@@ -1,0 +1,420 @@
+Chordy, Tab et al Revision history.
+Bit late starting with 2.6.4 but about time I documented it :-)
+
+3.8.2
+	   Migrated the Installer from Visual Studio to Inno Script. Bit of a steep
+	     learning curve but it's more flexible.
+	   Also scrapped the Release/Upgrade builds - now just a Release package and
+	     the ChordPro/Tab files are available as separate ZIP packages. I'd like
+	     to make them as installable packages which don't register with the system
+	     Installer. Don't know if I can - have to do more digging.
+	   Added code to popWin() to always set the title bar icon == main program icon.
+	   Fixed some errors in the Help page formating due to me changing my mind!
+
+Chordy - Added 'Date Modified' and 'Revese' to Browser file lists sort options.
+           Re-coded 'Export ChordPro' - the overwrite message kept popping up when the
+	     'All' box was ticked.
+	   Some Menu buttons had the incorrect style - were showing as push buttons.
+     Tab - Added label next to the Copy button to show the Copy Buffer Bar index's saved.
+           Added 'View Release Notes' button.
+
+3.8.1
+	   Build mechanism for the Mac distro had to be modified because Apple have
+	     decided to move from OpenGL to Metal for the low level graphics interface.
+	     This required the existing Tcl/Tk to be removed and a new version installed.
+  Chordy - Added Date and Time pop-ups for Set List editing.
+           Added 'All' to the Export Set List destinations.
+           Bugfix - Switching Collections now carries the Current Set selection across
+	     if the Set List exists in the new Collection.
+	   Forgot to update the Help for 3.8
+	   Recoded the ChordPro Export to enable export to one or all Collections.
+	   Added note damping to Win32 Play code.
+	   Changed the FontList generation logic because Apple, in their infinite wisdom,
+	     decided to move where the TTF fonts are stored!
+     Tab - Bugfix - Paste Over added a blank bar if the "over" was the last bar.
+	   Bugfix - Playing a Tab in 3/4 time still used 4/4 timing.
+           Added 2 new buttons to the Edit window to combine a Save and Next/Prev Bar.
+	   Added "Off" button to the Slide/Hammer/Bend/Release Edit window.
+	   Added a button to export the Tab as a text file.
+
+3.8
+     Tab - Bugfix - file selection only worked on double-click.
+	   Bugfix - SaveAs worked but always threw up an error.
+	   Bugfix - Page display backgrounds caused Bar end line to disappear.
+           Re-wrote and fixed the Slide/Hammer code where they cross bar boundaries.
+	   Re-wrote the Note position binding code. It'd grown into a complete
+	     mess - almost impossible to follow :-(
+	   Added Batch Make button for PDFs.
+  Chordy - Bugfix - Bridge background button not changeing colour correctly.
+	   Bugfix - propagated Media rename to all Collections.
+           Adjusted Chords/Lyrics vertical position so that coloured backgrounds
+	     are more evenly spaced.
+	   Added a check button to the Font Picker so that it would only display
+	     fixed width fonts.
+	   Added Tempo directive.
+	   Added Tab directives.
+	   Added option to make blank lines 1/2 height.
+	   Re-wrote Media.pm to be more 'modular';
+  Editor - Added the 'Tab' directives along with the font directives.
+  	   Added a vspace directive - shorthand for blank horizontal line.
+           Added code to select a Chord and move it left/right/up/down.
+	   Added Tempo directive.
+	   Before calling the colour editor you can now select colour defining text.
+	   Bugfix - Chord buttons incorrectly displayed on 2nd call from Chordy.
+
+3.7.7
+  Chordy - Added the start/end_of_grid directive to Chordy and the Editor.
+           Trial of adding fonts via the installer rather than via Chordy.
+	   Logic change to speed up regenerating font list.
+
+3.7.6
+           Changed the way constants are handled - no longer need Const::Fast module.
+	   Made a number of changes to the Build process to reduce the total size of the
+	     distribution (for Windows) which mainly involved deleteing unwanted modules.
+  Editor - Added Help for Chord Offset button.
+     Tab - Fixed issue with new fonts caused by the change to constant handling.
+
+3.7.5
+  Chordy - Bugfix - changing Media did not change the background colour of the background
+                    buttons.
+           Mailer now distinguishes between ChordPro and PDF in the "Subject" heading.
+     Tab - Collection and Media Edit are now just selectors.
+           Slight change to the Lyric lines positioning.
+	   Added a Batch button to PDF a selected list of Tabs.
+	   
+3.7.4
+  Chordy - Can now export a Set List to another Collection.
+	   Added some extra options for the Run List output.
+  Editor - Fixed problem with pasted text not being formatted correctly.
+           Also fixed the issue where 2 pastes were being done by a Ctrl-V.
+	   Added a "Re-format Buffer" button as there are some cases we can't catch.
+	   Save button now saves to the original file rather than the temporary file.
+   Chedi - Bugfix - Chord editor wouldn't open correctly the second time.
+
+3.7.3
+  Chordy - Changed the Set Lists background, Selection button wording and button/entry layout.
+           Code change to Colour Swatches in the Colour Editor to higlight the currently
+	     selected swatch.
+	   Bugfix - call to selectionSet should be selection_set after Clone or Edit.
+	   Various layout adjustments.
+	   Bugfix - changed popWin() packing - help pop-ups would not expand vertically.
+	   Increased width of Key list box to display keys like F#m.
+	   Bugfix - Colour and Font name lists now correctly track up/down selection.
+	   Bugfix - Title, Chords, Lyrics, etc. now track background colour setting in the
+	     Configuration Options Tab.
+	   Added a simple mechanism to print a Set List ie. a list of song titles on one page.
+  Editor - Added Offset button for chord display.
+           Bugfix - swatch colours not being set/saved.
+	   Added code to Open() and Save() to remove trailing blank lines.
+     Tab - Added Delete and Rename buttons.
+           New layout for buttons and options to reduce window height.
+	   Bugfix - new directives being added not showing in the correct colour/size.
+
+3.7.2
+     Tab - Removed the need for GIF manipulation to display rests. Now have a "rest" font
+             (Gonville-20) that I stripped down to just have the rests in it. Auxiliary
+	     fonts will now be distributed and live in the $PROG/fonts folder and will be
+	     added to the system fonts folder whenever a Version change happens.
+	   A "simple" way to add your own fonts is to put them in the $PROG/fonts folder
+	     and then delete the file "FontList" from the Chordy home folder:
+	     on Windows - C:/Users/[USERNAME]/Chordy/FontList
+	     on Mac:      ~/Chordy/FontList
+
+3.7.1
+  Chordy - Issue with printing multiple PDF's caused Chordy to hang after the last file.
+  Cpgedi - Directives & Chords Foreground, PDF Background and Editor Fore/Background are now
+  	     all user definable colours.
+           Directives and Chords are now user definable sizes independant of the text size.
+     Tab - bug in Collection->change() because $AllSets is only used in Chordy.
+3.7
+           FileBrowser.pm is now Browser.pm and implemented as a proper module that makes a
+	     Browse object that can be embedded in other objects. This has enabled the SetList
+	     code to be implemented as a new tab on the notebook effectively replacing what
+	     used to be a pop-up window. The previous SetList buttons have hence been removed
+	     from the Miscellaneous tab.
+	   Now Set Lists are semi-permanent, had to change the Collection code to update the
+	     Set List tab if a Collection changed.
+  Cpgedi - The font picker is now the generic one in Fonts.pm - no idea why it had it's own
+             stripped down version!
+ Cmsg.pm - Placed conditional around message display to catch message before The Main Window
+             has been initialised.
+     Tab - Fixed positioning issue with half bar rest.
+
+3.6.1
+  Chordy - Mechanism used to stop a console pop-up in CPmail was causing SumatraPDF to run but
+  	     not display a window. Modified CPmail to alter/restore console display before and
+	     after call to 'wmic' (only an issue on Windows).
+	   Changed the way transposed files are handled. Option to Edit or Guess the key if not
+	     present then put the original into the backup chain rather than a new file with the
+	     original key appended to the file name.
+	   Rewrote messages from Export/Import files for single/multiple items.
+	   Changed the logic around creating/viewing multiple PDFs to show each one in the pop-up.
+	   Recoded Editor Open sub to clean up lines of text.
+	   List of ChordPro files now carries forward when a Collection is changed as long as
+	     they exist in the new Collection. Any that don't get deleted from the list.
+	   Added the 'View Release Notes' option.
+	   Added Title, Verse and Bridge to the BackGround options.
+	   Implemented a binary search for file lookup - faster. It also fixed a problem where
+	     a lower case file halted the search.
+	   Improved the layout and code for Exporting/Mailing ChordPro and PDF files.
+
+3.6
+           From the SendEmail changes, the packed Chordy.exe failed to run with a failure to
+	     load a DLL file but, as usual from Dynaloader.pm, there was no indication of which
+	     one. After much searching I found "Dependency Walker" - so I don't forget, here are
+	     the steps to fix this type of issue:
+	     1) Pack new version of Chordy.exe
+	     2) Rename C:\Strawberry -> C:\Strawberry0
+	     3) Start 'Dependency Walker'
+	     4) 'Open' the packed Chordy.exe
+	     5) Click on 'Profile/Start Profiling...'
+	        The Profile run should fall over at the point where the DLL load fails
+	     6) Get the name(s) of any missing DLLs and add them to the Makefile eg:
+	        -l C:\Strawberry\c\bin\zlib1__.dll
+		and rebuild/test new Chordy.exe
+	     7) Rename C:\Strawberry0 -> C:\Strawberry
+	   Rewrote write_file() - trying to be too clever with \r\n processing - now just
+	     writes whatever is passed in. It was screwing up PDF (binary) file copies!
+  Chordy - Fixed issue with renaming ChordPro files.
+  	   Converted SMTP->{security} from numeric to a string.
+           SendEmail is now a module contained within Chordy - fixed a bug with SSL version
+	     inherent in SendEmail.
+	   SendEmail now used in the Mac version.
+	   The mail 'To:' Entry is now a Combobox which remembers the last 10 mailee's and
+	     keeps the last 'To' at the start of the list.
+	   Stopped a command window poping up when running CPmail.
+  Cpgedi - start/end_background not being inserted - from changes in 3.5.1
+
+3.5.2
+  Chordy - Found a problem with new verse/chorus/bridge repeats using a numbered section.
+             Whole array was being cleared on start of a new section - only the new
+	     section should have been cleared.
+
+3.5.1
+           Removed use of File::Slurp and wrote my own read/write_file subs - problems
+	     caused by "Wide character in syswrite" errors.
+	   Rewrote Help.pm so that we can conditionally add help text depending on OS type.
+  Chordy - You can now edit the Pop-Up Message Fore/Back-ground.
+  Cpgedi - Directive button layout now 3 wide to reduce overall height.
+           'Goto' button and Entry moved down to the line/column box with 'Help' button.
+	   Rewrote file Open/Close/Save stuff as was real messy - even found one sub declared
+	     twice!
+	   Closed endless loop when answering 'No' to save changes.
+	   Find/Replace/All now works across Mac and Win.
+
+3.5
+  Editor - Fixed bug with 'Save' and 'Exit & Save'.
+           Added Start/End Verse and Bridge directives.
+  Chordy - Added Start/End Verse and Bridge directives.
+           Changed the Colour Editor swatch from a Canvas to a Label - easier to format.
+	   Added focus points to all message pop-ups.
+  Cpgedi - Rewrote the 'balloon' pop-up code - wasn't working on the Mac. Same for the
+             chord pop-ups.
+
+3.4
+	   Rationalised the Help modules into one Help.pm callable with the help text to be
+	     displayed.
+	   Added Copyright notice into all files except A2Crd.pm
+  Editor - Added the CP::A2Crd.pm module - actually a renamed App::Music::ChordPro::A2Crd
+             available from CPAN by Johan Vromans.
+	   This module allows you to import a text file into the Editor (chords shown above the
+	     lines of lyrics) and convert it wholesale into ChordPro format.
+  Chordy - You can now specify the Title background colour on a per Media basis.
+
+3.3.1
+           Re-made the .pro/.tab backup sub as Global and all use the Temp folder. Numbering
+	     is now reversed from what it was - larger numbers are now older versions.
+  Chordy - Fixed bug with transpose() caused by CP::Chord changes.
+           Transposing changes the original to be <FileName>_<key>.pro
+	   Changed positioning of messages to be more intelligent & kept within the bounds of the
+	     Chordy display window (mainly for 'Line Too Long' messages).
+	   Window BG colour not being saved after editing.
+	   FG/BG colours now correctly Collection dependent and change when the Collection changes
+	     but added a 'Menu' button to propagate colours to all Collections.
+     Tab - 'Saving' an edited bar AFTER a 'Copy' then 'Paste After' resulted in the Pasted bars
+             being deleted. $Tab->{lastBar} had not been updated.
+	   Changed the way temporary files created when saving + more checks for writing new file.
+	   Added a Metronome ability (to Windows 'Play' mode)
+
+3.3
+	   Help modules recoded to use a type of HTML format.
+           Moved all modules into a CP sub-folder.
+  Chordy - Running on a Mac, any menu item that pops up a window causes Chordy to crash either
+             when the window opens or when it closes - no ryhme or reason to which but always
+	     consistent. Did find one pop-up that didn't - almost identical to one that did :(
+	     As a result I've removed the menu bar and all the functionality has been put into
+	     a Menu Tab on the NoteBook as the last Tab but Chordy still starts with the main
+	     Tab visible.
+	   Re-did the layout for the Set List window(s) and fixed a couple of minor bugs around
+	     the Search function and some major ones around New, Clone and Rename.
+	   Update the Help page and improved the appearance of headings and made their layout
+	     more consistent across the whole module.
+	   Moved "Print Media Size" to the "PDF Page Size" section.
+	   Don't redirect STDOUT to STDERR on Mac as Platypus (the App generator) has a Hissy Fit
+	     and fails to start the App.
+	   Removed the use of back ticks in CPmail.pm and Cmnd.pm and used open with pipe read.
+	     Stops a shell being spawned and flashing up on the screen.
+	   Fixed issue with centering the Sample text when selecting a font.
+	   Finally figured out how to set Entry fore/backgrounds: -fieldforeground. The
+	     documentaion for Tcl/Tk styles is appalling!
+	   Stopped a brief command window pop-up when starting "Mail .pro" -added the
+	     /INTERACTIVE:OFF arg to wmic - seems to have done the trick.
+	   Added the text/chord size/colour directives. These plus the font variants now revert
+	     to the defaults if no arguments to the directive are supplied.
+  Cpgedi - Moved Menu to a series of buttons at the top of the page.
+           Find was not higlighting the found text.
+	   Implemented the Editor as a module called by chordy and cpgedi.
+     Tab - Moved Menu to be buttons down the left side of the page.
+           Clearing the tab page now correctly deletes the bar numbers down the left side.
+
+3.2.1
+   Chedi - Bug in code to display oneButton - binding was not to the correct Chord string.
+           Re-wrote the code around the available chords pop-up. Highlighted by it not working
+	     correctly on a Mac.
+  Chordy - Common PDF Path was being carried over when changing Collection.
+           Change to a Chorus BackGround was not being applied or propagated.
+	   Fixed confusion over where List Boxes were defined.
+	   Version checks only carried out on Option and FontList files.
+	   Re-wrote the font height parameters used when creating a PDF - now more readable.
+	   Fixed bug where Chorus background colours were not being displayed and propagated
+	     correctly.
+  Cpgedi - Added -f "Font Spec" command line option so that Chordy can pass in a temporary
+             EditFont specification.
+
+3.2
+	   Had to work out how much of ActiveTcl we needed and how to get it installed OK.
+	   There still seems to be a problem whereby upgrades fail to install *.exe over
+	     the originals - something wrong with MSIs.
+	   A wierd bug from STDOUT/STDERR redirection - Have to redirect STDERR to the error
+	     log first and THEN dup STDOUT onto STDERR otherwise Chordy, Tab etc wouldn't
+	     start but the 'ng' variants would!!
+  Chordy - Can now specify a Common PDF Path so we can mix/match things like 4 & 5 String
+  	     Bass Tabs and/or ChordPro outputs.
+  Tab    - In the Edit Bar, a selected rest was still showing as black instead of red.
+
+3.1
+	   Now there is no restriction on bold/italic fonts that don't exist as a TTF file.
+	   The PDF TTF modules can (now?) synthesize bold/italic fonts that don't exist
+	     in their own right. Need to see what Mac/Linux do from within Tcl/Tk as Windows
+	     seems to automagically generate them.
+
+3.0
+           EVERYTHING re-written to use Tkx in the hope that I can make Chordy et al
+	     independant of a X server and dependant on Tcl which appears to be more
+	     universally available on platforms like Mac.
+	   The next step is to find all the Mac/Linux dependencies and code round them.
+  Tab    - Removed TabBrowser.pm and incorporated it into FileBrowser.pm.
+	   Wrote my own 'balloon' pop-up for Tab and Cpgedi.
+
+2.7.4
+  Global - Moved a number of common subs into Global.pm
+  Chordy - Removed redundant 'NewLine' option from the Options menu.
+           Fixed vertical placement of 'Key' & 'Capo' on PDF page.
+	   Changed the $DATA constant to be $USER and replaced global $Data with $Parent.
+	     $USER is now the full path ie includes /Chordy
+  Cpgedi - Colours behind Chord, Highlight and Comment buttons now taken from the Media hash.
+             Previously they were hard coded.
+	   Added colour buttons for Chord, Highlight and Comment for quick entry.
+  CHedit   Moved all the Chord definitions and the %CHRD hash into here.
+  Chedi    Bug - fixed logic in showChord();
+  Tab    - Added the 'Sync' option for Tabs.
+
+2.7.3
+  Chordy - Added the 'Sync' option in the File menu to be able to sync ChordPro files between
+  	     different Collections (or anywhere else for that matter!).
+	   Fixed the Collection.pm logic around add()'ing a new one and added the option to
+	     'Move' a Collection and optionally delete the original.
+	   Bug - When viewing/printing a transposed song the 'Key' did not get transposed.
+
+2.7.2
+  Chordy - Changed Mail mechanism to use 'SendEmail.exe' and the code (for Windows) uses
+  	     Win32::Job so we can kill the process in a timely manner.
+	   Added the sendmail.exe entry to the "Commands & Collections" tab.
+  Tab    - Added the (simplistic) ability to play (4/5 string) bass tabs.
+             TODO: other instruments.
+           Added the 'tempo' directive for use with the above. Also added
+	     a 'quaver = XX' to the top of the page if 'tempo' is set.
+	   Corrected the logic around Play/Loop - Pause - Play/Loop
+	   Added the PDFname key to the Tab hash and tab file. You can now have a number
+	     of different .tab file names that will all create the same PDF file and have
+	     the same Title. Typically where each file is a different key but any one of them
+	     can be used to create the working PDF file. If you want individual PDF files
+	     then just leave PDFname as the individual name.
+	   Added the ability to shuffle Lyrics up or down a Stave.
+	   Updated the Tab Help page.
+	   Bug - new Key not shown on transpose.
+	   Bug - Set Key did not have "B" in the list ...
+
+2.7.1
+  Tab -    Fixed bug with moving frets up/down 1 string. The range selection logic was wrong.
+           Now save and load definitions for font types and colours.
+	   Changed the "save" policy to be the same as for chordy ie. add a .# number to the
+	     file name, so that we can go back where .1 is the first saved version.
+	   Added menu item and sub to delete backups.
+  Chordy - Added debugging capability into CPmail.pm for SSL & SMTP layers.
+  
+2.7
+  Chordy - Added option to be able to email ChordPro files.
+  Tab    - PDF fret numbers above 10 are now auto scaled to be 75% the normal width.
+	     To make editing and the displayed page more readable, any frets above 9
+	     are shown using the "Small" font but with the "Normal" font colour.
+	     (I did this because, unlike the PDF font handler, I can't scale the
+	     width of text on the display.)
+           Stopped strings (shown with an 'x') are now always black.
+	   Fixed bug where moving a fret number showed the original position as well.
+	   Fixed problem where the height of a fret number was not picked up from
+	     $fnt->{'OS/2'}{'CapHeight'}
+	   Added a "Paste After" button option.
+	   Added some code so that when editing a bar, the actual bar index rather than
+	     the bars 'page' index is displayed in the editor.
+	   Added TabBrowse.pm to make file selection easier.
+	   Changed positioning of pop-up windows to be relative to the main window.
+	   Fixed bug where killing the colour editor stopped its parent from being close.
+	   Re-did editBarOpts() to use Optionmenus - much cleaner.
+  cpedi -  Changed packing from 'pack' to 'grid' and fixed bug where Text area would
+             not expand or shrink correctly.
+
+2.6.11
+  Tab -    Added buttons to transpose up/down one string - mainly for me to convert to/from
+             4 and 5 string bass.
+
+2.6.10
+  Tab -    When Cloning a Bar, the LAST page rather than the current page is displayed.
+           Bug when measuring text which has space(s) on the end for PDF. text->advancewidth()
+	     call ignores the spaces.
+
+2.6.9
+  Tab -    Previously, Stave spacing was auto-adjusted to spread them equally down the page.
+           Now there is NO initial adjustment and variable spacing is adjusted by:
+	     Stave Line Spacing
+	     # of Lyric Lines
+	     Lyric Spacing
+	     Inter-Stave Gap
+	   At the moment, "Stave Line Spacing" is the only variant that is not saved on a per
+	     xxx.tab basis - it's defined in the Chordy Option.cfg file - maybe it should be moved?
+
+2.6.8
+  Tab -    Lyrics were not being saved across page changes or Tab saves.
+           Lyrics did not follow pages if a Bar had the "New Page" flag set.
+	   Fixed issue with page number text not displaying correctly under some circumstances.
+
+2.6.7
+  Chordy - Reversed the print order for Multiple PDFs so the printer stacks them correctly.
+           When managing multiple PDFs into a single PDF, each song has individual page
+	   numbering - previously the pages were numbered sequentially from start to end.
+
+2.6.6
+  Chordy - Page numbers weren't displaying when printing multiple songs.
+  Tab    - Fixed Bend & Bend/Release display.
+           Added first pass of TabHelp.pm
+
+2.6.5
+  Cpgedi - Changed the exit logic to ask to save any changes.
+           Reorganised the Text and Button packing order to prevent shrinking.
+  Tab 	 - Added dummy sub selectClear() needed by Collection.pm in Chordy.
+           Changed packing in Page view - buttons, bar numbers and Page Canvas.
+           Fixed bug where Collection change did not change Media.
+	   
+2.6.4
+  Chordy - Added "Ignore article when sorting" option to the Chordy 'Available File' list
+             along with an Option to edit the Articles to ignore (default is 'the|an|a').

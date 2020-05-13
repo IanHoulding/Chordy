@@ -1,0 +1,6 @@
+*.iss
+Makefile
+icons/**
+fonts/**
+Release/**
+Tcl/**
