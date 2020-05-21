@@ -640,7 +640,7 @@ sub pageOpts {
     -width => 3,
     -command => sub{popMenu(\$Opt->{Nbar},
 			    sub{$Tab->drawPageWin();main::setEdited(1);},
-			    [qw/3 4 5 6 7 8/]);
+			    [qw/3 4 5 6 7 8 9 10/]);
     });
 ###
   my $ssl = $frm->new_ttk__label(-text => "String\nSpacing");
