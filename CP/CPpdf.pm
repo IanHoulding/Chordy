@@ -467,7 +467,7 @@ sub newPage {
 	_textAdd(INDENT + $offset, $h, $pro->{note}, $self->{font}[TITLE], $th, $cc);
 	$h -= $dc;
       }
-      if ($pro->{capo} ne 0) {
+      if ($pro->{capo} ne 0 && $Opt->{LyricOnly} == 0) {
 	$h -= ($th - $dc);
 	my $tw = _textAdd(INDENT, $h, "Capo: ", $self->{font}[TITLE], $th, BLACK);
 	$offset = $tw if ($offset == 0);
