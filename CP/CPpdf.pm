@@ -121,9 +121,7 @@ sub printSL {
 
   $pp->mediabox($w, $h);
   $pp->cropbox(0, 0, $w, $h);
-  $GfxPtr = $pp->gfx();
-  $GfxPtr->linecap(1);
-  $TextPtr = $pp->text();
+  newTextGfx($pp);
 
   if ($Media->{verseBG} ne WHITE) {
     $GfxPtr->fillcolor($Media->{verseBG});
@@ -394,7 +392,7 @@ sub error {
 }
 
 sub newTextGfx {
-  my($self,$pp) = @_;
+  my($pp) = shift;
 
   $GfxPtr = $pp->gfx();
   $GfxPtr->linecap(1);
@@ -411,7 +409,7 @@ sub newPage {
   push(@{$self->{page}}, $pp);
   $pp->mediabox($w, $h);
   $pp->cropbox(0, 0, $w, $h);
-  newTextGfx($self, $pp);
+  newTextGfx($pp);
 
   if ($Opt->{PageBG} ne WHITE) {
     _bg($Opt->{PageBG}, 0, 0, $w, $h);

@@ -112,7 +112,7 @@ sub getFont {
 }
 
 sub newTextGfx {
-  my($self,$pp) = @_;
+  my($pp) = shift;
 
   $GfxPtr = $pp->gfx();
   $GfxPtr->linecap(1);
@@ -270,7 +270,7 @@ sub make {
   my $lidx = my $pn = 0;
   for(my $bar = $Tab->{bars}; $bar != 0; $bar = $bar->{next}) {
     if ($bar->{pageNum} != $pn) {
-      $pdf->newTextGfx($pdf->{page}[$pn]);
+      newTextGfx($pdf->{page}[$pn]);
       $lidx = $pn * $Tab->{rowsPP};
       $pdf->pageNum(++$pn);
     }
@@ -316,7 +316,7 @@ sub newPage {
   push(@{$self->{page}}, $pp);
   $pp->mediabox($w, $h);
   $pp->cropbox(0, 0, $w, $h);
-  newTextGfx($self, $pp);
+  newTextGfx($pp);
 
   $h -= $Tab->{pageHeader};
 
