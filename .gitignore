@@ -1,5 +1,9 @@
+*~
+*.exe
 *.iss
 Makefile
+bin/**
+build/**
 icons/**
 fonts/**
 Release/**
