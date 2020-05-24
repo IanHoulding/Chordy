@@ -112,7 +112,7 @@ sub new {
   my $centerFrm = $frame->new_ttk__frame();
 
   ### Selected Files
-  my $title = ($what & (FILE | TABBR)) ? ' Selected Files ' : ' Set List Files ';
+  my $title = ($what & (FILE | TABBR)) ? ' Selected Files ' : ' Setlist Files ';
   my $rightFrm = $frame->new_ttk__labelframe(
     -text => $title,
     -labelanchor => 'n',
@@ -159,7 +159,7 @@ sub new {
   # columnspan is 2 so that we can put 2 buttons below the ListBox.
   $select->{frame}->g_grid(qw/-row 0 -column 0 -columnspan 2 -sticky nsew/);
 
-  # Up/Down Arrows only for Set Lists
+  # Up/Down Arrows only for Setlists
   if (($what & (FILE | TABBR)) == 0) {
     $rightFrmR->g_pack(qw/-side left -expand 0 -fill x/, -padx => [4,2]);
   }

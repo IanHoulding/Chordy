@@ -57,7 +57,7 @@ sub chordyDisplay {
   my $misc = $NB->new_ttk__frame(-padding => [4,4,4,4]);
 
   $NB->add($chordy, -text => '  Chordy PDF Generator  ');
-  $NB->add($setLst, -text => '  Set Lists  ');
+  $NB->add($setLst, -text => '  Setlists  ');
   $NB->add($opts,   -text => '  Configuration Options  ');
   $NB->add($misc,   -text => '  Miscellaneous  ');
   $NB->select(0);
@@ -93,7 +93,7 @@ sub chordyDisplay {
   $ctf->g_pack(qw/-side top -expand 1 -fill both/);
   $cmf->g_pack(qw/-side top -expand 1 -fill both/, -pady => [8,0]);
 
-#### Set Lists Tab
+#### Setlists Tab
   setLists($setLst, $NB);
 
 #### Configuration Options Tab
@@ -233,7 +233,7 @@ sub filesWin {
     -command => sub{main::selectFiles(FILE)} );
 
   my $fsl = $tFr->new_ttk__button(
-    -text => "From Set List",
+    -text => "From Setlist",
     -command => sub{$NB->m_select(1)});
 
   my $act = $tFr->new_ttk__labelframe(
@@ -307,7 +307,7 @@ sub filesWin {
   $KeyLB->{frame}->g_pack (qw/-side left -fill y -ipadx 1 -padx 1/);
   $FileLB->{frame}->g_pack(qw/-side left -fill y -ipadx 1/);
 
-  ## Browse/From Set List/PDFs
+  ## Browse/From Setlist/PDFs
   $brw->g_pack(qw/-side top -pady 4/);
   $fsl->g_pack(qw/-side top -pady 4/);
   $act->g_pack(qw/-side top -pady 8/);  # LabelFrame
@@ -492,7 +492,7 @@ sub optWin {
 
 ##############
 ##
-## Set Lists
+## Setlists
 ##
 ##############
 
@@ -506,12 +506,12 @@ sub setLists {
   my $browser = $AllSets->{browser} = browser($slFb, $NB);
 
   my $sltL = $slFt->new_ttk__labelframe(
-    -text => ' Set Lists ',
+    -text => ' Setlists ',
     -style => 'Wh.TLabelframe',
     -labelanchor => 'n',
     -padding => [4,0,4,4]);
   my $sltM = $slFt->new_ttk__labelframe(
-    -text => ' Current Set List ',
+    -text => ' Current Setlist ',
     -style => 'Wh.TLabelframe',
     -labelanchor => 'n',
     -padding => [4,0,4,4]);
@@ -582,7 +582,7 @@ sub setLists {
     -command => sub{slAct(SLDEL)} );
 
   ## Now pack everything
-  # Set Lists
+  # Setlists
   $slFt->g_pack(qw/-side top -fill x/, -pady => [0,4]);
   # Browser
   $slFb->g_pack(qw/-side top -fill x/, -pady => [4,0]);
@@ -655,7 +655,7 @@ sub slAct {
   } else {
     my $new = $CurSet;
     if ($what == SLNEW || $new ne '') {
-      my $ans = msgSet("Enter a new Set List name:", \$new);
+      my $ans = msgSet("Enter a new Setlist name:", \$new);
       return if ($ans eq "Cancel" || $new eq '');
       
       # setNRC() will only adjust the SetList object {sets}.
