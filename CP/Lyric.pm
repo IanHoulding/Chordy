@@ -40,7 +40,7 @@ sub new {
   my $self = {};
   bless $self, $class;
   $self->{text} = [];    # Contains all the lyric lines as a linear array.
-  $self->{modified} = [];
+  $self->{modified} = [];# 1-to-1 map with {text}
   $self->{widget} = [];  # Contains enough Text widgets for a page.
   $self;
 }
@@ -60,7 +60,7 @@ sub widgets {
     my $font = $Tab->{wordFont};
     my $fg = $Tab->{wordColor};
     my $rc = 0;
-    foreach my $row (0..($Tab->{rowsPP} - 1)) { # * $Opt->{LyricLines};
+    foreach my $row (0..($Tab->{rowsPP} - 1)) {
       my $frm = $can->new_ttk__frame(-width => $w, -height => $h * $ll, -padding => [0,0,0,0]);
       foreach my $line (0..($ll - 1)) {
 	my $wdgt = $frm->new_tk__text(
@@ -100,7 +100,6 @@ sub linechk {
   my $bg = ($lw > $w) ? '#FFD0D0' : MWBG;
   $wid->configure(-background => $bg);
   $self->{modified}[$rc] = 1;
-#  $wid->edit_modified(0);
 }
 
 sub set {
@@ -224,12 +223,14 @@ sub adjust {
 	}
       }
     } elsif ($new > $ll) {
-      collect($self);
-      clear($self);
-      my $segs = @{$self->{text}};
-      while ($segs > 0) {
-	splice(@{$self->{text}}, $segs, 0, '');
-	$segs -= $ll;
+      if ($new > 1) {
+	collect($self);
+	clear($self);
+	my $segs = @{$self->{text}};
+	while ($segs > 0) {
+	  splice(@{$self->{text}}, $segs, 0, '');
+	  $segs -= $ll;
+	}
       }
     } else {
       collect($self);

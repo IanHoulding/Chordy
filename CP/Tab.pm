@@ -873,8 +873,7 @@ sub editBar {
 
   my($a,$b) = $self->diff();
   if ($a == 0) {
-    CP::Bar::Edit(0);
-#    message(QUIZ, "Please select a bar to edit.");
+    CP::Bar::Edit();
   } else {
     if ($a != $b) {
       if (msgYesNo("Only the first Bar will be edited.\nContinue?") eq "No") {
