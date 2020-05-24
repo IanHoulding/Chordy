@@ -83,6 +83,7 @@ sub new {
   $Tab->{title}    = '';
   $Tab->{key}      = '';
   $Tab->{note}     = '';
+  $Tab->{tempo}    = 40;
   $Tab->{sid}      = 0;
   $Tab->{eid}      = 0;
   $Tab->{trans}    = 0;
@@ -741,7 +742,7 @@ sub pageNum {
 sub pageTempo {
   my($self) = shift;
 
-  if ($self->{title} ne '' && defined $self->{tempo}) {
+  if (defined $self->{tempo}) {
     my $can = $self->{pCan};
     $can->delete('hdrb');
     my $x = ($Media->{width} / 2) - 12;

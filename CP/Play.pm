@@ -393,6 +393,7 @@ sub pagePlay {
   $lb->g_grid(qw/-row 0 -column 0 -sticky e/);
 
   my $sc;
+  my $trc = sprintf("#%02x0000", $Tab->{tempo} + 55);
   $sc = $frt->new_tk__scale(
     -variable => \$Tab->{tempo},
     -fg => DRED,
@@ -405,10 +406,11 @@ sub pagePlay {
     -length  => '6c',
     -orient  => 'horizontal',
     -bg => MWBG,
-    -troughcolor => DRED,
+    -troughcolor => $trc,
     -command => sub {
-      $sc->m_configure(-troughcolor => sprintf("#%02x0000", $Tab->{tempo} + 55));
-      CP::Tab::pageTempo();
+      $trc = sprintf("#%02x0000", $Tab->{tempo} + 55);
+      $sc->m_configure(-troughcolor => $trc);
+      $Tab->pageTempo();
       main::setEdited(1) if ($Tab->{loaded});});
   $sc->g_grid(qw/-row 0 -column 1/);
 
