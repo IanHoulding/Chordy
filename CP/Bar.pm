@@ -437,6 +437,7 @@ sub Edit {
     } else {
       $EditBar1->{next} = $EditBar1->{pbar} = 0;
     }
+    $EditBar->{bidx} = $self->{bidx};
   } else {
     $EditBar->{bidx} = ($Tab->{bars}) ? $Tab->{lastBar}{bidx} + 1 : 1;
   }
