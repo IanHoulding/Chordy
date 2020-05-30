@@ -13,7 +13,7 @@ BEGIN {
   use FindBin 1.51 qw( $RealBin );
   use lib (($^O =~ /win32/i) ? $RealBin : ($^O =~ /darwin/i) ? '/Applications/Chordy.app/lib' : '/usr/local/lib/Chordy');
   if ($^O =~ /win32/i) {
-    $ENV{PATH} = "D:\\Tcl\\bin;$ENV{PATH}";
+    $ENV{PATH} = "C:\\Program Files\\Chordy\\Tcl\\bin;$ENV{PATH}";
   }
 }
 
@@ -27,6 +27,7 @@ use CP::Cconst qw(:OS :PATH :LENGTH :PDF :MUSIC :TEXT :SHFL :INDEX :BROWSE :SMIL
 use CP::Global qw/:FUNC :PATH :OPT :CHORD :WIN :PRO :SETL :MEDIA :SCALE :XPM/;
 
 use CP::Win;
+use CP::Pop qw/:POP :MENU/;
 use CP::ChordyWin qw/&chordyDisplay/;
 use CP::List;
 use CP::Pro qw/$LenError/;
@@ -274,7 +275,9 @@ sub useBold {
 
 sub editArticles {
   my $done;
-  my($top,$fr) = popWin(0, 'Edit Articles');
+  my $pop = CP::Pop->new(0, '.ea', 'Edit Articles');
+  return if ($pop eq '');
+  my($top,$fr) = ($pop->{top}, $pop->{frame});
 
   my $tf = $fr->new_ttk__frame();
   $tf->g_grid(qw/-row 0 -column 0 -padx 4 -pady 6 -sticky nsew/);
@@ -307,7 +310,7 @@ sub editArticles {
   if ($done eq 'OK') {
     $Opt->{Articles} = $arts;
   }
-  $top->g_destroy();
+  $pop->destroy();
 }
 
 sub saveOpt {
@@ -476,7 +479,7 @@ sub transposeOne {
 sub Main {
   my($oneorall) = shift;
 
-  return if ($Pop ne '');
+  return if (CP::Pop::exists('.pr'));
   if ($#ProFiles < 0) {
     message(QUIZ, "Can't do anything without a ChordPro file.");
     return;
@@ -534,8 +537,7 @@ sub Main {
       foreach my $idx (@pfn) {
 	$pdf = makeOnePDF(2, $ProFiles[$idx], $PdfFileName, $pdf);
       }
-      $Pop->g_destroy();
-      $Pop = '';
+      $Pop->destroy();
       $pdf->close();
       actionPDF("$Path->{Temp}/$PdfFileName", "$PdfFileName");
     } else {
@@ -544,8 +546,7 @@ sub Main {
       foreach my $idx (@pfn) {
 	my $flg = (--$i == 0) ? 0 : 1;
 	if (makeOnePDF($flg, $ProFiles[$idx]) eq 'Cancel') {
-	  $Pop->g_destroy();
-	  $Pop = '';
+	  $Pop->destroy();
 	  last;
 	}
       }
@@ -596,8 +597,7 @@ sub makeOnePDF {
   $pro->makePDF($pdf);
   $pdf->close() if ($wait != 2);
   if ($wait == 0) {
-    $Pop->g_destroy();
-    $Pop = '';
+    $Pop->destroy();
   }
   actionPDF($tmpPDF, $name) if ($wait != 2);
   $pro->{capo} = $tmpCapo;
@@ -670,35 +670,35 @@ sub PDFprint {
 sub popProg {
   my($wait) = shift;
 
-  if ($Pop eq '') {
-    ($Pop, my $pp) = popWin(1, 'Progress', 10, 10);
-    $pp->m_configure(-style => 'Pop.TFrame');
-    my $font = (exists $FontList{"Comic Sans MS"}) ? "Comic Sans MS" : "Times";
-    my $size = 14;
+  return if (CP::Pop::exists('.pr'));
+  $Pop = CP::Pop->new(1, '.pr', 'Progress', 10, 10);
+  my($top,$pp) = ($Pop->{top},$Pop->{frame});
+  $pp->m_configure(-style => 'Pop.TFrame');
+  my $font = (exists $FontList{"Comic Sans MS"}) ? "Comic Sans MS" : "Times";
+  my $size = 14;
 
-    my $pll = $pp->new_ttk__label(
-      -text => "Please wait .... PDF-ing",
-      -font => "{$font} $size bold",
-      -style => 'Pop.TLabel',
-      -width => 25);
-    $pll->g_pack();
-    my $pfn = $pp->new_ttk__label(
-      -textvariable => \$FileName,
-      -font => "{$font} $size bold",
-      -style => 'Pop.TLabel',
-      -width => 25);
-    $pfn->g_pack();
+  my $pll = $pp->new_ttk__label(
+    -text => "Please wait .... PDF-ing",
+    -font => "{$font} $size bold",
+    -style => 'Pop.TLabel',
+    -width => 25);
+  $pll->g_pack();
+  my $pfn = $pp->new_ttk__label(
+    -textvariable => \$FileName,
+    -font => "{$font} $size bold",
+    -style => 'Pop.TLabel',
+    -width => 25);
+  $pfn->g_pack();
 
-    $Done = '';
-    if ($wait == 1) {
-      my $bf = $Pop->new_ttk__frame(-padding => [4,4,4,4]);
-      $bf->m_configure(-style => 'Pop.TFrame');
-      $bf->g_pack(qw/-side bottom -fill x/);
-      my $can = $bf->new_ttk__button(-text => 'Cancel', -command => sub{$Done = 'Cancel';});
-      $can->g_pack();
-    }
-    $Pop->g_raise();
-    $Pop->g_grab();
+  $Done = '';
+  if ($wait == 1) {
+    my $bf = $top->new_ttk__frame(-padding => [4,4,4,4]);
+    $bf->m_configure(-style => 'Pop.TFrame');
+    $bf->g_pack(qw/-side bottom -fill x/);
+    my $can = $bf->new_ttk__button(-text => 'Cancel', -command => sub{$Done = 'Cancel';});
+    $can->g_pack();
   }
+  $top->g_raise();
+  $top->g_grab();
   Tkx::update();
 }

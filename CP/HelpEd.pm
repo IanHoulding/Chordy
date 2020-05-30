@@ -4,24 +4,23 @@ use CP::Global qw/:OPT :FUNC :XPM/;
 use CP::Help;
 
 sub help {
-  my($win) = shift;
-  if ($win eq '') {
-    makeImage("checkbox", \%XPM);
-    foreach my $i (qw/bracket bracketsz braceclr bracesz/) {
-      my $ht = Tkx::image_height($i) + 8;
-      my $wd = Tkx::image_width($i) + 6;
-      my $name = "H$i";
-      my $subr = 'Tkx::'.$i.'_data';
-      no strict 'refs';
-      my $data = &$subr(-background => $Opt->{PushBG});
-      Tkx::image_create_photo($name, -height => $ht, -width => $wd);
-      $subr = 'Tkx::'.$name.'_put';
-      &$subr(BLACK, -to => (0,0,$wd,$ht));
-      &$subr($Opt->{PushBG}, -to => (1,1,$wd-1,$ht-1));
-      &$subr($data, -to => (3,4));
-    }
-    $win = CP::Help->new("Editor Help");
-    $win->add(
+  my $win = CP::Help->new("Editor Help");
+  return if ($win eq '');
+  makeImage("checkbox", \%XPM);
+  foreach my $i (qw/bracket bracketsz braceclr bracesz/) {
+    my $ht = Tkx::image_height($i) + 8;
+    my $wd = Tkx::image_width($i) + 6;
+    my $name = "H$i";
+    my $subr = 'Tkx::'.$i.'_data';
+    no strict 'refs';
+    my $data = &$subr(-background => $Opt->{PushBG});
+    Tkx::image_create_photo($name, -height => $ht, -width => $wd);
+    $subr = 'Tkx::'.$name.'_put';
+    &$subr(BLACK, -to => (0,0,$wd,$ht));
+    &$subr($Opt->{PushBG}, -to => (1,1,$wd-1,$ht-1));
+    &$subr($data, -to => (3,4));
+  }
+  $win->add(
 [
  "<O TO:H: Cpgedi - A ChordPro Editor > ",
  "This was Gedi (Gregs EDItor) Ver. 1.0, Copyright 1999 Greg London",
@@ -432,9 +431,7 @@ sub help {
  "<T HP><P  Help > ",
  "<M>I know you'll find it hard to believe, but that's how you got here!",
 ]);
-  }
   $win->show();
-  $win;
 }
 
 1;

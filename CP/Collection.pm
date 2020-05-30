@@ -12,9 +12,10 @@ package CP::Collection;
 use strict;
 use warnings;
 
+use Tkx;
 use CP::Cconst qw/:OS :PATH :SMILIE :COLOUR/;
 use CP::Global qw/:PATH :FUNC :WIN :OPT :PRO :MEDIA :SETL/;
-use Tkx;
+use CP::Pop qw/:POP :MENU/;
 use File::Path qw(make_path remove_tree);
 use CP::Cmsg;
 
@@ -165,7 +166,9 @@ sub _delete {
 sub _move {
   my($self,$name,$del) = @_;
 
-  my($top,$wt) = popWin(1, '');
+  my $pop = CP::Pop->new(1, '.mv', '');
+  return if ($pop eq '');
+  my($top,$wt) = ($pop->{top}, $pop->{frame});
 
   my $tf = $wt->new_ttk__frame();
   $tf->g_grid(qw/-row 0 -column 0 -sticky nsew -padx 4 -pady 6/);
@@ -257,7 +260,7 @@ sub _move {
     }
     Tkx::vwait(\$done);
   }
-  $top->g_destroy();
+  $pop->destroy();
 }
 
 sub rmove {
@@ -331,7 +334,9 @@ sub save {
 sub edit {
   my($self) = shift;
 
-  my($top,$wt) = popWin(0, 'Collections');
+  my $pop = CP::Pop->new(1, '.ec', '');
+  return if ($pop eq '');
+  my($top,$wt) = ($pop->{top}, $pop->{frame});
 
   my $tf = $wt->new_ttk__frame(qw/-relief raised -borderwidth 1/, -padding => [4,4,4,4]);
   $tf->g_grid(qw/-row 0 -column 0 -sticky nsew/);
@@ -454,7 +459,7 @@ sub edit {
     $CurrentCollection = $orgcol;
     $CollectionPath = $self->{$CurrentCollection};
   }
-  $top->g_destroy();
+  $pop->destroy();
   $Done;
 }
 

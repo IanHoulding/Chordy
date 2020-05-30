@@ -19,12 +19,12 @@ use File::Path qw(make_path remove_tree);
 
 BEGIN {
   our @ISA = qw(Exporter);
-  our @EXPORT = qw/
+  our @EXPORT_OK = qw/
       &read_file &write_file
       &syncFiles &setDefaults &readChords &cleanCache &openConfig &backupFile
       &DeleteBackups
       &viewElog &clearElog &viewRelNt &errorPrint &makeImage
-      &popWin &popMenu &balloon &jobSpawn
+      &jobSpawn
 
       $Version $Parent $Home
       $Collection $Opt $Path $Cmnd $Swatches
@@ -34,20 +34,20 @@ BEGIN {
       $MW $KeyLB $FileLB $Media %FontList $ColourEd
       $KeyShift $Scale @Sscale @Fscale
       %EditFont
-      %XPM
+      %XPM %Images
       /;
   our %EXPORT_TAGS = (
     FUNC  => [qw/&read_file &write_file
 	         &syncFiles &setDefaults &readChords &cleanCache &openConfig &backupFile
 	         &DeleteBackups
 	         &viewElog &clearElog &viewRelNt &errorPrint &makeImage
-	         &popWin &popMenu &balloon &jobSpawn/],
+	         &jobSpawn/],
     VERS  => [qw/$Version/],
     PATH  => [qw/$Parent $Home/],
     OPT   => [qw/$Collection $Opt $Path $Cmnd $Swatches/],
     CHORD => [qw/%Fingers $Nstring @Tuning/],
     WIN   => [qw/$MW $KeyLB $FileLB $Media %FontList $ColourEd/],
-    XPM   => [qw/%XPM/],
+    XPM   => [qw/%XPM %Images/],
     PRO   => [qw/@ProFiles/],
     SETL  => [qw/$AllSets $CurSet/],
     SCALE => [qw/$KeyShift $Scale @Sscale @Fscale/],
@@ -59,19 +59,16 @@ BEGIN {
 use CP::Cconst qw/:OS :PATH :SHFL :SMILIE :COLOUR/;
 use CP::Cmsg qw/&message &msgYesNo &msgYesNoCan &msgSet &msgYesNoAll/;
 
-our $Version = "3.8.2";
+our $Version = "3.8.3";
 
 our($Parent, $Home, $Collection, $Opt, $Path, $Cmnd, $Swatches);
 our(%Fingers, $Nstring, @Tuning, $CurSet);
 our($MW, $KeyLB, $FileLB, $Media, %FontList, $ColourEd, @ProFiles);
 our($KeyShift, $Scale, @Sscale, @Fscale);
 our(%EditFont);
-our(%XPM);
+our(%XPM, %Images);
 
-# Although global, this is only used locally in this .pm
-# to keep track of all images created.
 Tkx::package_require("img::xpm");
-our(%Images);
 
 Tkx::eval(<<'EOT');
 proc bgerror {msg} {
@@ -142,7 +139,9 @@ sub sig_catch {
 sub syncFiles {
   my($from,$ext) = @_;
 
-  my($top,$wt) = popWin(0, 'Folder Sync');
+  my $pop = CP::Pop->new(0, '.fs', 'Folder Sync');
+  return if ($pop eq '');
+  my($top,$wt) = ($pop->{top}, $pop->{frame});
 
   my $tf = $wt->new_ttk__frame();
   $tf->g_grid(qw/-row 0 -column 0 -padx 4 -pady 6 -sticky nsew/);
@@ -281,7 +280,7 @@ sub syncFiles {
       }
     }
   }
-  $top->g_destroy();
+  $pop->destroy();
 }
 
 #
@@ -453,70 +452,6 @@ sub makeImage {
   $img;
 }
 
-sub popWin {
-  my($ov,$title,$x,$y) = @_;
-
-  my $pop = $MW->new_toplevel();
-  my $icon = (defined $Images{Ticon}) ? 'Ticon' : (defined $Images{Cicon}) ? 'Cicon' : 'Eicon';
-  $pop->g_wm_iconphoto($icon);
-  if ($ov) {
-    $pop->g_wm_overrideredirect(1);
-  } elsif ($title ne '') {
-    $pop->g_wm_title($title);
-  }
-
-  my $fr = $pop->new_ttk__frame(-relief => 'raised', -borderwidth => 2,  -padding => [4,4,4,4]);
-  $fr->g_pack(qw/-side top -expand 1 -fill both/);
-
-  if (! defined $x) {
-    $x = Tkx::winfo_pointerx($MW);
-    $y = Tkx::winfo_pointery($MW);
-  }
-  $x = 0 if ($x < 0);
-  $y = 0 if ($y < 0);
-  Tkx::update_idletasks();
-  $pop->g_wm_geometry("+$x+$y");
-
-  ($pop,$fr);
-}
-
-sub popMenu {
-  my($var,$subr,$list) = @_;
-
-  my $menu = $MW->new_menu();
-  foreach (@{$list}) {
-    my $m = $menu->add_radiobutton(
-      -label => $_,
-      -value => $_,
-      -variable => $var,
-      -command => $subr);
-  }
-  $menu->g_tk___popup(Tkx::winfo_pointerx($MW), Tkx::winfo_pointery($MW));
-  Tkx::update();
-}
-
-my $Ball = '';
-sub balloon {
-  my($wid,$text) = @_;
-
-  $wid->g_bind(
-    '<Enter>',
-    sub {
-      if ($Ball eq '') {
-	$Ball = $MW->new_toplevel();
-	$Ball->g_wm_overrideredirect(1);
-	my $x = Tkx::winfo_pointerx($MW) + 10;
-	my $y = Tkx::winfo_pointery($MW) - 30;
-	$Ball->g_wm_geometry("+$x+$y");
-	($Ball->new_ttk__label(-text => $text, -style => 'YN.TLabel'))->g_pack();
-	Tkx::update_idletasks();
-	$Ball->g_raise();
-	Tkx::after(1000, sub{$Ball = $Ball->g_destroy() if ($Ball ne '');});
-      }
-    });
-  $wid->g_bind('<Leave>', sub {$Ball = $Ball->g_destroy() if ($Ball ne '');});
-}
-
 sub viewElog {
   if (-e ERRLOG) {
     if (-z ERRLOG) {
@@ -541,7 +476,9 @@ sub viewRelNt {
 sub viewFile {
   my($fn) = shift;
 
-  my($top,$frm) = popWin(0, $fn);
+  my $pop = CP::Pop->new(0, '.vf', $fn);
+  return if ($pop eq '');
+  my($top,$frm) = ($pop->{top}, $pop->{frame});
 
   my $tf = $frm->new_ttk__frame();
   $tf->g_pack(qw/-side top -expand 1 -fill both/);
@@ -572,7 +509,7 @@ sub viewFile {
 
   my $bp = $bf->new_ttk__button(-text => "Print", -command => sub{printFile($fn)} );
   $bp->g_pack(qw/-side left -padx 40 -pady 8/);
-  my $bc = $bf->new_ttk__button(-text => "Close", -command => sub{$top->g_destroy();});
+  my $bc = $bf->new_ttk__button(-text => "Close", -command => sub{$pop->destroy()});
   $bc->g_pack(qw/-side right -padx 40 -pady 8/);
 
   open(FH, "<", "$fn");

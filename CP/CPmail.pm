@@ -33,6 +33,11 @@ sub cpmail {
     message(SAD, "Sorry, only know how to send Mail using\n  osascript and the Mail.app");
     return(0);
   }
+
+  my $pop = CP::Pop->new(0, '.ma', 'Mailer', Tkx::winfo_rootx($MW), Tkx::winfo_rooty($MW));
+  return if ($pop eq '');
+  my($top,$wt) = ($pop->{top}, $pop->{frame});
+
   my $done;
   my $type = ($files->[0] =~ /.pro$/i) ? 'ChordPro' : 'PDF';
   my $SMTP = {
@@ -64,11 +69,10 @@ sub cpmail {
       $SMTP->{password} = RC4($key, $decoded);
     }
   }
-  my($top,$wt) = popWin(0, 'Mailer', Tkx::winfo_rootx($MW), Tkx::winfo_rooty($MW));
 
   if ($SMTP->{server} eq '') {
     if (get_smtp($SMTP) == 0) {
-      $top->g_destroy();
+      $pop->destroy();
       return(0);
     }
     save_smtp($SMTP);
@@ -76,7 +80,7 @@ sub cpmail {
 
   if ($SMTP->{server} eq '') {
     message(SAD, "You need a Mail Server to send the mail to!");
-    $top->g_destroy();
+    popDestroy($top);
     return(0);
   }
 
@@ -175,7 +179,7 @@ sub cpmail {
 	unless (open OFH, ">$body") {
 	  errorPrint("Couldn't create Mail Body file '$body': $!");
 	  $SMTP = {};
-	  $top->g_destroy();
+	  $pop->destroy();
 	  return($ret);
 	}
 	print OFH $txt;
@@ -191,15 +195,18 @@ sub cpmail {
       $SMTP = {};
     }
   }
-  $top->g_destroy();
+  $pop->destroy();
   $ret;
 }
 
 sub get_smtp {
   my($SMTP) = shift;
 
+  my $pop = CP::Pop->new(0, '.ms', 'Mailer', Tkx::winfo_rootx($MW), Tkx::winfo_rooty($MW));
+  return if ($pop eq '');
+  my($top,$wt) = ($pop->{top}, $pop->{frame});
+
   my $done = '';
-  my($top,$wt) = popWin(0, 'Mail Server', Tkx::winfo_pointerx($MW), Tkx::winfo_pointery($MW)-100);
 
   my $tf = $wt->new_ttk__frame(qw/-relief raised -borderwidth 2/);
   $tf->g_pack(qw/-side top -expand 1 -fill x/, -pady => [0,2]);
@@ -268,7 +275,7 @@ sub get_smtp {
   $ok->g_pack(qw/-side right -padx 30/);
 
   Tkx::vwait(\$done);
-  $top->g_destroy();
+  $pop->destroy();
   if ($done eq "OK") {
     if ($SMTP->{server} ne '' && $SMTP->{username} ne '') {
       save_smtp($SMTP);

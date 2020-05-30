@@ -14,7 +14,7 @@ BEGIN {
   use FindBin 1.51 qw( $RealBin );
   use lib (($^O =~ /win32/i) ? $RealBin : ($^O =~ /darwin/i) ? '/Applications/Chordy.app/lib' : '/usr/local/lib/Chordy');
   if ($^O =~ /win32/i) {
-    $ENV{PATH} = "D:\\Tcl\\bin;$ENV{PATH}";
+    $ENV{PATH} = "C:\\Program Files\\Chordy\\Tcl\\bin;$ENV{PATH}";
   }
 }
 

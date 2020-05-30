@@ -4,12 +4,10 @@ use CP::Global qw/:FUNC :XPM/;
 use CP::Help;
 
 sub help {
-  my($win) = shift;
-
-  if ($win eq '') {
-    makeImage("checkbox", \%XPM);
-    $win = CP::Help->new("Chordy Help");
-    $win->add(
+  makeImage("checkbox", \%XPM);
+  my $win = CP::Help->new("Chordy Help");
+  return if ($win eq '');
+  $win->add(
 [
  "<O TO:H: Chordy > ",
  "Takes a standard(ish) ChordPro text file and converts it to a PDF file with the chords arranged above the lines of lyrics. Chordy can also transpose the music key, either permanently or just for the current PDF creation.",
@@ -301,9 +299,7 @@ sub help {
  "<c     Some lyrics, Lots more lyrics>\n",
  "The spec. for ChordPro defines quite a number of directives that can be embedded in the ChordPro file. This app only handles a specific subset of the directives but it provides extra functionality over the basic set. Most (but not all) directives have a short and a long form shown as <s {short|long: ...}>. Each directive must appear as the first (and only) text on any given line. You can embed comments into a ChordPro file by placing a '#' as the first character on a line followed by any text. This text will not appear on any output created using the ChordPro file.\n\n",
 ]);
-  }
   $win->show();
-  $win;
 }
 
 1;

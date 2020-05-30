@@ -15,6 +15,7 @@ use warnings;
 use Tkx;
 use CP::Cconst qw(:OS :LENGTH :PDF :MUSIC :TEXT :SHFL :INDEX :BROWSE :SMILIE :COLOUR);
 use CP::Global qw/:FUNC :OPT :WIN :XPM :MEDIA :CHORD/;
+use CP::Pop qw/:MENU :POP/;
 use CP::Win;
 use CP::Collection;
 use CP::Cmnd;
@@ -33,6 +34,7 @@ use FileHandle;
 use File::Basename;
 
 our $Ed = {};
+our $IsPro = 0;
 our $Done;
 our $helpWin = '';
 our $TempPath = '';
@@ -232,12 +234,11 @@ sub new {
   $gotob->g_grid(qw/-row 0 -column 1 -rowspan 2 -pady 2 -sticky e/, -padx => [20,2]);
   $gotoe->g_grid(qw/-row 0 -column 2 -rowspan 2 -pady 2 -sticky w/, -padx => [2,8]);
 
-  CORE::state $helpWin = '';
   my $help = $counter_frame->new_ttk__button(
     -text => 'Help',
     -width => 5,
     -style => 'Green.TButton',
-    -command => sub{$helpWin = CP::HelpEd::help($helpWin)} );
+    -command => [\&CP::HelpEd::help] );
   $help->g_grid(qw/-row 0 -column 3 -rowspan 2 -padx 4 -sticky e/);
   $counter_frame->g_grid_columnconfigure(3, -weight => 1);
 
@@ -303,7 +304,10 @@ sub Edit {
   }
 
   update_indicators();
-  $Ed->{leftFrame}->g_pack_forget() if (defined $unpck);
+  if (defined $unpck) {
+    $Ed->{leftFrame}->g_pack_forget();
+    $Ed->{menuFrame}->g_grid_forget();
+  }
   $Ed->{Top}->g_wm_deiconify();
   $Ed->{Top}->g_raise();
   $Ed->{TxtWin}->mark_set('insert', '1.0');
@@ -323,7 +327,10 @@ sub Edit {
     $Ed->{Top}->g_destroy();
     exit(0);
   }
-  $Ed->{leftFrame}->g_pack(qw/-side left -expand 0 -fill y/) if (defined $unpck);
+  if (defined $unpck) {
+    $Ed->{leftFrame}->g_pack(qw/-side left -expand 0 -fill y/);
+    $Ed->{menuFrame}->g_grid(qw/-row 0 -column 1/);
+  }
   $Ed->{Top}->g_wm_withdraw();
   Tkx::update_idletasks();
   return($Done);
@@ -366,10 +373,10 @@ sub quickButtons {
     ['Undo',       'un_do',       'Undo'],
     ['Redo',       're_do',       'Redo'],
     ['settags',    'setTags',     'Reformat Buffer'],
-    ['chordL',     'MC -1c',  'Move Chord Left'],
-    ['chordR',     'MC +1c',  'Move Chord Right'],
-    ['chordU',     'MC -1l',  'Move Chord Up'],
-    ['chordD',     'MC +1l',  'Move Chord Down'],
+    ['chordL',     'MC -1c',      'Move Chord Left'],
+    ['chordR',     'MC +1c',      'Move Chord Right'],
+    ['chordU',     'MC -1l',      'Move Chord Up'],
+    ['chordD',     'MC +1l',      'Move Chord Down'],
     ['Find',       'Find',        'Find'],
     ['FindNext',   'FindNext',    'Find next'],
     ['FindPrev',   'FindPrev',    'Find prev'],
@@ -404,10 +411,13 @@ sub quickButtons {
 
   my $a2cp = $Ed->{Top}->new_ttk__button(-text => 'Text to ChordPro', -command => \&text2cp);
 
-  my $rfrm = $frame->new_ttk__frame(-padding => [4,0,4,0]);
-  $rfrm->g_pack(qw/-side right/);
   my $lfrm = $frame->new_ttk__frame(-padding => [0,0,4,0]);
-  $lfrm->g_pack(qw/-side right/);
+  $lfrm->g_grid(qw/-row 0 -column 0/);
+  my $mfrm = $frame->new_ttk__frame(-padding => [4,0,4,0]);
+  $mfrm->g_grid(qw/-row 0 -column 1/);
+  $Ed->{menuFrame} = $mfrm;
+  my $rfrm = $frame->new_ttk__frame(-padding => [4,0,4,0]);
+  $rfrm->g_grid(qw/-row 0 -column 2/);
 
   my $ignc = $frame->new_ttk__checkbutton(-text => " Ignore\n Case", -variable => \$Ed->{IgnCase});
 
@@ -421,17 +431,18 @@ sub quickButtons {
     $repl = $frame->new_ttk__label(-text => 'Replace with:');
     $repe = $frame->new_ttk__entry(-width => 10, -textvariable => \$Ed->{RepV});
   }
-  $findl->g_grid(          -in => $rfrm, qw/-row 0 -column 0 -pady 2 -sticky e/, -padx => [0,2]);
-  $finde->g_grid(          -in => $rfrm, qw/-row 0 -column 1 -pady 2 -sticky w/, -padx => [0,4]);
-  $but{Find}->g_grid(      -in => $rfrm, qw/-row 0 -column 2 -padx 4 -pady 2/);
-  $but{FindNext}->g_grid(  -in => $rfrm, qw/-row 0 -column 3 -padx 4 -pady 2/);
-  $but{FindPrev}->g_grid(  -in => $rfrm, qw/-row 0 -column 4 -padx 4 -pady 2/);
-  $ignc->g_grid(           -in => $rfrm, qw/-row 0 -column 5 -columnspan 2 -sticky w/, -padx => [8,0]);
+  $but{exit}->g_grid(      -in => $rfrm, qw/-row 0 -column 0 -padx 12 -pady 2/);
+  $findl->g_grid(          -in => $rfrm, qw/-row 0 -column 1 -pady 2 -sticky e/, -padx => [0,2]);
+  $finde->g_grid(          -in => $rfrm, qw/-row 0 -column 2 -pady 2 -sticky w/, -padx => [0,4]);
+  $but{Find}->g_grid(      -in => $rfrm, qw/-row 0 -column 3 -padx 4 -pady 2/);
+  $but{FindNext}->g_grid(  -in => $rfrm, qw/-row 0 -column 4 -padx 4 -pady 2/);
+  $but{FindPrev}->g_grid(  -in => $rfrm, qw/-row 0 -column 5 -padx 4 -pady 2/);
+  $ignc->g_grid(           -in => $rfrm, qw/-row 0 -column 6 -columnspan 2 -sticky w/, -padx => [8,0]);
   if (OS ne 'aqua') {
-    $repl->g_grid(           -in => $rfrm, qw/-row 1 -column 0 -pady 2 -sticky e/, -padx => [0,2]);
-    $repe->g_grid(           -in => $rfrm, qw/-row 1 -column 1 -pady 2 -sticky w/, -padx => [0,4]);
-    $but{Replace}->g_grid(   -in => $rfrm, qw/-row 1 -column 2 -padx 4 -pady 2/);
-    $but{ReplaceAll}->g_grid(-in => $rfrm, qw/-row 1 -column 3 -padx 4 -pady 2/);
+    $repl->g_grid(           -in => $rfrm, qw/-row 1 -column 1 -pady 2 -sticky e/, -padx => [0,2]);
+    $repe->g_grid(           -in => $rfrm, qw/-row 1 -column 2 -pady 2 -sticky w/, -padx => [0,4]);
+    $but{Replace}->g_grid(   -in => $rfrm, qw/-row 1 -column 3 -padx 4 -pady 2/);
+    $but{ReplaceAll}->g_grid(-in => $rfrm, qw/-row 1 -column 4 -padx 4 -pady 2/);
   }
 
   $spcl->g_grid(          -in => $lfrm, qw/-row 0 -column 0 -pady 2 -sticky e/, -padx => [0,2]);
@@ -446,11 +457,11 @@ sub quickButtons {
   $but{saveAs}->g_grid(   -in => $lfrm, qw/-row 0 -column 7         -pady 2 -padx/ => [2,8]);
   $but{text}->g_grid(     -in => $lfrm, qw/-row 0 -column 8 -padx 2 -pady 2/);
   $but{textsize}->g_grid( -in => $lfrm, qw/-row 0 -column 9 -padx 2 -pady 2/);
-  $but{textfg}->g_grid(   -in => $lfrm, qw/-row 0 -column 10 -padx 2 -pady 2/);
-  $but{textbg}->g_grid(   -in => $lfrm, qw/-row 0 -column 11         -pady 2 -padx/ => [2,8]);
-  $but{chordL}->g_grid(   -in => $lfrm, qw/-row 0 -column 12 -padx 2 -pady 2/);
-  $but{chordR}->g_grid(   -in => $lfrm, qw/-row 0 -column 13 -padx 2 -pady 2/);
-  $but{exit}->g_grid(     -in => $lfrm, qw/-row 0 -column 14 -padx 12 -pady 2/);
+  $but{textfg}->g_grid(   -in => $mfrm, qw/-row 0 -column 0 -padx 2 -pady 2/);
+  $but{textbg}->g_grid(   -in => $mfrm, qw/-row 0 -column 1         -pady 2 -padx/ => [2,8]);
+  $but{chordL}->g_grid(   -in => $mfrm, qw/-row 0 -column 2 -padx 2 -pady 2/);
+  $but{chordR}->g_grid(   -in => $mfrm, qw/-row 0 -column 3 -padx 2 -pady 2/);
+#  $but{exit}->g_grid(     -in => $lfrm, qw/-row 0 -column 14 -padx 12 -pady 2/);
 
   $but{cut}->g_grid(      -in => $lfrm, qw/-row 1 -column 2 -padx 2 -pady 2/);
   $but{copy}->g_grid(     -in => $lfrm, qw/-row 1 -column 3 -padx 2 -pady 2/);
@@ -460,9 +471,9 @@ sub quickButtons {
   $but{Unselect}->g_grid( -in => $lfrm, qw/-row 1 -column 7 -padx 2 -pady 2 -padx/ => [2,8]);
   $but{Undo}->g_grid(     -in => $lfrm, qw/-row 1 -column 8 -padx 2 -pady 2/);
   $but{Redo}->g_grid(     -in => $lfrm, qw/-row 1 -column 9 -padx 2 -pady 2/);
-  $but{settags}->g_grid(  -in => $lfrm, qw/-row 1 -column 11         -pady 2 -padx/ => [2,8]);
-  $but{chordU}->g_grid(   -in => $lfrm, qw/-row 1 -column 12 -padx 2 -pady 2/);
-  $but{chordD}->g_grid(   -in => $lfrm, qw/-row 1 -column 13 -padx 2 -pady 2/);
+  $but{settags}->g_grid(  -in => $mfrm, qw/-row 1 -column 1         -pady 2 -padx/ => [2,8]);
+  $but{chordU}->g_grid(   -in => $mfrm, qw/-row 1 -column 2 -padx 2 -pady 2/);
+  $but{chordD}->g_grid(   -in => $mfrm, qw/-row 1 -column 3 -padx 2 -pady 2/);
 }
 
 sub text2cp {
@@ -807,7 +818,8 @@ sub update_indicators {
 
 #
 # fileOpen() allows you to open ANY file from ANYWHERE
-# but it will always be written to the TempPath folder.
+# but it will always be written to the TempPath folder
+# as a .pro file.
 #
 my $Ftypes = [['ChordPro Files', '.pro'],
 	      ['All Files', '*']];
@@ -820,11 +832,11 @@ sub fileOpen {
     -filetypes => $Ftypes);
   if ($fn ne '') {
     my($fln,$flp) = fileparse($fn);
-    $flp = "$Path->{Pro}/$fln";;
+    (my $title = $fln) =~ s/\.[^\.]+$//;
+    $flp = "$Path->{Pro}/${title}.pro";;
     if (! -e "$flp") {
       open OFH, ">", "$flp";
-      (my $t = $fln) =~ s/\.pro$//;
-      print OFH "{title:$t}\n";
+      print OFH "{title:$title}\n";
       close OFH;
     }
     Open($flp);
@@ -971,6 +983,7 @@ sub Open {
   $Ed->{TxtWin}->edit_modified(0);
   view('1.0');
   update_indicators();
+  $IsPro = ($Ed->{FileName} =~ /.pro$/);
   return(1);
 }
 
@@ -988,11 +1001,10 @@ sub Save {
   my($fn) = shift;
 
   my $text = $Ed->{TxtWin}->get('1.0', 'end');
-  my @lines = split(/^/, $text);
-  while ($lines[-1] =~ /^[\r\n\s]+$/) {
-    pop(@lines);
-  }
-  $text = join('', @lines);
+  my $pm = $/;
+  $/ = '';
+  chomp($text);
+  $/ = $pm;
   write_file("$TempPath/$fn", $text);
   $Ed->{TxtWin}->edit_modified(0);
   $Saved++;
@@ -1008,17 +1020,12 @@ sub Include {
   $Ed->{TxtWin}->edit_modified(1);
 }
 
-my $about_pop_up_reference;
 sub about_pop_up {
-  my $name = ref($about_pop_up_reference);
-  if (defined($about_pop_up_reference)) {
-    $about_pop_up_reference->g_raise();
-    $about_pop_up_reference->g_focus();
-  }
-  else {
-    my($pop,$fr) = popWin(0, 'About');
+  my $pop = CP::Pop->new(0, '.ap', 'About');
+  return if ($pop eq '');
+  my($top,$fr) = ($pop->{top}, $pop->{frame});
 
-    my $txt = <<EOF;
+  my $txt = <<EOF;
 This was Gedi (Gregs EDItor) Ver. 1.0
 Copyright 1999 Greg London
 All Rights Reserved.
@@ -1033,19 +1040,12 @@ for use with Chordy running under Tkx.
 Not much (if any) of the original
 code survives :-)
 EOF
-    my $tl = $fr->new_ttk__label(-text => $txt, -justify => 'center');
-    $tl->g_pack();
+  my $tl = $fr->new_ttk__label(-text => $txt, -justify => 'center');
+  $tl->g_pack();
 
-    my $ok = $fr->new_ttk__button(
-      -text=>'OK',
-      -command => sub {
-	$pop->g_destroy();
-	$about_pop_up_reference = undef;
-      });
-    $ok->g_pack();
-    $pop->g_wm_resizable('no','no');
-    $about_pop_up_reference = $pop;
-  }
+  my $ok = $fr->new_ttk__button(-text=>'OK', -command => sub {$pop->destroy()});
+  $ok->g_pack();
+  $top->g_wm_resizable('no','no');
 }
 
 sub ichord {

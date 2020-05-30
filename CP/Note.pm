@@ -672,13 +672,13 @@ sub noteXY {
 Tkx::package_require('img::window');
 our $Nmw = 0;
 our $Ncan;
-our %Images;
+our %Imgs;
 
 sub cNote {
   my($fr,$fnt,$clr,$tag) = @_;
 
   my $nimg = "$tag$fr";
-  if (! defined $Images{$nimg}) {
+  if (! defined $Imgs{$nimg}) {
     my $h = ($fnt eq $Tab->{enoteFont}) ? $Tab->{enoteSize} : $Tab->{noteSize};
     my $w = Tkx::font_measure($fnt, $fr);
     if ($Nmw == 0) {
@@ -723,7 +723,7 @@ sub cNote {
     $subr = 'Tkx::'.$nimg.'_redither';
     &$subr();
     Tkx::image_delete('tmp');
-    $Images{$nimg} = $nimg;
+    $Imgs{$nimg} = $nimg;
 #    $Nmw->g_wm_withdraw();
   }
   $nimg;

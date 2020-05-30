@@ -18,15 +18,18 @@ use Tkx;
 
 sub new {
   my($proto,$title) = @_;
-  my $class = ref($proto) || $proto;
 
+  my $class = ref($proto) || $proto;
   my $self = {};
   bless $self, $class;
 
   $self->{mark} = {};
-  my($win,$tf) = popWin(0, $title, Tkx::winfo_rootx($MW) + 10, Tkx::winfo_rooty($MW) + 10);
+  my $pop = CP::Pop->new(0, '.hp', $title, Tkx::winfo_rootx($MW) + 10, Tkx::winfo_rooty($MW) + 10);
+  return('') if ($pop eq '');
+  my($win,$tf) = ($pop->{top}, $pop->{frame});
+
   $self->{win} = $win;
-  $win->g_wm_protocol('WM_DELETE_WINDOW' => sub{$win->g_wm_withdraw()} );
+  $win->g_wm_protocol('WM_DELETE_WINDOW' => sub{$pop->destroy()} );
 
   my $textf = $tf->new_ttk__frame();
   $textf->g_pack(qw/-side top -expand 1 -fill both/);
@@ -48,7 +51,7 @@ sub new {
   my $bf = $tf->new_ttk__frame();
   $bf->g_pack(qw/-side bottom -fill x/);
 
-  my $bc = $bf->new_ttk__button(-text => "Close", -command => sub{$win->g_wm_withdraw()});
+  my $bc = $bf->new_ttk__button(-text => "Close", -command => sub{$pop->destroy()});
   $bc->g_pack(qw/-side left -padx 30 -pady 4/);
 
   my $bt = $bf->new_ttk__button(-text => " Top ", -command => sub{$self->{text}->see("1.0")});

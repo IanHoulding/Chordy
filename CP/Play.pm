@@ -23,6 +23,7 @@ BEGIN {
   }
 }
 
+use CP::Pop qw/:MENU/;
 use CP::Tab;
 use CP::Bar;
 

@@ -15,6 +15,7 @@ use warnings;
 use Tkx;
 use CP::Cconst qw/:OS :PATH :SMILIE :COLOUR/;
 use CP::Global qw/:FUNC :OPT :WIN :XPM :CHORD/;
+use CP::Pop qw/:POP :MENU/;
 use CP::Collection;
 use CP::Cmnd;
 use CP::Path;
@@ -54,8 +55,7 @@ my $Dot = int($Pitch / 3);    # 'dot' inlay radius
 sub CHedit {
   my($what) = @_; # Currently either 'Save' or 'Define'
 
-  # Create MainWindow first to handle X11 options.
-  my $sa = 0;
+  my $standAlone = 0;
   my $done = '';
   if (defined $MW && Tkx::winfo_exists($MW)) {
     $Top = $MW->new_toplevel();
@@ -68,7 +68,7 @@ sub CHedit {
     $Opt = CP::Opt->new();
     CP::Win::init();
     $Top = $MW;
-    $sa++;
+    $standAlone++;
   }
   makeImage("Eicon", \%XPM);
 
@@ -143,7 +143,7 @@ sub CHedit {
       -text    => 'Exit',
       -style => 'Red.TButton',
       -command => sub{
-	if ($sa) {
+	if ($standAlone) {
 	  $MW->g_destroy();
 	  exit(0);
 	} else {
@@ -155,7 +155,7 @@ sub CHedit {
       -style => 'Green.TButton',
       -command => sub{
 	save();
-	if ($sa) {
+	if ($standAlone) {
 	  $MW->g_destroy();
 	  exit(0);
 	} else {
@@ -168,7 +168,7 @@ sub CHedit {
       -text    => 'Cancel',
       -style => 'Red.TButton',
       -command => sub{
-	if ($sa) {
+	if ($standAlone) {
 	  $MW->g_destroy();
 	  exit(0);
 	} else {
@@ -187,7 +187,7 @@ sub CHedit {
 
   $Top->g_raise();
 
-  if ($sa == 0) {
+  if ($standAlone == 0) {
     Tkx::vwait(\$done);
     my $str = '';
     if ($done eq 'OK' && $what eq 'Define' && $Centry ne '') {
@@ -243,8 +243,6 @@ sub chordButtons {
   $row;
 }
 
-my $Pop = '';
-
 sub oneButton {
   my($frame,$row,$col,$base,$sfm,$func) = @_;
 
@@ -297,59 +295,62 @@ sub oneButton {
   $name;
 }
 
+my $Pop = '';
+
 sub popCancel {
   my($name) = shift;
 
-  if ($Pop ne '') {
+  if (CP::Pop::exists('.ch')) {
     Tkx::after_cancel($IDs{$name}) if ($IDs{$name} ne '');
-    $Pop->g_destroy();
-    $Pop = $IDs{$name} = '';
+    $Pop->destroy();
+    $IDs{$name} = '';
   }
 }
 
 sub popChords {
   my($but,$name,$func) = @_;
 
-  if ($Pop ne '') {
-    $Pop->g_raise();
+  if (CP::Pop::exists('.ch')) {
+    $Pop->{top}->g_raise();
   } elsif (@{$Groups{$name}}) {
-     if ($but->m_instate('active')) {
-       ($Pop,my $fr) = popWin(1, '', (pX()-20), (pY()-15));
-       my($row,$col) = qw/0 0/;
-       my $chord = "$name";
-       foreach my $ch (sort @{$Groups{$name}}) {
-	 my $rb = $fr->new_ttk__radiobutton(
-	   -text => $ch,
-	   -variable => \$chord,
-	   -value => $ch,
-	   -command => sub{&$func($chord);$Pop->g_destroy;$Pop = '';},
-	     );
-	 $rb->g_grid(-row => $row++, -column => $col, -sticky => 'w');
-	 if ($row == 8) {
-	   $row = 0;
-	   $col++;
-	 }
-       }
-       Tkx::update_idletasks();
-       $Pop->g_raise();
-       Tkx::after(400, \&Where);
-     } else {
-       popCancel($name);
-     }
+    if ($but->m_instate('active')) {
+      $Pop = CP::Pop->new(1, '.ch', '', (pX()-20), (pY()-15));
+      my($top,$fr) = ($Pop->{top}, $Pop->{frame});
+      my($row,$col) = qw/0 0/;
+      my $chord = "$name";
+      foreach my $ch (sort @{$Groups{$name}}) {
+	my $rb = $fr->new_ttk__radiobutton(
+	  -text => $ch,
+	  -variable => \$chord,
+	  -value => $ch,
+	  -command => sub{&$func($chord);$Pop->destroy();},
+	    );
+	$rb->g_grid(-row => $row++, -column => $col, -sticky => 'w');
+	if ($row == 8) {
+	  $row = 0;
+	  $col++;
+	}
+      }
+      Tkx::update_idletasks();
+      $top->g_raise();
+      Tkx::after(400, \&Where);
+    } else {
+      popCancel($name);
+    }
   }
 }
 
 sub Where {
-  if ($Pop ne '') {
+  if (CP::Pop::exists('.ch')) {
+    my $top = $Pop->{top};
     my $x = pX();
     my $y = pY();
-    my $Px = Tkx::winfo_x($Pop);
-    my $Py = Tkx::winfo_y($Pop);
-    my $Pw = Tkx::winfo_reqwidth($Pop);
-    my $Ph = Tkx::winfo_reqheight($Pop);
+    my $Px = Tkx::winfo_x($top);
+    my $Py = Tkx::winfo_y($top);
+    my $Pw = Tkx::winfo_reqwidth($top);
+    my $Ph = Tkx::winfo_reqheight($top);
     if ($x < $Px || $x >= ($Px + $Pw) || $y < $Py || $y >= ($Py + $Ph)) {
-      $Pop->g_destroy();
-      $Pop = '';
+      $Pop->destroy();
     } else {
       Tkx::after(400, \&Where);
     }

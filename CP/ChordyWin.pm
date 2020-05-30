@@ -12,9 +12,10 @@ package CP::ChordyWin;
 use strict;
 use warnings;
 
+use Tkx;
 use CP::Cconst qw/:OS :LENGTH :TEXT :SHFL :INDEX :PDF :BROWSE :SMILIE :COLOUR/;
 use CP::Global qw(:FUNC :VERS :PATH :OPT :PRO :SETL :XPM :WIN :MEDIA);
-use Tkx;
+use CP::Pop qw /:MENU/;
 use CP::CHedit;
 use CP::FgBgEd;
 use CP::List;
@@ -68,11 +69,10 @@ sub chordyDisplay {
     -style => 'Green.TButton',
     -command => sub{message(SMILE, "Version $Version\nian\@houlding.me.uk");});
 
-  CORE::state $helpWin = '';
   my $help = $butf->new_ttk__button(
     -text => 'Help',
     -style => 'Green.TButton',
-    -command => sub{$helpWin = CP::HelpCh::help($helpWin)} );
+    -command => [\&CP::HelpCh::help] );
 
   my $ext = $butf->new_ttk__button(
     -text => 'Exit',

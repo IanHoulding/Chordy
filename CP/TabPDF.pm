@@ -121,13 +121,17 @@ sub newTextGfx {
 }
 
 sub batch {
+  my $pop = CP::Pop->new(0, '.bp', 'Batch PDF');
+  return if ($pop eq '');
+  my($top,$frm) = ($pop->{top}, $pop->{frame});
+
   my $done = '';
   my $x = Tkx::winfo_pointerx($MW);
   my $y = Tkx::winfo_pointery($MW);
   my @files = CP::Browser->new($MW, FILE, $Path->{Tab}, '.tab');
   return if (@files == 0);
   my $pl = (@files > 1) ? 's' : '';
-  my($top,$frm) = popWin(0, 'Batch DPF', $x, $y);
+
   my $lab = $frm->new_ttk__label(
     -text => "The following tab$pl will have a PDF created:",
     -font => 'BTkDefaultFont');
@@ -178,7 +182,7 @@ sub batch {
     CP::Cmsg::position($x,$y);
     message(SMILE, " Done ", -1);
   }
-  $top->g_destroy();
+  $pop->destroy();
 }
 
 sub textConf {

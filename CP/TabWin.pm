@@ -24,6 +24,7 @@ use strict;
 use Tkx;
 use CP::Cconst qw/:OS :SHFL :TEXT :SMILIE :COLOUR :TAB :PLAY/;
 use CP::Global qw/:FUNC :VERS :OPT :WIN :XPM :CHORD :SCALE/;
+use CP::Pop qw/:POP :MENU/;
 use CP::Tab;
 use CP::Offset;
 use CP::Cmsg;
@@ -99,7 +100,9 @@ sub pageWindow {
 #
 sub editWindow {
   if ($Tab->{eWin} eq '') {
-    ($Tab->{eWin}, my $outer) = popWin(0, 'Bar Editor', 10, 10);
+    my $pop = CP::Pop->new(0, '.be', 'Bar Editor', 10, 10);
+    ($Tab->{eWin}, my $outer) = ($pop->{top}, $pop->{frame});
+
     $Tab->{eWin}->g_wm_protocol('WM_DELETE_WINDOW', sub{$EditBar->Cancel()});
     $outer->g_pack(qw//);
     $Tab->{eWin}->g_wm_withdraw();
@@ -224,9 +227,8 @@ sub menu_buttons {
   my $botF = $frame->new_ttk__frame(qw/-relief raised -borderwidth 2/, -padding => 0);
   $botF->g_pack(qw/-side bottom/);
 
-  CORE::state $helpWin = '';
   foreach my $t (['About', 'Show Version', sub{showVersion()}, 0,0,1,1],
-		 ['Help',  'Tab Help', sub{$helpWin=CP::HelpTab::help($helpWin)}, 1,0,1,1] ) {
+		 ['Help',  'Tab Help', [\&CP::HelpTab::help], 1,0,1,1] ) {
     oneMbutton($botF, @{$t});
   }
 }

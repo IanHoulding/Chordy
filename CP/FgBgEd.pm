@@ -16,6 +16,7 @@ use POSIX;
 
 use CP::Global qw/:FUNC :OPT :WIN :XPM/;
 use CP::Cconst qw/:COLOUR :SMILIE/;
+use CP::Pop qw/:POP/;
 use CP::Cmsg;
 use CP::List;
 use CP::Swatch;
@@ -29,9 +30,12 @@ sub new {
   my $class = ref($proto) || $proto;
   my $self = {};
 
-  my($FBE,$fr) = popWin(0, 'Colour Editor', Tkx::winfo_rootx($MW), Tkx::winfo_rooty($MW));
+  my $pop = CP::Pop->new(0, '.ce', 'Colour Editor', Tkx::winfo_rootx($MW), Tkx::winfo_rooty($MW));
+  return if ($pop eq '');
+  my($FBE,$fr) = ($pop->{top}, $pop->{frame});
+
   makeImage("colour", \%XPM);
-  $FBE->g_wm_protocol('WM_DELETE_WINDOW', sub{$self->{'done'} = 'Cancel';});
+  $FBE->g_wm_protocol('WM_DELETE_WINDOW', sub{$pop->destroy();$self->{'done'} = 'Cancel';});
   $FBE->g_wm_withdraw();
 
   foreach my $c (keys %Colour) {

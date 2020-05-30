@@ -152,6 +152,8 @@ sub save {
   close($OFH);  
 }
 
+# Save the Entry/List/Menu etc. FG and BG to all Collections.
+#
 sub saveClr2all {
   my($self) = shift;
 

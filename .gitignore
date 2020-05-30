@@ -1,6 +1,7 @@
 *~
 *.exe
 *.iss
+AppVersion.pl
 Makefile
 bin/**
 build/**

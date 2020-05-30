@@ -4,12 +4,10 @@ use CP::Global qw/:FUNC :XPM/;
 use CP::Help;
 
 sub help {
-  my($win) = shift;
-
-  if ($win eq '') {
-    makeImage("checkbox", \%XPM);
-    $win = CP::Help->new("Chordy Help");
-    $win->add(
+  my $win = CP::Help->new("Tab Help");
+  return if ($win eq '');
+  makeImage("checkbox", \%XPM);
+  $win->add(
 [
  "<O TO:H:Tab Editor>",
  "\nMy first pass at writing a Tab editor.\nAt some point I'll get round to writing the help section in full :)\n\nThe editor is split vertically with the the left panel holding a series of buttons to manage Tab files, a centre panel to display what the final PDF page will look like (more or less) and a right panel to handle editing and Tab options. The PDF page is not editable directly (except for lyrics) but individual bars can be selected for editing at which point an edit window will pop into existance.\n",
@@ -78,14 +76,14 @@ sub help {
  "<O CE:S:Colour Editor>",
  "<V 5>",
 ]);
-    if (OS eq "win32") {
-      $win->add(
+  if (OS eq "win32") {
+    $win->add(
 [
  "<O TP:S:\nTab Player> ",
 ]);
-    }
-    $win->add(
-[
+  }
+  $win->add(
+    [
  "<O ES:S:Edit Window>",
  "<V 5>",
  "<O EB:S:Edit Buttons>",
@@ -262,18 +260,17 @@ sub help {
  "Below the sliders is an entry area where you can modify the Hex values for a given colour. If a colour matches one of those listed on the left, that name will appear in this entry box.\n",
  "Below this are three buttons which give you quick access to the current Chorus, Highlight and Comment colours.",
  "The \"My Colours\" box gives you the ability to mix and save 16 different colours you might want to use on a regular basis. Clicking on one of the 16 buttons will set that fore/back-ground colour. If you then change the colour with the sliders, you can change the selected colour swatch with the <R Set Colour> button. These colours are only saved if you hit the <R OK> button.\n",
-]);
-    if (OS eq "win32") {
-      $win->add(
-[
+    ]);
+  if (OS eq "win32") {
+    $win->add(
+      [
  "<T TP><H Tab Player\n>",
  "<V10>",
  "Use the slider to set the tempo of the piece (beats/minute). If no start or stop bar is selected then the whole piece will be played. If just the start is selected then play will continue to the end of the piece. If both are selected then the (inclusive) bars will be played. The same applies to the 'Loop' function. If you 'Pause' play, you can continue with either the 'Play' or the 'Loop' button and play will continue in that mode.\n"
-]);
-    }
+      ]);
   }
   $win->add(
-[
+    [
  "<T ES><H Bar Edit Window\n>",
  "<V 10>",
  "  This is where all the real work happens and shows two Bars - the one on the left can be edited, the one on the right is really just there so that you can easily see what is comong next. The horizontal lines represent instrument strings - the lowest note string is at the bottom. The vertical lines (not either end of the stave) are the major beats in each bar - crotchets. The subdivisions then represent quavers, semiquavers and demisemiquavers.\nFrets/Rests are selected and placed by clicking on one of the horizontal/vertical intersections. They can then be deleted by right clicking on them or selected for moving by left clicking on them. If a Fret/Rest is selected it will turn <R red> and can then be moved to a new position by left clicking on the new position.\n",
@@ -321,10 +318,9 @@ sub help {
  "<V5>",
  "These are mainly to handle stuff other than Fret Numbers and Rests.\nPlace any text you want above the staff in the <B Header Text> box. This can be <B Left> or <B Right> justified and can have <B Volta brackets> included by selecting the appropriate button option.\nThe <B Repeat> options place a start or end Repeat sign into the Bar.\nThe <B Note Font> option lets you reduce the size of the font - useful where frets are played very close together and would otherwise overlap.\nThe <B Bar Starts New Line/Page> option does just that - it forces the Bar onto a new line or page.\n",
 
-]);
+    ]);
 
   $win->show();
-  $win;
 }
 
 1;

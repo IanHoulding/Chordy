@@ -13,7 +13,7 @@ BEGIN {
   use FindBin 1.51 qw( $RealBin );
   use lib (($^O =~ /win32/i) ? $RealBin : ($^O =~ /darwin/i) ? '/Applications/Chordy.app/lib' : '/usr/local/lib/Chordy');
   if ($^O =~ /win32/i) {
-    $ENV{PATH} = "D:\\Tcl\\bin;$ENV{PATH}";
+    $ENV{PATH} = "C:\\Program Files\\Chordy\\Tcl\\bin;$ENV{PATH}";
   }
 }
 
@@ -23,6 +23,7 @@ use PDF::API2;
 use PDF::API2::Resource::CIDFont::TrueType;
 use CP::Cconst qw(:OS :PATH :LENGTH :PDF :MUSIC :TEXT :SHFL :INDEX :BROWSE :SMILIE :COLOUR);
 use CP::Global qw/:FUNC :PATH :OPT :WIN :CHORD :SCALE :XPM/;
+use CP::Pop qw/:POP :MENU/;
 use CP::Collection;
 use CP::Path;
 use CP::Cmnd;
@@ -210,6 +211,8 @@ sub renameTab {
     rename("$Path->{Tab}/$ofn", "$Path->{Tab}/$newfn");
     $Tab->{fileName} = $newfn;
     tabTitle("$newfn");
+  } else {
+    Tkx::bell();
   }
 }
 
@@ -220,7 +223,10 @@ sub closeTab {
 }
 
 sub exportTab {
-  return if ($Tab->{loaded} == 0);
+  if ($Tab->{loaded} == 0) {
+    Tkx::bell();
+    return;
+  }
   my $dest = Tkx::tk___chooseDirectory(
     -title => "Choose Destination Folder",
     -initialdir => "$Home",);
@@ -293,11 +299,14 @@ sub mediaDefault {
 }
 
 sub fontEdit {
+  my $pop = CP::Pop->new(0, '.fo', 'Font Selector', Tkx::winfo_rootx($MW) + 10, Tkx::winfo_rooty($MW) + 10);
+  return if ($pop eq '');
+  my($top,$wt) = ($pop->{top}, $pop->{frame});
+
   my $Done;
   my $mcopy = {};
   $Media->copy($mcopy);
 
-  my($top,$wt) = popWin(0, 'Font Selector', Tkx::winfo_rootx($MW) + 10, Tkx::winfo_rooty($MW) + 10);
   $wt->m_configure(qw/-relief raised -borderwidth 2/);
 
   my $tf = $wt->new_ttk__frame(qw/-borderwidth 2 -relief ridge/, -padding => [4,4,4,4]);
@@ -328,7 +337,7 @@ sub fontEdit {
   } else {
     $mcopy->copy($Media);
   }
-  $top->g_destroy();
+  $pop->destroy();
 }
 
 sub saveOpt {
