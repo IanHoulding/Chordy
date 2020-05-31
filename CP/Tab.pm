@@ -1100,23 +1100,6 @@ sub NextPage {
   $self->newPage($self->{pageNum} + 1);
 }
 
-my $lasttop = '';
-sub topVal {
-  my($self,$val) = @_;
-
-  my $rx = dx($self->{eCan}, $val, $self->{eheadFont});
-  my $ret = 0;
-  if ($rx < ($EditBar->{offset}{width} + 10)) {
-    $lasttop = $val;
-    $ret = 1;
-  } else {
-    $val = $lasttop;
-  }
-  $EditBar->{header} = $val;
-  $EditBar->topText();
-  return($ret);
-}
-
 # select1 & select2 are Bar object refs
 # in any order and may set or not.
 # Returns Bar Objects Low,High.

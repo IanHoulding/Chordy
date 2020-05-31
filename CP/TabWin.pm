@@ -408,9 +408,9 @@ sub editBarFret {
 sub editBarOpts {
   my($frm) = @_;
 
-  my $lb1 = $frm->new_ttk__label(-text => 'Volta Bracket');
+  my $vbl = $frm->new_ttk__label(-text => 'Volta Bracket');
 
-  my $mb1 = $frm->new_ttk__button(
+  my $vbb = $frm->new_ttk__button(
     -textvariable => \$EditBar->{volta},
     -width => 7,
     -style => 'Menu.TButton',
@@ -419,15 +419,17 @@ sub editBarOpts {
 	      sub{$EditBar->volta()},
 	      [qw/None Left Center Right Both/]);
     });
-  my $lb2 = $frm->new_ttk__label(-text => 'Header Text');
-  my $ent = $frm->new_ttk__entry(
-    -width => 20,
+  my $htl = $frm->new_ttk__label(-text => 'Header Text');
+  my $hte = $frm->new_ttk__entry(
+    -width => 40,
     -validate => 'key',
-    -validatecommand => [sub{$Tab->topVal(@_)}, Tkx::Ev("%P")]);
-  $EditBar->{topEnt} = $ent;
-  $ent->configure(-invalidcommand => sub{Tkx::bell();$ent->configure(-validate => 'key');});
-  my $lb3 = $frm->new_ttk__label(-text => 'Justify -');
-  my $mb2 = $frm->new_ttk__button(
+    -validatecommand => [sub{
+      $EditBar->{header} = shift;
+      $EditBar->topText();
+      1;}, Tkx::Ev("%P")]);
+  $EditBar->{topEnt} = $hte;
+  my $jul = $frm->new_ttk__label(-text => 'Justify -');
+  my $jub = $frm->new_ttk__button(
     -textvariable => \$EditBar->{justify},
     -width => 6,
     -style => 'Menu.TButton',
@@ -436,8 +438,8 @@ sub editBarOpts {
 	      sub{$EditBar->topText()},
 	      [qw/Left Right/]);
     });
-  my $lb4 = $frm->new_ttk__label(-text => 'Repeat');
-  my $mb3 = $frm->new_ttk__button(
+  my $rel = $frm->new_ttk__label(-text => 'Repeat');
+  my $reb = $frm->new_ttk__button(
     -textvariable => \$EditBar->{rep},
     -width => 7,
     -style => 'Menu.TButton',
@@ -446,8 +448,8 @@ sub editBarOpts {
 	      sub{$EditBar->repeat()},
 	      [qw/None Start End/]);
     });
-  my $lb5 = $frm->new_ttk__label(-text => 'Note Font');
-  my $mb4 = $frm->new_ttk__button(
+  my $nfl = $frm->new_ttk__label(-text => 'Note Font');
+  my $nfb = $frm->new_ttk__button(
     -textvariable => \$Tab->{noteFsize},
     -width => 8,
     -style => 'Menu.TButton',
@@ -456,7 +458,7 @@ sub editBarOpts {
 	      undef,
 	      [qw/Normal Small/]);
     });
-  my $lb6 = $frm->new_ttk__label(-text => "Bar Starts:");
+  my $bsl = $frm->new_ttk__label(-text => "Bar Starts:");
   my $cb1 = $frm->new_ttk__checkbutton(
     -text => 'Line',
     -variable => \$EditBar->{newline},
@@ -466,20 +468,33 @@ sub editBarOpts {
     -variable => \$EditBar->{newpage},
     -command => sub{$EditBar->{newline} = 0 if ($EditBar->{newpage} == 1);});
 
-  $lb1->g_grid(qw/-row 0 -column 0 -sticky e/, -padx => [0,2],  -pady => [0,4]); #VB
-  $mb1->g_grid(qw/-row 0 -column 1 -sticky w/, -padx => [0,16], -pady => [0,4]);
-  $lb2->g_grid(qw/-row 0 -column 2 -sticky e/, -padx => [0,2],  -pady => [0,4]); #HT
-  $ent->g_grid(qw/-row 0 -column 3 -columnspan 2 -sticky w/, -padx => [0,0],  -pady => [0,4]);
-  $lb3->g_grid(qw/-row 0 -column 5 -sticky e/, -padx => [2,2],  -pady => [0,4]); #Just
-  $mb2->g_grid(qw/-row 0 -column 6 -sticky w/, -padx => [0,0],  -pady => [0,4]);
+  $vbl->g_grid(qw/-row 0 -column 0 -sticky e/, -padx => [0,2],  -pady => [0,4]);
+  $vbb->g_grid(qw/-row 0 -column 1 -sticky w/, -padx => [0,16], -pady => [0,4]);
 
-  $lb4->g_grid(qw/-row 1 -column 0 -sticky e/, -padx => [0,2],  -pady => [0,4]); #Rep
-  $mb3->g_grid(qw/-row 1 -column 1 -sticky w/, -padx => [0,16], -pady => [0,4]);
-  $lb5->g_grid(qw/-row 1 -column 2 -sticky e/, -padx => [0,2],  -pady => [0,4]); #NF
-  $mb4->g_grid(qw/-row 1 -column 3 -sticky w/, -padx => [0,0],  -pady => [0,4]);
-  $lb6->g_grid(qw/-row 1 -column 4 -sticky e/); # Bar Starts
-  $cb1->g_grid(qw/-row 1 -column 5/);
-  $cb2->g_grid(qw/-row 1 -column 6 -sticky w/);
+  $rel->g_grid(qw/-row 1 -column 0 -sticky e/, -padx => [0,2],  -pady => [0,4]);
+  $reb->g_grid(qw/-row 1 -column 1 -sticky w/, -padx => [0,16], -pady => [0,4]);
+
+  $nfl->g_grid(qw/-row 2 -column 0 -sticky e/, -padx => [0,2],  -pady => [0,4]);
+  $nfb->g_grid(qw/-row 2 -column 1 -sticky w/, -padx => [0,0],  -pady => [0,4]);
+
+
+  $htl->g_grid(qw/-row 0 -column 2 -sticky e/, -padx => [0,2],  -pady => [0,4]);
+  $hte->g_grid(qw/-row 0 -column 3 -columnspan 3 -sticky w/, -padx => [0,0],  -pady => [0,4]);
+
+  $jul->g_grid(qw/-row 1 -column 4 -sticky e/, -padx => [2,2],  -pady => [0,4]);
+  $jub->g_grid(qw/-row 1 -column 5 -sticky w/, -padx => [0,0],  -pady => [0,4]);
+
+  $bsl->g_grid(qw/-row 1 -column 2 -rowspan 2 -sticky e/); # Bar Starts
+  $cb1->g_grid(qw/-row 1 -column 3 -sticky sw/);
+  $cb2->g_grid(qw/-row 2 -column 3 -sticky nw/);
+}
+
+sub topVal {
+  my($val) = shift;
+
+  $EditBar->{header} = $val;
+  $EditBar->topText();
+  return(1);
 }
 
 sub shiftOpt {
@@ -519,14 +534,16 @@ sub shiftOpt {
 
   my $cb4 = $frm->new_ttk__checkbutton(-variable => \$Opt->{Refret});
 
-  $lb1->g_grid(qw/-row 0 -column 0 -sticky e/, -padx => [4,0], -pady => [0,4]);
-  $me1->g_grid(qw/-row 0 -column 1 -sticky w/, -padx => [2,2], -pady => [0,4]);
-  $bu1->g_grid(qw/-row 0 -column 2 -sticky w/, -padx => [4,0], -pady => [0,4]);
-  $lb2->g_grid(qw/-row 0 -column 3 -sticky e/, -padx => [16,0], -pady => [0,4]);
-  $bu2->g_grid(qw/-row 0 -column 4 -sticky e/, -padx => [2,2], -pady => [0,4]);
-  $bu3->g_grid(qw/-row 0 -column 5 -sticky e/, -padx => [4,0], -pady => [0,4]);
-  $lb4->g_grid(qw/-row 1 -column 0 -sticky e/, -padx => [4,0], -pady => [0,4]);
-  $cb4->g_grid(qw/-row 1 -column 1/,           -padx => [4,0], -pady => [0,4]);
+  $lb1->g_grid(qw/-row 0 -column 0 -columnspan 2/, -padx => [8,4], -pady => [0,4]);
+  $me1->g_grid(qw/-row 1 -column 0 /,              -padx => [8,2], -pady => [0,4]);
+  $bu1->g_grid(qw/-row 1 -column 1 /,              -padx => [2,4], -pady => [0,4]);
+
+  $lb2->g_grid(qw/-row 0 -column 3 -columnspan 2/, -padx => [8,4], -pady => [0,4]);
+  $bu2->g_grid(qw/-row 1 -column 3 /,              -padx => [8,2], -pady => [0,4]);
+  $bu3->g_grid(qw/-row 1 -column 4 /,              -padx => [2,4], -pady => [0,4]);
+
+  $lb4->g_grid(qw/-row 2 -column 0 -columnspan 2 -sticky e/, -padx => [8,0], -pady => [0,4]);
+  $cb4->g_grid(qw/-row 2 -column 2 -sticky w/,           -padx => [4,0], -pady => [0,4]);
 }
 
 sub transCmnd {
