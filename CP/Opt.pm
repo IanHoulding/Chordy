@@ -89,7 +89,6 @@ sub default {
   $self->{SharpFlat}   = SHARP;
   $self->{SortBy}      = 'Alphabetical';
   $self->{StaffSpace}  = 10;
-  $self->{Timing}      = '4/4';
   $self->{Together}    = 1;
   $self->{UseBold}     = 1;
   $self->{WinBG}       = MWBG;
@@ -113,11 +112,6 @@ sub load {
       # Legacy change.
       $self->{EditScale} = $self->{Scale};
       delete($self->{Scale});
-      $version = 0;
-    }
-    # Another legacy fix :(
-    if (length($self->{Timing}) == 1) {
-      $self->{Timing} .= '/4';
       $version = 0;
     }
     if ("$version" ne "$Version") {

@@ -105,7 +105,7 @@ sub setRate {
 sub note {
   $AfterID = Tkx::after(int(7500/$Tab->{tempo}), \&note); # Same as: 600000/($Tab->{tempo}*8)
   if ($Tab->{play} == PLAY || $Tab->{play} == LOOP || $Tab->{play} == MET) {
-    my $ticks = eval($Opt->{Timing}) * 32;
+    my $ticks = eval($Tab->{Timing}) * 32;
     $Paused = 0 if ($Paused);
     if ($BarIdx == @Bars) {
       if ($Tab->{play} == LOOP) {

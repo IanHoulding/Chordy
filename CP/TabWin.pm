@@ -630,12 +630,12 @@ sub pageOpts {
 ###
   my $tml = $frm->new_ttk__label(-text => 'Timing');
   my $tmm = $frm->new_ttk__button(
-    -textvariable => \$Opt->{Timing},
+    -textvariable => \$Tab->{Timing},
     -style => 'Menu.TButton',
     -width => 4,
-    -command => sub{popMenu(\$Opt->{Timing},
-			    sub{(my $t = $Opt->{Timing}) =~ s/(\d).*/$1/;
-				$Opt->{BarEnd} = $t * 8;
+    -command => sub{popMenu(\$Tab->{Timing},
+			    sub{my($t,$_t) = split('/', $Tab->{Timing});
+				$Tab->{BarEnd} = $t * 8;
 				$Tab->drawPageWin();
 				editWindow();
 				main::setEdited(1);},

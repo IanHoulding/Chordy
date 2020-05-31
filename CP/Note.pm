@@ -78,7 +78,7 @@ sub new {
     if ($def =~ /(f)?([-]?[X\d]+),(\d+)([bhrsv])?(\d+)?,?([-]?\d+)?/) {
       $self->{font} = 'Small' if ($1 eq 'f');
       $self->{fret} = $2;
-      $self->{pos} = ($3 % $Opt->{BarEnd});
+      $self->{pos} = ($3 % $Tab->{BarEnd});
       if (defined $4) {
 	$self->{shbr} = lc($4);
 	my $p5 = $5;
@@ -259,15 +259,15 @@ sub move {
     unmap($nn);
     $nn->{string} += $sdiff;
     $nn->{pos} += $pdiff;
-    if ($self->{bar} == $nn->{bar} && $nn->{pos} >= $Opt->{BarEnd}) {
+    if ($self->{bar} == $nn->{bar} && $nn->{pos} >= $Tab->{BarEnd}) {
       # We've moved the end-point into the next Bar.
-      $nn->{pos} -= $Opt->{BarEnd};
+      $nn->{pos} -= $Tab->{BarEnd};
       $nn = delFromBar($nn);
       $nn->{bar} = $EditBar1;
       $EditBar1->noteSort($nn);
     } elsif ($self->{bar} != $nn->{bar} && $nn->{pos} < 0) {
       # We've moved the end-point into our Bar
-      $nn->{pos} += $Opt->{BarEnd};
+      $nn->{pos} += $Tab->{BarEnd};
       $nn = delFromBar($nn);
       $nn->{bar} = $EditBar;
       $EditBar->noteSort($nn);
@@ -276,8 +276,8 @@ sub move {
   } elsif (ref($self->{shbr}) eq 'CP::Note') {
     # This is the end note of a Slide/Hammer therefore
     # we force the move to stay on the same string.
-    if ($pos >= $Opt->{BarEnd}) {
-      $pos -= $Opt->{BarEnd};
+    if ($pos >= $Tab->{BarEnd}) {
+      $pos -= $Tab->{BarEnd};
       if ($self->{bar} == $EditBar) {
 	$self->{bar} = $EditBar1;
 	delFromBar($self);
@@ -376,7 +376,7 @@ sub slideHam {
   my $clr = $Tab->{headColor};
   $clr = CP::FgBgEd::lighten($clr, 80) if ($bar->{pidx} == -2);
 
-  my $xaxis = ($nn->{bar} != $bar) ? $Opt->{BarEnd} - $pos + 3 + $topos : $topos - $pos;
+  my $xaxis = ($nn->{bar} != $bar) ? $Tab->{BarEnd} - $pos + 3 + $topos : $topos - $pos;
   $xaxis *= $u;
   if ($self->{shbr} eq 's') {
     my $slht = $ss * 0.4;
@@ -394,7 +394,7 @@ sub slideHam {
     }
     else {
       # Crosses a Bar boundary.
-      my $xlen = ($Opt->{BarEnd} + 1 - $pos) * $u;
+      my $xlen = ($Tab->{BarEnd} + 1 - $pos) * $u;
       $x1 = $x + $xlen;
       my $ymid = ($xlen / $xaxis) * $slht;
       if ($nn->{fret} > $self->{fret}) {
@@ -495,11 +495,11 @@ sub bendRel {
     # is in the same Bar as the Bend - makes the logic easier.
     my $hold = $self->{hold};
     my $arc1 = my $arc2 = ($hold > 6) ? 3 : $hold / 2;
-    if ($self->{pos} == ($Opt->{BarEnd} - 1)) {
+    if ($self->{pos} == ($Tab->{BarEnd} - 1)) {
       $arc1 = 2;
     }
-    if (($self->{pos} + $hold) >= $Opt->{BarEnd}) {
-      if (($self->{pos} + $hold) == $Opt->{BarEnd}) {
+    if (($self->{pos} + $hold) >= $Tab->{BarEnd}) {
+      if (($self->{pos} + $hold) == $Tab->{BarEnd}) {
 	$arc2 = 2;
       }
       $hold += 4;
@@ -515,8 +515,8 @@ sub bendRel {
 		     -width => $fat,  -tags    => $tag);
     $x = $x1;
     $y -= ($ss * 0.6);
-    if (($self->{pos} + $hold) >= $Opt->{BarEnd}) {
-      $line -= ($Opt->{BarEnd} - 1 - $self->{pos});
+    if (($self->{pos} + $hold) >= $Tab->{BarEnd}) {
+      $line -= ($Tab->{BarEnd} - 1 - $self->{pos});
       $x1 = $bar->{x} + $off->{width};
     }
     else {

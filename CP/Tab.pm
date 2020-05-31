@@ -84,8 +84,8 @@ sub new {
   $Tab->{key}      = '';
   $Tab->{note}     = '';
   $Tab->{tempo}    = 40;
-  $Tab->{sid}      = 0;
-  $Tab->{eid}      = 0;
+  $Tab->{Timing}   = '4/4';
+  $Tab->{BarEnd}   = 32;
   $Tab->{trans}    = 0;
   $Tab->{edited}   = 0;
   $Tab->{bars}     = 0;
@@ -151,8 +151,8 @@ sub offsets {
   $self->{barTop} = $self->{pageHeader} + INDENT;
 
   $s{width} = int(($Media->{width} - (INDENT * 2)) / $Opt->{Nbar});
-  (my $t = $Opt->{Timing}) =~ s/(\d).*/$1/;
-  $Opt->{BarEnd} = $t * 8;
+  my($t,$_t) = split('/', $Tab->{Timing});
+  $Tab->{BarEnd} = $t * 8;
   $s{interval} = $s{width} / (($t * 8) + 3);
   # Distance between lines of a Staff.
   $s{staffSpace} = $Opt->{StaffSpace};
@@ -406,7 +406,7 @@ sub load {
       elsif ($cmd =~ /^newpage$/i)        {$newpage = 1;}
       elsif ($cmd =~ /^instrument$/i)     {$Opt->{Instrument} = ucfirst(lc($txt)); readChords();}
       elsif ($cmd =~ /^bars_per_stave$/i) {$Opt->{Nbar} = $txt + 0;}
-      elsif ($cmd =~ /^timing$/i)         {$Opt->{Timing} = $txt}
+      elsif ($cmd =~ /^timing$/i)         {$Tab->{Timing} = $txt}
       elsif ($cmd =~ /^staff_space$/i)    {$Opt->{StaffSpace} = $txt + 0;}
       elsif ($cmd =~ /^stave_gap$/i)      {$self->{staveGap} = $txt + 0;}
       elsif ($cmd =~ /^lyric_space$/i)    {$self->{lyricSpace} = $txt + 0;}
@@ -459,7 +459,7 @@ sub load {
       }
     }
   }
-  $Opt->{Timing} .= '/4' if (length($Opt->{Timing}) == 1);
+  $Tab->{Timing} .= '/4' if (length($Tab->{Timing}) == 1);
   close(IFH);
   $self->guessKey() if ($self->{key} eq '');
   $self->{loaded} = 1;
@@ -565,7 +565,7 @@ sub save {
       print $OFH '{note:'.$self->{note}."}\n" if ($self->{note} ne '');
       print $OFH '{tempo:'.$self->{tempo}."}\n";
       print $OFH '{bars_per_stave:'.$Opt->{Nbar}."}\n";
-      print $OFH '{timing:'.$Opt->{Timing}."}\n";
+      print $OFH '{timing:'.$Tab->{Timing}."}\n";
       print $OFH '{staff_space:'.$Opt->{StaffSpace}."}\n";
       print $OFH '{stave_gap:'.$self->{staveGap}."}\n";
       print $OFH '{lyric_space:'.$self->{lyricSpace}."}\n";
@@ -1272,7 +1272,7 @@ sub saveAsText {
     return();
   }
   my @bars = ();
-  (my $t = $Opt->{Timing}) =~ s/(\d).*/$1/;
+  my($t,$_t) = split('/', $Tab->{Timing});
   my $div = 8;
   for(my $b = $self->{bars}; $b != 0; $b = $b->{next}) {
     foreach my $n (@{$b->{notes}}) {
