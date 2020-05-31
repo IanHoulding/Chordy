@@ -17,7 +17,7 @@ use CP::Cmsg;
 
 my @strOpt = (qw/Articles Instrument Media PDFpath PrintMedia
 	         PopFG PopBG PushFG PushBG MenuFG MenuBG ListFG ListBG EntryFG EntryBG
-	         Timing WinBG PageBG SortBy/);
+	         WinBG PageBG SortBy/);
 my @numOpt = (qw/AutoSave Bold Center EditScale FullLineHL FullLineCM Grid HHBL
 	         IgnArticle IgnCapo
 	         Italic LineSpace LyricLines LyricOnly Nbar NewLine NoWarn
