@@ -427,6 +427,23 @@ sub Edit {
   my($self) = shift;
 
   if ($self) {
+    if ($Tab->{eWin}->g_wm_state() eq 'normal') {
+      # We have a Bar being Edited and someone's selected a new Bar for editing.
+      my $bar = $Tab->{select1};
+      my $pbar = $EditBar->{pbar};
+      if (($pbar && comp($EditBar, $pbar)) || ($pbar == 0 && ! isblank($EditBar))) {
+	my $ans = CP::Cmsg::msgYesNoCan("Save current Bar?");
+	if ($ans eq 'Cancel') {
+	  $Tab->ClearSel();
+	  $pbar->select();
+	  $Tab->{select1} = $pbar;
+	  return;
+	}
+	Save() if ($ans eq 'Yes');
+      }
+      $EditBar->Clear();
+      $EditBar1->Clear();
+    }
     copy($self, $EditBar);
     $EditBar->{pbar} = $self;
     $EditBar->{prev} = $self->{prev};
