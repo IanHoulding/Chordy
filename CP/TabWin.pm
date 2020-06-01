@@ -412,7 +412,7 @@ sub editBarOpts {
 
   my $vbb = $frm->new_ttk__button(
     -textvariable => \$EditBar->{volta},
-    -width => 7,
+    -width => 8,
     -style => 'Menu.TButton',
     -command => sub{
       popMenu(\$EditBar->{volta},
@@ -428,10 +428,10 @@ sub editBarOpts {
       $EditBar->topText();
       1;}, Tkx::Ev("%P")]);
   $EditBar->{topEnt} = $hte;
-  my $jul = $frm->new_ttk__label(-text => 'Justify -');
+  my $jul = $frm->new_ttk__label(-text => 'Justify ');
   my $jub = $frm->new_ttk__button(
     -textvariable => \$EditBar->{justify},
-    -width => 6,
+    -width => 8,
     -style => 'Menu.TButton',
     -command => sub{
       popMenu(\$EditBar->{justify},
@@ -441,7 +441,7 @@ sub editBarOpts {
   my $rel = $frm->new_ttk__label(-text => 'Repeat');
   my $reb = $frm->new_ttk__button(
     -textvariable => \$EditBar->{rep},
-    -width => 7,
+    -width => 8,
     -style => 'Menu.TButton',
     -command => sub{
       popMenu(\$EditBar->{rep},
@@ -479,14 +479,14 @@ sub editBarOpts {
 
 
   $htl->g_grid(qw/-row 0 -column 2 -sticky e/, -padx => [0,2],  -pady => [0,4]);
-  $hte->g_grid(qw/-row 0 -column 3 -columnspan 3 -sticky w/, -padx => [0,0],  -pady => [0,4]);
+  $hte->g_grid(qw/-row 0 -column 3 -columnspan 4 -sticky w/, -padx => [0,0],  -pady => [0,4]);
 
-  $jul->g_grid(qw/-row 1 -column 4 -sticky e/, -padx => [2,2],  -pady => [0,4]);
-  $jub->g_grid(qw/-row 1 -column 5 -sticky w/, -padx => [0,0],  -pady => [0,4]);
+  $jul->g_grid(qw/-row 1 -column 5 -rowspan 2 -sticky e/, -padx => [12,0], -pady => [0,0]);
+  $jub->g_grid(qw/-row 1 -column 6 -rowspan 2 -sticky w/, -padx => [0,0],  -pady => [0,0]);
 
   $bsl->g_grid(qw/-row 1 -column 2 -rowspan 2 -sticky e/); # Bar Starts
-  $cb1->g_grid(qw/-row 1 -column 3 -sticky sw/);
-  $cb2->g_grid(qw/-row 2 -column 3 -sticky nw/);
+  $cb1->g_grid(qw/-row 1 -column 3 -rowspan 2/);
+  $cb2->g_grid(qw/-row 1 -column 4 -rowspan 2 -sticky w/);
 }
 
 sub topVal {
@@ -504,7 +504,7 @@ sub shiftOpt {
 
   my $me1 = $frm->new_ttk__button(
     -textvariable => \$Tab->{trans},
-    -width => 3,
+    -width => 4,
     -style => 'Menu.TButton',
     -command => sub{
       popMenu(\$Tab->{trans},
