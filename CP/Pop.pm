@@ -95,12 +95,16 @@ sub popMenu {
   my($var,$subr,$list) = @_;
 
   my $menu = $MW->new_menu();
-  foreach (@{$list}) {
-    my $m = $menu->add_radiobutton(
-      -label => $_,
-      -value => $_,
-      -variable => $var,
-      -command => $subr);
+  foreach my $e (@{$list}) {
+    if ($e eq 'SeP') {
+      $menu->add_separator();
+    } else {
+      $menu->add_radiobutton(
+	-label => $e,
+	-value => $e,
+	-variable => $var,
+	-command => $subr);
+    }
   }
   $menu->g_tk___popup(Tkx::winfo_pointerx($MW), Tkx::winfo_pointery($MW));
   Tkx::update();

@@ -136,18 +136,19 @@ sub expFile {
       foreach (sort keys %{$Collection}) {
 	push(@lst, $_) if ($_ ne $orgC);
       }
-      push(@lst, 'FOLDER');
+      push(@lst, 'SeP', 'FOLDER');
       popMenu(\$exp, sub{}, \@lst);
       return if ($exp eq '');
       if ($exp ne 'FOLDER') {
 	if ($exp eq 'All') {
-	  shift(@lst); pop(@lst); # Remove 'All' & 'FOLDER'.
+	  shift(@lst); # Remove 'All'.
 	} else {
 	  @lst = ($exp);
 	}
 	my @toExp = ($idx >= 0) ? ($FileLB->{array}[$idx]): @{$FileLB->{array}};
 	my $all = 0;
 	foreach my $col (@lst) {
+	  next if ($col =~ /^SeP|FOLDER/);
 	  my $dest = "$Collection->{$col}/$col/Pro";
 	  foreach (@toExp) {
 	    (my $fn = $_) =~ s/.*\///;
@@ -160,11 +161,10 @@ sub expFile {
 	      unlink("$dest/$fn");
 	    }
 	    my $txt = read_file("$path/$fn");
-	    if (write_file("$dest/$fn", $txt) == 0) {
-	      ;
-	    }
+	    write_file("$dest/$fn", $txt);
 	  }
 	}
+	message(SMILE, ' Done ', 1);
 	return;
       }
     }
