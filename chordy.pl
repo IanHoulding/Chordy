@@ -671,7 +671,7 @@ sub popProg {
   my($wait) = shift;
 
   return if (CP::Pop::exists('.pr'));
-  $Pop = CP::Pop->new(1, '.pr', 'Progress', 10, 10);
+  $Pop = CP::Pop->new(1, '.pr', 'Progress', -1, -1);
   my($top,$pp) = ($Pop->{top},$Pop->{frame});
   $pp->m_configure(-style => 'Pop.TFrame');
   my $font = (exists $FontList{"Comic Sans MS"}) ? "Comic Sans MS" : "Times";

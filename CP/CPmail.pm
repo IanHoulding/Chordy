@@ -34,7 +34,7 @@ sub cpmail {
     return(0);
   }
 
-  my $pop = CP::Pop->new(0, '.ma', 'Mailer', Tkx::winfo_rootx($MW), Tkx::winfo_rooty($MW));
+  my $pop = CP::Pop->new(0, '.ma', 'Mailer', -1, -1);
   return if ($pop eq '');
   my($top,$wt) = ($pop->{top}, $pop->{frame});
 
@@ -202,7 +202,7 @@ sub cpmail {
 sub get_smtp {
   my($SMTP) = shift;
 
-  my $pop = CP::Pop->new(0, '.ms', 'Mailer', Tkx::winfo_rootx($MW), Tkx::winfo_rooty($MW));
+  my $pop = CP::Pop->new(0, '.ms', 'Mailer', -1, -1);
   return if ($pop eq '');
   my($top,$wt) = ($pop->{top}, $pop->{frame});
 

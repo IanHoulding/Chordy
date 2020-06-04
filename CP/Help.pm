@@ -24,7 +24,7 @@ sub new {
   bless $self, $class;
 
   $self->{mark} = {};
-  my $pop = CP::Pop->new(0, '.hp', $title, Tkx::winfo_rootx($MW) + 10, Tkx::winfo_rooty($MW) + 10);
+  my $pop = CP::Pop->new(0, '.hp', $title, -1, -1);
   return('') if ($pop eq '');
   my($win,$tf) = ($pop->{top}, $pop->{frame});
 

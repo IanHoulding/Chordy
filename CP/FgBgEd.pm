@@ -30,7 +30,7 @@ sub new {
   my $class = ref($proto) || $proto;
   my $self = {};
 
-  my $pop = CP::Pop->new(0, '.ce', 'Colour Editor', Tkx::winfo_rootx($MW), Tkx::winfo_rooty($MW));
+  my $pop = CP::Pop->new(0, '.ce', 'Colour Editor', -1, -1);
   return if ($pop eq '');
   my($FBE,$fr) = ($pop->{top}, $pop->{frame});
 

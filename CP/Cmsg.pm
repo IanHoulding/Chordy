@@ -31,15 +31,18 @@ our $Xpos = -1;
 our $Ypos = -1;
 
 sub init {
-  my $pop = CP::Pop->new(0, '.mg', ' ', $Xpos + 10, $Ypos + 5);
+  if ($Xpos < 0 && $Ypos < 0) {
+    my($rx,$ry) = (Tkx::winfo_rootx($MW), Tkx::winfo_rooty($MW));
+    my($wx,$wy) = (Tkx::winfo_reqwidth($MW), Tkx::winfo_reqheight($MW));
+    ($Xpos,$Ypos) = (Tkx::winfo_pointerx($MW), Tkx::winfo_pointery($MW));
+    $Xpos = $rx if ($Xpos < $rx || $Xpos > ($rx + $wx));
+    $Ypos = $ry if ($Ypos < $ry || $Ypos > ($ry + $wy));
+  } else {
+    $Xpos += 11;
+    $Ypos += 6;
+  }
+  my $pop = CP::Pop->new(0, '.mg', ' ', $Xpos, $Ypos);
   if ($pop ne '') {
-    if ($Xpos < 0 && $Ypos < 0) {
-      my($rx,$ry) = (Tkx::winfo_rootx($MW), Tkx::winfo_rooty($MW));
-      my($wx,$wy) = (Tkx::winfo_reqwidth($MW), Tkx::winfo_reqheight($MW));
-      ($Xpos,$Ypos) = (Tkx::winfo_pointerx($MW), Tkx::winfo_pointery($MW));
-      $Xpos = $rx if ($Xpos < $rx || $Xpos > ($rx + $wx));
-      $Ypos = $ry if ($Ypos < $ry || $Ypos > ($ry + $wy));
-    }
     if ($Init == 0) {
       #
       # Create all images on first call.

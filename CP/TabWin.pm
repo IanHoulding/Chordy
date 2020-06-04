@@ -100,7 +100,7 @@ sub pageWindow {
 #
 sub editWindow {
   if ($Tab->{eWin} eq '') {
-    my $pop = CP::Pop->new(0, '.be', 'Bar Editor', 10, 10);
+    my $pop = CP::Pop->new(0, '.be', 'Bar Editor', -1, -1);
     ($Tab->{eWin}, my $outer) = ($pop->{top}, $pop->{frame});
 
     $Tab->{eWin}->g_wm_protocol('WM_DELETE_WINDOW', sub{$EditBar->Cancel()});

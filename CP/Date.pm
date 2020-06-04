@@ -66,9 +66,9 @@ sub newDate {
     makeImage($i, \%XPM);
   }
 
-  my($Xpos,$Ypos) = (Tkx::winfo_pointerx($MW), Tkx::winfo_pointery($MW));
-
-  my $pop = CP::Pop->new(0, '.nd', ' ', $Xpos + 10, $Ypos - 10);
+  my $pop = CP::Pop->new(0, '.nd', ' ',
+			 Tkx::winfo_pointerx($MW) + 10,
+			 Tkx::winfo_pointery($MW) - 10);
   return if ($pop eq '');
   my($top,$topF) = ($pop->{top}, $pop->{frame});
 
@@ -241,9 +241,9 @@ sub newTime {
 			    -relief => 'flat',
 			    -borderwidth => 0,);
 
-  my($Xpos,$Ypos) = (Tkx::winfo_pointerx($MW), Tkx::winfo_pointery($MW));
-
-  my $pop = CP::Pop->new(0, '.nt', ' ', $Xpos + 10, $Ypos - 10);
+  my $pop = CP::Pop->new(0, '.nt', ' ',
+			 Tkx::winfo_pointerx($MW) + 10,
+			 Tkx::winfo_pointery($MW) - 10);
   return if ($pop eq '');
   my($top,$topF) = ($pop->{top}, $pop->{frame});
 

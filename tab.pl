@@ -299,7 +299,7 @@ sub mediaDefault {
 }
 
 sub fontEdit {
-  my $pop = CP::Pop->new(0, '.fo', 'Font Selector', Tkx::winfo_rootx($MW) + 10, Tkx::winfo_rooty($MW) + 10);
+  my $pop = CP::Pop->new(0, '.fo', 'Font Selector', -1, -1);
   return if ($pop eq '');
   my($top,$wt) = ($pop->{top}, $pop->{frame});
 

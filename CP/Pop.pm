@@ -60,6 +60,9 @@ sub new {
   if (! defined $x) {
     $x = Tkx::winfo_pointerx($MW);
     $y = Tkx::winfo_pointery($MW);
+  } elsif ($x < 0) {
+    $x = Tkx::winfo_rootx($MW) + 10;
+    $y = Tkx::winfo_rooty($MW) + 5;
   }
   $x = 0 if ($x < 0);
   $y = 0 if ($y < 0);
