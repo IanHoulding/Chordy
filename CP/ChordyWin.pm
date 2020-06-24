@@ -547,6 +547,12 @@ sub setLists {
     -style => 'Green.TButton',
     -command => sub{if ($CurSet ne '') {$AllSets->edit()}});
   $butEdt->g_grid(-row => 2, -column => 2, -rowspan => 2, -sticky => 'w', -padx => 10, -pady => 4);
+  my $butClr = $sltM->new_ttk__button(
+    -text => "Clear",
+    -width => 6,
+    -style => 'Green.TButton',
+    -command => sub{$browser->reset();$AllSets->select('')});
+  $butClr->g_grid(-row => 3, -column => 2, -rowspan => 2, -sticky => 'w', -padx => 10, -pady => 4);
 
   my $butNew = $sltR->new_ttk__button(
     -text => "New",

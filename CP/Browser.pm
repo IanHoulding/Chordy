@@ -135,14 +135,14 @@ sub new {
   ## Now pack everything except, possibly, the Cancel/OK buttons
 
   # Search box
-  $topFrm->g_pack(qw/-side top -fill x/, -padx => [0,4]);
-  $mfs->g_grid(qw/-row 0 -column 0 -sticky e/);
-  $entry->g_grid(qw/-row 0 -column 1 -sticky w/);
-  $mfn->g_grid(qw/-row 0 -column 2 -sticky w -pady 2/, -padx => [16,0]);
+  $topFrm->g_pack(qw/-side top -fill x/, -padx => [0,4], -pady => [4,4]);
+  $mfs->g_pack(  qw/-side left/, -padx => [4,0]);
+  $entry->g_pack(qw/-side left/, -padx => [2,0]);
+  $mfn->g_pack(  qw/-side left/, -padx => [8,0]);
 
-  $srt->g_grid(qw/-row 1 -column 0 -sticky e/);
-  $sby->g_grid(qw/-row 1 -column 1 -sticky w -ipadx 4 -pady 4/);
-  $rev->g_grid(qw/-row 1 -column 2 -sticky w/);
+  $srt->g_pack(qw/-side left/, -padx => [16,0]);
+  $sby->g_pack(qw/-side left/, -padx => [2,0]);
+  $rev->g_pack(qw/-side left/, -padx => [4,0]);
 
   # Available files
   $leftFrm->g_pack(qw/-side left -expand 1 -fill y/, -padx => [0,4]);
