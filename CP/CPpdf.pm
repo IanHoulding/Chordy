@@ -442,10 +442,10 @@ sub newPage {
     if ($pro->{note} ne '') {
       $bgh = $th;
     }
-    if ($pro->{capo} ne 0) {
+    if ($pro->{capo} ne 0 && $Opt->{LyricOnly} == 0) {
       $bgh += $th;
     }
-    if ($pro->{tempo} ne 0) {
+    if ($pro->{tempo} ne 0 && $Opt->{LyricOnly} == 0) {
       $bgh += $th;
     }
     if ($bgh) {
