@@ -5,6 +5,8 @@ Bit late starting with 2.6.4 but about time I documented it :-)
 
   Chordy - Bugfix - In LyricOnly mode a backgroud rectangle was still being shown
              if a Capo directive was present (but not shown).
+     Tab - Copy Bar(s) now split into Header, Notes or Everything.
+     
 3.8.3
      Tab - Lyric Lines going from 1 to 0 would race on going back to 1.
            Bar number not showing in the Edit page.

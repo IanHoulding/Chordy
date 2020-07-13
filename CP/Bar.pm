@@ -444,12 +444,12 @@ sub Edit {
       $EditBar->Clear();
       $EditBar1->Clear();
     }
-    copy($self, $EditBar);
+    copy($self, $EditBar, HANDN);
     $EditBar->{pbar} = $self;
     $EditBar->{prev} = $self->{prev};
     if ($self->{next} != 0) {
       $EditBar1->{pbar} = $self->{next};
-      copy($self->{next}, $EditBar1);
+      copy($self->{next}, $EditBar1, HANDN);
       $EditBar1->{next} = $self->{next}{next};
     } else {
       $EditBar1->{next} = $EditBar1->{pbar} = 0;
@@ -623,14 +623,18 @@ sub rangeSelect {
 
 # Copy the visible components from one bar to another.
 sub copy {
-  my($self,$dst) = @_;
+  my($self,$dst,$what) = @_;
 
-  foreach (qw/bg header justify lyric newline newpage rep volta/) {
-    $dst->{$_} = $self->{$_};
+  if ($what & HONLY) {
+    foreach (qw/bg header justify lyric newline newpage rep volta/) {
+      $dst->{$_} = $self->{$_};
+    }
   }
-  $dst->{notes} = [];
-  foreach my $n (noteSort($self)) {
-    push(@{$dst->{notes}}, $n->copy($dst));
+  if ($what & NONLY) {
+    $dst->{notes} = [];
+    foreach my $n (noteSort($self)) {
+      push(@{$dst->{notes}}, $n->copy($dst, HANDN));
+    }
   }
 }
 
