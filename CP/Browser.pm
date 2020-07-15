@@ -47,18 +47,13 @@ sub new {
 
   mkArrows() if ($Arrows == 0);
 
-  ### Search Frame
+  ### Sort By & Search Frame
   my $topFrm = $frame->new_ttk__frame();
-  my $mfs = $topFrm->new_ttk__label(-text => 'Search: ');
-
-  my $entry = $topFrm->new_ttk__entry(-width => 20, -validate => 'key');
-  $entry->m_configure(-validatecommand => [sub{do_search($self,@_)}, Tkx::Ev("%P")]);
-
-  my $mfn = $topFrm->new_ttk__button(-text => 'Find Next', -command => sub{next_search($self)});
 
   my $srt = $topFrm->new_ttk__label(-text => 'Sort By: ');
   my $sby = $topFrm->new_ttk__button(
     -textvariable => \$Opt->{SortBy},
+    -width => 14,
     -style => 'Menu.TButton',
     -command => sub{
       popMenu(\$Opt->{SortBy}, undef, ["Alphabetical", "Date Modified"]);
@@ -68,6 +63,11 @@ sub new {
   my $rev = $topFrm->new_ttk__checkbutton(-text => 'Reverse',
 					  -variable => \$Opt->{RevSort},
 					  -command => sub{$avail->h2tcl()});
+
+  my $mfs = $topFrm->new_ttk__label(-text => 'Search: ');
+  my $entry = $topFrm->new_ttk__entry(-width => 20, -validate => 'key');
+  $entry->m_configure(-validatecommand => [sub{do_search($self,@_)}, Tkx::Ev("%P")]);
+  my $mfn = $topFrm->new_ttk__button(-text => 'Find Next', -command => sub{next_search($self)});
 
   ### Available Files
   my $leftFrm = $frame->new_ttk__labelframe(
@@ -134,15 +134,16 @@ sub new {
   ### LEFT
   ## Now pack everything except, possibly, the Cancel/OK buttons
 
-  # Search box
+  # Sort By and Search box
   $topFrm->g_pack(qw/-side top -fill x/, -padx => [0,4], -pady => [4,4]);
-  $mfs->g_pack(  qw/-side left/, -padx => [4,0]);
-  $entry->g_pack(qw/-side left/, -padx => [2,0]);
-  $mfn->g_pack(  qw/-side left/, -padx => [8,0]);
 
-  $srt->g_pack(qw/-side left/, -padx => [16,0]);
+  $srt->g_pack(qw/-side left/, -padx => [4,0]);
   $sby->g_pack(qw/-side left/, -padx => [2,0]);
   $rev->g_pack(qw/-side left/, -padx => [4,0]);
+
+  $mfs->g_pack(  qw/-side left/, -padx => [20,0]);
+  $entry->g_pack(qw/-side left/, -padx => [2,0]);
+  $mfn->g_pack(  qw/-side left/, -padx => [8,0]);
 
   # Available files
   $leftFrm->g_pack(qw/-side left -expand 1 -fill y/, -padx => [0,4]);
