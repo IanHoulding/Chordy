@@ -469,7 +469,12 @@ sub newPage {
 	$h -= ($th - $dc);
 	my $tw = _textAdd(INDENT, $h, "Capo: ", $self->{font}[TITLE], $th, BLACK);
 	$offset = $tw if ($offset == 0);
-	_textAdd(INDENT + $offset, $h, "$pro->{capo}", $self->{font}[TITLE], $th, $cc);
+	$tw = _textAdd(INDENT + $offset, $h, "$pro->{capo}", $self->{font}[TITLE], $th, $cc);
+	if ($Opt->{IgnCapo}) {
+	  $offset += $tw;
+	  $tw = int(($th / 4) * 3);
+	  _textAdd(INDENT + $offset, $h, "  (ignored)", $self->{font}[TITLE], $tw, $cc);
+	}
 	$h -= $dc;
       }
       $h -= 1;
