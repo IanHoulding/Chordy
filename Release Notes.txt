@@ -5,6 +5,7 @@ Bit late starting with 2.6.4 but about time I documented it :-)
 
   Chordy - Bugfix - In LyricOnly mode a backgroud rectangle was still being shown
              if a Capo directive was present (but not shown).
+	   Bugfix - Message pop-ups now return a negative response on error.
      Tab - Copy Bar(s) now split into Header, Notes or Everything.
      
 3.8.3

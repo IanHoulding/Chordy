@@ -118,7 +118,7 @@ sub msgYesNo {
 
   my $done = '';
   if (defined $MW && Tkx::winfo_exists($MW)) {
-    return if ((my $pop = init()) eq '');
+    return('No') if ((my $pop = init()) eq '');
     my($top,$msgf) = ($pop->{top}, $pop->{frame});
 
     my $tf = $msgf->new_ttk__frame(
@@ -141,10 +141,10 @@ sub msgYesNo {
     my $bfr = $msgf->new_ttk__frame(-style => 'Pop.TFrame', -padding => [4,4,4,4]);
     $bfr->g_grid(qw/-row 1 -column 0 -sticky we/);
 
-    $a = $bfr->new_ttk__button(-text => (defined $yes) ? $yes : " Yes ",
-			       -command => sub{topDown($pop,"Yes",\$done);});
-    $b = $bfr->new_ttk__button(-text => (defined $no) ? $no : " No ",
-			       -command => sub{topDown($pop,"No",\$done);});
+    $a = $bfr->new_ttk__button(-text => (defined $yes) ? $yes : ' Yes ',
+			       -command => sub{topDown($pop,'Yes',\$done);});
+    $b = $bfr->new_ttk__button(-text => (defined $no) ? $no : ' No ',
+			       -command => sub{topDown($pop,'No',\$done);});
 
     $a->g_pack(qw/-side right -padx 30/);
     $b->g_pack(qw/-side left -padx 30/);
@@ -153,7 +153,7 @@ sub msgYesNo {
     topUp($pop,\$done);
   } else {
     errorPrint($txt);
-    $done = (defined $no) ? $no : " No ";
+    $done = (defined $no) ? $no : 'No';
   }
   $done;
 }
@@ -163,7 +163,7 @@ sub msgYesNoCan {
 
   my $done = '';
   if (defined $MW && Tkx::winfo_exists($MW)) {
-    return if ((my $pop = init()) eq '');
+    return('Cancel') if ((my $pop = init()) eq '');
     my($top,$msgf) = ($pop->{top}, $pop->{frame});
 
     my $tf = $msgf->new_ttk__frame(-relief => 'raised', -style => 'Pop.TFrame', -padding => [4,4,4,4]);
@@ -181,11 +181,11 @@ sub msgYesNoCan {
     my $bfr = $msgf->new_ttk__frame(-style => 'Pop.TFrame', -padding => [4,4,4,4]);
     $bfr->g_grid(qw/-row 1 -column 0 -sticky we/);
     $a = $bfr->new_ttk__button(-text => " Cancel ",
-			       -command => sub{topDown($pop,"Cancel",\$done);});
-    $b = $bfr->new_ttk__button(-text => (defined $no) ? $no : " No ",
-			       -command => sub{topDown($pop,"No",\$done);});
-    my $c = $bfr->new_ttk__button(-text => (defined $yes) ? $yes : " Yes ",
-				  -command => sub{topDown($pop,"Yes",\$done);});
+			       -command => sub{topDown($pop,'Cancel',\$done);});
+    $b = $bfr->new_ttk__button(-text => (defined $no) ? $no : ' No ',
+			       -command => sub{topDown($pop,'No',\$done);});
+    my $c = $bfr->new_ttk__button(-text => (defined $yes) ? $yes : ' Yes ',
+				  -command => sub{topDown($pop,'Yes',\$done);});
 
     $a->g_pack(qw/-side left -padx 30/);
     $c->g_pack(qw/-side right -padx 30/);
@@ -195,7 +195,7 @@ sub msgYesNoCan {
     topUp($pop,\$done);
   } else {
     errorPrint($txt);
-    $done = "Cancel";
+    $done = 'Cancel';
   }
   $done;
 }
@@ -206,7 +206,7 @@ sub msgYesNoAll {
 
   my $done = "";
   if (defined $MW && Tkx::winfo_exists($MW)) {
-    return if ((my $pop = init()) eq '');
+    return('No') if ((my $pop = init()) eq '');
     my($top,$msgf) = ($pop->{top}, $pop->{frame});
 
     my $tf = $msgf->new_ttk__frame(-relief => 'raised', -style => 'Pop.TFrame', -padding => [4,4,4,4]);
@@ -224,12 +224,12 @@ sub msgYesNoAll {
     my $bfr = $msgf->new_ttk__frame(-style => 'Pop.TFrame', -padding => [4,4,4,4]);
     $bfr->g_grid(qw/-row 1 -column 0 -sticky we/);
     my $chk = 0;
-    my $c = $bfr->new_ttk__button(-text => " Yes ", -command => sub{topDown($pop,"Yes",\$done);});
+    my $c = $bfr->new_ttk__button(-text => ' Yes ', -command => sub{topDown($pop,'Yes',\$done);});
     my $d = $bfr->new_ttk__checkbutton(
       -text => "Apply to all",
       -variable => \$chk,
       -style => 'Pop.TCheckbutton');
-    my $e = $bfr->new_ttk__button(-text => " No ",  -command => sub{topDown($pop,"No",\$done);});
+    my $e = $bfr->new_ttk__button(-text => ' No ',  -command => sub{topDown($pop,'No',\$done);});
 
     $c->g_pack(qw/-side right/, -padx => [30,10]);
     $d->g_pack(qw/-side right/);
@@ -240,7 +240,7 @@ sub msgYesNoAll {
     $done = "All" if ($done eq "Yes" && $chk == 1);
   } else {
     errorPrint($txt);
-    $done = "No";
+    $done = 'No';
   }
   $done;
 }
@@ -253,7 +253,7 @@ sub msgSet {
 
   my $done = "";
   if (defined $MW && Tkx::winfo_exists($MW)) {
-    return if ((my $pop = init()) eq '');
+    return('Cancel') if ((my $pop = init()) eq '');
     my($top,$msgf) = ($pop->{top}, $pop->{frame});
 
     my $tf = $msgf->new_ttk__frame(-relief => 'raised', -style => 'Pop.TFrame', -padding => [4,4,4,4]);
@@ -276,8 +276,8 @@ sub msgSet {
     my $bfr = $msgf->new_ttk__frame(-style => 'Pop.TFrame', -padding => [4,4,4,4]);
     $bfr->g_grid(qw/-row 1 -column 0 -sticky we/);
 
-    $a = $bfr->new_ttk__button(-text => " Cancel ", -command => sub{topDown($pop,"Cancel",\$done);});
-    $b = $bfr->new_ttk__button(-text => " OK ", -command => sub{topDown($pop,"OK",\$done);});
+    $a = $bfr->new_ttk__button(-text => ' Cancel ', -command => sub{topDown($pop,'Cancel',\$done);});
+    $b = $bfr->new_ttk__button(-text => ' OK ', -command => sub{topDown($pop,'OK',\$done);});
 
     $a->g_pack(qw/-side left -padx 30/);
     $b->g_pack(qw/-side right -padx 30/);
@@ -286,7 +286,7 @@ sub msgSet {
     topUp($pop,\$done);
   } else {
     errorPrint($txt);
-    $done = "Cancel";
+    $done = 'Cancel';
   }
   $done;
 }

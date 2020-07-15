@@ -896,7 +896,7 @@ sub ExitCheck {
 
 sub checkAndSave {
   if ($Ed->{TxtWin}->edit_modified() != 0) {
-    my $ans;
+    my $ans = 'No';
     if ($Ed->{FileName} eq "") {
       $ans = msgYesNoCan("Do you want to save the changes?");
       return($ans) if ($ans ne 'Yes');
