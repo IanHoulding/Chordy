@@ -349,11 +349,11 @@ sub actWin {
   $cret->g_pack(qw/-side top -anchor w -padx 8/);
   $prnt->g_pack(qw/-side top -anchor w -padx 8/);
 
-  $sepa->g_pack(qw/-side top -fill x/);
-  $ones->g_pack(qw/-side top -padx 4 -pady 4/);
+  $sepa->g_pack(qw/-side top -fill x/, -pady => [4,0]);
+  $ones->g_pack(qw/-side top -padx 4 -pady 8/);
 
   $sepb->g_pack(qw/-side top -fill x/);
-  $alls->g_pack(qw/-side top -padx 4/, -pady => [4,0]);
+  $alls->g_pack(qw/-side top -padx 4/, -pady => [8,4]);
   $onep->g_pack(qw/-side top -anchor w/);
 }
 

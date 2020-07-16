@@ -7,6 +7,7 @@ Bit late starting with 2.6.4 but about time I documented it :-)
              if a Capo directive was present (but not shown).
 	   Bugfix - Message pop-ups now return a negative response on error.
 	   Capo in PDF now shows '(ignored)' if option is set.
+	   Set List PDF layout changed to be more readable.
      Tab - Copy Bar(s) now split into Header, Notes or Everything.
      
 3.8.3

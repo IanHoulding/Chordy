@@ -123,6 +123,9 @@ sub printSL {
   $pp->cropbox(0, 0, $w, $h);
   newTextGfx($pp);
 
+  #
+  # Set BackGround colour and show the title
+  #
   if ($Media->{verseBG} ne WHITE) {
     $GfxPtr->fillcolor($Media->{verseBG});
     $GfxPtr->rect(0, 0, $w, $h);
@@ -140,38 +143,45 @@ sub printSL {
   $h -= $hht;
   _hline(0, $h, $w, 1, DBLUE);
 
-  my $spc = '  ';
-  my $x = 15;
-  $h -= $Tsz;
+  #
+  # Show all the meta data (time slots)
+  #
+  $h -= $Tsz * 2;
+  my $metalab = _measure('Sound Check: ', $pfp, $Lsz);
+  my $metaw = 0;
+  foreach my $k (qw/setup soundcheck set1time set2time/) {
+    my $dx = _measure($AllSets->{meta}{$k}, $pfp, $Lsz);
+    $metaw = $dx if ($dx > $metaw);
+  }
+  my $x = $w - $metaw - (INDENT * 3);
+  my $y = $h - ($Tsz * 4);
   foreach my $xtr (['Setup','setup'], ['Sound Check','soundcheck'], ['Set 1 Start','set1time'], ['Set 2 Start','set2time']) {
     my($lab,$key) = (@{$xtr});
     if (($key = $AllSets->{meta}{$key}) ne '') {
-      $x += _textAdd($x, $h, "$lab: ", $pfp, $Lsz, $Tclr);
-      $x += _textAdd($x, $h, "$key", $pfp, $Lsz, $Lclr);
-      $x += 30;
+      _textRight($x, $y, "$lab: ", $pfp, $Lsz, $Tclr);
+      _textAdd($x, $y, "$key", $pfp, $Lsz, $Lclr);
+      $y -= $Tsz;
     }
   }
-  $h -= $Tsz if ($x != 15);
-  $h -= $Tsz;
 
+  #
+  # Now the play list
+  #
+  my $spc = '  ';
   my $cnt = @{$list};
   while (($h - ($Tsz * $cnt)) < 0) { # deliberately use $Tsz to add extra spacing
     $Lsz--;
   }
-  my $max = 0;
   my @pros = ();
   foreach my $fn (@{$list}) {
     my $pro = CP::Pro->new($fn);
     push(@pros, $pro);
     $cnt++ if ($pro->{title} =~ /^INTERVAL$/i);
-    my $x = _measure("$spc$pro->{title}", $pfp, $Lsz);
-    $max = $x if ($x > $max);
   }
   my $spcw = _measure($spc, $pfp, $Lsz);
   my $numw = _measure("99", $pfp, $Lsz);
   my $keyw = _measure("${spc}G#m", $pfp, $Lsz - 3);
-  $max += ($spcw + $numw + $keyw);
-  my $indent = int(($w - $max) / 2);
+  my $indent = INDENT * 3;
   my $num = 1;
   foreach my $pro (@pros) {
     if ($pro->{title} =~ /^INTERVAL$/i) {
