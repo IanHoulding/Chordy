@@ -786,7 +786,10 @@ sub pButtons {
   my @tb = ([['Edit Bar',        sub{$Tab->editBar},     'Green'],
 	     ['Clone Bar(s)',    sub{$Tab->Clone},       'Green']],
 	    [['SEP']],
-	    [['Copy Bar(s)',     sub{$Tab->Copy},        'Green']],
+	    [[]],
+	    [['Header Only',     sub{$Tab->Copy(HONLY)}, 'Green'],
+	     ['Notes Only',      sub{$Tab->Copy(NONLY)}, 'Green'],
+	     ['Everthing',       sub{$Tab->Copy(HANDN)}, 'Green']],
 	    [['Paste Over',      sub{$Tab->PasteOver},   'Green'],
 	     ['Paste Before',    sub{$Tab->PasteBefore}, 'Green'],
 	     ['Paste After',     sub{$Tab->PasteAfter},  'Green']],
@@ -826,7 +829,7 @@ sub pButtons {
 	makeImage("arrd", \%XPM);
 	my $dn = $sfrm->new_ttk__button(-image => 'arrd', -command => sub{$Tab->{lyrics}->shiftDown});
 	$dn->g_grid(qw/-row 0 -column 2/);
-      } else {
+      } elsif (defined $txt) {
 	my $bu = $frm->new_ttk__button(
 	  -text => $txt,
 	  -style => "$fg.TButton",
@@ -837,6 +840,8 @@ sub pButtons {
     }
     $row++;
   }
+  my $ch = $frm->new_ttk__label(-text => 'Copy Bar(s)', -font => "BTkDefaultFont");
+  $ch->g_grid(-row => 2, -column => 0, qw/-sticky e -padx 4 -pady 4/);
   my $cb = $frm->new_ttk__label(-text => 'Copy Buffer:');
   $cb->g_grid(-row => 2, -column => 1, qw/-sticky e -padx 4 -pady 4/);
   my $cbs = $frm->new_ttk__label(-textvariable => \$CP::Tab::CopyIdx);

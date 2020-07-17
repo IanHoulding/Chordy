@@ -163,8 +163,11 @@ use constant {
   RESTS  => 5,
   RESTFONT => 'Gonville-20',
 };
-# Constants for new Bar insertion
+# Constants for Bar copy & insertion
 use constant {
+  HONLY   =>  1,
+  NONLY   =>  2,
+  HANDN   =>  3,
   BEFORE  => -1,
   REPLACE =>  0,
   AFTER   =>  1,
@@ -212,7 +215,7 @@ our @EXPORT_OK = qw/
   PAGE EDIT
     VOLTA HEADER REPEAT NOTE
     NOTES SNOTES HEADER WORDS RESTS RESTFONT
-    BEFORE REPLACE AFTER UPDATE
+    HONLY NONLY HANDN BEFORE REPLACE AFTER UPDATE
     BNUMW FAT THICK THIN
   STOP PLAY PAUSE LOOP MET RATE
 /;
@@ -239,7 +242,7 @@ our %EXPORT_TAGS = (
   TAB     => [qw/PAGE EDIT
 	         VOLTA HEADER REPEAT NOTE
 	         TITLE NOTES SNOTES HEADER WORDS RESTS
-	         BEFORE REPLACE AFTER UPDATE
+	         HONLY NONLY HANDN BEFORE REPLACE AFTER UPDATE
 	         BNUMW FAT THICK THIN/],
 
   PLAY    => [qw/STOP PLAY PAUSE LOOP MET RATE/],

@@ -349,11 +349,11 @@ sub actWin {
   $cret->g_pack(qw/-side top -anchor w -padx 8/);
   $prnt->g_pack(qw/-side top -anchor w -padx 8/);
 
-  $sepa->g_pack(qw/-side top -fill x/);
-  $ones->g_pack(qw/-side top -padx 4 -pady 4/);
+  $sepa->g_pack(qw/-side top -fill x/, -pady => [4,0]);
+  $ones->g_pack(qw/-side top -padx 4 -pady 8/);
 
   $sepb->g_pack(qw/-side top -fill x/);
-  $alls->g_pack(qw/-side top -padx 4/, -pady => [4,0]);
+  $alls->g_pack(qw/-side top -padx 4/, -pady => [8,4]);
   $onep->g_pack(qw/-side top -anchor w/);
 }
 
@@ -547,6 +547,12 @@ sub setLists {
     -style => 'Green.TButton',
     -command => sub{if ($CurSet ne '') {$AllSets->edit()}});
   $butEdt->g_grid(-row => 2, -column => 2, -rowspan => 2, -sticky => 'w', -padx => 10, -pady => 4);
+  my $butClr = $sltM->new_ttk__button(
+    -text => "Clear",
+    -width => 6,
+    -style => 'Green.TButton',
+    -command => sub{$browser->reset();$AllSets->select('')});
+  $butClr->g_grid(-row => 3, -column => 2, -rowspan => 2, -sticky => 'w', -padx => 10, -pady => 4);
 
   my $butNew = $sltR->new_ttk__button(
     -text => "New",

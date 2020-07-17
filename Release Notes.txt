@@ -1,6 +1,15 @@
 Chordy, Tab et al Revision history.
 Bit late starting with 2.6.4 but about time I documented it :-)
 
+3.8.4
+
+  Chordy - Bugfix - In LyricOnly mode a backgroud rectangle was still being shown
+             if a Capo directive was present (but not shown).
+	   Bugfix - Message pop-ups now return a negative response on error.
+	   Capo in PDF now shows '(ignored)' if option is set.
+	   Set List PDF layout changed to be more readable.
+     Tab - Copy Bar(s) now split into Header, Notes or Everything.
+     
 3.8.3
      Tab - Lyric Lines going from 1 to 0 would race on going back to 1.
            Bar number not showing in the Edit page.
@@ -9,6 +18,9 @@ Bit late starting with 2.6.4 but about time I documented it :-)
 	   Increased # of bars per line to 10 - mainly for 2/4 time.
 	   Rationalised the newTextGfx subroutine and calls arguments.
 	   Don't show Capo when Lyric Only selected.
+  Chordy - Export All Pro files included the FOLDER option and barfed - not fatal
+             as all the >pro's had already been exported.
+	   Added the ability to insert a Seperator into pop-up menus.
 
 3.8.2
 	   Migrated the Installer from Visual Studio to Inno Script. Bit of a steep

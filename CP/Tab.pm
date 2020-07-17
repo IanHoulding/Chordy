@@ -903,7 +903,7 @@ sub Clone {
     if ($bp && ! $bp->isblank()) {
       do {
 	$bp = $self->add1bar();
-	$a->copy($bp);
+	$a->copy($bp, HANDN);
 	$a = $a->{next};
       } while ($a && $a->{prev} != $b);
       pasteEnd($self, $bp);
@@ -914,7 +914,7 @@ sub Clone {
 my @Copy = ();
 our $CopyIdx = 'Empty';
 sub Copy {
-  my($self) = shift;
+  my($self,$what) = @_;
 
   my($a,$b) = $self->diff();
   if ($a == 0) {
@@ -923,7 +923,7 @@ sub Copy {
     @Copy = ();
     do {
       my $copy = CP::Bar->new($self->{pOffset});
-      $a->copy($copy);
+      $a->copy($copy, $what);
       $copy->{bidx} = $a->{bidx};
       push(@Copy, $copy);
       $a = $a->{next};
@@ -948,7 +948,7 @@ sub PasteOver {
     my $lastdst;
     foreach my $src (@Copy) {
       $dst = $self->add1bar() if ($dst == 0); # $dst is pointing at {lastBar}
-      $src->copy($dst);
+      $src->copy($dst, HANDN);
       $lastdst = $dst;
       $dst = $dst->{next};
     }
@@ -963,7 +963,7 @@ sub PasteBefore {
     my $dst = $self->{select1}{prev};
     foreach my $src (@Copy) {
       my $bar = CP::Bar->new($self->{pOffset});
-      $src->copy($bar);
+      $src->copy($bar, HANDN);
       if ($dst == 0) {
 	$self->{bars} = $bar;
       } else {
@@ -986,7 +986,7 @@ sub PasteAfter {
     my $next = $dst->{next};
     foreach my $src (@Copy) {
       my $bar = CP::Bar->new($self->{pOffset});
-      $src->copy($bar);
+      $src->copy($bar, HANDN);
       $dst->{next} = $bar;
       $bar->{prev} = $dst;
       $dst = $bar;
