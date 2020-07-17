@@ -4,19 +4,17 @@ use CP::Global qw/:FUNC :XPM/;
 use CP::Help;
 
 sub help {
-  my($win) = shift;
-
-  if ($win eq '') {
-    makeImage("checkbox", \%XPM);
-    $win = CP::Help->new("Chordy Help");
-    $win->add(
+  makeImage("checkbox", \%XPM);
+  my $win = CP::Help->new("Chordy Help");
+  return if ($win eq '');
+  $win->add(
 [
  "<O TO:H: Chordy > ",
  "Takes a standard(ish) ChordPro text file and converts it to a PDF file with the chords arranged above the lines of lyrics. Chordy can also transpose the music key, either permanently or just for the current PDF creation.",
  "Chordy works with independent sets of files called <R Collections>. Each Collection has its own set of ChordPro and PDF files and its own set of configuration options.",
  "In the applications main display you have 4 tabs:",
 "<R Chordy PDF Generator> is where you get to convert your ChordPro files into a PDF file and/or Transposed etc.",
-"<R Set Lists> allows you to create/modify/delete Set Lists and is also where you select one or more ChordPro files you want to edit and/or create PDFs.",
+"<R Setlists> allows you to create/modify/delete Setlists and is also where you select one or more ChordPro files you want to edit and/or create PDFs.",
 "<R Configuration Options> has the various default items and settings used in each Collection.",
 "<R Miscellaneous> lets you perform various house-keeping functions.\n",
  "<O To:H: Table Of Contents >",
@@ -26,7 +24,7 @@ sub help {
  "<O PD:s:PDFs>",
  "<O Op:s:PDF Options>",
  "<O DI:s:Chord Diagrams>",
- "<O SL:S:\nSet Lists>",
+ "<O SL:S:\nSetlists>",
  "<O FB:S:\nConfiguration Options>",
  "<O CL:s:Collections>",
  "<O PS:s:PDF Page Size>",
@@ -49,7 +47,7 @@ sub help {
  "<V5>",
 
  "<T CP><S ChordPro File(s)>\n",
- "<M>These are files ending with a .pro extension. The <R Browse> button allows you to select one or more files contained in the ChordPro folder (see the section on Folders and Commands).\nThe <R From Set List> button lets you pull in a list of files from a pre defined Set List.\n",
+ "<M>These are files ending with a .pro extension. The <R Browse> button allows you to select one or more files contained in the ChordPro folder (see the section on Folders and Commands).\nThe <R From Setlist> button lets you pull in a list of files from a pre defined Setlist.\n",
 
  "<P  New > ",
  "<M>Enables you to create a new ChordPro file - enters the Editor with the <R Title> directive initalised.\n",
@@ -130,46 +128,46 @@ sub help {
 
 ################
 
- "<T SL><H Set Lists\n>",
+ "<T SL><H Setlists\n>",
  "<V5>",
 
  "This tab is split into an upper and lower section.",
  "<S Upper Section>\n",
- "The upper section shows (on the left) the currently available Set Lists and to it's right a box which shows which Set List is currently selected along with date/time information and to the right of that, a number of buttons to manipulate the current Set List:\n",
+ "The upper section shows (on the left) the currently available Setlists and to it's right a box which shows which Setlist is currently selected along with date/time information and to the right of that, a number of buttons to manipulate the current Setlist:\n",
  "<P  New > ",
- "<M>Creates a new Set List.",
+ "<M>Creates a new Setlist.",
  "<V5>",
  "<P  Rename > ",
- "<M>Renames the current Set List.",
+ "<M>Renames the current Setlist.",
  "<V5>",
  "<P  Clone > ",
- "<M>Produces a copy of the current Set List and gives it the new name.\n",
+ "<M>Produces a copy of the current Setlist and gives it the new name.\n",
 
  "<P  Print > ",
  "<M>Puts a list of song titles onto one PDF page with a title that is the Current Set Name.",
  "<V5>",
  "<P  Export > ",
- "<M>Lets you copy the current Set List to another Collection.",
+ "<M>Lets you copy the current Setlist to another Collection.",
  "<V5>",
  "<P  Save > ",
- "<M>Saves any changes to the currently selected Set List.",
+ "<M>Saves any changes to the currently selected Setlist.",
  "<V5>",
  "<P  Delete > ",
- "<M>Deletes the currently selected Set List after prompting.\n",
- "The date/time information for the current Set List may be entered/edited using the <R Edit> button. The various fields are completed using pop-ups - the only buttons which are unique are the ones which increment/decrement the minutes - holding the left mouse button down while over the button will cause the minutes to change rapidly.\n",
+ "<M>Deletes the currently selected Setlist after prompting.\n",
+ "The date/time information for the current Setlist may be entered/edited using the <R Edit> button. The various fields are completed using pop-ups - the only buttons which are unique are the ones which increment/decrement the minutes - holding the left mouse button down while over the button will cause the minutes to change rapidly.\n",
  "<S Lower Section>",
  "<V5>",
  "This is a copy of the Browser pop-up and has a Search area and 2 list boxes:",
  "The Search area lets you type in a case insensitive string and will search the <R Available Files>. The search takes place as you type and throws up a message if no match is found. The <R Find Next> button does just that and will wrap back to the begining of the list if it fails to match when the end of the list is reached.\n",
  "<E><R Available Files> ",
- "<M>A list of all ChordPro files in the current collection. Double clicking a file will automatically transfer it to the Set List Files. The alphabet buttons below the <R Available Files> list enable you to quickly jump to entries starting with the appropriate letter.",
- "<E><R Set List Files> ",
- "<M>All the files that either do, or will, make up the current Set List. Below this list are 2 buttons:",
+ "<M>A list of all ChordPro files in the current collection. Double clicking a file will automatically transfer it to the Setlist Files. The alphabet buttons below the <R Available Files> list enable you to quickly jump to entries starting with the appropriate letter.",
+ "<E><R Setlist Files> ",
+ "<M>All the files that either do, or will, make up the current Setlist. Below this list are 2 buttons:",
  "<E><R Clear> ",
- "<M>Moves all the Set List Files back into the <R Available FIles> list.",
+ "<M>Moves all the Setlist Files back into the <R Available FIles> list.",
  "<E><R Select for Editing> ",
- "<M>Will place the currently selected Set List files into the <R ChordPro Files> list (on the 1st tab) and switch to that tab.\n",
- "The various arrow buttons move files between the 2 lists and allow you to change the order of the files in the Set List.\n",
+ "<M>Will place the currently selected Setlist files into the <R ChordPro Files> list (on the 1st tab) and switch to that tab.\n",
+ "The various arrow buttons move files between the 2 lists and allow you to change the order of the files in the Setlist.\n",
 
 ################
 
@@ -301,9 +299,7 @@ sub help {
  "<c     Some lyrics, Lots more lyrics>\n",
  "The spec. for ChordPro defines quite a number of directives that can be embedded in the ChordPro file. This app only handles a specific subset of the directives but it provides extra functionality over the basic set. Most (but not all) directives have a short and a long form shown as <s {short|long: ...}>. Each directive must appear as the first (and only) text on any given line. You can embed comments into a ChordPro file by placing a '#' as the first character on a line followed by any text. This text will not appear on any output created using the ChordPro file.\n\n",
 ]);
-  }
   $win->show();
-  $win;
 }
 
 1;

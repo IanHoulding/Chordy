@@ -17,7 +17,7 @@ use CP::Cmsg;
 
 my @strOpt = (qw/Articles Instrument Media PDFpath PrintMedia
 	         PopFG PopBG PushFG PushBG MenuFG MenuBG ListFG ListBG EntryFG EntryBG
-	         Timing WinBG PageBG SortBy/);
+	         WinBG PageBG SortBy/);
 my @numOpt = (qw/AutoSave Bold Center EditScale FullLineHL FullLineCM Grid HHBL
 	         IgnArticle IgnCapo
 	         Italic LineSpace LyricLines LyricOnly Nbar NewLine NoWarn
@@ -89,7 +89,6 @@ sub default {
   $self->{SharpFlat}   = SHARP;
   $self->{SortBy}      = 'Alphabetical';
   $self->{StaffSpace}  = 10;
-  $self->{Timing}      = '4/4';
   $self->{Together}    = 1;
   $self->{UseBold}     = 1;
   $self->{WinBG}       = MWBG;
@@ -113,11 +112,6 @@ sub load {
       # Legacy change.
       $self->{EditScale} = $self->{Scale};
       delete($self->{Scale});
-      $version = 0;
-    }
-    # Another legacy fix :(
-    if (length($self->{Timing}) == 1) {
-      $self->{Timing} .= '/4';
       $version = 0;
     }
     if ("$version" ne "$Version") {
@@ -152,6 +146,8 @@ sub save {
   close($OFH);  
 }
 
+# Save the Entry/List/Menu etc. FG and BG to all Collections.
+#
 sub saveClr2all {
   my($self) = shift;
 

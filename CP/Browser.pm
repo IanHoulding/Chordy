@@ -12,22 +12,26 @@ package CP::Browser;
 use strict;
 use warnings;
 
+use Tkx;
 use CP::Cconst qw/:BROWSE :SMILIE :COLOUR/;
 use CP::Global qw/:FUNC :WIN :OPT :PRO :SETL :XPM/;
-use Tkx;
+use CP::Pop qw /:POP :MENU/;
 use CP::List;
 use CP::Cmsg;
-use Exporter;
-
-our @ISA = qw(Exporter);
-
-our @EXPORT = qw(&Browser);
 
 my $Arrows = 0;
 
 sub new {
   my($proto,$top,$what,$path,$ext,$list) = @_;
 
+  return if ($top eq $MW && CP::Pop::exists('.fb'));
+  my($pop,$fileBr,$frame);
+  if ($top eq $MW) {
+    $pop = CP::Pop->new(0, '.fb', "File Browser  |  Collection: ".$Collection->name());
+    ($fileBr,$frame) = ($pop->{top}, $pop->{frame});
+  } else {
+    $frame = $top;
+  }
   my $class = ref($proto) || $proto;
   my $self = {};
   bless $self, $class;
@@ -43,12 +47,6 @@ sub new {
 
   mkArrows() if ($Arrows == 0);
 
-  my($FileBr,$frame);
-  if ($top eq $MW) {
-    ($FileBr,$frame) = popWin(0, "File Browser  |  Collection: ".$Collection->name());
-  } else {
-    $frame = $top;
-  }
   ### Search Frame
   my $topFrm = $frame->new_ttk__frame();
   my $mfs = $topFrm->new_ttk__label(-text => 'Search: ');
@@ -62,8 +60,10 @@ sub new {
   my $sby = $topFrm->new_ttk__button(
     -textvariable => \$Opt->{SortBy},
     -style => 'Menu.TButton',
-    -command => sub{popMenu(\$Opt->{SortBy}, undef, ["Alphabetical", "Date Modified"]);
-		    $avail->h2tcl();
+    -command => sub{
+      popMenu(\$Opt->{SortBy}, undef, ["Alphabetical", "Date Modified"]);
+      $avail->h2tcl();
+      $Opt->change('SortBy', $Opt->{SortBy});
     } );
   my $rev = $topFrm->new_ttk__checkbutton(-text => 'Reverse',
 					  -variable => \$Opt->{RevSort},
@@ -84,7 +84,7 @@ sub new {
   }
 
   if (readInAvail($self, $path, $ext) == 0 && $what & (FILE | TABBR)) {
-    $FileBr->g_destroy();
+    popDestroy($fileBr);
     message(SAD, "Sorry - couldn't find any '$ext' files!");
     return('');
   }
@@ -112,7 +112,7 @@ sub new {
   my $centerFrm = $frame->new_ttk__frame();
 
   ### Selected Files
-  my $title = ($what & (FILE | TABBR)) ? ' Selected Files ' : ' Set List Files ';
+  my $title = ($what & (FILE | TABBR)) ? ' Selected Files ' : ' Setlist Files ';
   my $rightFrm = $frame->new_ttk__labelframe(
     -text => $title,
     -labelanchor => 'n',
@@ -159,7 +159,7 @@ sub new {
   # columnspan is 2 so that we can put 2 buttons below the ListBox.
   $select->{frame}->g_grid(qw/-row 0 -column 0 -columnspan 2 -sticky nsew/);
 
-  # Up/Down Arrows only for Set Lists
+  # Up/Down Arrows only for Setlists
   if (($what & (FILE | TABBR)) == 0) {
     $rightFrmR->g_pack(qw/-side left -expand 0 -fill x/, -padx => [4,2]);
   }
@@ -194,8 +194,8 @@ sub new {
     $b->g_grid(qw/-row 1 -column 1 -padx 4/, -pady => [8,4]);
 
     Tkx::update();
-    $FileBr->g_raise();
-    $FileBr->g_focus();
+    $fileBr->g_raise();
+    $fileBr->g_focus();
 
     Tkx::vwait(\$done);
 
@@ -212,7 +212,7 @@ sub new {
 	@sl = @{$select->{array}};
       }
     }
-    $FileBr = $FileBr->g_destroy();
+    $pop->destroy();
     return(@sl);
   }
   return($self);

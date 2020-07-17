@@ -12,10 +12,11 @@ package CP::Fonts;
 use strict;
 use warnings;
 
+use Tkx;
 use CP::Cconst qw/:PATH :COLOUR :SMILIE/;
 use CP::Global qw/:FUNC :VERS :OPT :WIN :MEDIA/;
 use CP::List;
-use Tkx;
+use CP::Pop qw/:POP :MENU/;
 # The only reason this lot is explicitly listed is because using
 # "pp" to create an executable seems to loose track of them :(
 use Font::TTF::Font;
@@ -71,7 +72,9 @@ my $Done;
 sub new {
   my($title) = shift;
 
-  my($FontP,$fr) = popWin(0, $title);
+  my $pop = CP::Pop->new(0, '.fe', $title);
+  return if ($pop eq '');
+  my($top,$fr) = ($pop->{top}, $pop->{frame});
 
   my $ftop = $fr->new_ttk__frame(qw/-borderwidth 1 -relief solid/);
   $ftop->g_pack(qw/-side top -expand 1 -fill x/);
@@ -145,7 +148,7 @@ sub new {
     -anchor => 'center',
     -justify => 'center');
 
-  $FontP;
+  $pop;
 }
 
 sub listFill {
@@ -175,7 +178,7 @@ sub showSample {
 sub fontPick {
   my($font,$bg,$title) = @_;
 
-  my $fontwin = new($title);
+  return if ((my $pop = new($title)) eq '');
 
   $Ffamily = $font->{family};
   $Fsize   = $font->{size};
@@ -197,7 +200,7 @@ sub fontPick {
   }
   showSample();
 
-  $fontwin->g_raise;
+  $pop->{top}->g_raise;
   Tkx::vwait(\$Done);
 
   if ($Done eq "OK") {
@@ -207,7 +210,7 @@ sub fontPick {
     $font->{slant}  = $Fslant;
   }
 
-  $fontwin->g_destroy();
+  $pop->destroy();
   $Done;
 }
 

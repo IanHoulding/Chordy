@@ -66,8 +66,11 @@ sub newDate {
     makeImage($i, \%XPM);
   }
 
-  my($Xpos,$Ypos) = (Tkx::winfo_pointerx($MW), Tkx::winfo_pointery($MW));
-  my($top,$topF) = popWin(0, ' ', $Xpos + 10, $Ypos - 10);
+  my $pop = CP::Pop->new(0, '.nd', ' ',
+			 Tkx::winfo_pointerx($MW) + 10,
+			 Tkx::winfo_pointery($MW) - 10);
+  return if ($pop eq '');
+  my($top,$topF) = ($pop->{top}, $pop->{frame});
 
   my $botF = $topF->new_ttk__frame(-padding => 0);
   $botF->g_pack(qw/-side bottom -expand 1 -fill both/);
@@ -98,7 +101,7 @@ sub newDate {
   $top->g_raise();
   Tkx::vwait(\$done);
 
-  $top->g_destroy();
+  $pop->destroy();
   if ($done eq 'OK') {
     ($self->{day},$self->{month},$self->{months},$self->{year}) = ($Day,$Month,$Months[$Month],$Year);
     return(1);
@@ -238,8 +241,11 @@ sub newTime {
 			    -relief => 'flat',
 			    -borderwidth => 0,);
 
-  my($Xpos,$Ypos) = (Tkx::winfo_pointerx($MW), Tkx::winfo_pointery($MW));
-  my($top,$topF) = popWin(0, ' ', $Xpos + 10, $Ypos - 10);
+  my $pop = CP::Pop->new(0, '.nt', ' ',
+			 Tkx::winfo_pointerx($MW) + 10,
+			 Tkx::winfo_pointery($MW) - 10);
+  return if ($pop eq '');
+  my($top,$topF) = ($pop->{top}, $pop->{frame});
 
   my $hup = $topF->new_ttk__button(-image => "timeu",
 				   -style => 'NoBd.TButton',
@@ -295,7 +301,7 @@ sub newTime {
   $top->g_raise();
   Tkx::vwait(\$done);
 
-  $top->g_destroy();
+  $pop->destroy();
   return(($done eq 'OK') ? 1 : 0);
 }
 

@@ -11,9 +11,10 @@ package CP::Media;
 
 use strict;
 
+use Tkx;
 use CP::Cconst qw/:LENGTH :SMILIE :COLOUR/;
 use CP::Global qw/:FUNC :OPT :WIN :PRO :SETL :MEDIA :XPM/;
-use Tkx;
+use CP::Pop qw/:POP :MENU/;
 use CP::Fonts;
 use CP::Cmsg;
 
@@ -208,10 +209,13 @@ sub edit {
 
   our($a,$b,$c,$d,$e,$f,$g,$h,$i,$j,$k,$m,$n,$o,$wstr,$hstr);
 
-  my($top,$wt) = popWin(0, 'Media Editor');
+  my $pop = CP::Pop->new(0, '.me', 'Media Editor');
+  return if ($pop eq '');
+  my($top,$wt) = ($pop->{top}, $pop->{frame});
+
   $top->g_wm_protocol(
     'WM_DELETE_WINDOW',
-    sub {copy($medias{$Opt->{Media}}, $self); $top->g_destroy();});
+    sub {copy($medias{$Opt->{Media}}, $self); $pop->destroy();});
 
   my $tf = $wt->new_ttk__frame(qw/-borderwidth 2 -relief ridge/);
   $tf->g_pack(qw/-side top -expand 1 -fill x/);
@@ -306,7 +310,7 @@ sub edit {
     $Opt->{Media} = $orgMedia;
     change($Media, \$Opt->{Media});
   }
-  $top->g_destroy();
+  $pop->destroy();
   $Done;
 }
 

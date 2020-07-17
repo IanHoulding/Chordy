@@ -1,6 +1,15 @@
 Chordy, Tab et al Revision history.
 Bit late starting with 2.6.4 but about time I documented it :-)
 
+3.8.3
+     Tab - Lyric Lines going from 1 to 0 would race on going back to 1.
+           Bar number not showing in the Edit page.
+	   Changing the tempo slider was not updating the page display heading.
+	   Changed all "Set List"s to "Setlist".
+	   Increased # of bars per line to 10 - mainly for 2/4 time.
+	   Rationalised the newTextGfx subroutine and calls arguments.
+	   Don't show Capo when Lyric Only selected.
+
 3.8.2
 	   Migrated the Installer from Visual Studio to Inno Script. Bit of a steep
 	     learning curve but it's more flexible.

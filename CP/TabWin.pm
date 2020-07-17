@@ -24,6 +24,7 @@ use strict;
 use Tkx;
 use CP::Cconst qw/:OS :SHFL :TEXT :SMILIE :COLOUR :TAB :PLAY/;
 use CP::Global qw/:FUNC :VERS :OPT :WIN :XPM :CHORD :SCALE/;
+use CP::Pop qw/:POP :MENU/;
 use CP::Tab;
 use CP::Offset;
 use CP::Cmsg;
@@ -99,7 +100,9 @@ sub pageWindow {
 #
 sub editWindow {
   if ($Tab->{eWin} eq '') {
-    ($Tab->{eWin}, my $outer) = popWin(0, 'Bar Editor', 10, 10);
+    my $pop = CP::Pop->new(0, '.be', 'Bar Editor', -1, -1);
+    ($Tab->{eWin}, my $outer) = ($pop->{top}, $pop->{frame});
+
     $Tab->{eWin}->g_wm_protocol('WM_DELETE_WINDOW', sub{$EditBar->Cancel()});
     $outer->g_pack(qw//);
     $Tab->{eWin}->g_wm_withdraw();
@@ -224,9 +227,8 @@ sub menu_buttons {
   my $botF = $frame->new_ttk__frame(qw/-relief raised -borderwidth 2/, -padding => 0);
   $botF->g_pack(qw/-side bottom/);
 
-  CORE::state $helpWin = '';
   foreach my $t (['About', 'Show Version', sub{showVersion()}, 0,0,1,1],
-		 ['Help',  'Tab Help', sub{$helpWin=CP::HelpTab::help($helpWin)}, 1,0,1,1] ) {
+		 ['Help',  'Tab Help', [\&CP::HelpTab::help], 1,0,1,1] ) {
     oneMbutton($botF, @{$t});
   }
 }
@@ -406,46 +408,48 @@ sub editBarFret {
 sub editBarOpts {
   my($frm) = @_;
 
-  my $lb1 = $frm->new_ttk__label(-text => 'Volta Bracket');
+  my $vbl = $frm->new_ttk__label(-text => 'Volta Bracket');
 
-  my $mb1 = $frm->new_ttk__button(
+  my $vbb = $frm->new_ttk__button(
     -textvariable => \$EditBar->{volta},
-    -width => 7,
+    -width => 8,
     -style => 'Menu.TButton',
     -command => sub{
       popMenu(\$EditBar->{volta},
 	      sub{$EditBar->volta()},
 	      [qw/None Left Center Right Both/]);
     });
-  my $lb2 = $frm->new_ttk__label(-text => 'Header Text');
-  my $ent = $frm->new_ttk__entry(
-    -width => 20,
+  my $htl = $frm->new_ttk__label(-text => 'Header Text');
+  my $hte = $frm->new_ttk__entry(
+    -width => 40,
     -validate => 'key',
-    -validatecommand => [sub{$Tab->topVal(@_)}, Tkx::Ev("%P")]);
-  $EditBar->{topEnt} = $ent;
-  $ent->configure(-invalidcommand => sub{Tkx::bell();$ent->configure(-validate => 'key');});
-  my $lb3 = $frm->new_ttk__label(-text => 'Justify -');
-  my $mb2 = $frm->new_ttk__button(
+    -validatecommand => [sub{
+      $EditBar->{header} = shift;
+      $EditBar->topText();
+      1;}, Tkx::Ev("%P")]);
+  $EditBar->{topEnt} = $hte;
+  my $jul = $frm->new_ttk__label(-text => 'Justify ');
+  my $jub = $frm->new_ttk__button(
     -textvariable => \$EditBar->{justify},
-    -width => 6,
+    -width => 8,
     -style => 'Menu.TButton',
     -command => sub{
       popMenu(\$EditBar->{justify},
 	      sub{$EditBar->topText()},
 	      [qw/Left Right/]);
     });
-  my $lb4 = $frm->new_ttk__label(-text => 'Repeat');
-  my $mb3 = $frm->new_ttk__button(
+  my $rel = $frm->new_ttk__label(-text => 'Repeat');
+  my $reb = $frm->new_ttk__button(
     -textvariable => \$EditBar->{rep},
-    -width => 7,
+    -width => 8,
     -style => 'Menu.TButton',
     -command => sub{
       popMenu(\$EditBar->{rep},
 	      sub{$EditBar->repeat()},
 	      [qw/None Start End/]);
     });
-  my $lb5 = $frm->new_ttk__label(-text => 'Note Font');
-  my $mb4 = $frm->new_ttk__button(
+  my $nfl = $frm->new_ttk__label(-text => 'Note Font');
+  my $nfb = $frm->new_ttk__button(
     -textvariable => \$Tab->{noteFsize},
     -width => 8,
     -style => 'Menu.TButton',
@@ -454,7 +458,7 @@ sub editBarOpts {
 	      undef,
 	      [qw/Normal Small/]);
     });
-  my $lb6 = $frm->new_ttk__label(-text => "Bar Starts:");
+  my $bsl = $frm->new_ttk__label(-text => "Bar Starts:");
   my $cb1 = $frm->new_ttk__checkbutton(
     -text => 'Line',
     -variable => \$EditBar->{newline},
@@ -464,20 +468,33 @@ sub editBarOpts {
     -variable => \$EditBar->{newpage},
     -command => sub{$EditBar->{newline} = 0 if ($EditBar->{newpage} == 1);});
 
-  $lb1->g_grid(qw/-row 0 -column 0 -sticky e/, -padx => [0,2],  -pady => [0,4]); #VB
-  $mb1->g_grid(qw/-row 0 -column 1 -sticky w/, -padx => [0,16], -pady => [0,4]);
-  $lb2->g_grid(qw/-row 0 -column 2 -sticky e/, -padx => [0,2],  -pady => [0,4]); #HT
-  $ent->g_grid(qw/-row 0 -column 3 -columnspan 2 -sticky w/, -padx => [0,0],  -pady => [0,4]);
-  $lb3->g_grid(qw/-row 0 -column 5 -sticky e/, -padx => [2,2],  -pady => [0,4]); #Just
-  $mb2->g_grid(qw/-row 0 -column 6 -sticky w/, -padx => [0,0],  -pady => [0,4]);
+  $vbl->g_grid(qw/-row 0 -column 0 -sticky e/, -padx => [0,2],  -pady => [0,4]);
+  $vbb->g_grid(qw/-row 0 -column 1 -sticky w/, -padx => [0,16], -pady => [0,4]);
 
-  $lb4->g_grid(qw/-row 1 -column 0 -sticky e/, -padx => [0,2],  -pady => [0,4]); #Rep
-  $mb3->g_grid(qw/-row 1 -column 1 -sticky w/, -padx => [0,16], -pady => [0,4]);
-  $lb5->g_grid(qw/-row 1 -column 2 -sticky e/, -padx => [0,2],  -pady => [0,4]); #NF
-  $mb4->g_grid(qw/-row 1 -column 3 -sticky w/, -padx => [0,0],  -pady => [0,4]);
-  $lb6->g_grid(qw/-row 1 -column 4 -sticky e/); # Bar Starts
-  $cb1->g_grid(qw/-row 1 -column 5/);
-  $cb2->g_grid(qw/-row 1 -column 6 -sticky w/);
+  $rel->g_grid(qw/-row 1 -column 0 -sticky e/, -padx => [0,2],  -pady => [0,4]);
+  $reb->g_grid(qw/-row 1 -column 1 -sticky w/, -padx => [0,16], -pady => [0,4]);
+
+  $nfl->g_grid(qw/-row 2 -column 0 -sticky e/, -padx => [0,2],  -pady => [0,4]);
+  $nfb->g_grid(qw/-row 2 -column 1 -sticky w/, -padx => [0,0],  -pady => [0,4]);
+
+
+  $htl->g_grid(qw/-row 0 -column 2 -sticky e/, -padx => [0,2],  -pady => [0,4]);
+  $hte->g_grid(qw/-row 0 -column 3 -columnspan 4 -sticky w/, -padx => [0,0],  -pady => [0,4]);
+
+  $jul->g_grid(qw/-row 1 -column 5 -rowspan 2 -sticky e/, -padx => [12,0], -pady => [0,0]);
+  $jub->g_grid(qw/-row 1 -column 6 -rowspan 2 -sticky w/, -padx => [0,0],  -pady => [0,0]);
+
+  $bsl->g_grid(qw/-row 1 -column 2 -rowspan 2 -sticky e/); # Bar Starts
+  $cb1->g_grid(qw/-row 1 -column 3 -rowspan 2/);
+  $cb2->g_grid(qw/-row 1 -column 4 -rowspan 2 -sticky w/);
+}
+
+sub topVal {
+  my($val) = shift;
+
+  $EditBar->{header} = $val;
+  $EditBar->topText();
+  return(1);
 }
 
 sub shiftOpt {
@@ -487,7 +504,7 @@ sub shiftOpt {
 
   my $me1 = $frm->new_ttk__button(
     -textvariable => \$Tab->{trans},
-    -width => 3,
+    -width => 4,
     -style => 'Menu.TButton',
     -command => sub{
       popMenu(\$Tab->{trans},
@@ -517,14 +534,16 @@ sub shiftOpt {
 
   my $cb4 = $frm->new_ttk__checkbutton(-variable => \$Opt->{Refret});
 
-  $lb1->g_grid(qw/-row 0 -column 0 -sticky e/, -padx => [4,0], -pady => [0,4]);
-  $me1->g_grid(qw/-row 0 -column 1 -sticky w/, -padx => [2,2], -pady => [0,4]);
-  $bu1->g_grid(qw/-row 0 -column 2 -sticky w/, -padx => [4,0], -pady => [0,4]);
-  $lb2->g_grid(qw/-row 0 -column 3 -sticky e/, -padx => [16,0], -pady => [0,4]);
-  $bu2->g_grid(qw/-row 0 -column 4 -sticky e/, -padx => [2,2], -pady => [0,4]);
-  $bu3->g_grid(qw/-row 0 -column 5 -sticky e/, -padx => [4,0], -pady => [0,4]);
-  $lb4->g_grid(qw/-row 1 -column 0 -sticky e/, -padx => [4,0], -pady => [0,4]);
-  $cb4->g_grid(qw/-row 1 -column 1/,           -padx => [4,0], -pady => [0,4]);
+  $lb1->g_grid(qw/-row 0 -column 0 -columnspan 2/, -padx => [8,4], -pady => [0,4]);
+  $me1->g_grid(qw/-row 1 -column 0 /,              -padx => [8,2], -pady => [0,4]);
+  $bu1->g_grid(qw/-row 1 -column 1 /,              -padx => [2,4], -pady => [0,4]);
+
+  $lb2->g_grid(qw/-row 0 -column 3 -columnspan 2/, -padx => [8,4], -pady => [0,4]);
+  $bu2->g_grid(qw/-row 1 -column 3 /,              -padx => [8,2], -pady => [0,4]);
+  $bu3->g_grid(qw/-row 1 -column 4 /,              -padx => [2,4], -pady => [0,4]);
+
+  $lb4->g_grid(qw/-row 2 -column 0 -columnspan 2 -sticky e/, -padx => [8,0], -pady => [0,4]);
+  $cb4->g_grid(qw/-row 2 -column 2 -sticky w/,           -padx => [4,0], -pady => [0,4]);
 }
 
 sub transCmnd {
@@ -611,12 +630,12 @@ sub pageOpts {
 ###
   my $tml = $frm->new_ttk__label(-text => 'Timing');
   my $tmm = $frm->new_ttk__button(
-    -textvariable => \$Opt->{Timing},
+    -textvariable => \$Tab->{Timing},
     -style => 'Menu.TButton',
     -width => 4,
-    -command => sub{popMenu(\$Opt->{Timing},
-			    sub{(my $t = $Opt->{Timing}) =~ s/(\d).*/$1/;
-				$Opt->{BarEnd} = $t * 8;
+    -command => sub{popMenu(\$Tab->{Timing},
+			    sub{my($t,$_t) = split('/', $Tab->{Timing});
+				$Tab->{BarEnd} = $t * 8;
 				$Tab->drawPageWin();
 				editWindow();
 				main::setEdited(1);},
@@ -640,7 +659,7 @@ sub pageOpts {
     -width => 3,
     -command => sub{popMenu(\$Opt->{Nbar},
 			    sub{$Tab->drawPageWin();main::setEdited(1);},
-			    [qw/3 4 5 6 7 8/]);
+			    [qw/3 4 5 6 7 8 9 10/]);
     });
 ###
   my $ssl = $frm->new_ttk__label(-text => "String\nSpacing");

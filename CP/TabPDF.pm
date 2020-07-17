@@ -112,7 +112,7 @@ sub getFont {
 }
 
 sub newTextGfx {
-  my($self,$pp) = @_;
+  my($pp) = shift;
 
   $GfxPtr = $pp->gfx();
   $GfxPtr->linecap(1);
@@ -121,13 +121,17 @@ sub newTextGfx {
 }
 
 sub batch {
+  my $pop = CP::Pop->new(0, '.bp', 'Batch PDF');
+  return if ($pop eq '');
+  my($top,$frm) = ($pop->{top}, $pop->{frame});
+
   my $done = '';
   my $x = Tkx::winfo_pointerx($MW);
   my $y = Tkx::winfo_pointery($MW);
   my @files = CP::Browser->new($MW, FILE, $Path->{Tab}, '.tab');
   return if (@files == 0);
   my $pl = (@files > 1) ? 's' : '';
-  my($top,$frm) = popWin(0, 'Batch DPF', $x, $y);
+
   my $lab = $frm->new_ttk__label(
     -text => "The following tab$pl will have a PDF created:",
     -font => 'BTkDefaultFont');
@@ -178,7 +182,7 @@ sub batch {
     CP::Cmsg::position($x,$y);
     message(SMILE, " Done ", -1);
   }
-  $top->g_destroy();
+  $pop->destroy();
 }
 
 sub textConf {
@@ -270,7 +274,7 @@ sub make {
   my $lidx = my $pn = 0;
   for(my $bar = $Tab->{bars}; $bar != 0; $bar = $bar->{next}) {
     if ($bar->{pageNum} != $pn) {
-      $pdf->newTextGfx($pdf->{page}[$pn]);
+      newTextGfx($pdf->{page}[$pn]);
       $lidx = $pn * $Tab->{rowsPP};
       $pdf->pageNum(++$pn);
     }
@@ -316,7 +320,7 @@ sub newPage {
   push(@{$self->{page}}, $pp);
   $pp->mediabox($w, $h);
   $pp->cropbox(0, 0, $w, $h);
-  newTextGfx($self, $pp);
+  newTextGfx($pp);
 
   $h -= $Tab->{pageHeader};
 
@@ -390,7 +394,7 @@ sub bar {
   $lx = $xy->{pos0};
   $ly += $ss;
   my $un = $off->{interval} * 8;
-  (my $t = $Opt->{Timing}) =~ s/(\d).*/$1/;
+  (my $t = $Tab->{Timing}) =~ s/(\d).*/$1/;
   foreach (1..$t) {
     _vline($lx, $ly, $ly + $h, (THIN / 2), BLACK);
     $lx += $un;
@@ -570,7 +574,7 @@ sub NoteSlideHam {
   my $clr = $Tab->{headColor};
   $clr = CP::FgBgEd::lighten($clr, 80) if ($bar->{pidx} == -2);
 
-  my $xaxis = ($nn->{bar} != $bar) ? $Opt->{BarEnd} - $pos + 3 + $topos : $topos - $pos;
+  my $xaxis = ($nn->{bar} != $bar) ? $Tab->{BarEnd} - $pos + 3 + $topos : $topos - $pos;
   $xaxis *= $u;
   if ($self->{shbr} eq 's') {
     my $slht = $ss * 0.4;
@@ -588,7 +592,7 @@ sub NoteSlideHam {
     }
     else {
       # Crosses a Bar boundary.
-      my $xlen = ($Opt->{BarEnd} + 1 - $pos) * $u;
+      my $xlen = ($Tab->{BarEnd} + 1 - $pos) * $u;
       $x1 = $x + $xlen;
       my $ymid = ($xlen / $xaxis) * $slht;
       if ($nn->{fret} > $self->{fret}) {
@@ -656,7 +660,7 @@ sub slideHam {
   my($x1,$y1);
   my $pos = $note->{pos};
   my $topos = $nn->{pos};
-  my $xaxis = ($nn->{bar} != $bar) ? $Opt->{BarEnd} - $pos + 3 + $topos : $topos - $pos;
+  my $xaxis = ($nn->{bar} != $bar) ? $Tab->{BarEnd} - $pos + 3 + $topos : $topos - $pos;
   $xaxis *= $u;
   $hu = $u / 2;
 
@@ -678,7 +682,7 @@ sub slideHam {
     }
     else {
       # Crosses a Bar boundary.
-      my $xlen = ($Opt->{BarEnd} + 1 - $pos) * $u;
+      my $xlen = ($Tab->{BarEnd} + 1 - $pos) * $u;
       $x1 = $x + $xlen;
       my $ymid = ($xlen / $xaxis) * $slht;
       $y1 = ($nn->{fret} > $note->{fret}) ? $y + $ymid : $y - $ymid;
@@ -748,11 +752,11 @@ sub bendRel {
     # is in the same Bar as the Bend - makes the logic easier.
     my $hold = $note->{hold};
     my $arc1 = my $arc2 = ($hold > 8) ? 4 : $hold / 2;
-    if ($pos == ($Opt->{BarEnd} - 1)) {
+    if ($pos == ($Tab->{BarEnd} - 1)) {
       $arc1 = 2;
     }
-    if (($pos + $hold) >= $Opt->{BarEnd}) {
-      $arc2 = 2 if (($pos + $hold) == $Opt->{BarEnd});
+    if (($pos + $hold) >= $Tab->{BarEnd}) {
+      $arc2 = 2 if (($pos + $hold) == $Tab->{BarEnd});
       $hold += 3;
     }
     $arc1 *= $u;
@@ -763,7 +767,7 @@ sub bendRel {
 
     $x += $arc1;
     my $x1;
-    if (($pos + $hold) >= $Opt->{BarEnd}) {
+    if (($pos + $hold) >= $Tab->{BarEnd}) {
       $x1 = $bar->{x} + $off->{width};
       $line -= ($x1 - $x);
     }

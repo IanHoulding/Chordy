@@ -221,7 +221,7 @@ sub outline {
   $y1 = $Y + $off->{staffY};
   $y2 = $Y + $off->{staff0};
   my $un = $off->{interval} * 8;
-  (my $t = $Opt->{Timing}) =~ s/(\d).*/$1/;
+  my($t,$_t) = split('/', $Tab->{Timing});
   foreach (1..$t) {
     vline($can, $x1, $y1, $y2, $ht, $fill, $tag);
     $x1 += $un;
@@ -266,7 +266,7 @@ sub markers {
   my $hu = $u / 2;
   my $ss = $off->{staffSpace};
   my $hss = $ss / 2;
-  (my $t = $Opt->{Timing}) =~ s/(\d).*/$1/;
+  my($t,$_t) = split('/', $Tab->{Timing});
   my $hsq = ($t * 8) - 1;
   my $can = $self->{canvas};
   my $fill = ($self->{pidx} == -1) ? BLACK : LGREY;
@@ -283,7 +283,7 @@ sub markers {
 	$can->create_line($x,$y, $x,$y+$l, -width => 1, -fill => $fill, -tags => $tag);
       }
       # Create and bind the detection rectangles
-      $pos += $Opt->{BarEnd} if ($self->{pidx} == -2);
+      $pos += $Tab->{BarEnd} if ($self->{pidx} == -2);
       my $a = $can->create_rectangle($x-$hu, $y1, $x+$hu, $y2, -width => 0, -tags => $det);
       $can->bind($a, "<Button-1>", sub{posSelect($self, $str, $pos)});
       $x += $u;
@@ -382,7 +382,7 @@ sub posSelect {
 	  if ($n->{bar} == $self) {
 	    $n->{hold} = $pos - $n->{pos};
 	  } else {
-	    my $barEnd = (eval($Opt->{Timing}) * 32) + 1;
+	    my $barEnd = (eval($Tab->{Timing}) * 32) + 1;
 	    $n->{hold} = ($barEnd - $n->{pos}) + ($pos - $barEnd);
 	  }
 	  $n->show('F');
@@ -427,6 +427,23 @@ sub Edit {
   my($self) = shift;
 
   if ($self) {
+    if ($Tab->{eWin}->g_wm_state() eq 'normal') {
+      # We have a Bar being Edited and someone's selected a new Bar for editing.
+      my $bar = $Tab->{select1};
+      my $pbar = $EditBar->{pbar};
+      if (($pbar && comp($EditBar, $pbar)) || ($pbar == 0 && ! isblank($EditBar))) {
+	my $ans = CP::Cmsg::msgYesNoCan("Save current Bar?");
+	if ($ans eq 'Cancel') {
+	  $Tab->ClearSel();
+	  $pbar->select();
+	  $Tab->{select1} = $pbar;
+	  return;
+	}
+	Save() if ($ans eq 'Yes');
+      }
+      $EditBar->Clear();
+      $EditBar1->Clear();
+    }
     copy($self, $EditBar);
     $EditBar->{pbar} = $self;
     $EditBar->{prev} = $self->{prev};
@@ -437,6 +454,7 @@ sub Edit {
     } else {
       $EditBar1->{next} = $EditBar1->{pbar} = 0;
     }
+    $EditBar->{bidx} = $self->{bidx};
   } else {
     $EditBar->{bidx} = ($Tab->{bars}) ? $Tab->{lastBar}{bidx} + 1 : 1;
   }
@@ -578,7 +596,6 @@ sub deselect {
       $Tab->{eCan}->itemconfigure($id, -fill => $Tab->{noteColor});
     }
     $Tab->{selected} = 0;
-    $self->{sid} = $self->{eid} = 0;
   }
 }
 
@@ -654,7 +671,7 @@ sub show {
 	  if ($pn->{shbr} =~ /s|h/) {
 	    my $fn = $self->{notes}[0];
 	    my $u = $self->{offset}{interval};
-	    my $xlft = ($Opt->{BarEnd} - $pn->{pos}) * $u;
+	    my $xlft = ($Tab->{BarEnd} - $pn->{pos}) * $u;
 	    my $xrht = (2 + $fn->{pos}) * $u;
 	    my $xaxis = $xlft + $xrht;
 	    if ($pn->{shbr} eq 's') {
@@ -668,8 +685,8 @@ sub show {
 	      $fn->hammerTail($xaxis, $mid, $Tab->{headColor}, 'edit');
 	    }
 	  }
-	  elsif ($pn->{shbr} eq 'r' && ($pn->{pos} + $pn->{hold}) >= $Opt->{BarEnd}) {
-	    my $hold = $pn->{hold} - ($Opt->{BarEnd} - 1 - $pn->{pos}) + 2;
+	  elsif ($pn->{shbr} eq 'r' && ($pn->{pos} + $pn->{hold}) >= $Tab->{BarEnd}) {
+	    my $hold = $pn->{hold} - ($Tab->{BarEnd} - 1 - $pn->{pos}) + 2;
 	    my $arc = ($hold >= 3) ? 3 : 2;
 	    $hold -= $arc;
 	    my($x,$y) = $pn->noteXY();

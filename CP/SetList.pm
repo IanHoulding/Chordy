@@ -74,7 +74,7 @@ sub save {
     rename("${SL}.cfg", "${SL}.bak");
   }
   unless (open OFH, ">${SL}.cfg") {
-    message(SAD, "Couldn't create Set List file. (${SL}.cfg)");
+    message(SAD, "Couldn't create Setlist file. (${SL}.cfg)");
     if (-e "${SL}.bak") {
       rename( "${SL}.bak", "${SL}.cfg");
     }
@@ -99,7 +99,7 @@ sub save {
   }
   print OFH ");\n1;\n";
   close(OFH);
-  message(SMILE, "Set Lists updated and saved.", 1);
+  message(SMILE, "Setlists updated and saved.", 1);
 }
 
 sub select {
@@ -157,12 +157,12 @@ sub setNRC {
 
   my $oldname = $CurSet;
   if (defined $self->{sets}{$newname}) {
-    message(SAD, "Set List \"$newname\" already exists\nPlease choose another name.");
+    message(SAD, "Setlist \"$newname\" already exists\nPlease choose another name.");
   } else {
     if ($newname ne '') {
       my $sp = $self->{sets};
       if ($what & (SLCLN | SLREN)) {
-	# Copy the selected Set List into a new one
+	# Copy the selected Setlist into a new one
 	$sp->{$newname} = $sp->{$oldname};
 	if ($what == SLREN) {
 	  delete $sp->{$oldname};
@@ -225,7 +225,7 @@ sub export {
 	  $Home = "$Collection->{$col}/$col";
 	  my $sl = CP::SetList->new();
 	  if (exists $sl->{sets}{$CurSet} && $all == 0) {
-	    my $ans = msgYesNoAll("The Set List:    \"$CurSet\"\nalready exists in Collection:\n    \"$col\"\nDo you want to overwrite it?");
+	    my $ans = msgYesNoAll("The Setlist:    \"$CurSet\"\nalready exists in Collection:\n    \"$col\"\nDo you want to overwrite it?");
 	    if ($ans eq "No") {
 	      undef $sl;
 	      next;
@@ -250,7 +250,9 @@ sub edit {
   if (! defined $DT) {
     $DT = CP::Date->new();
   }
-  my($top,$wt) = popWin(0, 'Set List Date/Times');
+  my $pop = CP::Pop->new(0, '.sl', 'Setlist Date/Times');
+  return if ($pop eq '');
+  my($top,$wt) = ($pop->{top}, $pop->{frame});
 
   my $tf = $wt->new_ttk__labelframe(
     -text => $CurSet,
@@ -269,8 +271,8 @@ sub edit {
   my $sd = $tf->new_ttk__button(-image => 'ellipsis',
 				-width => 5,
 				-command => sub{if ($DT->newDate()) {
-				                  $self->{meta}{date} = sprintf "%d %s %d",
-						      $DT->{day}, $DT->{months}, $DT->{year};
+				  $self->{meta}{date} = sprintf "%d %s %d",
+				      $DT->{day}, $DT->{months}, $DT->{year};
 						}});
   $sd->g_grid(qw/-row 0 -column 3 -padx 8 -pady 2 -sticky w/);
   my $row = 1;
@@ -287,8 +289,8 @@ sub edit {
     my $sel = $tf->new_ttk__button(-image => 'ellipsis',
 				   -width => 5,
 				   -command => sub{if ($DT->newTime()) {
-						     $$var = sprintf "%02d:%02d",
-							 $DT->{hour}, $DT->{minute};
+				     $$var = sprintf "%02d:%02d",
+					 $DT->{hour}, $DT->{minute};
 						   }});
     $sel->g_grid(-row => $row++, qw/-column 2 -padx 0 -pady 2 -sticky w/);
     $ent->g_focus() if ($row == 1);
@@ -312,7 +314,7 @@ sub edit {
       $self->{meta}{$o} = $sp->{$o};
     }    
   }
-  $top->g_destroy();
+  $pop->destroy();
   $done;
 }
 
