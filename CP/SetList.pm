@@ -13,6 +13,7 @@ use strict;
 
 use CP::Cconst qw/:SMILIE :BROWSE/;
 use CP::Global qw/:FUNC :PATH :OPT :PRO :SETL :XPM/;
+use CP::Pop qw/:MENU/;
 use CP::Cmsg;
 use CP::Date;
 
@@ -118,13 +119,15 @@ sub select {
     foreach my $o (@strOpt) {
       $self->{meta}{$o} = $sp->{$o};
     }
-    my $idx = 0;
-    foreach my $a (@{$AllSets->{setsLB}{array}}) {
-      if ($a eq $CurSet) {
-	$AllSets->{setsLB}->selection_set($idx);
-	last;
+    if (defined $AllSets) {
+      my $idx = 0;
+      foreach my $a (@{$AllSets->{setsLB}{array}}) {
+	if ($a eq $CurSet) {
+	  $AllSets->{setsLB}->selection_set($idx);
+	  last;
+	}
+	$idx++;
       }
-      $idx++;
     }
   }
 }
