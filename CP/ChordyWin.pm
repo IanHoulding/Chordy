@@ -510,18 +510,25 @@ sub setLists {
     -style => 'Wh.TLabelframe',
     -labelanchor => 'n',
     -padding => [4,0,4,4]);
-  my $sltM = $slFt->new_ttk__labelframe(
+  my $sltR = $slFt->new_ttk__labelframe(
     -text => ' Current Setlist ',
     -style => 'Wh.TLabelframe',
     -labelanchor => 'n',
-    -padding => [4,0,4,4]);
-  my $sltR = $slFt->new_ttk__frame(-style => 'Wh.TFrame');
+    -padding => [4,2,4,4]);
 
-  my $setsLB = $AllSets->{setsLB} = CP::List->new(
-    $sltL, 'e', -height => 10, -width => SLWID, -selectmode => '');
-  $setsLB->bind('<ButtonRelease-1>' => \&showSet);
-  $setsLB->{array} = $AllSets->listSets();
-  $setsLB->a2tcl();
+  my $setsLB;
+  my $rev = $Opt->{SLrev};
+  my $sltr = $slFt->new_ttk__checkbutton(-text => 'Reverse Sort',
+					  -variable => \$rev,
+					  -style => 'Wh.TCheckbutton',
+					  -command => sub{$Opt->change('SLrev', $rev);
+							  $AllSets->listSets();
+					  });
+
+  $setsLB = $AllSets->{setsLB} = CP::List->new(
+    $sltL, 'e', -height => 12, -width => SLWID, -selectmode => '');
+  $setsLB->bind('<ButtonRelease-1>' => sub{$AllSets->showSet()});
+  $AllSets->listSets();
 
   my($row,$w,$st,$cs) = (0,25,'YNb.TLabel',2);
   foreach my $l (['Name',        \$CurSet],
@@ -531,61 +538,67 @@ sub setLists {
 		 ['Set1 Start',  \$AllSets->{meta}{set1time}],
 		 ['Set2 Start',  \$AllSets->{meta}{set2time}]) {
     my($n,$v) = @{$l};
-    my $lab = $sltM->new_ttk__label(-text => "$n: ", -background => WHITE);
+    my $lab = $sltR->new_ttk__label(-text => "$n: ", -background => WHITE);
     if ($row) {
       $w = ($row == 1) ? 18 : 8;
       $st = 'YNnf.TLabel';
       $cs = 1;
     }
-    my $ent = $sltM->new_ttk__label(-textvariable => $v, -style => $st, -width => $w);
-    $lab->g_grid(-row => $row, -column => 0, -sticky => 'e', -pady => [0,4]);
-    $ent->g_grid(-row => $row++, -column => 1, -columnspan => $cs, -sticky => 'w', -pady => [0,4]);
+    my $ent = $sltR->new_ttk__label(-textvariable => $v, -style => $st, -width => $w);
+    $lab->g_grid(-row => $row, -column => 0, -sticky => 'e', -pady => [0,6]);
+    $ent->g_grid(-row => $row++, -column => 1, -columnspan => $cs, -sticky => 'w', -pady => [0,6]);
   }
-  my $butEdt = $sltM->new_ttk__button(
+  my $butEdt = $sltR->new_ttk__button(
     -text => "Edit",
     -width => 6,
     -style => 'Green.TButton',
     -command => sub{if ($CurSet ne '') {$AllSets->edit()}});
   $butEdt->g_grid(-row => 2, -column => 2, -rowspan => 2, -sticky => 'w', -padx => 10, -pady => 4);
-  my $butClr = $sltM->new_ttk__button(
+  my $butClr = $sltR->new_ttk__button(
     -text => "Clear",
     -width => 6,
     -style => 'Green.TButton',
     -command => sub{$browser->reset();$AllSets->select('')});
   $butClr->g_grid(-row => 3, -column => 2, -rowspan => 2, -sticky => 'w', -padx => 10, -pady => 4);
 
-  my $butNew = $sltR->new_ttk__button(
+  my $butNew = $slFt->new_ttk__button(
     -text => "New",
     -width => 8,
     -command => sub{slAct(SLNEW)});
-  my $butRen = $sltR->new_ttk__button(
+  my $butRen = $slFt->new_ttk__button(
     -text => "Rename",
     -width => 8,
     -command => sub{slAct(SLREN)});
-  my $butCln = $sltR->new_ttk__button(
+  my $butCln = $slFt->new_ttk__button(
     -text => "Clone",
     -width => 8,
     -command => sub{slAct(SLCLN)});
-  my $butPrt = $sltR->new_ttk__button(
-    -text => "Print",
-    -width => 8,
-    -style => 'Green.TButton',
-    -command => \&CP::CPpdf::printSL);
-  my $butExp = $sltR->new_ttk__button(
-    -text => "Export",
-    -width => 8,
-    -style => 'Green.TButton',
-    -command => sub{$AllSets->export()});
-  my $butSav = $sltR->new_ttk__button(
-    -text => "Save",
-    -width => 8,
-    -style => 'Green.TButton',
-    -command => sub{saveSet($browser)});
-  my $butDel = $sltR->new_ttk__button(
+  my $butDel = $slFt->new_ttk__button(
     -text => "Delete",
     -width => 8,
     -style => 'Red.TButton',
     -command => sub{slAct(SLDEL)} );
+
+  my $butPrt = $slFt->new_ttk__button(
+    -text => "Print",
+    -width => 8,
+    -style => 'Green.TButton',
+    -command => \&CP::CPpdf::printSL);
+  my $butInp = $slFt->new_ttk__button(
+    -text => "Import",
+    -width => 8,
+    -style => 'Green.TButton',
+    -command => sub{$AllSets->importSet()});
+  my $butExp = $slFt->new_ttk__button(
+    -text => "Export",
+    -width => 8,
+    -style => 'Green.TButton',
+    -command => sub{$AllSets->export()});
+  my $butSav = $slFt->new_ttk__button(
+    -text => "Save",
+    -width => 8,
+    -style => 'Green.TButton',
+    -command => sub{saveSet($browser)});
 
   ## Now pack everything
   # Setlists
@@ -593,19 +606,21 @@ sub setLists {
   # Browser
   $slFb->g_pack(qw/-side top -fill x/, -pady => [4,0]);
 
-  $sltL->g_pack(qw/-side left/, -padx => [4,0], -pady => [0,4]);
-  $sltM->g_pack(qw/-side left -anchor n/, -padx => [20,0]);
-  $sltR->g_pack(qw/-side left -fill y/, -padx => [8,8]);
+  $sltL->g_grid(qw/-row 1 -column 0 -rowspan 2 -sticky n/, -padx => [4,0], -pady => [0,4]);
+  $sltR->g_grid(qw/-row 1 -column 1 -columnspan 4 -sticky n/, -padx => [20,0]);
+
+  $sltr->g_grid(qw/-row 0 -column 0 -sticky sw -padx 4/, -pady => [0,0]);
   $setsLB->{frame}->g_grid(qw/-row 0 -column 0 -sticky nsew/);
-  # New/Rename/Clone buttons
-  $butNew->g_pack( qw/-side top/, -pady => [4,4]);
-  $butRen->g_pack( qw/-side top/, -pady => [0,4]);
-  $butCln->g_pack( qw/-side top/, -pady => [0,4]);
+  # New/Rename/Clone/Delete buttons
+  $butNew->g_grid(qw/-row 0 -column 1 -pady 4/, -padx => [20,6]);
+  $butRen->g_grid(qw/-row 0 -column 2 -padx 6 -pady 4/);
+  $butCln->g_grid(qw/-row 0 -column 3 -padx 6 -pady 4/);
+  $butDel->g_grid(qw/-row 0 -column 4 -padx 6 -pady 4/);
   # Print/Export/Save/Delete
-  $butPrt->g_pack( qw/-side top/, -pady => [4,4]);
-  $butExp->g_pack( qw/-side top/, -pady => [0,4]);
-  $butSav->g_pack( qw/-side top/, -pady => [4,4]);
-  $butDel->g_pack( qw/-side top/, -pady => [4,4]);
+  $butPrt->g_grid(qw/-row 2 -column 1 -pady 4/, -padx => [20,6]);
+  $butInp->g_grid(qw/-row 2 -column 2 -padx 6 -pady 4/);
+  $butExp->g_grid(qw/-row 2 -column 3 -padx 6 -pady 4/);
+  $butSav->g_grid(qw/-row 2 -column 4 -padx 6 -pady 4/);
 }
 
 sub browser {
@@ -641,16 +656,6 @@ sub saveSet {
   }
 }
 
-sub showSet {
-  my $idx = $AllSets->{setsLB}->curselection(0);
-  my $sl = $AllSets->{setsLB}{array}[$idx];
-  if ($sl ne '') {
-    $AllSets->select($sl);
-    $AllSets->{browser}{selLB}{array} = $AllSets->{sets}{$sl}{songs};
-    $AllSets->{browser}->refresh($Path->{Pro}, '.pro');
-  }
-}
-
 sub slAct {
   my($what) = @_;
 
@@ -674,7 +679,7 @@ sub slAct {
       }
       $i = 0 if ($i == @{$AllSets->{setsLB}{array}});
       $AllSets->{setsLB}->set($i);
-      showSet($AllSets);
+      $AllSets->showSet();
     }
   }
 }

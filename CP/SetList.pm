@@ -61,7 +61,10 @@ sub conv2new {
 sub listSets {
   my($self) = shift;
 
-  [sort keys %{$self->{sets}}];
+  $self->{setsLB}{array} = ($Opt->{SLrev}) ?
+      [reverse sort keys %{$self->{sets}}] :
+      [sort keys %{$self->{sets}}];
+  $self->{setsLB}->a2tcl();
 }
 
 sub save {
@@ -140,8 +143,7 @@ sub change {
   $AllSets = CP::SetList->new();
   $AllSets->{setsLB} = $slb;
   $AllSets->{browser} = $br;
-  $slb->{array} = $AllSets->listSets();
-  $slb->a2tcl();
+  $AllSets->listSets();
   if ($CurSet ne '') {
     if (! defined $AllSets->{sets}{$CurSet}) {
       $CurSet = '';
@@ -192,8 +194,20 @@ sub setNRC {
   }
 }
 
+sub showSet {
+  my($self) = shift;
+
+  my $idx = $self->{setsLB}->curselection(0);
+  my $sl = $self->{setsLB}{array}[$idx];
+  if ($sl ne '') {
+    $self->select($sl);
+    $self->{browser}{selLB}{array} = $self->{sets}{$sl}{songs};
+    $self->{browser}->refresh($Path->{Pro}, '.pro');
+  }
+}
+
 sub delete {
-  my($self) = @_;
+  my($self) = shift;
 
   my $todel = $CurSet;
   if ($todel ne '') {
@@ -205,6 +219,39 @@ sub delete {
   }
 }
 
+sub importSet {
+  my($self) = shift;
+
+  my $types = [
+    ['SetList Files', '.sel'],
+    ['All Files',      '*'],
+      ];
+  my $f = Tkx::tk___getOpenFile(
+    -initialdir => "$Home",
+    -filetypes => $types,
+    -defaultextension => '.sel',
+    -multiple => 1);
+  if ($f ne '') {
+    foreach my $f (Tkx::SplitList($f)) {
+      our %list;
+      do "$f";
+      foreach $CurSet (sort keys %list) {
+	if (exists $self->{sets}{$CurSet}) {
+	  my $ans = msgYesNoCan("SetList \"$CurSet\" already exists.\n  Overwrite it?");
+	  return if ($ans eq 'Cancel');
+	  next if ($ans eq 'No');
+	}
+	$self->{sets}{$CurSet} = $list{$CurSet};
+	message(SMILE, "\"$CurSet\" imported (but not saved)", -1);
+      }
+    }
+    $self->{setsLB}{array} = [sort keys %{$self->{sets}}];
+    $self->{setsLB}->a2tcl();
+    $self->select($CurSet);
+    $self->showSet();
+  }
+}
+
 sub export {
   my($self) = shift;
 
@@ -212,16 +259,50 @@ sub export {
   my $newC = my $orgC = $Collection->name();
   my @lst = sort keys %{$Collection};
   unshift(@lst, 'All');
+  push(@lst, 'SeP', 'File');
   popMenu(
     \$newC,
     sub{
       if ($newC ne $orgC) {
 	my $all = 0;
-	if ($newC eq 'All') {
+	if ($newC eq 'File') {
+	  my $file = $CurSet.'.sel';
+	  $file = Tkx::tk___getSaveFile(
+	    -title => "Save As",
+	    -initialdir => "$Home",
+	    -initialfile => $file,
+	    -confirmoverwrite => 1,
+	      );
+	  return if ($file eq '');
+	  unless (open OFH, '>', $file) {
+	    errorPrint("Couldn't create SetList file:\n   '$file'\n$!");
+	    return();
+	  }
+	  my $sp = \%{$self->{sets}{$CurSet}};
+	  print OFH "#!/usr/bin/perl\n\n";
+	  print OFH "\%list = (\n";
+	  print OFH "  \"$CurSet\" => {\n";
+	  foreach my $s (@strOpt) {
+	    print OFH "    $s => '$sp->{$s}',\n";
+	  }
+	  print OFH "    songs => [\n";
+	  foreach my $s (@{$sp->{songs}}) {
+	    print OFH '      "'.$s."\",\n";
+	  }
+	  print OFH "    ],\n";
+	  print OFH "  },\n";
+	  print OFH ");\n1;\n";
+	  close(OFH);
+	  message(SMILE, " Done ", 1);
+	  return;
+	} elsif ($newC eq 'All') {
 	  shift(@lst);
 	} else {
 	  @lst = ($newC);
 	}
+	# Remove the Seperator and File entries.
+	pop(@lst);
+	pop(@lst);
 	my $orgHome = $Home;
 	foreach my $col (@lst) {
 	  next if ($col eq $orgC);

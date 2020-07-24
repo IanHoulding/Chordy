@@ -59,7 +59,8 @@ sub MWoptions {
   Tkx::font_create("BTkDefaultFont", %list);
   $list{'-weight'} = 'normal';
   Tkx::font_create("NTkDefaultFont", %list);
-  $list{'-size'} -= 2;
+  $list{'-size'} -= 3;
+  $list{'-weight'} = 'bold';
   Tkx::font_create("STkDefaultFont", %list);
 
   BGclr($Opt->{WinBG});
@@ -114,7 +115,9 @@ sub MWoptions {
 			    -selectborderwidth => 0,
 			    -padding => [0,0,0,0]);
 
-  Tkx::ttk__style_configure('SF.TButton', -font => 'STkDefaultFont');
+  Tkx::ttk__style_configure('SF.TButton',
+			    -borderwidth => [0,0,0,0],
+			    -font => 'STkDefaultFont');
 
   Tkx::ttk__style_configure('Red.TButton',   -foreground => 'darkred');
   Tkx::ttk__style_configure('Green.TButton', -foreground => 'darkgreen');
@@ -143,6 +146,7 @@ sub MWoptions {
 			    -highlightthickness => 0,
 			    -foreground => bFG);
   Tkx::ttk__style_configure('Pop.TCheckbutton', -background => POPBG);
+  Tkx::ttk__style_configure('Wh.TCheckbutton', -background => WHITE);
 
   Tkx::ttk__style_configure('TRadiobutton',
 			    -activeforeground => BLACK,
