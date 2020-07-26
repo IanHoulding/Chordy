@@ -146,7 +146,11 @@ sub MWoptions {
 			    -highlightthickness => 0,
 			    -foreground => bFG);
   Tkx::ttk__style_configure('Pop.TCheckbutton', -background => POPBG);
-  Tkx::ttk__style_configure('Wh.TCheckbutton', -background => WHITE);
+  Tkx::ttk__style_configure('NM.TCheckbutton',
+			    -indicatormargin => [0,0,0,0]);
+  Tkx::ttk__style_configure('Wh.TCheckbutton',
+			    -background => WHITE,
+			    -indicatormargin => [0,0,0,0]);
 
   Tkx::ttk__style_configure('TRadiobutton',
 			    -activeforeground => BLACK,
@@ -159,6 +163,14 @@ sub MWoptions {
   Tkx::ttk__style_configure('Pop.TLabel',
 			    -background => $Opt->{PopBG},
 			    -foreground => $Opt->{PopFG});
+
+  Tkx::ttk__style_configure('Wh.TLabel',
+			    -background => WHITE,
+			    -relief => 'solid',
+			    -borderwidth => 0,
+			    -selectborderwidth => 0,
+			    -highlightthickness => 0,
+			    -padding => [0,0,0,0]);
 
   Tkx::ttk__style_configure('YN.TLabel',
 			    -background => SELECT,

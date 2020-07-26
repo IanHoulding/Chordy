@@ -510,23 +510,39 @@ sub setLists {
     -style => 'Wh.TLabelframe',
     -labelanchor => 'n',
     -padding => [4,0,4,4]);
-  my $sltR = $slFt->new_ttk__labelframe(
+  my $sltM = $slFt->new_ttk__frame(qw/-style Wh.TFrame/);
+  my $sltCS = $slFt->new_ttk__labelframe(
     -text => ' Current Setlist ',
     -style => 'Wh.TLabelframe',
     -labelanchor => 'n',
     -padding => [4,2,4,4]);
+  my $sltR = $slFt->new_ttk__frame(qw/-style Wh.TFrame/);
 
   my $setsLB;
   my $rev = $Opt->{SLrev};
-  my $sltr = $slFt->new_ttk__checkbutton(-text => 'Reverse Sort',
-					  -variable => \$rev,
-					  -style => 'Wh.TCheckbutton',
-					  -command => sub{$Opt->change('SLrev', $rev);
-							  $AllSets->listSets();
-					  });
+  my $sltr = $sltM->new_ttk__checkbutton(-variable => \$rev,
+					 -style => 'Wh.TCheckbutton',
+					 -command => sub{$Opt->change('SLrev', $rev);
+							 $AllSets->listSets();
+					 });
+  # This is a bit OTT but the only apparent way to get rotated text.
+  my $can = $sltM->new_tk__canvas(-bg => WHITE,
+				  -highlightthickness => 0,
+				  -relief => 'solid',
+				  -borderwidth => 0);
+  my $rtxt = $can->create_text(0,0,
+			       -text => 'Reverse Sort',
+			       -font => 'BTkDefaultFont',
+			       -justify => 'left',
+			       -angle => 270);
+  my($x1,$y1,$x2,$y2) = split(/ /, $can->bbox($rtxt));
+  $can->configure(-width => abs($x1) + $x2, -height => abs($y1) + $y2);
+  $can->move($rtxt, abs($x1), abs($y1));
 
-  $setsLB = $AllSets->{setsLB} = CP::List->new(
-    $sltL, 'e', -height => 12, -width => SLWID, -selectmode => '');
+  $setsLB = $AllSets->{setsLB} = CP::List->new($sltL, 'e',
+					       -height => 12, -width => SLWID,
+					       -selectmode => '');
+  $setsLB->{frame}->g_grid(qw/-row 0 -column 0 -sticky nsew/);
   $setsLB->bind('<ButtonRelease-1>' => sub{$AllSets->showSet()});
   $AllSets->listSets();
 
@@ -538,42 +554,47 @@ sub setLists {
 		 ['Set1 Start',  \$AllSets->{meta}{set1time}],
 		 ['Set2 Start',  \$AllSets->{meta}{set2time}]) {
     my($n,$v) = @{$l};
-    my $lab = $sltR->new_ttk__label(-text => "$n: ", -background => WHITE);
+    my $lab = $sltCS->new_ttk__label(-text => "$n: ", -background => WHITE);
     if ($row) {
       $w = ($row == 1) ? 18 : 8;
       $st = 'YNnf.TLabel';
       $cs = 1;
     }
-    my $ent = $sltR->new_ttk__label(-textvariable => $v, -style => $st, -width => $w);
+    my $ent = $sltCS->new_ttk__label(-textvariable => $v, -style => $st, -width => $w);
     $lab->g_grid(-row => $row, -column => 0, -sticky => 'e', -pady => [0,6]);
     $ent->g_grid(-row => $row++, -column => 1, -columnspan => $cs, -sticky => 'w', -pady => [0,6]);
   }
-  my $butEdt = $sltR->new_ttk__button(
+  my $butEdt = $sltCS->new_ttk__button(
     -text => "Edit",
     -width => 6,
     -style => 'Green.TButton',
     -command => sub{if ($CurSet ne '') {$AllSets->edit()}});
   $butEdt->g_grid(-row => 2, -column => 2, -rowspan => 2, -sticky => 'w', -padx => 10, -pady => 4);
-  my $butClr = $sltR->new_ttk__button(
+  my $butClr = $sltCS->new_ttk__button(
     -text => "Clear",
     -width => 6,
     -style => 'Green.TButton',
     -command => sub{$browser->reset();$AllSets->select('')});
   $butClr->g_grid(-row => 3, -column => 2, -rowspan => 2, -sticky => 'w', -padx => 10, -pady => 4);
 
-  my $butNew = $slFt->new_ttk__button(
+  my $butNew = $sltR->new_ttk__button(
     -text => "New",
     -width => 8,
     -command => sub{slAct(SLNEW)});
-  my $butRen = $slFt->new_ttk__button(
+  my $butRen = $sltR->new_ttk__button(
     -text => "Rename",
     -width => 8,
     -command => sub{slAct(SLREN)});
-  my $butCln = $slFt->new_ttk__button(
+  my $butCln = $sltR->new_ttk__button(
     -text => "Clone",
     -width => 8,
     -command => sub{slAct(SLCLN)});
-  my $butDel = $slFt->new_ttk__button(
+  my $butSav = $sltR->new_ttk__button(
+    -text => "Save",
+    -width => 8,
+    -style => 'Green.TButton',
+    -command => sub{saveSet($browser)});
+  my $butDel = $sltR->new_ttk__button(
     -text => "Delete",
     -width => 8,
     -style => 'Red.TButton',
@@ -594,11 +615,6 @@ sub setLists {
     -width => 8,
     -style => 'Green.TButton',
     -command => sub{$AllSets->export()});
-  my $butSav = $slFt->new_ttk__button(
-    -text => "Save",
-    -width => 8,
-    -style => 'Green.TButton',
-    -command => sub{saveSet($browser)});
 
   ## Now pack everything
   # Setlists
@@ -606,21 +622,27 @@ sub setLists {
   # Browser
   $slFb->g_pack(qw/-side top -fill x/, -pady => [4,0]);
 
-  $sltL->g_grid(qw/-row 1 -column 0 -rowspan 2 -sticky n/, -padx => [4,0], -pady => [0,4]);
-  $sltR->g_grid(qw/-row 1 -column 1 -columnspan 4 -sticky n/, -padx => [20,0]);
+  $sltL->g_grid(qw/-row 0 -column 0 -rowspan 2 -sticky n/, -padx => [4,0], -pady => [0,4]);
 
-  $sltr->g_grid(qw/-row 0 -column 0 -sticky sw -padx 4/, -pady => [0,0]);
-  $setsLB->{frame}->g_grid(qw/-row 0 -column 0 -sticky nsew/);
-  # New/Rename/Clone/Delete buttons
-  $butNew->g_grid(qw/-row 0 -column 1 -pady 4/, -padx => [20,6]);
-  $butRen->g_grid(qw/-row 0 -column 2 -padx 6 -pady 4/);
-  $butCln->g_grid(qw/-row 0 -column 3 -padx 6 -pady 4/);
-  $butDel->g_grid(qw/-row 0 -column 4 -padx 6 -pady 4/);
+  $sltM->g_grid(qw/-row 0 -column 1 -sticky n/, -padx => [4,0], -pady => [0,4]);
+  $sltr->g_pack(qw/-side top -fill x/, -pady => [12,0]);
+  $can->g_pack(qw/-side top -fill x/, -pady => [0,0]);
+
+  $sltCS->g_grid(qw/-row 0 -column 2 -columnspan 3 -sticky n/, -padx => [12,0]);
+
   # Print/Export/Save/Delete
-  $butPrt->g_grid(qw/-row 2 -column 1 -pady 4/, -padx => [20,6]);
-  $butInp->g_grid(qw/-row 2 -column 2 -padx 6 -pady 4/);
-  $butExp->g_grid(qw/-row 2 -column 3 -padx 6 -pady 4/);
-  $butSav->g_grid(qw/-row 2 -column 4 -padx 6 -pady 4/);
+  $butPrt->g_grid(qw/-row 1 -column 2 -pady 4/);
+  $butInp->g_grid(qw/-row 1 -column 3 -pady 4/);
+  $butExp->g_grid(qw/-row 1 -column 4 -pady 4/);
+
+  $sltR->g_grid(qw/-row 0 -column 5 -padx 6 -pady 4/);
+  # New/Rename/Clone/Delete buttons
+  $slFt->g_grid_columnconfigure(6, -weight => 1);
+  $butNew->g_pack(qw/-side top -padx 4 -pady 6/);
+  $butRen->g_pack(qw/-side top -padx 4 -pady 6/);
+  $butCln->g_pack(qw/-side top -padx 4 -pady 6/);
+  $butSav->g_pack(qw/-side top -padx 4 -pady 6/);
+  $butDel->g_pack(qw/-side top -padx 4 -pady 12/);
 }
 
 sub browser {

@@ -61,10 +61,13 @@ sub new {
       $Opt->change('SortBy', $Opt->{SortBy});
     } );
   my $revVar = $Opt->{RevSort};
-  my $rev = $topFrm->new_ttk__checkbutton(-text => 'Reverse',
-					  -variable => \$revVar,
+  my $rev = $topFrm->new_ttk__checkbutton(-variable => \$revVar,
+					  -style => 'NM.TCheckbutton',
 					  -command => sub{$Opt->change('RevSort', $revVar);
 							  $avail->h2tcl();});
+  my $revlab = $topFrm->new_ttk__label(-text => 'Reverse',
+				       -font => 'BTkDefaultFont',
+				       -padding => [0,0,0,0]);
 
   my $mfs = $topFrm->new_ttk__label(-text => 'Search: ');
   my $entry = $topFrm->new_ttk__entry(-width => 20, -validate => 'key');
@@ -134,9 +137,10 @@ sub new {
 
   $srt->g_pack(qw/-side left/, -padx => [4,0]);
   $sby->g_pack(qw/-side left/, -padx => [2,0]);
-  $rev->g_pack(qw/-side left/, -padx => [4,0]);
+  $rev->g_pack(qw/-side left -anchor e/, -padx => [4,0]);
+  $revlab->g_pack(qw/-side left -anchor w/, -padx => [0,0]);
 
-  $mfs->g_pack(  qw/-side left/, -padx => [20,0]);
+  $mfs->g_pack(  qw/-side left/, -padx => [30,0]);
   $entry->g_pack(qw/-side left/, -padx => [2,0]);
   $mfn->g_pack(  qw/-side left/, -padx => [8,0]);
 

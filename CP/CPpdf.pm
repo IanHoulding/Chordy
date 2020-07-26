@@ -111,9 +111,9 @@ sub printSL {
   # return Bold, BoldItalic or Regular
   my $Twt = pdfWeight($fp->{weight}, $fp->{slant});
   my $pfp = getFont($pdf, $Tfam, $Twt);
-  my $Tdc = abs(ceil(($pfp->descender * $Tsz) / 1000)) + 2;
+  my $Tdc = abs(ceil(($pfp->descender * $Tsz) / 1000)) + 1;
   my $Tclr = $fp->{color};
-  my $Lsz = $Media->{Lyric}{size};
+  my $Lsz = $Media->{Lyric}{size} + 1;
   my $Lclr = $Media->{Lyric}{color};
 
   my $w = $Media->{width};
@@ -135,9 +135,9 @@ sub printSL {
   if ($Media->{titleBG} ne WHITE) {
     _hline(0, $h - ($hht / 2), $w, $hht, $Media->{titleBG});
   }
-  _textCenter($w/2, $h - ($hht - $Tdc - 1), $CurSet, $pfp, $Tsz, $Tclr);
+  _textCenter($w/2, $h - ($hht - $Tdc), $CurSet, $pfp, $Tsz, $Tclr);
   if ($AllSets->{meta}{date} ne '') {
-    _textRight($w - INDENT, $h - ($hht - $Tdc - 1), $AllSets->{meta}{date}, $pfp, $Lsz, $Tclr);
+    _textRight($w - INDENT, $h - ($hht - $Tdc), $AllSets->{meta}{date}, $pfp, $Lsz, $Tclr);
   }
 
   $h -= $hht;
@@ -167,9 +167,15 @@ sub printSL {
   #
   # Now the play list
   #
+  $Tsz += 4;
   my $spc = '  ';
   my $cnt = @{$list};
+  for(my $i = 4; $i; $i--) {
+    last if (($h - ($Tsz * $cnt)) >= 0);
+    $Tsz--;
+  }
   while (($h - ($Tsz * $cnt)) < 0) { # deliberately use $Tsz to add extra spacing
+    $Tsz--;
     $Lsz--;
   }
   my @pros = ();

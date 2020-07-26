@@ -68,7 +68,7 @@ sub listSets {
 }
 
 sub save {
-  my ($self) = shift;
+  my ($self,$col) = @_;
 
   my $SL = "$Home/SetList";
   if (-e "${SL}.bak") {
@@ -103,7 +103,12 @@ sub save {
   }
   print OFH ");\n1;\n";
   close(OFH);
-  message(SMILE, "Setlists updated and saved.", 1);
+  if (! defined $col) {
+    $col = '';
+  } else {
+    $col = "$col ";
+  }
+  message(SMILE, $col."Setlists updated and saved.", 1);
 }
 
 sub select {
@@ -318,7 +323,7 @@ sub export {
 	    }
 	  }
 	  $sl->{sets}{$CurSet} = $self->{sets}{$CurSet};
-	  $sl->save();
+	  $sl->save($col);
 	  undef $sl;
 	}
 	$Home = $orgHome;
