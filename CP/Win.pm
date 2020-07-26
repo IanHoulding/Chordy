@@ -70,7 +70,10 @@ sub MWoptions {
 			    -borderwidth => 0,
 			    -activeborderwidth => 0,
 			    -selectborderwidth => 0);
-  Tkx::ttk__style_configure('Pop.TFrame', -background => $Opt->{PopBG});
+  Tkx::ttk__style_configure('Pop.TFrame',
+			    -relief => 'raised',
+			    -borderwidth => 2,
+			    -background => $Opt->{PopBG});
   Tkx::ttk__style_configure('Wh.TFrame', -background => WHITE);
 
   Tkx::ttk__style_configure('TLabelframe',

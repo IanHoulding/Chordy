@@ -1,6 +1,12 @@
 Chordy, Tab et al Revision history.
 Bit late starting with 2.6.4 but about time I documented it :-)
 
+3.8.5
+  Chordy - More Setlist layout changes.
+           Added Reverse Sort for list of Sets.
+	   Can now Import as well as Export Setlists.
+	   Bugfix - PDF making pop-up window not showing file name.
+
 3.8.4
 
   Chordy - Bugfix - In LyricOnly mode a backgroud rectangle was still being shown
@@ -11,6 +17,7 @@ Bit late starting with 2.6.4 but about time I documented it :-)
      Tab - Copy Bar(s) now split into Header, Notes or Everything.
      
 3.8.3
+           ChordPro/Tab files now installable outside of the Windows Installer.
      Tab - Lyric Lines going from 1 to 0 would race on going back to 1.
            Bar number not showing in the Edit page.
 	   Changing the tempo slider was not updating the page display heading.
