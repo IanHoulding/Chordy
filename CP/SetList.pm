@@ -17,7 +17,7 @@ use CP::Pop qw/:MENU/;
 use CP::Cmsg;
 use CP::Date;
 
-my @strOpt = (qw/date setup soundcheck set1time set2time/);
+my @strOpt = (qw/date setup soundcheck s1start s1end s2start s2end/);
 
 sub new {
   my($proto) = @_;
@@ -35,6 +35,12 @@ sub new {
       save($self);
     } else {
       foreach (@lst) {
+	if (defined $list{$_}{set1time}) {
+	  $list{$_}{s1start} = $list{$_}{set1time};
+	  $list{$_}{s2start} = $list{$_}{set2time};
+	  delete($list{$_}{set1time});
+	  delete($list{$_}{set2time});
+	}
 	$sets->{$_} = $list{$_};
       }
     }
@@ -330,81 +336,6 @@ sub export {
       }
     },
     \@lst);
-}
-
-sub edit {
-  my($self) = shift;
-
-  CORE::state $DT;
-  if (! defined $DT) {
-    $DT = CP::Date->new();
-  }
-  my $pop = CP::Pop->new(0, '.sl', 'Setlist Date/Times');
-  return if ($pop eq '');
-  my($top,$wt) = ($pop->{top}, $pop->{frame});
-
-  my $tf = $wt->new_ttk__labelframe(
-    -text => $CurSet,
-    -labelanchor => 'n',
-    -padding => [16,4,4,4]);
-  $tf->g_pack(qw/-side top -expand 1 -fill x/);
-  my $bf = $wt->new_ttk__frame();
-  $bf->g_pack(qw/-side top -expand 1 -fill x/);
-
-  makeImage('ellipsis', \%XPM);
-  my $done = '';
-  my $lab = $tf->new_ttk__label(-text => "Date: ");
-  $lab->g_grid(qw/-row 0 -column 0 -pady 2 -sticky e/);
-  my $ent = $tf->new_ttk__entry(-width => 18, -textvariable => \$self->{meta}{date});
-  $ent->g_grid(qw/-row 0 -column 1 -columnspan 2 -pady 2 -sticky w/);
-  my $sd = $tf->new_ttk__button(-image => 'ellipsis',
-				-width => 5,
-				-command => sub{if ($DT->newDate()) {
-				  $self->{meta}{date} = sprintf "%d %s %d",
-				      $DT->{day}, $DT->{months}, $DT->{year};
-						}});
-  $sd->g_grid(qw/-row 0 -column 3 -padx 8 -pady 2 -sticky w/);
-  my $row = 1;
-  foreach my $i (['Setup',       'setup'],
-		 ['Sound Check', 'soundcheck'],
-		 ['Set 1 Start', 'set1time'],
-		 ['Set 2 Start', 'set2time']) {
-    my($lab,$key) = @{$i};
-    my $lab = $tf->new_ttk__label(-text => "$lab: ");
-    $lab->g_grid(-row => $row, qw/-column 0 -pady 2 -sticky e/);
-    my $var = \$self->{meta}{$key};
-    my $ent = $tf->new_ttk__entry(-width => 8, -textvariable => $var);
-    $ent->g_grid(-row => $row, qw/-column 1 -pady 2 -sticky w/);
-    my $sel = $tf->new_ttk__button(-image => 'ellipsis',
-				   -width => 5,
-				   -command => sub{if ($DT->newTime()) {
-				     $$var = sprintf "%02d:%02d",
-					 $DT->{hour}, $DT->{minute};
-						   }});
-    $sel->g_grid(-row => $row++, qw/-column 2 -padx 0 -pady 2 -sticky w/);
-    $ent->g_focus() if ($row == 1);
-  }
-
-  ($bf->new_ttk__button(-text => "Cancel", -command => sub{$done = "Cancel";},
-   ))->g_pack(qw/-side left/, -padx => [20,0], -pady => [4,2]);
-
-  ($bf->new_ttk__button(-text => "OK", -command => sub{$done = "OK";},
-   ))->g_pack(qw/-side right/, -padx => [0,20], -pady => [4,2]);
-
-  Tkx::vwait(\$done);
-  if ($done eq "OK") {
-    my $sp = $self->{sets}{$CurSet};
-    foreach my $o (@strOpt) {
-      $sp->{$o} = $self->{meta}{$o};
-    }    
-  } else {
-    my $sp = $self->{sets}{$CurSet};
-    foreach my $o (@strOpt) {
-      $self->{meta}{$o} = $sp->{$o};
-    }    
-  }
-  $pop->destroy();
-  $done;
 }
 
 1;

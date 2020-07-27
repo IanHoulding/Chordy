@@ -1378,23 +1378,19 @@ static char * delete_xpm[] = {
 " oo..................oo "};
 EOXPM
 
-$XPM{ellipsis} = <<'EOXPM';
+$XPM{hyphen} = <<'EOXPM';
 /* XPM */
-static char *ellipsis[] = {
-"21 10 3 1",
+static char *hyphen[] = {
+"10 6 3 1",
 "  c None",
 "x c #000000",
 "c c #909090",
-"                     ",
-"                     ",
-"                     ",
-"                     ",
-"   cxc   cxc   cxc   ",
-"   cxc   cxc   cxc   ",
-"                     ",
-"                     ",
-"                     ",
-"                     ",
+"          ",
+"          ",
+" cxxxxxxc ",
+" cxxxxxxc ",
+"          ",
+"          ",
 EOXPM
 
 $XPM{exit} = <<'EOXPM';

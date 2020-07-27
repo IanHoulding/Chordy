@@ -147,15 +147,14 @@ sub printSL {
   # Show all the meta data (time slots)
   #
   $h -= $Tsz * 2;
-  my $metalab = _measure('Sound Check: ', $pfp, $Lsz);
-  my $metaw = 0;
-  foreach my $k (qw/setup soundcheck set1time set2time/) {
-    my $dx = _measure($AllSets->{meta}{$k}, $pfp, $Lsz);
-    $metaw = $dx if ($dx > $metaw);
+  $Tsz += 4;
+  my $timew = my $setw = _measure('88:88', $pfp, $Lsz);
+  if ($AllSets->{meta}{s1end} ne '' || $AllSets->{meta}{s2end} ne '') {
+    $setw += ($timew + _measure(' - ', $pfp, $Lsz));
   }
-  my $x = $w - $metaw - (INDENT * 3);
+  my $x = $w - $setw - (INDENT * 2);
   my $y = $h - ($Tsz * 4);
-  foreach my $xtr (['Setup','setup'], ['Sound Check','soundcheck'], ['Set 1 Start','set1time'], ['Set 2 Start','set2time']) {
+  foreach my $xtr (['Setup','setup'], ['Sound Check','soundcheck']) {
     my($lab,$key) = (@{$xtr});
     if (($key = $AllSets->{meta}{$key}) ne '') {
       _textRight($x, $y, "$lab: ", $pfp, $Lsz, $Tclr);
@@ -163,12 +162,30 @@ sub printSL {
       $y -= $Tsz;
     }
   }
+  if ($AllSets->{meta}{s1start} ne '' || $AllSets->{meta}{s1end} ne '') {
+    _textRight($x, $y, "Set 1: ", $pfp, $Lsz, $Tclr);
+    if ($AllSets->{meta}{s1start} ne '') {
+      _textAdd($x, $y, "$AllSets->{meta}{s1start}", $pfp, $Lsz, $Lclr);
+    }
+    if ($AllSets->{meta}{s1end} ne '') {
+      _textAdd($x + $timew, $y, " - $AllSets->{meta}{s1end}", $pfp, $Lsz, $Lclr);
+    }
+    $y -= $Tsz;
+  }
+  if ($AllSets->{meta}{s2start} ne '' || $AllSets->{meta}{s2end} ne '') {
+    _textRight($x, $y, "Set 2: ", $pfp, $Lsz, $Tclr);
+    if ($AllSets->{meta}{s2start} ne '') {
+      _textAdd($x, $y, "$AllSets->{meta}{s2start}", $pfp, $Lsz, $Lclr);
+    }
+    if ($AllSets->{meta}{s2end} ne '') {
+      _textAdd($x + $timew, $y, " - $AllSets->{meta}{s2end}", $pfp, $Lsz, $Lclr);
+    }
+    $y -= $Tsz;
+  }
 
   #
   # Now the play list
   #
-  $Tsz += 4;
-  my $spc = '  ';
   my $cnt = @{$list};
   for(my $i = 4; $i; $i--) {
     last if (($h - ($Tsz * $cnt)) >= 0);
@@ -184,25 +201,22 @@ sub printSL {
     push(@pros, $pro);
     $cnt++ if ($pro->{title} =~ /^INTERVAL$/i);
   }
-  my $spcw = _measure($spc, $pfp, $Lsz);
-  my $numw = _measure("99", $pfp, $Lsz);
-  my $keyw = _measure("${spc}G#m", $pfp, $Lsz - 3);
-  my $indent = INDENT * 3;
+  my $numw = _measure("99  ", $pfp, $Lsz);
+  my $keyw = _measure("G#m  ", $pfp, $Lsz - 3);
+  my $indent = INDENT * 2;
   my $num = 1;
   foreach my $pro (@pros) {
     if ($pro->{title} =~ /^INTERVAL$/i) {
       $num = 1;
       $h -= int($Lsz / 2);
-      _textAdd($indent, $h, "$spc$pro->{title}", $pfp, $Lsz, RFG);
+      _textAdd($indent, $h, "  INTERVAL", $pfp, $Lsz, RFG);
       $h -= int($Lsz / 2);
     }
     else {
       my $x = $indent + $numw;
-      _textRight($x, $h, "$num", $pfp, $Lsz, $Tclr);
-      $x += ($spcw * 2);
-      _textAdd($x, $h, $pro->{key}, $pfp, $Lsz - 3, DRED);
-      $x += ($keyw + $spcw);
-      _textAdd($x, $h, $pro->{title}, $pfp, $Lsz, $Lclr);
+      _textRight($x, $h, "$num  ", $pfp, $Lsz, $Tclr);
+      _textAdd($x, $h, $pro->{key}, $pfp, $Lsz - 3, RFG);
+      _textAdd($x + $keyw, $h, $pro->{title}, $pfp, $Lsz, $Lclr);
       $num++;
     }
     $h -= $Tsz;

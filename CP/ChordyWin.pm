@@ -515,7 +515,7 @@ sub setLists {
     -text => ' Current Setlist ',
     -style => 'Wh.TLabelframe',
     -labelanchor => 'n',
-    -padding => [4,2,4,4]);
+    -padding => [4,0,4,4]);
   my $sltR = $slFt->new_ttk__frame(qw/-style Wh.TFrame/);
 
   my $setsLB;
@@ -545,36 +545,88 @@ sub setLists {
   $setsLB->bind('<ButtonRelease-1>' => sub{$AllSets->showSet()});
   $AllSets->listSets();
 
-  my($row,$w,$st,$cs) = (0,25,'YNb.TLabel',2);
-  foreach my $l (['Name',        \$CurSet],
-		 ['Date',        \$AllSets->{meta}{date}],
-		 ['Setup',       \$AllSets->{meta}{setup}],
-		 ['Sound Check', \$AllSets->{meta}{soundcheck}],
-		 ['Set1 Start',  \$AllSets->{meta}{set1time}],
-		 ['Set2 Start',  \$AllSets->{meta}{set2time}]) {
-    my($n,$v) = @{$l};
-    my $lab = $sltCS->new_ttk__label(-text => "$n: ", -background => WHITE);
-    if ($row) {
-      $w = ($row == 1) ? 18 : 8;
-      $st = 'YNnf.TLabel';
-      $cs = 1;
-    }
-    my $ent = $sltCS->new_ttk__label(-textvariable => $v, -style => $st, -width => $w);
-    $lab->g_grid(-row => $row, -column => 0, -sticky => 'e', -pady => [0,6]);
-    $ent->g_grid(-row => $row++, -column => 1, -columnspan => $cs, -sticky => 'w', -pady => [0,6]);
+  CORE::state $DT;
+  if (! defined $DT) {
+    $DT = CP::Date->new();
   }
-  my $butEdt = $sltCS->new_ttk__button(
-    -text => "Edit",
-    -width => 6,
-    -style => 'Green.TButton',
-    -command => sub{if ($CurSet ne '') {$AllSets->edit()}});
-  $butEdt->g_grid(-row => 2, -column => 2, -rowspan => 2, -sticky => 'w', -padx => 10, -pady => 4);
-  my $butClr = $sltCS->new_ttk__button(
-    -text => "Clear",
-    -width => 6,
-    -style => 'Green.TButton',
-    -command => sub{$browser->reset();$AllSets->select('')});
-  $butClr->g_grid(-row => 3, -column => 2, -rowspan => 2, -sticky => 'w', -padx => 10, -pady => 4);
+
+  my $dsub = sub{
+    my($key) = shift;
+    my $kp = \%{$AllSets->{meta}};
+    if ($DT->newDate($kp->{$key})) {
+      $kp->{$key} = $AllSets->{sets}{$CurSet}{$key} = sprintf "%d %s %d", $DT->{day}, $DT->{months}, $DT->{year};
+    }
+  };
+  my $tsub = sub{
+    my($key) = shift;
+    my $kp = \%{$AllSets->{meta}};
+    $kp->{$key} = $AllSets->{sets}{$CurSet}{$key} = $DT->{time} if ($DT->newTime($kp->{$key}));
+  };
+
+  my($row,$st) = (0,'YNb.TLabel');
+  foreach my $l (['Name',        '', 25],
+		 ['Date',        'date', 18],
+		 ['Setup',       'setup', 5],
+		 ['Sound Check', 'soundcheck', 5]) {
+    my($n,$v,$w) = @{$l};
+    my $ent;
+    my $lab = $sltCS->new_ttk__label(-text => "$n: ", -background => WHITE);
+    $lab->g_grid(-row => $row, qw/-column 0 -sticky e -pady 3/);
+    if ($row) {
+      $ent = $sltCS->new_ttk__button(-textvariable => \$AllSets->{meta}{$v},
+				     -style => $st,
+				     -width => $w,
+				     -command => ($row == 1) ? [$dsub, $v] : [$tsub, $v] );
+    } else {
+      $ent = $sltCS->new_ttk__label(-textvariable => \$CurSet,
+				    -style => 'YNb.TLabel',
+				    -width => $w);
+      $st = 'YNnf.TLabel';
+    }
+    $ent->g_grid(-row => $row, qw/-column 1 -sticky w -pady 3/);
+    $row++;
+  }
+
+  makeImage('hyphen', \%XPM);
+  my %list = (Tkx::SplitList(Tkx::font_actual("BTkDefaultFont")));
+  $list{'-size'} += 10;
+  Tkx::font_create("HyphenFont", %list);
+
+  my $labs1s = $sltCS->new_ttk__label(-text => "Set 1: ", -background => WHITE);
+  $labs1s->g_grid(-row => $row, qw/-column 0 -sticky e -pady 3/);
+  my $s1F = $sltCS->new_ttk__frame(qw/-style Wh.TFrame/);
+  $s1F->g_grid(-row => $row++, qw/-column  1 -sticky w/);
+
+  my $buts1s = $s1F->new_ttk__button(-textvariable => \$AllSets->{meta}{s1start},
+				     -style => $st,
+				     -width => 5,
+				     -command => [$tsub, 's1start'] );
+  $buts1s->g_grid(qw/-row 0 -column 0 -pady 3/);
+  my $h1 = $s1F->new_ttk__label(qw/-image hyphen -font HyphenFont/, -background => WHITE);
+  $h1->g_grid(qw/-row 0 -column 1 -padx 4 -pady 3/);
+  my $buts1e = $s1F->new_ttk__button(-textvariable => \$AllSets->{meta}{s1end},
+				       -style => $st,
+				       -width => 5,
+				       -command => [$tsub, 's1end'] );
+  $buts1e->g_grid(qw/-row 0 -column 2 -pady 3/);
+
+  my $labs2s = $sltCS->new_ttk__label(-text => "Set 2: ", -background => WHITE);
+  $labs2s->g_grid(-row => $row, qw/-column  0 -sticky  e -pady 3/);
+  my $s2F = $sltCS->new_ttk__frame(qw/-style Wh.TFrame/);
+  $s2F->g_grid(-row => $row, qw/-column  1 -sticky w/);
+
+  my $buts2s = $s2F->new_ttk__button(-textvariable => \$AllSets->{meta}{s2start},
+				     -style => $st,
+				     -width => 5,
+				     -command => [$tsub, 's2start'] );
+  $buts2s->g_grid(qw/-row 0 -column 0 -sticky w -pady 3/);
+  my $h2 = $s2F->new_ttk__label(qw/-image hyphen -font HyphenFont/, -background => WHITE);
+  $h2->g_grid(qw/-row 0 -column  1 -padx 4 -pady 3/);
+  my $buts2e = $s2F->new_ttk__button(-textvariable => \$AllSets->{meta}{s2end},
+				       -style => $st,
+				       -width => 5,
+				       -command => [$tsub, 's2end'] );
+  $buts2e->g_grid(qw/-row 0 -column 2 -sticky w -pady 3/);
 
   my $butNew = $sltR->new_ttk__button(
     -text => "New",
@@ -588,6 +640,11 @@ sub setLists {
     -text => "Clone",
     -width => 8,
     -command => sub{slAct(SLCLN)});
+  my $butClr = $sltR->new_ttk__button(
+    -text => "Clear",
+    -width => 8,
+    -style => 'Green.TButton',
+    -command => sub{$browser->reset();$AllSets->select('')});
   my $butSav = $sltR->new_ttk__button(
     -text => "Save",
     -width => 8,
@@ -625,23 +682,23 @@ sub setLists {
 
   $sltM->g_grid(qw/-row 0 -column 1 -sticky n/, -padx => [4,0], -pady => [0,4]);
   $sltr->g_pack(qw/-side top -fill x/, -pady => [12,0]);
-  $can->g_pack(qw/-side top -fill x/, -pady => [0,0]);
+  $can->g_pack(qw/-side top -fill x -pady 0/);
 
   $sltCS->g_grid(qw/-row 0 -column 2 -columnspan 3 -sticky n/, -padx => [12,0]);
 
   # Print/Export/Save/Delete
-  $butPrt->g_grid(qw/-row 1 -column 2 -pady 4/);
-  $butInp->g_grid(qw/-row 1 -column 3 -pady 4/);
-  $butExp->g_grid(qw/-row 1 -column 4 -pady 4/);
+  $butPrt->g_grid(qw/-row 1 -column 2/, -pady => [0,4]);
+  $butInp->g_grid(qw/-row 1 -column 3/, -pady => [0,4]);
+  $butExp->g_grid(qw/-row 1 -column 4/, -pady => [0,4]);
 
   $sltR->g_grid(qw/-row 0 -column 5 -padx 6 -pady 4/);
   # New/Rename/Clone/Delete buttons
-  $slFt->g_grid_columnconfigure(6, -weight => 1);
-  $butNew->g_pack(qw/-side top -padx 4 -pady 6/);
-  $butRen->g_pack(qw/-side top -padx 4 -pady 6/);
-  $butCln->g_pack(qw/-side top -padx 4 -pady 6/);
-  $butSav->g_pack(qw/-side top -padx 4 -pady 6/);
-  $butDel->g_pack(qw/-side top -padx 4 -pady 12/);
+  $butNew->g_pack(qw/-side top -padx 4 -pady 4/);
+  $butRen->g_pack(qw/-side top -padx 4 -pady 4/);
+  $butCln->g_pack(qw/-side top -padx 4 -pady 4/);
+  $butClr->g_pack(qw/-side top -padx 4 -pady 4/);
+  $butSav->g_pack(qw/-side top -padx 4 -pady 4/);
+  $butDel->g_pack(qw/-side top -padx 4/, -pady => [12,0]);
 }
 
 sub browser {
