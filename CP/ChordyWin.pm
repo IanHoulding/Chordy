@@ -519,10 +519,9 @@ sub setLists {
   my $sltR = $slFt->new_ttk__frame(qw/-style Wh.TFrame/);
 
   my $setsLB;
-  my $rev = $Opt->{SLrev};
-  my $sltr = $sltM->new_ttk__checkbutton(-variable => \$rev,
+  my $sltr = $sltM->new_ttk__checkbutton(-variable => \$Opt->{SLrev},
 					 -style => 'Wh.TCheckbutton',
-					 -command => sub{$Opt->change('SLrev', $rev);
+					 -command => sub{$Opt->changeOne('SLrev');
 							 $AllSets->listSets();
 					 });
   # This is a bit OTT but the only apparent way to get rotated text.
@@ -846,7 +845,7 @@ sub mediaWin {
 }
 
 sub newMedia {
-#  $Opt->change('Media', $Opt->{Media});
+#  $Opt->changeOne('Media');
   $Media->change(\$Opt->{Media});
   showSize();
   fontWin();

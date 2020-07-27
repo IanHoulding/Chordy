@@ -58,12 +58,11 @@ sub new {
     -command => sub{
       popMenu(\$Opt->{SortBy}, undef, ["Alphabetical", "Date Modified"]);
       $avail->h2tcl();
-      $Opt->change('SortBy', $Opt->{SortBy});
+      $Opt->changeOne('SortBy');
     } );
-  my $revVar = $Opt->{RevSort};
-  my $rev = $topFrm->new_ttk__checkbutton(-variable => \$revVar,
+  my $rev = $topFrm->new_ttk__checkbutton(-variable => \$Opt->{RevSort},
 					  -style => 'NM.TCheckbutton',
-					  -command => sub{$Opt->change('RevSort', $revVar);
+					  -command => sub{$Opt->changeOne('RevSort');
 							  $avail->h2tcl();});
   my $revlab = $topFrm->new_ttk__label(-text => 'Reverse',
 				       -font => 'BTkDefaultFont',

@@ -190,15 +190,17 @@ sub changeAll {
   $Path->{Option} = $opath;
 }
 
-sub change {
+sub changeOne {
   my($self,$opt,$new) = @_;
 
   our($version,%opts);
   do "$Path->{Option}";
-  if ("$opts{$opt}" ne "$new") {
-    $opts{$opt} = $self->{$opt} = $new;
-    save(\%opts);
+  if (defined $new) {
+    return if ("$opts{$opt}" eq "$new");
+    $self->{$opt} = $new;
   }
+  $opts{$opt} = $self->{$opt};
+  save(\%opts);
 }
 
 1;

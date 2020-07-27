@@ -6,6 +6,7 @@ Bit late starting with 2.6.4 but about time I documented it :-)
            Added Reverse Sort for list of Sets.
 	   Can now Import as well as Export Setlists.
 	   Bugfix - PDF making pop-up window not showing file name.
+	   Changed the way saving 1 option works - more flexible now.
 
 3.8.4
 
