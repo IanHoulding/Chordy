@@ -510,49 +510,123 @@ sub setLists {
     -style => 'Wh.TLabelframe',
     -labelanchor => 'n',
     -padding => [4,0,4,4]);
-  my $sltM = $slFt->new_ttk__labelframe(
+  my $sltM = $slFt->new_ttk__frame(qw/-style Wh.TFrame/);
+  my $sltCS = $slFt->new_ttk__labelframe(
     -text => ' Current Setlist ',
     -style => 'Wh.TLabelframe',
     -labelanchor => 'n',
     -padding => [4,0,4,4]);
-  my $sltR = $slFt->new_ttk__frame(-style => 'Wh.TFrame');
+  my $sltR = $slFt->new_ttk__frame(qw/-style Wh.TFrame/);
 
-  my $setsLB = $AllSets->{setsLB} = CP::List->new(
-    $sltL, 'e', -height => 10, -width => SLWID, -selectmode => '');
-  $setsLB->bind('<ButtonRelease-1>' => \&showSet);
-  $setsLB->{array} = $AllSets->listSets();
-  $setsLB->a2tcl();
+  my $setsLB;
+  my $sltr = $sltM->new_ttk__checkbutton(-variable => \$Opt->{SLrev},
+					 -style => 'Wh.TCheckbutton',
+					 -command => sub{$Opt->changeOne('SLrev');
+							 $AllSets->listSets();
+					 });
+  # This is a bit OTT but the only apparent way to get rotated text.
+  my $can = $sltM->new_tk__canvas(-bg => WHITE,
+				  -highlightthickness => 0,
+				  -relief => 'solid',
+				  -borderwidth => 0);
+  my $rtxt = $can->create_text(0,0,
+			       -text => 'Reverse Sort',
+			       -font => 'BTkDefaultFont',
+			       -justify => 'left',
+			       -angle => 270);
+  my($x1,$y1,$x2,$y2) = split(/ /, $can->bbox($rtxt));
+  $can->configure(-width => abs($x1) + $x2, -height => abs($y1) + $y2);
+  $can->move($rtxt, abs($x1), abs($y1));
 
-  my($row,$w,$st,$cs) = (0,25,'YNb.TLabel',2);
-  foreach my $l (['Name',        \$CurSet],
-		 ['Date',        \$AllSets->{meta}{date}],
-		 ['Setup',       \$AllSets->{meta}{setup}],
-		 ['Sound Check', \$AllSets->{meta}{soundcheck}],
-		 ['Set1 Start',  \$AllSets->{meta}{set1time}],
-		 ['Set2 Start',  \$AllSets->{meta}{set2time}]) {
-    my($n,$v) = @{$l};
-    my $lab = $sltM->new_ttk__label(-text => "$n: ", -background => WHITE);
-    if ($row) {
-      $w = ($row == 1) ? 18 : 8;
-      $st = 'YNnf.TLabel';
-      $cs = 1;
-    }
-    my $ent = $sltM->new_ttk__label(-textvariable => $v, -style => $st, -width => $w);
-    $lab->g_grid(-row => $row, -column => 0, -sticky => 'e', -pady => [0,4]);
-    $ent->g_grid(-row => $row++, -column => 1, -columnspan => $cs, -sticky => 'w', -pady => [0,4]);
+  $setsLB = $AllSets->{setsLB} = CP::List->new($sltL, 'e',
+					       -height => 12, -width => SLWID,
+					       -selectmode => '');
+  $setsLB->{frame}->g_grid(qw/-row 0 -column 0 -sticky nsew/);
+  $setsLB->bind('<ButtonRelease-1>' => sub{$AllSets->showSet()});
+  $AllSets->listSets();
+
+  CORE::state $DT;
+  if (! defined $DT) {
+    $DT = CP::Date->new();
   }
-  my $butEdt = $sltM->new_ttk__button(
-    -text => "Edit",
-    -width => 6,
-    -style => 'Green.TButton',
-    -command => sub{if ($CurSet ne '') {$AllSets->edit()}});
-  $butEdt->g_grid(-row => 2, -column => 2, -rowspan => 2, -sticky => 'w', -padx => 10, -pady => 4);
-  my $butClr = $sltM->new_ttk__button(
-    -text => "Clear",
-    -width => 6,
-    -style => 'Green.TButton',
-    -command => sub{$browser->reset();$AllSets->select('')});
-  $butClr->g_grid(-row => 3, -column => 2, -rowspan => 2, -sticky => 'w', -padx => 10, -pady => 4);
+
+  my $dsub = sub{
+    my($key) = shift;
+    my $kp = \%{$AllSets->{meta}};
+    if ($DT->newDate($kp->{$key})) {
+      $kp->{$key} = $AllSets->{sets}{$CurSet}{$key} = sprintf "%d %s %d", $DT->{day}, $DT->{months}, $DT->{year};
+    }
+  };
+  my $tsub = sub{
+    my($key) = shift;
+    my $kp = \%{$AllSets->{meta}};
+    $kp->{$key} = $AllSets->{sets}{$CurSet}{$key} = $DT->{time} if ($DT->newTime($kp->{$key}));
+  };
+
+  my($row,$st) = (0,'YNb.TLabel');
+  foreach my $l (['Name',        '', 25],
+		 ['Date',        'date', 18],
+		 ['Setup',       'setup', 5],
+		 ['Sound Check', 'soundcheck', 5]) {
+    my($n,$v,$w) = @{$l};
+    my $ent;
+    my $lab = $sltCS->new_ttk__label(-text => "$n: ", -background => WHITE);
+    $lab->g_grid(-row => $row, qw/-column 0 -sticky e -pady 3/);
+    if ($row) {
+      $ent = $sltCS->new_ttk__button(-textvariable => \$AllSets->{meta}{$v},
+				     -style => $st,
+				     -width => $w,
+				     -command => ($row == 1) ? [$dsub, $v] : [$tsub, $v] );
+    } else {
+      $ent = $sltCS->new_ttk__label(-textvariable => \$CurSet,
+				    -style => 'YNb.TLabel',
+				    -width => $w);
+      $st = 'YNnf.TLabel';
+    }
+    $ent->g_grid(-row => $row, qw/-column 1 -sticky w -pady 3/);
+    $row++;
+  }
+
+  makeImage('hyphen', \%XPM);
+  my %list = (Tkx::SplitList(Tkx::font_actual("BTkDefaultFont")));
+  $list{'-size'} += 10;
+  Tkx::font_create("HyphenFont", %list);
+
+  my $labs1s = $sltCS->new_ttk__label(-text => "Set 1: ", -background => WHITE);
+  $labs1s->g_grid(-row => $row, qw/-column 0 -sticky e -pady 3/);
+  my $s1F = $sltCS->new_ttk__frame(qw/-style Wh.TFrame/);
+  $s1F->g_grid(-row => $row++, qw/-column  1 -sticky w/);
+
+  my $buts1s = $s1F->new_ttk__button(-textvariable => \$AllSets->{meta}{s1start},
+				     -style => $st,
+				     -width => 5,
+				     -command => [$tsub, 's1start'] );
+  $buts1s->g_grid(qw/-row 0 -column 0 -pady 3/);
+  my $h1 = $s1F->new_ttk__label(qw/-image hyphen -font HyphenFont/, -background => WHITE);
+  $h1->g_grid(qw/-row 0 -column 1 -padx 4 -pady 3/);
+  my $buts1e = $s1F->new_ttk__button(-textvariable => \$AllSets->{meta}{s1end},
+				       -style => $st,
+				       -width => 5,
+				       -command => [$tsub, 's1end'] );
+  $buts1e->g_grid(qw/-row 0 -column 2 -pady 3/);
+
+  my $labs2s = $sltCS->new_ttk__label(-text => "Set 2: ", -background => WHITE);
+  $labs2s->g_grid(-row => $row, qw/-column  0 -sticky  e -pady 3/);
+  my $s2F = $sltCS->new_ttk__frame(qw/-style Wh.TFrame/);
+  $s2F->g_grid(-row => $row, qw/-column  1 -sticky w/);
+
+  my $buts2s = $s2F->new_ttk__button(-textvariable => \$AllSets->{meta}{s2start},
+				     -style => $st,
+				     -width => 5,
+				     -command => [$tsub, 's2start'] );
+  $buts2s->g_grid(qw/-row 0 -column 0 -sticky w -pady 3/);
+  my $h2 = $s2F->new_ttk__label(qw/-image hyphen -font HyphenFont/, -background => WHITE);
+  $h2->g_grid(qw/-row 0 -column  1 -padx 4 -pady 3/);
+  my $buts2e = $s2F->new_ttk__button(-textvariable => \$AllSets->{meta}{s2end},
+				       -style => $st,
+				       -width => 5,
+				       -command => [$tsub, 's2end'] );
+  $buts2e->g_grid(qw/-row 0 -column 2 -sticky w -pady 3/);
 
   my $butNew = $sltR->new_ttk__button(
     -text => "New",
@@ -566,16 +640,11 @@ sub setLists {
     -text => "Clone",
     -width => 8,
     -command => sub{slAct(SLCLN)});
-  my $butPrt = $sltR->new_ttk__button(
-    -text => "Print",
+  my $butClr = $sltR->new_ttk__button(
+    -text => "Clear",
     -width => 8,
     -style => 'Green.TButton',
-    -command => \&CP::CPpdf::printSL);
-  my $butExp = $sltR->new_ttk__button(
-    -text => "Export",
-    -width => 8,
-    -style => 'Green.TButton',
-    -command => sub{$AllSets->export()});
+    -command => sub{$browser->reset();$AllSets->select('')});
   my $butSav = $sltR->new_ttk__button(
     -text => "Save",
     -width => 8,
@@ -587,25 +656,49 @@ sub setLists {
     -style => 'Red.TButton',
     -command => sub{slAct(SLDEL)} );
 
+  my $butPrt = $slFt->new_ttk__button(
+    -text => "Print",
+    -width => 8,
+    -style => 'Green.TButton',
+    -command => \&CP::CPpdf::printSL);
+  my $butInp = $slFt->new_ttk__button(
+    -text => "Import",
+    -width => 8,
+    -style => 'Green.TButton',
+    -command => sub{$AllSets->importSet()});
+  my $butExp = $slFt->new_ttk__button(
+    -text => "Export",
+    -width => 8,
+    -style => 'Green.TButton',
+    -command => sub{$AllSets->export()});
+
   ## Now pack everything
   # Setlists
   $slFt->g_pack(qw/-side top -fill x/, -pady => [0,4]);
   # Browser
   $slFb->g_pack(qw/-side top -fill x/, -pady => [4,0]);
 
-  $sltL->g_pack(qw/-side left/, -padx => [4,0], -pady => [0,4]);
-  $sltM->g_pack(qw/-side left -anchor n/, -padx => [20,0]);
-  $sltR->g_pack(qw/-side left -fill y/, -padx => [8,8]);
-  $setsLB->{frame}->g_grid(qw/-row 0 -column 0 -sticky nsew/);
-  # New/Rename/Clone buttons
-  $butNew->g_pack( qw/-side top/, -pady => [4,4]);
-  $butRen->g_pack( qw/-side top/, -pady => [0,4]);
-  $butCln->g_pack( qw/-side top/, -pady => [0,4]);
+  $sltL->g_grid(qw/-row 0 -column 0 -rowspan 2 -sticky n/, -padx => [4,0], -pady => [0,4]);
+
+  $sltM->g_grid(qw/-row 0 -column 1 -sticky n/, -padx => [4,0], -pady => [0,4]);
+  $sltr->g_pack(qw/-side top -fill x/, -pady => [12,0]);
+  $can->g_pack(qw/-side top -fill x -pady 0/);
+
+  $sltCS->g_grid(qw/-row 0 -column 2 -columnspan 3 -sticky n/, -padx => [12,0]);
+
   # Print/Export/Save/Delete
-  $butPrt->g_pack( qw/-side top/, -pady => [4,4]);
-  $butExp->g_pack( qw/-side top/, -pady => [0,4]);
-  $butSav->g_pack( qw/-side top/, -pady => [4,4]);
-  $butDel->g_pack( qw/-side top/, -pady => [4,4]);
+  $butPrt->g_grid(qw/-row 1 -column 2/, -pady => [0,4]);
+  $butInp->g_grid(qw/-row 1 -column 3/, -pady => [0,4]);
+  $butExp->g_grid(qw/-row 1 -column 4/, -pady => [0,4]);
+
+  $sltR->g_grid(qw/-row 0 -column 5 -padx 6 -pady 4/);
+  # New/Rename/Clone/Delete buttons
+  $butNew->g_pack(qw/-side top -padx 4 -pady 4/);
+  $butRen->g_pack(qw/-side top -padx 4 -pady 4/);
+  $butCln->g_pack(qw/-side top -padx 4 -pady 4/);
+  $butClr->g_pack(qw/-side top -padx 4 -pady 4/);
+  $butSav->g_pack(qw/-side top -padx 4 -pady 4/);
+  $butDel->g_pack(qw/-side top -padx 4/, -pady => [12,0]);
 }
 
 sub browser {
@@ -641,16 +734,6 @@ sub saveSet {
   }
 }
 
-sub showSet {
-  my $idx = $AllSets->{setsLB}->curselection(0);
-  my $sl = $AllSets->{setsLB}{array}[$idx];
-  if ($sl ne '') {
-    $AllSets->select($sl);
-    $AllSets->{browser}{selLB}{array} = $AllSets->{sets}{$sl}{songs};
-    $AllSets->{browser}->refresh($Path->{Pro}, '.pro');
-  }
-}
-
 sub slAct {
   my($what) = @_;
 
@@ -674,7 +757,7 @@ sub slAct {
       }
       $i = 0 if ($i == @{$AllSets->{setsLB}{array}});
       $AllSets->{setsLB}->set($i);
-      showSet($AllSets);
+      $AllSets->showSet();
     }
   }
 }
@@ -819,7 +902,7 @@ sub mediaWin {
 }
 
 sub newMedia {
-#  $Opt->change('Media', $Opt->{Media});
+#  $Opt->changeOne('Media');
   $Media->change(\$Opt->{Media});
   showSize();
   fontWin();

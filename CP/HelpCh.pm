@@ -52,24 +52,18 @@ sub help {
  "<P  New > ",
  "<M>Enables you to create a new ChordPro file - enters the Editor with the <R Title> directive initalised.\n",
 
- "<P  Import ChordPro > ",
+ "<P  Import > ",
  "<M>Lets you copy ChordPro files from somewhere into your Collection <B Pro> Folder.\n",
 
- "<P  Sync ChordPro > ",
+ "<P  Sync > ",
  "<M>Compares the contents of a source and destination folder and syncronises them such that the destination matches the source.\n",
 
- "<B The following 4 sets of buttons work on whatever ChordPro files are currently listed:> \n",
- "<P  Export ChordPro > ",
- "<M>Lets you copy <R One> or <R All> ChordPro files from your Collection <B Pro> Folder to anywhere you choose.\n",
+ "<B The following buttons work on whatever ChordPro files are currently listed:> \n",
+ "<P  ChordPro > ",
+ "<M>Lets you Export or Mail <R One> or <R All> ChordPro files from your Collection <B Pro> Folder to anywhere you choose. The <R One> button expects one of the ChordPro files in the list to be selected otherwise it complains. The <R All> button ignores any selection and acts as you'd expect on all listed files.\n",
 
- "<P  Export PDF > ",
- "<M>As above - lets you copy <R One> or <R All> PDF files from your Collection <B PDF> Folder to anywhere you choose. This assumes that the PDF files have alreay been created from the ChordPro files. If one or more PDFs have not been created you will get a list of those that have and those that have not been exported.\n",
-
- "<P  Mail ChordPro > ",
- "<M>Mails <R One> or <R All> ChordPro files as attachments.\n",
-
- "<P  Mail PDF > ",
- "<M>Mails <R One> or <R All> PDF files as attachments with the same provisos as for Exporting.\n",
+ "<P  PDF > ",
+ "<M>As above - lets you Export or Mail <R One> or <R All> PDF files from your Collection <B PDF> Folder to anywhere you choose. This assumes that the PDF files have alreay been created from the ChordPro files. If one or more PDFs have not been created you will get a list of those that have and those that have not been exported/mailed.\n",
 
  "<T SS><S Single Selected File>\n",
  "<M>This section allows you to select ONE of the ChordPro Files (above) and perform various actions on it:\n",
@@ -80,13 +74,13 @@ sub help {
  "<P  Edit > ",
  "<M>Opens the selected file in the <B Cpgedi> Editor.\n",
 
- "<P  Rename > <P  Clone > and <P  Delete > ",
+ "<P  Rename >  <P  Clone >  and  <P  Delete > ",
  "<M>Does what it says on the button :)\n",
 
 ###
  "<T PD><S PDFs>\n",
  "<M>You can elect to View, Create and/or Print all listed ChordPro files or just a single selected file.\nThe viewer is <B SumatraPDF> on Windows systems (installed with Chordy), <B Preview> on Mac and <B acroread> on Linux.",
- "The <R All Songs> button will view/create/print a PDF file for each ChordPro file in the list unless the <R Single PDF> checkbox is active in which case a single PDF file will be created containing all the songs in the order shown in the ChordPro file list.\nThe <R Single Song> button does the same as above but on the one selected ChordPro file.\n",
+ "The <R Single Song> button will view/create/print a PDF file for the one selected ChordPro file.\nThe <R All Songs> button will view/create/print a PDF file for each ChordPro file in the list unless the <R Single PDF> checkbox is active in which case a single PDF file will be created containing all the songs in the order shown in the ChordPro file list.\n",
 
 ###
  "<T Op><S PDF Options>\n",
@@ -99,6 +93,9 @@ sub help {
 
  "<X checkbox><s  Group Lines> ",
  "<M>Chordy will always ensure a line of Lyrics and Chords are on the same page. This option allows you to apply the same to any number of lines that are separated by a blank line, or a <R Verse>, <R Chorus> or <R Bridge> directive. This can be a combination of Lyrics, Highlighted or any Comment variation. As long as there is no blank line they will all be moved onto a new page if they would not fit on the current page. The only time this is aborted is if the collection of lines is larger than the page size - this will turn the <R Group> option off for the rest of file processing.\n",
+
+ "<X checkbox><s  1/2 Height Blank Lines> ",
+ "<M>Any blank lines in the ChordPro file will only use 1/2 as much verticle space in the PDF. This may make the PDF more compact at the possible expense of readability.\n",
 
  "<X checkbox><s  No Long Line warnings> ",
  "<M>If it has to, Chordy will adjust the Lyric font size until it fits onto a line in which case it will display a warning to that effect. This option stops those warnings appearing - they can become anoying if you're processing a large number of files. View the error log - they're copied into that.\n",
@@ -118,10 +115,13 @@ sub help {
  "<P  Transpose To > ",
  "<M>Allows you to select a key to transpose to. The app will scan the file for a {key:xx} directive (see below) to determine the original key. Failing that, it will take the first chord it finds as being the key. Be aware that if you view/create/print more than one ChordPro file, <B ALL> of them will be transposed to the same key!\n",
 
- "<s Force Flat/Sharp> ",
+ "<s Force Sharp/Flat> ",
  "<M>These 2 options force all 'black' notes to be either sharps or flats. So, for example, if you want to transpose a piece to Eb, a chord that would have been Eb will be shown as D# if Force Sharp is in effect.\n",
 
-###
+ "<P  PDF Background > ",
+ "<M>Pops up the colour editor and enables you to define a colour which will be placed over the whole PDF page background\n",
+
+ ###
  "<T DI><S Chord Diagrams>\n",
 
  "<M>This option set allows you to have an index of all the chords in the current song displayed at the top of the first page or the top of every page. Although the <R Instrument> button lets you select the type to display the chords for, only 6 string guitar chords are currently implemented. If you want to add chords to any of the available intruments, use the Chord Editor via the <R Edit> button.\n",
@@ -141,32 +141,38 @@ sub help {
  "<M>Renames the current Setlist.",
  "<V5>",
  "<P  Clone > ",
- "<M>Produces a copy of the current Setlist and gives it the new name.\n",
-
- "<P  Print > ",
- "<M>Puts a list of song titles onto one PDF page with a title that is the Current Set Name.",
+ "<M>Produces a copy of the current Setlist and gives it the new name.",
  "<V5>",
- "<P  Export > ",
- "<M>Lets you copy the current Setlist to another Collection.",
+ "<P  Clear > ",
+ "<M>Clears out all <R Name/Date/Time> fields and moves any <R Setlist Files> back to the <R Available Files> list.",
  "<V5>",
  "<P  Save > ",
  "<M>Saves any changes to the currently selected Setlist.",
  "<V5>",
  "<P  Delete > ",
  "<M>Deletes the currently selected Setlist after prompting.\n",
- "The date/time information for the current Setlist may be entered/edited using the <R Edit> button. The various fields are completed using pop-ups - the only buttons which are unique are the ones which increment/decrement the minutes - holding the left mouse button down while over the button will cause the minutes to change rapidly.\n",
+ "<P  Print > ",
+ "<M>Puts a list of song titles onto one PDF page with a title that is the Current Set Name.",
+ "<V5>",
+ "<P  Import > ",
+ "<M>Lets you import a Setlist (saved with the <R Export> function) into the current Collection.",
+ "<V5>",
+ "<P  Export > ",
+ "<M>Lets you copy the current Setlist to another Collection or save it into a file.\n",
+
+ "The date/time information for the current Setlist may be edited by clicking on the appropriate button - the only exception is the <R Name> field which is fixed (see <R Rename> above). The various fields are completed using pop-ups - the only buttons which are unique are the ones which increment/decrement the minutes - holding the left mouse button down while over the button will cause the minutes to change rapidly.\n",
  "<S Lower Section>",
  "<V5>",
  "This is a copy of the Browser pop-up and has a Search area and 2 list boxes:",
  "The Search area lets you type in a case insensitive string and will search the <R Available Files>. The search takes place as you type and throws up a message if no match is found. The <R Find Next> button does just that and will wrap back to the begining of the list if it fails to match when the end of the list is reached.\n",
  "<E><R Available Files> ",
- "<M>A list of all ChordPro files in the current collection. Double clicking a file will automatically transfer it to the Setlist Files. The alphabet buttons below the <R Available Files> list enable you to quickly jump to entries starting with the appropriate letter.",
+ "<M>A list of all ChordPro files in the current collection. Double clicking a file will automatically transfer it to the <R Setlist Files>. The alphabet buttons below the <R Available Files> list enable you to quickly jump to entries starting with the appropriate letter.",
  "<E><R Setlist Files> ",
  "<M>All the files that either do, or will, make up the current Setlist. Below this list are 2 buttons:",
  "<E><R Clear> ",
- "<M>Moves all the Setlist Files back into the <R Available FIles> list.",
+ "<M>Moves all the <R Setlist Files> back into the <R Available FIles> list.",
  "<E><R Select for Editing> ",
- "<M>Will place the currently selected Setlist files into the <R ChordPro Files> list (on the 1st tab) and switch to that tab.\n",
+ "<M>Will place the currently selected <R Setlist Files> into the <R ChordPro Files> list (on the 1st tab) and switch to that tab.\n",
  "The various arrow buttons move files between the 2 lists and allow you to change the order of the files in the Setlist.\n",
 
 ################

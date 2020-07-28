@@ -59,7 +59,8 @@ sub MWoptions {
   Tkx::font_create("BTkDefaultFont", %list);
   $list{'-weight'} = 'normal';
   Tkx::font_create("NTkDefaultFont", %list);
-  $list{'-size'} -= 2;
+  $list{'-size'} -= 3;
+  $list{'-weight'} = 'bold';
   Tkx::font_create("STkDefaultFont", %list);
 
   BGclr($Opt->{WinBG});
@@ -69,7 +70,8 @@ sub MWoptions {
 			    -borderwidth => 0,
 			    -activeborderwidth => 0,
 			    -selectborderwidth => 0);
-  Tkx::ttk__style_configure('Pop.TFrame', -background => $Opt->{PopBG});
+  Tkx::ttk__style_configure('Pop.TFrame',
+			    -background => $Opt->{PopBG});
   Tkx::ttk__style_configure('Wh.TFrame', -background => WHITE);
 
   Tkx::ttk__style_configure('TLabelframe',
@@ -114,7 +116,9 @@ sub MWoptions {
 			    -selectborderwidth => 0,
 			    -padding => [0,0,0,0]);
 
-  Tkx::ttk__style_configure('SF.TButton', -font => 'STkDefaultFont');
+  Tkx::ttk__style_configure('SF.TButton',
+			    -borderwidth => [0,0,0,0],
+			    -font => 'STkDefaultFont');
 
   Tkx::ttk__style_configure('Red.TButton',   -foreground => 'darkred');
   Tkx::ttk__style_configure('Green.TButton', -foreground => 'darkgreen');
@@ -143,6 +147,11 @@ sub MWoptions {
 			    -highlightthickness => 0,
 			    -foreground => bFG);
   Tkx::ttk__style_configure('Pop.TCheckbutton', -background => POPBG);
+  Tkx::ttk__style_configure('NM.TCheckbutton',
+			    -indicatormargin => [0,0,0,0]);
+  Tkx::ttk__style_configure('Wh.TCheckbutton',
+			    -background => WHITE,
+			    -indicatormargin => [0,0,0,0]);
 
   Tkx::ttk__style_configure('TRadiobutton',
 			    -activeforeground => BLACK,
@@ -155,6 +164,14 @@ sub MWoptions {
   Tkx::ttk__style_configure('Pop.TLabel',
 			    -background => $Opt->{PopBG},
 			    -foreground => $Opt->{PopFG});
+
+  Tkx::ttk__style_configure('Wh.TLabel',
+			    -background => WHITE,
+			    -relief => 'solid',
+			    -borderwidth => 0,
+			    -selectborderwidth => 0,
+			    -highlightthickness => 0,
+			    -padding => [0,0,0,0]);
 
   Tkx::ttk__style_configure('YN.TLabel',
 			    -background => SELECT,

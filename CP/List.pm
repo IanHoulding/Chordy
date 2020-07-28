@@ -238,20 +238,34 @@ sub next_search {
 sub moveTo {
   my($self,$a,$ht) = @_;
 
-  my $low = 0;
+  if ($Opt->{SortBy} eq 'Date Modified') {
+    Tkx::bell();
+    return;
+  }
+  my $low = my $idx = 0;
   my $high = $self->{lb}->size();
   while ($low < $high) {
-    my $idx = int((($low + $high) / 2));
-    my $b = uc($self->get($idx));
+    $idx = int((($low + $high) / 2));
+    my $b = $self->get($idx);
     if ($Opt->{IgnArticle}) {
       $b =~ s/^($Opt->{Articles})\s+//i;
     }
-    if ($b lt $a) {
-      $low = $idx + 1;
+    $b = ucfirst($b);
+    if ($Opt->{RevSort}) {
+      if ($b gt $a) {
+	$low = $idx + 1;
+      } else {
+	$high = $idx;
+      }
     } else {
-      $high = $idx;
+      if ($b lt $a) {
+	$low = $idx + 1;
+      } else {
+	$high = $idx;
+      }
     }
   }
+  $low-- if ($Opt->{RevSort});
   $self->set($low);
 }
 
@@ -266,6 +280,7 @@ sub selection_set {
 
   $self->{lb}->selection_clear(0, 'end');
   $self->{lb}->selection_set($idx);
+  $self->{lb}->see($idx);
 }
 
 sub selection_clear {

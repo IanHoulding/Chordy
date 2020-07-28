@@ -59,7 +59,7 @@ BEGIN {
 use CP::Cconst qw/:OS :PATH :SHFL :SMILIE :COLOUR/;
 use CP::Cmsg qw/&message &msgYesNo &msgYesNoCan &msgSet &msgYesNoAll/;
 
-our $Version = "3.8.4";
+our $Version = "3.8.5";
 
 our($Parent, $Home, $Collection, $Opt, $Path, $Cmnd, $Swatches);
 our(%Fingers, $Nstring, @Tuning, $CurSet);
@@ -1378,23 +1378,19 @@ static char * delete_xpm[] = {
 " oo..................oo "};
 EOXPM
 
-$XPM{ellipsis} = <<'EOXPM';
+$XPM{hyphen} = <<'EOXPM';
 /* XPM */
-static char *ellipsis[] = {
-"21 10 3 1",
+static char *hyphen[] = {
+"10 6 3 1",
 "  c None",
 "x c #000000",
 "c c #909090",
-"                     ",
-"                     ",
-"                     ",
-"                     ",
-"   cxc   cxc   cxc   ",
-"   cxc   cxc   cxc   ",
-"                     ",
-"                     ",
-"                     ",
-"                     ",
+"          ",
+"          ",
+" cxxxxxxc ",
+" cxxxxxxc ",
+"          ",
+"          ",
 EOXPM
 
 $XPM{exit} = <<'EOXPM';

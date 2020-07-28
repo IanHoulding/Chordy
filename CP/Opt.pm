@@ -22,7 +22,7 @@ my @numOpt = (qw/AutoSave Bold Center EditScale FullLineHL FullLineCM Grid HHBL
 	         IgnArticle IgnCapo
 	         Italic LineSpace LyricLines LyricOnly Nbar NewLine NoWarn
 	         OnePDFfile PDFview PDFmake PDFprint
-	         Refret RevSort SharpFlat StaffSpace Together UseBold/);
+	         Refret RevSort SLrev SharpFlat StaffSpace Together UseBold/);
 
 sub new {
   my($proto) = @_;
@@ -84,6 +84,7 @@ sub default {
   $self->{PopBG}       = POPBG;
   $self->{PushFG}      = bFG;
   $self->{PushBG}      = bBG;
+  $self->{SLrev}       = 0;
   $self->{Refret}      = 0;
   $self->{RevSort}     = 0;
   $self->{SharpFlat}   = SHARP;
@@ -189,15 +190,17 @@ sub changeAll {
   $Path->{Option} = $opath;
 }
 
-sub change {
+sub changeOne {
   my($self,$opt,$new) = @_;
 
   our($version,%opts);
   do "$Path->{Option}";
-  if ("$opts{$opt}" ne "$new") {
-    $opts{$opt} = $new;
-    save(\%opts);
+  if (defined $new) {
+    return if ("$opts{$opt}" eq "$new");
+    $self->{$opt} = $new;
   }
+  $opts{$opt} = $self->{$opt};
+  save(\%opts);
 }
 
 1;

@@ -46,10 +46,18 @@ sub new {
 }
 
 sub newDate {
-  my($self) = shift;
+  my($self,$var) = @_;
 
+  if (defined $var && $var ne '') {
+    my $ms;
+    ($Day,$ms,$Year) = split(' ', $var);
+    foreach my $i (0..11) {
+      $Month = $i, last if ($ms eq $Months[$i]);
+    }
+  } else {
+    ($Day,$Month,$Year) = ($self->{day},$self->{month},$self->{year});
+  }
   my $done = '';
-  ($Day,$Month,$Year) = ($self->{day},$self->{month},$self->{year});
 
   my $f = Tkx::font_names();
   if ($f !~ / CalFont/) {
@@ -219,8 +227,12 @@ sub firstDay {
 my $Pressed = 0;
 
 sub newTime {
-  my($self) = shift;
+  my($self,$var) = @_;
 
+  if (defined $var && $var ne '') {
+    $self->{time} = $var;
+    ($self->{hour},$self->{minute}) = split(':',$var);
+  }
   my $done = '';
   spTime($self);
   my $f = Tkx::font_names();

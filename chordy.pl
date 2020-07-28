@@ -59,7 +59,6 @@ use CP::CPmail qw(&cpmail);
 # Any other Collection Folders are also home to their own variants of Options,
 # Swatches, Setlists, etc.
 #
-my $Pop = '';
 my $PDFtrans;
 
 use Getopt::Std;
@@ -476,6 +475,10 @@ sub transposeOne {
   }
 }
 
+my $Pop = '';
+my $Done;
+my $FNlabel;
+
 sub Main {
   my($oneorall) = shift;
 
@@ -506,52 +509,69 @@ sub Main {
       }
     }
   }
+  popProg();
   if ($oneorall == SINGLE) {
     ### Handle one single ChordPro file
     my $idx = $FileLB->curselection(0);
     if ($idx ne '') {
-      makeOnePDF(0, $ProFiles[$idx]);
+      my($pdf,$name) = makeOnePDF($ProFiles[$idx], undef, undef);
+      $pdf->close();
+      actionPDF("$Path->{Temp}/$name", $name);
     } else {
       message(SAD, "You don't appear to have selected a ChordPro file.");
+      $Pop->destroy();
       return;
     }
   } else {
     my $toKey = $Opt->{Transpose};
     my $msg = "This will Transpose ALL files to the key of $toKey.\nDo you want to continue?";
-    return if ($toKey ne "No" && msgYesNo($msg) eq 'No');
+    if ($toKey ne "No" && msgYesNo($msg) eq 'No') {
+      $Pop->destroy();
+      return;
+    }
 
     my $maxi = $#ProFiles;
     # Do them in reverse order if printing AND we're not creating a single PDF
     my @pfn = ($Opt->{PDFprint} && $Opt->{OnePDFfile} == MULTIPLE) ? reverse(0..$maxi) : (0..$maxi);
     #
-    # 2 options here: We do lots of individual PDFs - or - We do one monster PDF
+    # We do one monster PDF - or - We do lots of individual PDFs
     #
     if ($Opt->{OnePDFfile} == SINGLE) {
       ### One monster PDF
       if (! defined $CurSet || $CurSet eq "") {
 	my $ans = msgSet("You need to provide a name for the PDF File:",\$CurSet);
-	return if ($ans eq "Cancel" || $CurSet eq "");
+	 if ($ans eq "Cancel" || $CurSet eq "") {
+	   $Pop->destroy();
+	   return;
+	 }
       }
       my $PdfFileName = "$CurSet.pdf";
       my $pdf = undef;
       foreach my $idx (@pfn) {
-	$pdf = makeOnePDF(2, $ProFiles[$idx], $PdfFileName, $pdf);
+	($pdf,$PdfFileName) = makeOnePDF($ProFiles[$idx], $PdfFileName, $pdf);
+	if ($Done eq 'Cancel') {
+	  $pdf->close();
+	   $Pop->destroy();
+	   return;
+	}
+	Tkx::after(500); # Give user a chance to hit Cancel!
       }
-      $Pop->destroy();
       $pdf->close();
       actionPDF("$Path->{Temp}/$PdfFileName", "$PdfFileName");
     } else {
       ### Action each PDF independantly
-      my $i = @pfn;
       foreach my $idx (@pfn) {
-	my $flg = (--$i == 0) ? 0 : 1;
-	if (makeOnePDF($flg, $ProFiles[$idx]) eq 'Cancel') {
-	  $Pop->destroy();
-	  last;
+	my($pdf,$name) = makeOnePDF($ProFiles[$idx], undef, undef);
+	$pdf->close();
+	if ($Done eq 'Cancel') {
+	   $Pop->destroy();
+	   return;
 	}
+	actionPDF("$Path->{Temp}/$name", $name);
       }
     }
   }
+  $Pop->destroy();
   if ($tmpMedia ne '') {
     $Opt->{PDFview} = $tmpView;
     $Opt->{Media} = $tmpMedia;
@@ -569,42 +589,29 @@ sub Main {
   $PDFtrans = 0;
 }
 
-my $Done;
-my $FileName;
-
-# We always try to make the pop-up and then "make" the PDF but
-# $wait can have one of 3 values:
-#   0 - destroy the pop-up              - One off PDF or the last of a List
-#   1 - continue but possibly cancel    - One of a List of PDFs
-#   2 - don't perform any actions       - One BIG PDF
-#
 sub makeOnePDF {
-  my($wait,$pro,$name,$pdf) = @_;
+  my($pro,$name,$pdf) = @_;
 
+  $FNlabel->m_configure(-text => $pro->{name});
+  Tkx::update();
   if (! defined $name) {
     ($name = $pro->{name}) =~ s/\.pro$//i;
     $name .= '.pdf';
   }
-  $FileName = $name;
-  popProg($wait);
-  my $tmpCapo = $pro->{capo};
-  $pro->{capo} = $Opt->{Capo} if ($Opt->{Capo} ne "No");
   my $tmpPDF = "$Path->{Temp}/$name";
+
   if (! defined $pdf) {
     unlink("$tmpPDF") if (-e "$tmpPDF");
     $pdf = CP::CPpdf->new($pro, $tmpPDF);
   }
+
+  my $tmpCapo = $pro->{capo};
+  $pro->{capo} = $Opt->{Capo} if ($Opt->{Capo} ne "No");
+
   $pro->makePDF($pdf);
-  $pdf->close() if ($wait != 2);
-  if ($wait == 0) {
-    $Pop->destroy();
-  }
-  actionPDF($tmpPDF, $name) if ($wait != 2);
+
   $pro->{capo} = $tmpCapo;
-  if ($wait == 1 && $Done eq 'Cancel') {
-    return($Done);
-  }
-  $pdf
+  ($pdf, $name);
 }
 
 sub actionPDF {
@@ -668,12 +675,14 @@ sub PDFprint {
 }
 
 sub popProg {
-  my($wait) = shift;
-
   return if (CP::Pop::exists('.pr'));
   $Pop = CP::Pop->new(1, '.pr', 'Progress', -1, -1);
   my($top,$pp) = ($Pop->{top},$Pop->{frame});
   $pp->m_configure(-style => 'Pop.TFrame');
+  my $bf = $top->new_ttk__frame(-padding => [4,4,4,4]);
+  $bf->m_configure(-style => 'Pop.TFrame');
+  $bf->g_pack(qw/-side bottom -fill x/);
+
   my $font = (exists $FontList{"Comic Sans MS"}) ? "Comic Sans MS" : "Times";
   my $size = 14;
 
@@ -683,21 +692,18 @@ sub popProg {
     -style => 'Pop.TLabel',
     -width => 25);
   $pll->g_pack();
-  my $pfn = $pp->new_ttk__label(
-    -textvariable => \$FileName,
+  $FNlabel = $pp->new_ttk__label(
+    -text => ' ',
     -font => "{$font} $size bold",
     -style => 'Pop.TLabel',
     -width => 25);
-  $pfn->g_pack();
+  $FNlabel->g_pack();
 
   $Done = '';
-  if ($wait == 1) {
-    my $bf = $top->new_ttk__frame(-padding => [4,4,4,4]);
-    $bf->m_configure(-style => 'Pop.TFrame');
-    $bf->g_pack(qw/-side bottom -fill x/);
-    my $can = $bf->new_ttk__button(-text => 'Cancel', -command => sub{$Done = 'Cancel';});
-    $can->g_pack();
-  }
+  my $b = $bf->new_ttk__button(-text => 'Cancel',
+			       -command => sub{$Done = 'Cancel'; Tkx::update();} );
+  $b->g_pack();
+
   $top->g_raise();
   $top->g_grab();
   Tkx::update();

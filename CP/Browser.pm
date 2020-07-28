@@ -58,11 +58,15 @@ sub new {
     -command => sub{
       popMenu(\$Opt->{SortBy}, undef, ["Alphabetical", "Date Modified"]);
       $avail->h2tcl();
-      $Opt->change('SortBy', $Opt->{SortBy});
+      $Opt->changeOne('SortBy');
     } );
-  my $rev = $topFrm->new_ttk__checkbutton(-text => 'Reverse',
-					  -variable => \$Opt->{RevSort},
-					  -command => sub{$avail->h2tcl()});
+  my $rev = $topFrm->new_ttk__checkbutton(-variable => \$Opt->{RevSort},
+					  -style => 'NM.TCheckbutton',
+					  -command => sub{$Opt->changeOne('RevSort');
+							  $avail->h2tcl();});
+  my $revlab = $topFrm->new_ttk__label(-text => 'Reverse',
+				       -font => 'BTkDefaultFont',
+				       -padding => [0,0,0,0]);
 
   my $mfs = $topFrm->new_ttk__label(-text => 'Search: ');
   my $entry = $topFrm->new_ttk__entry(-width => 20, -validate => 'key');
@@ -75,7 +79,11 @@ sub new {
     -labelanchor => 'n',
     -padding => [2,0,4,0]);
   $avail = $self->{avLB} = CP::List->new(
-    $leftFrm, 'e', -height => $listHt, -width => SLWID, -selectmode => 'browse', -takefocus => 1);
+    $leftFrm, 'e',
+    -height => $listHt,
+    -width => SLWID,
+    -selectmode => 'browse',
+    -takefocus => 1);
 
   if ($what & TABBR) {
     $avail->bind('<Double-Button-1>' => sub{$done = 'OK'});
@@ -90,26 +98,15 @@ sub new {
   }
   $avail->h2tcl();  # doesn't actually "show" - just sets the $tcl variable
 
-  my $mfA2Z = $leftFrm->new_ttk__frame();
-  my $r = my $c = 0;
-
-  foreach my $a ('A'..'Z') {
-    my $wid = $mfA2Z->new_ttk__button(
-      -style => 'SF.TButton',
-      -text => $a, -width => 2,
-      -command => sub{$avail->moveTo($a, $listHt)});
-    $wid->g_grid(-row => $r, -column => $c++, -padx => 2, -pady => 2);
-    $c %= 13;
-    $r++ if ($c == 0);
-  }
-
   my $igna = $leftFrm->new_ttk__checkbutton(
     -text => "Ignore leading \"$Opt->{Articles}\" when sorting",
     -variable => \$Opt->{IgnArticle},
     -command => sub{$avail->h2tcl()});
 
-  ### Left/Right Arrows
+  ### Left/Right Arrows & Alpha shortcuts
   my $centerFrm = $frame->new_ttk__frame();
+  my $arrowFrm = $centerFrm->new_ttk__frame();
+  my $alphaFrm = $centerFrm->new_ttk__frame();
 
   ### Selected Files
   my $title = ($what & (FILE | TABBR)) ? ' Selected Files ' : ' Setlist Files ';
@@ -119,7 +116,7 @@ sub new {
     -padding => [4,0,4,0]);
   $self->{frame} = $rightFrm;
   $select = $self->{selLB} = CP::List->new(
-    $rightFrm, 'e', -height => $listHt + 3, -width => SLWID, -selectmode => 'browse', -takefocus => 1);
+    $rightFrm, 'e', -height => $listHt, -width => SLWID, -selectmode => 'browse', -takefocus => 1);
   $select->bind('<Double-Button-1>' => sub{moveOneItem($self,$select,$avail);});
 
   ### Up/Down Arrows
@@ -139,22 +136,24 @@ sub new {
 
   $srt->g_pack(qw/-side left/, -padx => [4,0]);
   $sby->g_pack(qw/-side left/, -padx => [2,0]);
-  $rev->g_pack(qw/-side left/, -padx => [4,0]);
+  $rev->g_pack(qw/-side left -anchor e/, -padx => [4,0]);
+  $revlab->g_pack(qw/-side left -anchor w/, -padx => [0,0]);
 
-  $mfs->g_pack(  qw/-side left/, -padx => [20,0]);
+  $mfs->g_pack(  qw/-side left/, -padx => [30,0]);
   $entry->g_pack(qw/-side left/, -padx => [2,0]);
   $mfn->g_pack(  qw/-side left/, -padx => [8,0]);
 
   # Available files
   $leftFrm->g_pack(qw/-side left -expand 1 -fill y/, -padx => [0,4]);
   $avail->{frame}->g_grid(qw/-row 0 -column 0 -sticky nsew/);
-  $mfA2Z->g_grid(qw/-row 1 -column 0 -sticky we/, -pady => [4,2]);
   $igna->g_grid(qw/-row 2 -column 0 -sticky w/, -pady => [8,2]);
 
   # Left/Right Arrows
-  $centerFrm->g_pack(qw/-side left -expand 0 -fill x/, -padx => [4,4]);
+  $centerFrm->g_pack(qw/-side left -anchor n -expand 0 -fill x -padx 4/);
+  $arrowFrm->g_pack(qw/-side top -expand 0 -pady 6/);
+  $alphaFrm->g_pack(qw/-side top -expand 0 -fill y/);
 
-  # Selected Files
+      # Selected Files
   $rightFrm->g_pack(qw/-side left -expand 1 -fill y/, -padx => [4,4]);
 
   # columnspan is 2 so that we can put 2 buttons below the ListBox.
@@ -166,7 +165,19 @@ sub new {
   }
 
   ### CENTER
-  leftRightArrows($self, $centerFrm, $avail, $select);
+  leftRightArrows($self, $arrowFrm, $avail, $select);
+  my $r = my $c = 0;
+
+  foreach my $a ('A'..'Z') {
+    my $wid = $alphaFrm->new_ttk__button(
+      -style => 'SF.TButton',
+      -text => $a, -width => 2,
+      -command => sub{$avail->moveTo($a, $listHt)});
+    $wid->g_grid(-row => $r, -column => $c++, -padx => 2, -pady => 2);
+    $c %= 3;
+    $r++ if ($c == 0);
+  }
+
 
   ### RIGHT
   # Already done above.
@@ -225,22 +236,22 @@ sub leftRightArrows {
   my $rt = $frame->new_ttk__button(
     -image => 'arrr',
     -command => sub{moveOneItem($self,$av,$sel);});
-  $rt->g_pack(qw/-side top -pady 4/, -ipady => 1);
+  $rt->g_pack(qw/-side top -pady 2/, -ipady => 1);
 
   my $lt = $frame->new_ttk__button(
     -image => 'arrl',
     -command => sub{moveOneItem($self,$sel,$av);});
-  $lt->g_pack(qw/-side top -pady 4/, -ipady => 1);
+  $lt->g_pack(qw/-side top -pady 2/, -ipady => 1);
 
   my $al = $frame->new_ttk__button(
     -image => 'alll',
     -command => sub{moveAllItems($self,$sel,$av);});
-  $al->g_pack(qw/-side bottom -pady 4/);
+  $al->g_pack(qw/-side bottom -pady 2/);
 
   my $ar = $frame->new_ttk__button(
     -image => 'allr',
     -command => sub{moveAllItems($self,$av,$sel);});
-  $ar->g_pack(qw/-side bottom -pady 4/);
+  $ar->g_pack(qw/-side bottom -pady 2/);
 }
 
 sub upDownArrows {
