@@ -514,7 +514,11 @@ sub Main {
     ### Handle one single ChordPro file
     my $idx = $FileLB->curselection(0);
     if ($idx ne '') {
-      makeOnePDF($ProFiles[$idx], undef, undef);
+      print "Making '$ProFiles[$idx]'\n";
+      my($pdf,$name) = makeOnePDF($ProFiles[$idx], undef, undef);
+      $pdf->close();
+      print "Actioning '$Path->{Temp}/$name', '$name'\n";
+      actionPDF("$Path->{Temp}/$name", $name);
     } else {
       message(SAD, "You don't appear to have selected a ChordPro file.");
       $Pop->destroy();
@@ -548,6 +552,7 @@ sub Main {
       foreach my $idx (@pfn) {
 	($pdf,$PdfFileName) = makeOnePDF($ProFiles[$idx], $PdfFileName, $pdf);
 	if ($Done eq 'Cancel') {
+	  $pdf->close();
 	   $Pop->destroy();
 	   return;
 	}
@@ -559,6 +564,7 @@ sub Main {
       ### Action each PDF independantly
       foreach my $idx (@pfn) {
 	my($pdf,$name) = makeOnePDF($ProFiles[$idx], undef, undef);
+	$pdf->close();
 	if ($Done eq 'Cancel') {
 	   $Pop->destroy();
 	   return;

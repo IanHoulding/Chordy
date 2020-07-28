@@ -8,6 +8,7 @@ Bit late starting with 2.6.4 but about time I documented it :-)
 	   Bugfix - PDF making pop-up window not showing file name.
 	   Changed the way saving 1 option works - more flexible now.
 	   Recoded the Setlist metadata window and PDF generator.
+	   After the above Bugfix, forgot to 'close' the made PDF before actioning!
 
 3.8.4
 
