@@ -514,10 +514,8 @@ sub Main {
     ### Handle one single ChordPro file
     my $idx = $FileLB->curselection(0);
     if ($idx ne '') {
-      print "Making '$ProFiles[$idx]'\n";
       my($pdf,$name) = makeOnePDF($ProFiles[$idx], undef, undef);
       $pdf->close();
-      print "Actioning '$Path->{Temp}/$name', '$name'\n";
       actionPDF("$Path->{Temp}/$name", $name);
     } else {
       message(SAD, "You don't appear to have selected a ChordPro file.");
