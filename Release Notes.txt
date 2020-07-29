@@ -1,6 +1,10 @@
 Chordy, Tab et al Revision history.
 Bit late starting with 2.6.4 but about time I documented it :-)
 
+3.8.6
+  Chordy - Bugfix - Selecting a Setlist then changing Collection resulted in the
+             Setlist code still looking at the old object metadata.
+
 3.8.5
   Chordy - More Setlist layout changes.
            Added Reverse Sort for list of Sets.

@@ -25,6 +25,16 @@ sub new {
   my $self = {};
   bless $self, $class;
 
+  $self->load();
+  $self->{setsLB} = '';
+  $self->{browser} = '';
+  $self->select($CurSet);
+  return $self;
+}
+
+sub load {
+  my($self) = shift;
+
   my $sets = $self->{sets} = {};
   if (-e "$Home/SetList.cfg") {
     our %list;
@@ -45,32 +55,6 @@ sub new {
       }
     }
   }
-  $self->{setsLB} = '';
-  $self->{browser} = '';
-  $self->select($CurSet);
-  return $self;
-}
-
-sub conv2new {
-  my($list,$sets) = @_;
-
-  foreach my $c (sort keys %{$list}) {
-    foreach my $s (@{$list->{$c}}) {
-      push(@{$sets->{$c}{songs}}, $s);
-      foreach (@strOpt) {
-	$sets->{$c}{$_} = '';
-      }
-    }
-  }
-}
-
-sub listSets {
-  my($self) = shift;
-
-  $self->{setsLB}{array} = ($Opt->{SLrev}) ?
-      [reverse sort keys %{$self->{sets}}] :
-      [sort keys %{$self->{sets}}];
-  $self->{setsLB}->a2tcl();
 }
 
 sub save {
@@ -117,6 +101,28 @@ sub save {
   message(SMILE, $col."Setlists updated and saved.", 1);
 }
 
+sub conv2new {
+  my($list,$sets) = @_;
+
+  foreach my $c (sort keys %{$list}) {
+    foreach my $s (@{$list->{$c}}) {
+      push(@{$sets->{$c}{songs}}, $s);
+      foreach (@strOpt) {
+	$sets->{$c}{$_} = '';
+      }
+    }
+  }
+}
+
+sub listSets {
+  my($self) = shift;
+
+  $self->{setsLB}{array} = ($Opt->{SLrev}) ?
+      [reverse sort keys %{$self->{sets}}] :
+      [sort keys %{$self->{sets}}];
+  $self->{setsLB}->a2tcl();
+}
+
 sub select {
   my($self,$set) = @_;
 
@@ -149,21 +155,17 @@ sub select {
 sub change {
   my($self) = shift;
 
-  my $slb = $self->{setsLB};
-  my $br = $self->{browser};
-  $AllSets = CP::SetList->new();
-  $AllSets->{setsLB} = $slb;
-  $AllSets->{browser} = $br;
-  $AllSets->listSets();
+  $self->load();
+  $self->listSets();
   if ($CurSet ne '') {
-    if (! defined $AllSets->{sets}{$CurSet}) {
+    if (! defined $self->{sets}{$CurSet}) {
       $CurSet = '';
     } else {
-      $AllSets->{browser}{selLB}{array} = $AllSets->{sets}{$CurSet}{songs};
+      $self->{browser}{selLB}{array} = $self->{sets}{$CurSet}{songs};
     }
   }
-  $br->refresh($Path->{Pro}, '.pro');
-  $AllSets->select($CurSet);
+  $self->{browser}->refresh($Path->{Pro}, '.pro');
+  $self->select($CurSet);
 }
 
 #
@@ -275,7 +277,6 @@ sub export {
     \$newC,
     sub{
       if ($newC ne $orgC) {
-	my $all = 0;
 	if ($newC eq 'File') {
 	  my $file = $CurSet.'.sel';
 	  $file = Tkx::tk___getSaveFile(
@@ -315,6 +316,7 @@ sub export {
 	pop(@lst);
 	pop(@lst);
 	my $orgHome = $Home;
+	my $all = 0;
 	foreach my $col (@lst) {
 	  next if ($col eq $orgC);
 	  $Home = "$Collection->{$col}/$col";
