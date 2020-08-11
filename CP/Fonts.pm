@@ -424,8 +424,7 @@ sub bgSet {
 sub pickFG {
   my($title,$fontp,$bg) = @_;
 
-  $ColourEd = CP::FgBgEd->new() if (! defined $ColourEd);
-  $ColourEd->title("$title Font");
+  CP::FgBgEd->new("$title Font");
   my $op = FOREGRND;
   $op |= BACKGRND if ($title =~ /Com|Hig|Tab|Tit|Cho|Lyr/);
   (my $fg,$bg) = $ColourEd->Show($fontp->{color}, $bg, $op);

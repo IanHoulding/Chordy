@@ -28,7 +28,7 @@ use CP::Global qw/:FUNC :PATH :OPT :CHORD :WIN :PRO :SETL :MEDIA :SCALE :XPM/;
 
 use CP::Win;
 use CP::Pop qw/:POP :MENU/;
-use CP::ChordyWin qw/&chordyDisplay/;
+use CP::Chordy;
 use CP::List;
 use CP::Pro qw/$LenError/;
 use CP::Collection;
@@ -92,7 +92,7 @@ makeImage("Cicon", \%XPM);
 $MW->g_wm_iconphoto("Cicon");
 title();
 
-CP::ChordyWin::chordyDisplay();
+CP::Chordy->new();
 
 $MW->g_wm_deiconify();
 $MW->g_raise();

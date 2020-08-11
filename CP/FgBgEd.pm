@@ -25,7 +25,13 @@ use Tkx;
 our(@LclSwtch,%Names,%Hexs,%Colour);
 
 sub new {
-  my($proto) = @_;
+  my($proto, $title) = @_;
+
+  $title = '' if (! defined $title);
+  if (defined $ColourEd) {
+    title($ColourEd, $title);
+    return;
+  }
 
   my $class = ref($proto) || $proto;
   my $self = {};
@@ -246,7 +252,8 @@ sub new {
   $self->{pending} = 0;
 
   bless $self, $class;
-  return($self);
+  $ColourEd = $self;
+  title($ColourEd, $title) if (defined $title);
 }
 
 sub title {

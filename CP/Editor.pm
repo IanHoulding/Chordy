@@ -86,7 +86,7 @@ sub new {
   makeImage("Eicon", \%XPM);
   $Ed->{Top}->g_wm_iconphoto("Eicon");
 
-  $ColourEd = CP::FgBgEd->new() if (! defined $ColourEd);
+  CP::FgBgEd->new();
 
   CP::CHedit::readFing('Guitar');
   CP::CHedit::mkChords();

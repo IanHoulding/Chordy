@@ -338,8 +338,7 @@ sub bgGet {
   my($self) = shift;
 
   $self->{bg} = WHITE if ($self->{bg} eq '');
-  $ColourEd = CP::FgBgEd->new() if (! defined $ColourEd);
-  $ColourEd->title("Background Colour");
+  CP::FgBgEd->new("Background Colour");
   my($fg,$bg) = $ColourEd->Show($Tab->{noteColor}, $self->{bg}, BACKGRND);
   $bg;
 }

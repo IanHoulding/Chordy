@@ -276,8 +276,7 @@ sub FgBgClr {
 
   my $fg = Tkx::ttk__style_lookup($style, -foreground);
   my $bg = Tkx::ttk__style_lookup($style, -background);
-  $ColourEd = CP::FgBgEd->new() if (!defined $ColourEd);
-  $ColourEd->title("$title Colour");
+  CP::FgBgEd->new("$title Colour");
   my($nfg,$nbg) = $ColourEd->Show($fg, $bg, (FOREGRND|BACKGRND));
   if ($nfg ne '' && $nfg ne $fg) {
     Tkx::ttk__style_configure($style, -foreground => $nfg);
@@ -293,8 +292,7 @@ sub BGclr {
 
   my($fg,$bg);
   if (! defined $clr) {
-    $ColourEd = CP::FgBgEd->new() if (!defined $ColourEd);
-    $ColourEd->title("Window Background");
+    CP::FgBgEd->new("Window Background");
     $fg = Tkx::ttk__style_lookup('TLabelframe.Label', -foreground);
     $bg = Tkx::ttk__style_lookup('TFrame', -background);
     $ColourEd->{fgcolor} = $fg;

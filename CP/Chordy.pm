@@ -1,4 +1,4 @@
-package CP::ChordyWin;
+package CP::Chordy;
 
 # This file is part of Chordy.
 #
@@ -27,43 +27,39 @@ use CP::Browser;
 use CP::HelpCh;
 use Exporter;
 
-our @ISA = qw/Exporter/;
+sub new {
+  my($proto) = @_;
+  my $class = ref($proto) || $proto;
 
-our @EXPORT = qw/&chordyDisplay/;
-
-#
-# This is all the GUI stuff. Just kept in a separate file
-# to make editing/managing easier.
-#
-my $FFrame = '';
-my $CurCol;
-my $Cpath;
-
-sub chordyDisplay {
-  $ColourEd = CP::FgBgEd->new() if (!defined $ColourEd);
+  my $self = {};
+  bless $self, $class;
 
   # The main window is composed of 2 areas:
   # 1) A top NoteBook with 3 tabs.
   # 2) A bottom Frame that contains the Help & Exit buttons.
 
-  my $NB = $MW->new_ttk__notebook();
-  my $butf = $MW->new_ttk__frame(-padding => [0,8,0,8]);
-
+  $self->{nb} = my $NB = $MW->new_ttk__notebook();
   $NB->g_pack(qw/-side top -expand 1 -fill both/);
+
+  my $butf = $MW->new_ttk__frame(-padding => [0,8,0,8]);
   $butf->g_pack(qw/-side bottom -fill x/);
 
   my $chordy = $NB->new_ttk__frame(-padding => [4,4,4,4]);
-  my $setLst = $NB->new_ttk__frame(-padding => [4,4,4,4]);
-  my $opts = $NB->new_ttk__frame(-padding => [4,4,4,4]);
-  my $misc = $NB->new_ttk__frame(-padding => [4,4,4,4]);
-
+  $self->{setLst} = my $setLst = $NB->new_ttk__frame(-padding => [4,4,4,4]);
+  $self->{opts}   = my $opts   = $NB->new_ttk__frame(-padding => [4,4,4,4]);
+  $self->{misc}   = my $misc   = $NB->new_ttk__frame(-padding => [4,4,4,4]);
+#  $self->{made0nb} = 0; # Always made - see below.
+  $self->{made1nb} = 0;
+  $self->{made2nb} = 0;
+  $self->{made3nb} = 0;
   $NB->add($chordy, -text => '  Chordy PDF Generator  ');
   $NB->add($setLst, -text => '  Setlists  ');
   $NB->add($opts,   -text => '  Configuration Options  ');
   $NB->add($misc,   -text => '  Miscellaneous  ');
-  $NB->select(0);
 
-#### Bottom Button Frame
+  $NB->g_bind('<<NotebookTabChanged>>', [\&notebookTabSelect, $self]);
+
+  #### Bottom Button Frame
   my $about = $butf->new_ttk__button(
     -text => 'About',
     -style => 'Green.TButton',
@@ -83,9 +79,12 @@ sub chordyDisplay {
   $help->g_pack(qw/-side left -padx 20/);
   $ext->g_pack(qw/-side right -padx 60/);
 
+#### This is NoteBook Tab 0 and is always made and displayed first.
 #### Chordy PDF Generator Tab
+  $self->{currentColl} = '';
+  $self->{collectionPath} = '';
   my $ctf = $chordy->new_ttk__labelframe(-text => " ChordPro Files ", -padding => [4,4,4,4]);
-  filesWin($ctf, $NB);
+  filesWin($self, $ctf);
 
   my $cmf = $chordy->new_ttk__labelframe(-text => " PDF Options ", -padding => [4,4,4,4]);
   optWin($cmf);
@@ -93,18 +92,46 @@ sub chordyDisplay {
   $ctf->g_pack(qw/-side top -expand 1 -fill both/);
   $cmf->g_pack(qw/-side top -expand 1 -fill both/, -pady => [8,0]);
 
-#### Setlists Tab
-  setLists($setLst, $NB);
+  $NB->select(0);
+  $chordy->g_focus();
+}
 
-#### Configuration Options Tab
+sub notebookTabSelect {
+  my($self) = shift;
+
+  my $idx = $self->{nb}->m_index('current');
+  if ($idx == 1) {
+    if ($self->{made1nb} == 0) {
+      setLists($self);
+      $self->{made1nb} = 1;
+    }
+  } elsif ($idx == 2) {
+    if ($self->{made2nb} == 0) {
+      confOpts($self);
+    }
+    fontWin($self);
+  } elsif ($idx == 3) {
+    if ($self->{made3nb} == 0) {
+      miscOpts($self);
+    }
+  }
+}
+
+##
+## Configuration Options NoteBook Tab
+##
+sub confOpts {
+  my($self) = shift;
+
+  my $opts = $self->{opts};
   my $fol = $opts->new_ttk__labelframe(-text => " Collections ", -padding => [4,4,4,4]);
-  collectionWin($fol);
+  collectionWin($self, $fol);
 
   my $sz = $opts->new_ttk__labelframe(-text => " PDF Page Size ", -padding => [4,4,4,0]);
-  mediaWin($sz);
+  mediaWin($self, $sz);
 
-  $FFrame = $opts->new_ttk__labelframe(-text => " Fonts - Colour and Size ", -padding => [4,0,0,8]);
-  $NB->g_bind('<<NotebookTabChanged>>', sub{fontWin() if ($NB->m_index('current') == 2)});
+  $self->{fontFr} = $opts->new_ttk__labelframe(-text => " Fonts - Colour and Size ",
+					       -padding => [4,0,0,8]);
 
   my $bgf = $opts->new_ttk__labelframe(-text => " Background Colours ");
   bgWin($bgf);
@@ -114,30 +141,34 @@ sub chordyDisplay {
 
   $fol->g_pack(qw/-side top -fill x/, -pady => [8,0]);
   $sz->g_pack(qw/-side top -fill x/, -pady => [16,0]);
-  $FFrame->g_pack(qw/-side top -fill x/, -pady => [16,0]);
+  $self->{fontFr}->g_pack(qw/-side top -fill x/, -pady => [16,0]);
   $bgf->g_pack(qw/-side top -fill x/, -pady => [16,0]);
   $bf->g_pack(qw/-side bottom -pady 4 -fill x/);
+}
 
-#### Miscellaneous Tab
+##
+## Misc Options Tab
+##
+sub miscOpts {
+  my($self) = shift;
+
+  my $misc = $self->{misc};
   my $ff = $misc->new_ttk__labelframe(-text => " File ");
-  fileFrm($ff);
+  $ff->g_pack(qw/-side top -fill x/, -pady => [8,0]);
 
   my $of = $misc->new_ttk__labelframe(-text => " Options ");
-  optFrm($of);
+  $of->g_pack(qw/-side top -fill x/, -pady => [16,0]);
 
   my $cf = $misc->new_ttk__labelframe(-text => " Appearance ");
-  lookFrm($cf);
+  $cf->g_pack(qw/-side top -fill x/, -pady => [16,0]);
 
   my $cmd = $misc->new_ttk__labelframe(-text => " Commands ", -padding => [4,4,4,4]);
-  commandWin($cmd);
-
-  $ff->g_pack(qw/-side top -fill x/, -pady => [8,0]);
-  $of->g_pack(qw/-side top -fill x/, -pady => [16,0]);
-  $cf->g_pack(qw/-side top -fill x/, -pady => [16,0]);
   $cmd->g_pack(qw/-side top -fill x/, -pady => [16,0]);
 
-####
-  $chordy->g_focus();
+  fileFrm($ff);
+  optFrm($of);
+  lookFrm($cf);
+  commandWin($cmd);
 }
 
 ###############################
@@ -151,7 +182,7 @@ sub chordyDisplay {
 ##########
 
 sub filesWin {
-  my($Fff,$NB) = @_;
+  my($self,$Fff) = @_;
 
   # Has to be packed first.
   my $bLF = $Fff->new_ttk__labelframe(-text => ' Single Selected File ', -padding => [4,4,4,8]);
@@ -234,7 +265,7 @@ sub filesWin {
 
   my $fsl = $tFr->new_ttk__button(
     -text => "From Setlist",
-    -command => sub{$NB->m_select(1)});
+    -command => sub{$self->{nb}->m_select(1)});
 
   my $act = $tFr->new_ttk__labelframe(
     -text => " PDFs ",
@@ -244,10 +275,10 @@ sub filesWin {
 
   my $cob = $tFr->new_ttk__button(
     -text => "Collection",
-    -command => sub{$CurCol = $Collection->name();
-		    popMenu(\$CurCol, undef, [sort keys %{$Collection}]);
-		    $Collection->change($CurCol);
-		    collItems();} );
+    -command => sub{$self->{currentColl} = $Collection->name();
+		    popMenu(\$self->{currentColl}, undef, [sort keys %{$Collection}]);
+		    $Collection->change($self->{currentColl});
+		    collItems($self);} );
 
 ###
   my $onet = $bLF->new_ttk__button(
@@ -497,13 +528,14 @@ sub optWin {
 ##############
 
 sub setLists {
-  my($frame,$NB) = @_;
+  my($self) = shift;
 
+  my $frame = $self->{setLst};
   my $slFt = $frame->new_ttk__frame(qw/-relief raised -borderwidth 2 -style Wh.TFrame/);
   my $slFb = $frame->new_ttk__frame();
 
   $AllSets = CP::SetList->new();
-  my $browser = $AllSets->{browser} = browser($slFb, $NB);
+  my $browser = $AllSets->{browser} = browser($slFb, $self->{nb});
 
   my $sltL = $slFt->new_ttk__labelframe(
     -text => ' Setlists ',
@@ -769,37 +801,37 @@ sub slAct {
 ################
 
 sub collectionWin {
-  my($wid) = shift;
+  my($self,$wid) = @_;
 
-  $CurCol = $Collection->name();
-  $Cpath = $Collection->{$CurCol}.'/'.$CurCol;
+  $self->{currentColl} = $Collection->name();
+  $self->{collectionPath} = $Collection->{$self->{currentColl}}.'/'.$self->{currentColl};
   my $ccsub = sub{
     my @lst = (sort keys %{$Collection});
-    popMenu(\$CurCol, sub{}, \@lst);
-    if ($Collection->name() ne $CurCol) {
-      $Collection->change($CurCol);
-      collItems();
+    popMenu(\$self->{currentColl}, sub{}, \@lst);
+    if ($Collection->name() ne $self->{currentColl}) {
+      $Collection->change($self->{currentColl});
+      collItems($self);
       showSize();
-      fontWin();
+      fontWin($self);
     }	    
   };
   my $cedit = sub{
-    if ($Collection->edit() eq 'OK' && $Collection->name() ne $CurCol) {
-      $CurCol = $Collection->name();
-      collItems();
+    if ($Collection->edit() eq 'OK' && $Collection->name() ne $self->{currentColl}) {
+      $self->{currentColl} = $Collection->name();
+      collItems($self);
     } else {
       showSize();
-      fontWin();
+      fontWin($self);
     }
   };
   my($a,$b,$c,$d,$e,$f,$g);
 
   $a = $wid->new_ttk__label(-text => "Collection: ");
-  $b = $wid->new_ttk__button(-textvariable => \$CurCol, -width => 10,
+  $b = $wid->new_ttk__button(-textvariable => \$self->{currentColl}, -width => 10,
 			     -style => 'Menu.TButton',    -command => $ccsub);
   $c = $wid->new_ttk__button(qw/-text Edit -command/ => $cedit);
   $d = $wid->new_ttk__label(-text => "Path: ");
-  $e = $wid->new_ttk__label(-textvariable => \$Cpath);
+  $e = $wid->new_ttk__label(-textvariable => \$self->{collectionPath});
 
   $f = $wid->new_ttk__label(-text => "Common PDF Path: ");
   $g = $wid->new_ttk__label(-textvariable => \$Opt->{PDFpath});
@@ -815,6 +847,8 @@ sub collectionWin {
 }
 
 sub collItems {
+  my($self) = shift;
+
   my @del = ();
   foreach my $idx (0..$#ProFiles) {
     if (! -e "$Path->{Pro}/$ProFiles[$idx]->{name}") {
@@ -830,8 +864,9 @@ sub collItems {
     $KeyLB->remove($idx);
     $FileLB->remove($idx);
   }
-  $CurCol = $Collection->name();
-  $Cpath = $Collection->{$CurCol}.'/'.$CurCol;
+  my $cc = $Collection->name();
+  $self->{currentColl} = $cc;
+  $self->{collectionPath} = $Collection->{$cc}.'/'.$cc;
   main::title();
 }
 
@@ -844,7 +879,7 @@ sub collItems {
 our($Wstr,$Hstr);
 
 sub mediaWin {
-  my($wid) = @_;
+  my($self, $wid) = @_;
 
   my($a,$b,$c,$d,$e,$f,$g,$i,$j,$k,$m);
   showSize();
@@ -902,10 +937,12 @@ sub mediaWin {
 }
 
 sub newMedia {
+  my($self) = shift;
+
 #  $Opt->changeOne('Media');
   $Media->change(\$Opt->{Media});
   showSize();
-  fontWin();
+  fontWin($self);
 }
 
 sub showSize {
@@ -916,10 +953,12 @@ sub showSize {
 }
 
 sub fontWin {
-  foreach my $c (Tkx::SplitList(Tkx::winfo_children($FFrame))) {
+  my($self) = shift;
+
+  foreach my $c (Tkx::SplitList(Tkx::winfo_children($self->{fontFr}))) {
     Tkx::destroy($c);
   }
-  CP::Fonts::fonts($FFrame, [qw/Title Chord Lyric Tab Comment Highlight Editor/]);
+  CP::Fonts::fonts($self->{fontFr}, [qw/Title Chord Lyric Tab Comment Highlight Editor/]);
 
   Tkx::update();
 }
@@ -953,7 +992,7 @@ sub BGcS {
 sub pickBG {
   my($title,$fntp,$but,$var) = @_;
 
-  $ColourEd->title("$title Background Colour");
+  CP::FgBgEd->new("$title Background Colour");
   my($fg,$bg) = $ColourEd->Show($fntp->{color}, $$var, BACKGRND);
   if ($bg ne '') {
     $$var = $bg;

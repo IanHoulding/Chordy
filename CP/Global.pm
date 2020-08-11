@@ -59,7 +59,7 @@ BEGIN {
 use CP::Cconst qw/:OS :PATH :SHFL :SMILIE :COLOUR/;
 use CP::Cmsg qw/&message &msgYesNo &msgYesNoCan &msgSet &msgYesNoAll/;
 
-our $Version = "3.8.5";
+our $Version = "3.8.7";
 
 our($Parent, $Home, $Collection, $Opt, $Path, $Cmnd, $Swatches);
 our(%Fingers, $Nstring, @Tuning, $CurSet);

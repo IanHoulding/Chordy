@@ -400,8 +400,7 @@ sub mrename {
 sub pickClr {
   my($title,$fontp,$clr,$ent) = @_;
 
-  $ColourEd = CP::FgBgEd->new() if (! defined $ColourEd);
-  $ColourEd->title("$title Font");
+  CP::FgBgEd->new("$title Font");
   my($fg,$bg) = $ColourEd->Show($fontp->{color}, VLMWBG, FOREGRND);
   if ($fg ne '') {
     $fontp->{color} = $fg;

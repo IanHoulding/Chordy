@@ -78,8 +78,7 @@ sub background {
   my $bg = (defined $Opt->{ListBG}) ? $Opt->{ListBG} : WHITE;
   my($nfg,$nbg) = ('','');
   if (defined $set) {
-    $ColourEd = CP::FgBgEd->new() if (!defined $ColourEd);
-    $ColourEd->title("List Colours");
+    CP::FgBgEd->new("List Colours");
     ($nfg,$nbg) = $ColourEd->Show($fg, $bg, (FOREGRND|BACKGRND));
     $fg = $nfg if ($nfg ne '');
     $bg = $nbg if ($nbg ne '');
