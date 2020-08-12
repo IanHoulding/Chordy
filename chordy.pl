@@ -679,9 +679,6 @@ sub popProg {
   $Pop = CP::Pop->new(1, '.pr', 'Progress', -1, -1);
   my($top,$pp) = ($Pop->{top},$Pop->{frame});
   $pp->m_configure(-style => 'Pop.TFrame');
-  my $bf = $top->new_ttk__frame(-padding => [4,4,4,4]);
-  $bf->m_configure(-style => 'Pop.TFrame');
-  $bf->g_pack(qw/-side bottom -fill x/);
 
   my $font = (exists $FontList{"Comic Sans MS"}) ? "Comic Sans MS" : "Times";
   my $size = 14;
@@ -699,8 +696,11 @@ sub popProg {
     -width => 25);
   $FNlabel->g_pack();
 
+  my $hl = $pp->new_ttk__separator(-orient => 'horizontal');
+  $hl->g_pack(-fill => 'x', -pady => 4);
+
   $Done = '';
-  my $b = $bf->new_ttk__button(-text => 'Cancel',
+  my $b = $pp->new_ttk__button(-text => 'Cancel',
 			       -command => sub{$Done = 'Cancel'; Tkx::update();} );
   $b->g_pack();
 
