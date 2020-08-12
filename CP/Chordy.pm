@@ -108,11 +108,13 @@ sub notebookTabSelect {
   } elsif ($idx == 2) {
     if ($self->{made2nb} == 0) {
       confOpts($self);
+      $self->{made2nb} = 1;
     }
     fontWin($self);
   } elsif ($idx == 3) {
     if ($self->{made3nb} == 0) {
       miscOpts($self);
+      $self->{made3nb} = 1;
     }
   }
 }
