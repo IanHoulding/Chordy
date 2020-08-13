@@ -41,7 +41,7 @@ sub new {
   my($FBE,$fr) = ($pop->{top}, $pop->{frame});
 
   makeImage("colour", \%XPM);
-  $FBE->g_wm_protocol('WM_DELETE_WINDOW', sub{$pop->destroy();$self->{'done'} = 'Cancel';});
+  $FBE->g_wm_protocol('WM_DELETE_WINDOW', sub{$self->{'done'} = 'Cancel';});
   $FBE->g_wm_withdraw();
 
   foreach my $c (keys %Colour) {
