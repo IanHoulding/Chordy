@@ -334,19 +334,29 @@ sub save {
 sub edit {
   my($self) = shift;
 
-  my $pop = CP::Pop->new(1, '.ec', '');
+  my $pop = CP::Pop->new(0, '.ec', 'Edit Collection');
   return if ($pop eq '');
   my($top,$wt) = ($pop->{top}, $pop->{frame});
+  $wt->m_configure(-padding => [0,0,0,0]);
 
-  my $tf = $wt->new_ttk__frame(qw/-relief raised -borderwidth 1/, -padding => [4,4,4,4]);
-  $tf->g_grid(qw/-row 0 -column 0 -sticky nsew/);
+  my $tf = $wt->new_ttk__frame(-padding => [4,4,4,4]);
+  $tf->g_pack(qw/-side top -fill x/);
+
+  my $sepa = $wt->new_ttk__separator(qw/-orient horizontal/);
+  $sepa->g_pack(qw/-side top -fill x/, -pady => [4,8]);
+
+  my $mf = $wt->new_ttk__frame();
+  $mf->g_pack(qw/-side top -fill x/);
+
+  my $sepb = $wt->new_ttk__separator(qw/-orient horizontal/);
+  $sepb->g_pack(qw/-side top -fill x/, -pady => [8,2]);
 
   my $bf = $wt->new_ttk__frame();
-  $bf->g_grid(qw/-row 1 -column 0 -sticky ew/);
+  $bf->g_pack(qw/-side top -fill x/);
 
   my($a,$b,$c,$ca,$cb,$d,$e,$f,$g,$h,$i,$j);
 
-  $a = $tf->new_ttk__label(-text => "Collection: ",);
+  $a = $tf->new_ttk__label(-text => "Collection",);
   $b = $tf->new_ttk__button(
     -width => 20,
     -textvariable => \$CurrentCollection,
@@ -371,22 +381,19 @@ sub edit {
     -text => 'Delete original',
     -variable => \$delorg,
       );
-  $d = $tf->new_ttk__label(-text => "Path: ");
+  $d = $tf->new_ttk__label(-text => "Path");
   $e = $tf->new_ttk__label(-textvariable => \$CollectionPath, -width => 50);
 
-  $a->g_grid(qw/-row 0 -column 0 -sticky e -pady/ => [0,6]);
-  $b->g_grid(qw/-row 0 -column 1 -sticky w/);
+  $a->g_grid(qw/-row 0 -column 0 -sticky e/);
+  $b->g_grid(qw/-row 0 -column 1 -sticky w -padx 4/);
   $c->g_grid(qw/-row 0 -column 2 -padx 10/);
   $ca->g_grid(qw/-row 0 -column 3 -padx 5/);
   $cb->g_grid(qw/-row 0 -column 4 -padx 5/);
-  $d->g_grid(qw/-row 1 -column 0 -sticky e/, -pady => [4,0]);
-  $e->g_grid(qw/-row 1 -column 1 -columnspan 4 -sticky w/, -padx => [0,4], -pady => [4,0]);
-
-  $f = $tf->new_ttk__frame(qw/-height 1/);
-  $f->g_grid(qw/-row 2 -column 0 -sticky we -columnspan 5 -pady 5/);
+  $d->g_grid(qw/-row 1 -column 0 -sticky e/, -pady => 4);
+  $e->g_grid(qw/-row 1 -column 1 -columnspan 4 -sticky w -padx 4 -pady 4/);
 
   $NewCollection = "";
-  $g = $tf->new_ttk__label(-text => "New Name: ");
+  $g = $tf->new_ttk__label(-text => "New Name");
   $h = $tf->new_ttk__entry(
     -width => 40,
     -textvariable => \$NewCollection);
@@ -409,47 +416,47 @@ sub edit {
     });
 
   $g->g_grid(qw/-row 3 -column 0 -sticky e/);
-  $h->g_grid(qw/-row 3 -column 1 -sticky w/);
+  $h->g_grid(qw/-row 3 -column 1 -sticky w -padx 4/);
   $i->g_grid(qw/-row 3 -column 2 -padx 5/);
   $j->g_grid(qw/-row 3 -column 3 -padx 5/);
 
-  my $sepa = $tf->new_ttk__separator(qw/-orient horizontal/);
-  $sepa->g_grid(qw/-row 4 -column 0 -columnspan 5 -sticky ew/, -pady => [8,4]);
-
-  my $brsub = sub{
-    my $dir = Tkx::tk___chooseDirectory(
-      -title => "Choose Common Folder",
-      -initialdir => "$Home");
-    $dir =~ s/\/$//;
-    $Opt->{PDFpath} = $dir if ($dir ne '');
-  };
-  $a = $tf->new_ttk__label(-text => "Common\nPDF Path ");
-  $b = $tf->new_ttk__entry(qw/-width 40 -textvariable/ => \$Opt->{PDFpath});
-  $c = $tf->new_ttk__button(
+  $a = $mf->new_ttk__label(-text => "Common PDF Path");
+  $b = $mf->new_ttk__entry(qw/-width 40 -textvariable/ => \$Opt->{PDFpath});
+  $c = $mf->new_ttk__button(
     -text => "Browse ...",
-    -command => $brsub,
+    -command => sub{
+      my $dir = Tkx::tk___chooseDirectory(
+	-title => "Choose Common Folder",
+	-initialdir => "$Home");
+      $dir =~ s/\/$//;
+      if ($dir ne '') {
+	$Opt->{PDFpath} = $dir;
+	$Opt->save();
+      }
+      $wt->g_focus();
+    },
       );
-  $d = $tf->new_ttk__button(
+  $d = $mf->new_ttk__button(
     -text => "Set",
     -width => 6,
     -style =>'Green.TButton',
     -command => sub{$Opt->save()}, );
 
-  $a->g_grid(qw/-row 5 -column 0 -sticky e/);
-  $b->g_grid(qw/-row 5 -column 1 -sticky w/);
-  $c->g_grid(qw/-row 5 -column 2 -padx 5/);
-  $d->g_grid(qw/-row 5 -column 3 -padx 5/);
+  $a->g_grid(qw/-row 0 -column 0 -sticky e -padx 4/);
+  $b->g_grid(qw/-row 0 -column 1 -sticky w/);
+  $c->g_grid(qw/-row 0 -column 2 -padx 16/);
+  $d->g_grid(qw/-row 0 -column 3/);
 
   my $Done = '';
   my $cancel = $bf->new_ttk__button(
     -text => "Cancel",
     -command => sub{$Done = "Cancel";});
-  $cancel->g_pack(qw/-side left -padx 60/, -pady => "4 2");
+  $cancel->g_pack(qw/-side left -padx 60/, -pady => [4,8]);
 
   my $ok = $bf->new_ttk__button(
     -text => "OK",
     -command => sub{$Done = "OK";});
-  $ok->g_pack(qw/-side right -padx 60/, -pady => "4 2");
+  $ok->g_pack(qw/-side right -padx 60/, -pady => [4,8]);
 
   Tkx::vwait(\$Done);
   if ($Done eq "OK") {

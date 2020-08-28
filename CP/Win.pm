@@ -39,7 +39,7 @@ sub init {
 
   MWoptions();
 
-  makeImage("blank", \%XPM); # used by Editor.pm, FgBgEd.pm and Fonts.pm
+  makeImage('blank', \%XPM); # used by Editor.pm, FgBgEd.pm and Fonts.pm
 }
 
 sub title {
@@ -72,15 +72,18 @@ sub MWoptions {
 			    -selectborderwidth => 0);
   Tkx::ttk__style_configure('Pop.TFrame',
 			    -background => $Opt->{PopBG});
-  Tkx::ttk__style_configure('Wh.TFrame', -background => WHITE);
+  Tkx::ttk__style_configure('Wh.TFrame',
+			    -background => WHITE);
 
   Tkx::ttk__style_configure('TLabelframe',
 			    -labeloutside => 0,
 			    -labelmargins => [8,0,8,0],
 			    -relief => 'raised',
 			    -bd => 2);
-  Tkx::ttk__style_configure('TLabelframe.Label', -font => "BTkDefaultFont");
-  Tkx::ttk__style_configure('TLabelframe.Label', -foreground => MAGENT);
+  Tkx::ttk__style_configure('TLabelframe.Label',
+			    -font => "BTkDefaultFont",
+			    -justify => 'center',
+			    -foreground => MAGENT);
 
   Tkx::ttk__style_configure('Wh.TLabelframe', -background => WHITE);
   Tkx::ttk__style_configure('Wh.TLabelframe.Label', -background => WHITE);
@@ -244,28 +247,52 @@ sub TLabelBGset {
 
 sub PBclr {
   my($fg,$bg) = FgBgClr("Push Button", 'TButton');
-  $Opt->{PushFG} = $fg if ($fg ne '');
-  $Opt->{PushBG} = $bg if ($bg ne '');
+  if ($fg ne '') {
+    $Opt->{PushFG} = $fg;
+    $Opt->save();
+  }
+  if ($bg ne '') {
+    $Opt->{PushBG} = $bg;
+    $Opt->save();
+  }
 }
 
 sub MBclr {
   my($fg,$bg) = FgBgClr("Menu Button", 'Menu.TButton');
-  $Opt->{MenuFG} = $fg if ($fg ne '');
-  $Opt->{MenuBG} = $bg if ($bg ne '');
+  if ($fg ne '') {
+    $Opt->{MenuFG} = $fg;
+    $Opt->save();
+  }
+  if ($bg ne '') {
+    $Opt->{MenuBG} = $bg;
+    $Opt->save();
+  }
 }
 
 sub ENTclr {
   my($fg,$bg) = FgBgClr("Entry Box", 'Ent.TButton');
-  $Opt->{EntryFG} = $fg if ($fg ne '');
-  $Opt->{EntryBG} = $bg if ($bg ne '');
+  if ($fg ne '') {
+    $Opt->{EntryFG} = $fg;
+    $Opt->save();
+  }
+  if ($bg ne '') {
+    $Opt->{EntryBG} = $bg;
+    $Opt->save();
+  }
   Tkx::ttk__style_configure('TEntry', -fieldforeground => $Opt->{EntryFG});
   Tkx::ttk__style_configure('TEntry', -fieldbackground => $Opt->{EntryBG});
 }
 
 sub MSGclr {
   my($fg,$bg) = FgBgClr("Message Pop-Up", 'Msg.TButton');
-  $Opt->{PopFG} = $fg if ($fg ne '');
-  $Opt->{PopBG} = $bg if ($bg ne '');
+  if ($fg ne '') {
+    $Opt->{PopFG} = $fg;
+    $Opt->save();
+  }
+  if ($bg ne '') {
+    $Opt->{PopBG} = $bg;
+    $Opt->save();
+  }
   Tkx::ttk__style_configure('Pop.TLabel', -foreground => $Opt->{PopFG});
   Tkx::ttk__style_configure('Pop.TLabel', -background => $Opt->{PopBG});
   Tkx::ttk__style_configure('Pop.TFrame', -background => $Opt->{PopBG});
@@ -321,6 +348,7 @@ sub defLook {
   $Opt->{PushBG} = bBG;
   $Opt->{WinBG}  = MWBG;
   newLook();
+  $Opt->save();
 }
 
 sub newLook {

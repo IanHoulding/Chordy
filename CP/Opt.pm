@@ -47,7 +47,7 @@ sub default {
 
   $self->{Articles}    = 'the|a|an';
   $self->{AutoSave}    = 0;
-  $self->{Bold}        = 2;
+  $self->{Bold}        = 2;    # This is the 'heavyness' weight for PDF bold fonts.
   $self->{Capo}        = 'No';
   $self->{Center}      = 0;
   $self->{EditScale}   = 4;
@@ -61,7 +61,7 @@ sub default {
   $self->{IgnCapo}     = 0;
   $self->{Instrument}  = 'Guitar';
   $self->{Instruments} = [qw/Banjo Bass4 Bass5 Guitar Mandolin Ukelele/];
-  $self->{Italic}      = 12;
+  $self->{Italic}      = 12;    # This is the slant angle for PDF italic fonts.
   $self->{LineSpace}   = 1;
   $self->{ListFG}      = BLACK;
   $self->{ListBG}      = WHITE;
@@ -93,6 +93,15 @@ sub default {
   $self->{Together}    = 1;
   $self->{UseBold}     = 1;
   $self->{WinBG}       = MWBG;
+}
+
+sub resetOpt {
+  my($self) = shift;
+
+  return if (msgYesNo("Are you sure you want to reset\nALL options to their defaults?") eq "No");
+  $self->default();
+  $self->save();
+  message(SMILE, "Done");
 }
 
 sub load {
@@ -147,6 +156,19 @@ sub save {
   close($OFH);  
 }
 
+sub saveOne {
+  my($self,$opt,$new) = @_;
+
+  our($version,%opts);
+  do "$Path->{Option}";
+  if (defined $new) {
+    return if ("$opts{$opt}" eq "$new");
+    $self->{$opt} = $new;
+  }
+  $opts{$opt} = $self->{$opt};
+  save(\%opts);
+}
+
 # Save the Entry/List/Menu etc. FG and BG to all Collections.
 #
 sub saveClr2all {
@@ -188,19 +210,6 @@ sub changeAll {
     }
   }
   $Path->{Option} = $opath;
-}
-
-sub changeOne {
-  my($self,$opt,$new) = @_;
-
-  our($version,%opts);
-  do "$Path->{Option}";
-  if (defined $new) {
-    return if ("$opts{$opt}" eq "$new");
-    $self->{$opt} = $new;
-  }
-  $opts{$opt} = $self->{$opt};
-  save(\%opts);
 }
 
 1;

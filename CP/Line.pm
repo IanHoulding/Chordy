@@ -68,6 +68,7 @@ sub segment {
   return if ($line eq '');
   # What we should have left is (possibly) a chord
   # followed by a bit of lyric - repeated.
+  #                  [.....]     1+  anything other than [
   while ($line =~ /(\[([^\]]*)\])?([^\[]*)/g) {
     last if (!defined $2 && !defined $3);
     my $seg = CP::Seg->new($3);

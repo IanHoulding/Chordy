@@ -338,8 +338,8 @@ sub fonts {
   my($frame,$list) = @_;
 
   ($frame->new_ttk__label(qw/-text Size/))->g_grid(qw/-row 0 -column 3 -padx 4/);
-  ($frame->new_ttk__label(qw/-text Bold/))->g_grid(qw/-row 0 -column 4 -padx 4/);
-  ($frame->new_ttk__label(qw/-text Italic/))->g_grid(qw/-row 0 -column 5 -padx 4/);
+  ($frame->new_ttk__label(qw/-text Bold/))->g_grid(qw/-row 0 -column 4 -padx 0/);
+  ($frame->new_ttk__label(qw/-text Italic/))->g_grid(qw/-row 0 -column 5 -padx 2/);
 
   # There are a couple of exceptions :-(
   my $row = 1;
@@ -353,7 +353,7 @@ sub fonts {
 sub FontS {
   my($frame,$r,$title,$fp) = @_;
 
-  my $ttl = $frame->new_ttk__label(-text => "${title}:");
+  my $ttl = $frame->new_ttk__label(-text => "${title}");
 
   my $bg = bgSet($title);
 
@@ -400,13 +400,13 @@ sub FontS {
       labUpdate($lab,$fp);
     });
   
-  $ttl->g_grid(-row => $r, qw/-column 0 -sticky e  -pady 2/, -padx => 2);
-  $clr->g_grid(-row => $r, qw/-column 1 -sticky we -pady 2/, -padx => [2,4]);
+  $ttl->g_grid(-row => $r, qw/-column 0 -sticky e  -pady 2/, -padx => [4,0]);
+  $clr->g_grid(-row => $r, qw/-column 1 -sticky we -pady 2/, -padx => 4);
   $lab->g_grid(-row => $r, qw/-column 2 -sticky we -pady 3/, -padx => [2,4]);
   $siz->g_grid(-row => $r, qw/-column 3 -padx 2 -pady 2/);
-  $bld->g_grid(-row => $r, qw/-column 4 -padx 2 -pady 2/);
+  $bld->g_grid(-row => $r, qw/-column 4 -padx 2 -pady 2/, -padx => [8,0]);
   $ita->g_grid(-row => $r, qw/-column 5 -padx 2 -pady 2/);
-  $but->g_grid(-row => $r, qw/-column 6 -sticky w  -padx 2 -pady 2/);
+  $but->g_grid(-row => $r, qw/-column 6 -sticky w -padx 2 -pady 2/);
 }
 
 sub bgSet {
@@ -432,6 +432,7 @@ sub pickFG {
     $fontp->{color} = $fg;
     Tkx::ttk__style_configure("$title.Font.TLabel", -foreground => $fg);
     Tkx::ttk__style_configure("$title.FG.TButton", -background => $fg);
+    $Media->save();
   }
   if ($bg ne '' && ($op & BACKGRND)) {
     Tkx::ttk__style_configure("$title.Font.TLabel", -background => $bg);
@@ -444,6 +445,7 @@ sub pickFG {
     } else {
       $Media->{lc($title)."BG"} = $bg;
     }
+    $Media->save();
   }
 }
 
@@ -451,6 +453,7 @@ sub labUpdate {
   my($lab,$fp) = @_;
 
   $lab->m_configure(-font => "{$fp->{family}} $fp->{size} $fp->{weight} $fp->{slant}");
+  $Media->save();
 }
 
 1;

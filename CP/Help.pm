@@ -40,7 +40,8 @@ sub new {
     -wrap => 'word',
     -borderwidth => 2,
     -width => 80,
-    -height => 30,
+    -height => 45,
+    -padx => 4,
     -undo => 0);
   $self->{text}->g_pack(qw/-side left -expand 1 -fill both/);
 
@@ -79,6 +80,12 @@ sub new {
 			       -spacing3 => 4,
 			       -underline => 1,
 			       -foreground => HFG);
+  $textWin->tag_configure('N', -font => "Arial ".($sz-1)." bold",
+			       -lmargin1 => 0,
+			       -spacing1 => 3,
+			       -spacing3 => 2,
+			       -underline => 0,
+			       -foreground => BLACK);
   $textWin->tag_configure('s', -font => "Arial ".($sz-1)." bold",
 			       -lmargin1 => 0,
 			       -foreground => HFG);
@@ -118,10 +125,9 @@ sub new {
 			        -spacing1 => 0,
 			        -spacing3 => 0);
   # Vertical Spacing
-  $textWin->tag_configure('V1',  -font => "Times 1 normal");
-  $textWin->tag_configure('V5',  -font => "Times 4 normal");
-  $textWin->tag_configure('V10', -font => "Times 10 normal");
-
+  foreach my $sz (1..10) {
+    $textWin->tag_configure("V$sz",  -font => "Times $sz normal");
+  }
   $self->{text}->configure(-state => 'disabled');
   $self;
 }

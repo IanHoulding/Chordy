@@ -1,6 +1,18 @@
 Chordy, Tab et al Revision history.
 Bit late starting with 2.6.4 but about time I documented it :-)
 
+3.9
+  Chordy - Bugfix - hitting the 'Close Window' cross on the Fg/Bg Editor caused
+             an error the next time the Editor was opened.
+	   Going to try and revisit the window Menu system now we've changed to Tk/Tcl.
+	   Now have Menu system working on both Windows and Mac. Involved a lot of layout
+	     changes - some were deletions and others just moving things around.
+	   Update the Help file.
+
+3.8.7
+  Chordy - Notebook Tabs and the FG/Bg Editor now built on demand to improve
+             loading speed.
+
 3.8.6
   Chordy - Bugfix - Selecting a Setlist then changing Collection resulted in the
              Setlist code still looking at the old object metadata.

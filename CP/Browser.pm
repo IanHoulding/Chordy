@@ -58,11 +58,11 @@ sub new {
     -command => sub{
       popMenu(\$Opt->{SortBy}, undef, ["Alphabetical", "Date Modified"]);
       $avail->h2tcl();
-      $Opt->changeOne('SortBy');
+      $Opt->saveOne('SortBy');
     } );
   my $rev = $topFrm->new_ttk__checkbutton(-variable => \$Opt->{RevSort},
 					  -style => 'NM.TCheckbutton',
-					  -command => sub{$Opt->changeOne('RevSort');
+					  -command => sub{$Opt->saveOne('RevSort');
 							  $avail->h2tcl();});
   my $revlab = $topFrm->new_ttk__label(-text => 'Reverse',
 				       -font => 'BTkDefaultFont',
@@ -149,11 +149,11 @@ sub new {
   $igna->g_grid(qw/-row 2 -column 0 -sticky w/, -pady => [8,2]);
 
   # Left/Right Arrows
-  $centerFrm->g_pack(qw/-side left -anchor n -expand 0 -fill x -padx 4/);
+  $centerFrm->g_pack(qw/-side left -anchor n -expand 0 -fill x/);
   $arrowFrm->g_pack(qw/-side top -expand 0 -pady 6/);
   $alphaFrm->g_pack(qw/-side top -expand 0 -fill y/);
 
-      # Selected Files
+  # Selected Files
   $rightFrm->g_pack(qw/-side left -expand 1 -fill y/, -padx => [4,4]);
 
   # columnspan is 2 so that we can put 2 buttons below the ListBox.
@@ -161,7 +161,7 @@ sub new {
 
   # Up/Down Arrows only for Setlists
   if (($what & (FILE | TABBR)) == 0) {
-    $rightFrmR->g_pack(qw/-side left -expand 0 -fill x/, -padx => [4,2]);
+    $rightFrmR->g_pack(qw/-side left -expand 0 -fill x/, -padx => [0,2]);
   }
 
   ### CENTER

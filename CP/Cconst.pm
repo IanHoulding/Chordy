@@ -90,7 +90,7 @@ use constant {
 };
 # Browser constants
 use constant {
-  SLWID => ($^O =~ /win32/i) ? 40 : 32,
+  SLWID => ($^O =~ /win32/i) ? 38 : 32,
   FILE  =>  1,
   SLNEW =>  2,
   SLREN =>  4,

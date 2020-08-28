@@ -184,7 +184,12 @@ sub save {
   print $OFH "\%medias = (\n";
   foreach my $s (sort keys %medias) {
     next if ($s =~ /^tmp/);
-    my $ref = ($s eq $type) ? $self : \%{$medias{$s}};
+    my $ref;
+    if (defined $type && $s eq $type) {
+      $ref = $self;
+    } else {
+      $ref = \%{$medias{$s}};
+    }
     print $OFH "  '$s' => {\n";
     print $OFH "    width  => ".$ref->{width}.",\n";
     print $OFH "    height => ".$ref->{height}.",\n";

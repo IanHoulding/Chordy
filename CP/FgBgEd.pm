@@ -468,6 +468,9 @@ my $nofgbghelp = "You can manipulate the %s colour to help determine the %s to u
 sub Show {
   my($self,$fg,$bg,$op) = @_;
 
+  my ($package, $filename, $line) = caller;
+  print "$filename  $line";
+
   @LclSwtch = @{$Swatches};
   my $stdbd = Tkx::ttk__style_lookup("TButton", "-background");
   foreach my $i (0..15) {

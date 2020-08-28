@@ -29,6 +29,7 @@ use CP::Global qw/:FUNC :PATH :OPT :CHORD :WIN :PRO :SETL :MEDIA :SCALE :XPM/;
 use CP::Win;
 use CP::Pop qw/:POP :MENU/;
 use CP::Chordy;
+use CP::CPmenu;
 use CP::List;
 use CP::Pro qw/$LenError/;
 use CP::Collection;
@@ -93,6 +94,7 @@ $MW->g_wm_iconphoto("Cicon");
 title();
 
 CP::Chordy->new();
+CP::CPmenu->new();
 
 $MW->g_wm_deiconify();
 $MW->g_raise();
@@ -310,23 +312,6 @@ sub editArticles {
     $Opt->{Articles} = $arts;
   }
   $pop->destroy();
-}
-
-sub saveOpt {
-  message(SMILE, "Options Saved", 1) if ($Opt->save());
-}
-
-sub loadOpt {
-  message(SMILE, " Done ", 1) if ($Opt->load());
-}
-
-sub resetOpt {
-  $Opt->default();
-  message(SMILE, "Done - but not saved (yet).");
-}
-
-sub editOpt {
-  CP::Editor::Edit($Path->{Option}, 1);
 }
 
 sub saveMed {
