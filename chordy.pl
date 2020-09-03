@@ -460,14 +460,9 @@ sub transposeOne {
   }
 }
 
-my $Pop = '';
-my $Done;
-my $FNlabel;
-
 sub Main {
-  my($oneorall) = shift;
+  my($chordy,$oneorall) = @_;
 
-  return if (CP::Pop::exists('.pr'));
   if ($#ProFiles < 0) {
     message(QUIZ, "Can't do anything without a ChordPro file.");
     return;
@@ -494,24 +489,26 @@ sub Main {
       }
     }
   }
-  popProg();
+  $chordy->{ProgFrm}->g_grid(qw/-row 1 -column 0 -columnspan 3 -sticky ew -padx 16/,
+			     -pady => [4,0]);
+  $chordy->{ProgCan} = 0;
   if ($oneorall == SINGLE) {
     ### Handle one single ChordPro file
     my $idx = $FileLB->curselection(0);
     if ($idx ne '') {
-      my($pdf,$name) = makeOnePDF($ProFiles[$idx], undef, undef);
+      my($pdf,$name) = makeOnePDF($ProFiles[$idx], undef, undef, $chordy->{ProgLab});
       $pdf->close();
-      actionPDF("$Path->{Temp}/$name", $name);
+      actionPDF($chordy, "$Path->{Temp}/$name", $name);
     } else {
       message(SAD, "You don't appear to have selected a ChordPro file.");
-      $Pop->destroy();
+      $chordy->{ProgFrm}->g_grid_forget();
       return;
     }
   } else {
     my $toKey = $Opt->{Transpose};
     my $msg = "This will Transpose ALL files to the key of $toKey.\nDo you want to continue?";
     if ($toKey ne "No" && msgYesNo($msg) eq 'No') {
-      $Pop->destroy();
+      $chordy->{ProgFrm}->g_grid_forget();
       return;
     }
 
@@ -526,37 +523,40 @@ sub Main {
       if (! defined $CurSet || $CurSet eq "") {
 	my $ans = msgSet("You need to provide a name for the PDF File:",\$CurSet);
 	 if ($ans eq "Cancel" || $CurSet eq "") {
-	   $Pop->destroy();
+	   $chordy->{ProgFrm}->g_grid_forget();
 	   return;
 	 }
       }
       my $PdfFileName = "$CurSet.pdf";
       my $pdf = undef;
       foreach my $idx (@pfn) {
-	($pdf,$PdfFileName) = makeOnePDF($ProFiles[$idx], $PdfFileName, $pdf);
-	if ($Done eq 'Cancel') {
+	($pdf,$PdfFileName) = makeOnePDF($ProFiles[$idx], $PdfFileName, $pdf, $chordy->{ProgLab});
+	if ($chordy->{ProgCan}) {
 	  $pdf->close();
-	   $Pop->destroy();
-	   return;
+	  $chordy->{ProgFrm}->g_grid_forget();
+	  return;
 	}
 	Tkx::after(500); # Give user a chance to hit Cancel!
       }
       $pdf->close();
-      actionPDF("$Path->{Temp}/$PdfFileName", "$PdfFileName");
+      actionPDF($chordy, "$Path->{Temp}/$PdfFileName", "$PdfFileName");
     } else {
       ### Action each PDF independantly
       foreach my $idx (@pfn) {
-	my($pdf,$name) = makeOnePDF($ProFiles[$idx], undef, undef);
-	$pdf->close();
-	if ($Done eq 'Cancel') {
-	   $Pop->destroy();
-	   return;
+	if ($chordy->{ProgCan}) {
+	  $chordy->{ProgFrm}->g_grid_forget();
+	  return;
 	}
-	actionPDF("$Path->{Temp}/$name", $name);
+	my($pdf,$name) = makeOnePDF($ProFiles[$idx], undef, undef, $chordy->{ProgLab});
+	$pdf->close();
+	if ($chordy->{ProgCan} || actionPDF($chordy, "$Path->{Temp}/$name", $name) < 0) {
+	  $chordy->{ProgFrm}->g_grid_forget();
+	  return;
+	}
       }
     }
   }
-  $Pop->destroy();
+  $chordy->{ProgFrm}->g_grid_forget();
   if ($tmpMedia ne '') {
     $Opt->{PDFview} = $tmpView;
     $Opt->{Media} = $tmpMedia;
@@ -569,15 +569,15 @@ sub Main {
     }
     $LenError = 0;
   } else {
-    message(SMILE, " Done ", 1) if ($PDFtrans || $oneorall == MULTIPLE);
+    message(SMILE, ' Done ', 1) if ($PDFtrans || $oneorall == MULTIPLE);
   }
   $PDFtrans = 0;
 }
 
 sub makeOnePDF {
-  my($pro,$name,$pdf) = @_;
+  my($pro,$name,$pdf,$label) = @_;
 
-  $FNlabel->m_configure(-text => $pro->{name});
+  $label->m_configure(-text => $pro->{name});
   Tkx::update();
   if (! defined $name) {
     ($name = $pro->{name}) =~ s/\.pro$//i;
@@ -600,11 +600,13 @@ sub makeOnePDF {
 }
 
 sub actionPDF {
-  my($tmpPDF,$PDFfileName) = @_;
+  my($chordy,$tmpPDF,$PDFfileName) = @_;
 
   my $Pact = "";
   if ($Opt->{PDFview}) {
-    return if (PDFview($tmpPDF) == 0);
+    Tkx::update();
+    my $ret = PDFview($chordy, $tmpPDF);
+    return($ret) if ($ret <= 0);
   }
   if ($Opt->{PDFprint}) {
     return if (PDFprint($tmpPDF) == 0);
@@ -617,11 +619,10 @@ sub actionPDF {
       write_file("$Opt->{PDFpath}/$PDFfileName", $txt);
     }
   }
-  1;
 }
 
 sub PDFview {
-  my($tmpPDF) = shift;
+  my($chordy, $tmpPDF) = @_;
 
   my $Pact = "";
   if ($Cmnd->{Acro} ne "") {
@@ -635,8 +636,15 @@ sub PDFview {
     return(0);
   }
   jobSpawn($Pact) if ($Pact ne "");
+  Tkx::update();
   if ($Opt->{PDFprint} == 69) {
-    return(0) if (msgYesNo("Do you want to continue and print the PDF?") eq 'No');
+    if ($chordy->{ProgCan} == 0) {
+      my $ans = msgYesNoCan("Do you want to continue and print the PDF?");
+      return(0) if ($ans eq 'No');
+      return(-1) if ($ans eq 'Cancel');
+    } else {
+      return(-1);
+    }
   }
   1;
 }
@@ -657,39 +665,4 @@ sub PDFprint {
   }
   jobSpawn($Pact) if ($Pact ne "");
   1;
-}
-
-sub popProg {
-  return if (CP::Pop::exists('.pr'));
-  $Pop = CP::Pop->new(1, '.pr', 'Progress', -1, -1);
-  my($top,$pp) = ($Pop->{top},$Pop->{frame});
-  $pp->m_configure(-style => 'Pop.TFrame');
-
-  my $font = (exists $FontList{"Comic Sans MS"}) ? "Comic Sans MS" : "Times";
-  my $size = 14;
-
-  my $pll = $pp->new_ttk__label(
-    -text => "Please wait .... PDF-ing",
-    -font => "{$font} $size bold",
-    -style => 'Pop.TLabel',
-    -width => 25);
-  $pll->g_pack();
-  $FNlabel = $pp->new_ttk__label(
-    -text => ' ',
-    -font => "{$font} $size bold",
-    -style => 'Pop.TLabel',
-    -width => 25);
-  $FNlabel->g_pack();
-
-  my $hl = $pp->new_ttk__separator(-orient => 'horizontal');
-  $hl->g_pack(-fill => 'x', -pady => 4);
-
-  $Done = '';
-  my $b = $pp->new_ttk__button(-text => 'Cancel',
-			       -command => sub{$Done = 'Cancel'; Tkx::update();} );
-  $b->g_pack();
-
-  $top->g_raise();
-  $top->g_grab();
-  Tkx::update();
 }

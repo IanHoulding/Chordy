@@ -100,10 +100,11 @@ sub message {
     } else {
       my $fb = $msgf->new_ttk__button(
 	-text => "  Continue  ",
-	-command => sub{topDown($pop, 'done', \$done);});
+	-command => sub{topDown($pop, 'done', \$done);},
+	-takefocus => 1);
       $fb->g_grid(qw/-row 1 -columnspan 2 -padx 10 -pady 5/);
-      $fb->g_focus();
-      topUp($pop,\$done);
+#      $fb->g_focus();
+      topUp($pop,\$done,$fb);
     }
   } else {
     errorPrint "$txt";
@@ -141,16 +142,20 @@ sub msgYesNo {
     my $bfr = $msgf->new_ttk__frame(-style => 'Pop.TFrame', -padding => [4,4,4,4]);
     $bfr->g_grid(qw/-row 1 -column 0 -sticky we/);
 
-    $a = $bfr->new_ttk__button(-text => (defined $yes) ? $yes : ' Yes ',
-			       -command => sub{topDown($pop,'Yes',\$done);});
-    $b = $bfr->new_ttk__button(-text => (defined $no) ? $no : ' No ',
-			       -command => sub{topDown($pop,'No',\$done);});
+    $yes = 'Yes' if (! defined $yes);
+    $no = 'No' if (! defined $no);
+    $a = $bfr->new_ttk__button(-text => " $yes ",
+			       -command => sub{topDown($pop,$yes,\$done);},
+			       -takefocus => 1);
+    $b = $bfr->new_ttk__button(-text => " $no ",
+			       -command => sub{topDown($pop,$no,\$done);},
+			       -takefocus => 1);
 
     $a->g_pack(qw/-side right -padx 30/);
     $b->g_pack(qw/-side left -padx 30/);
 
-    $a->g_focus();
-    topUp($pop,\$done);
+#    $a->g_focus();
+    topUp($pop,\$done,$a);
   } else {
     errorPrint($txt);
     $done = (defined $no) ? $no : 'No';
@@ -191,8 +196,8 @@ sub msgYesNoCan {
     $c->g_pack(qw/-side right -padx 30/);
     $b->g_pack(qw/-side right/);
 
-    $c->g_focus();
-    topUp($pop,\$done);
+#    $c->g_focus();
+    topUp($pop,\$done,$c);
   } else {
     errorPrint($txt);
     $done = 'Cancel';
@@ -235,8 +240,8 @@ sub msgYesNoAll {
     $d->g_pack(qw/-side right/);
     $e->g_pack(qw/-side left/, -padx => [0,30]);
 
-    $c->g_focus();
-    topUp($pop,\$done);
+#    $c->g_focus();
+    topUp($pop,\$done,$c);
     $done = "All" if ($done eq "Yes" && $chk == 1);
   } else {
     errorPrint($txt);
@@ -282,8 +287,8 @@ sub msgSet {
     $a->g_pack(qw/-side left -padx 30/);
     $b->g_pack(qw/-side right -padx 30/);
 
-    $ent->g_focus();
-    topUp($pop,\$done);
+#    $ent->g_focus();
+    topUp($pop,\$done,$ent);
   } else {
     errorPrint($txt);
     $done = 'Cancel';
@@ -292,13 +297,15 @@ sub msgSet {
 }
 
 sub topUp {
-  my($pop,$var) = @_;
+  my($pop,$var,$foc) = @_;
 
   Tkx::update();
   $pop->{top}->g_raise();
   if (defined $var) {
+    $foc->g_focus() if (defined $foc);
     Tkx::vwait($var);
     $pop->destroy();
+    Tkx::update();
   }
 }
 
@@ -307,6 +314,7 @@ sub topDown {
 
   $pop->destroy();
   $$var = $val;
+  Tkx::update();
 }
 
 1;

@@ -82,8 +82,8 @@ sub help {
  "<O Ch:S:Chordy PDF Generator>",
  "<V1>",
  "<O CP:s: ChordPro File(s)>",
- "<O SS:s: Single File>",
  "<O PD:s: PDFs>",
+ "<O SS:s: Single File>",
  "<O Op:s: PDF Options>",
  "<O DI:s: Chord Diagrams>",
  "<V5>",
@@ -241,10 +241,16 @@ sub help {
  "<V5>",
 
  "<T CP><S ChordPro File(s)>\n",
- "<M>These are files ending with a .pro extension. The <R Browse> button allows you to select one or more files contained in the ChordPro folder (see the section on Folders and Commands).\nThe <R From Setlist> button lets you pull in a list of files from a pre defined Setlist.\n",
+ "<M>These are files ending with a <B .pro> extension. The <R Browse> button allows you to select one or more files contained in the ChordPro folder (see the section on Folders and Commands).\nThe <R From Setlist> button lets you pull in a list of files from a pre defined Setlist.\n",
 
+###
+ "<T PD><S PDFs>\n",
+ "<M>You can elect to <B View>, <B Create> and/or <B Print> all listed ChordPro files or just a single selected file.\nThe viewer is <B SumatraPDF> on Windows systems (installed with Chordy), <B Preview> on Mac and <B acroread> on Linux. Whenever Chordy is creating a PDF, a small progress window will appear below the File List showing you which file is being worked on.",
+ "The <R Single Song> button will <B View/Create/Print> a PDF file for the one selected ChordPro file.\nThe <R All Songs> button will <B View/Create/Print> a PDF file for each ChordPro file in the list unless the <R Single PDF> checkbox is active in which case a single PDF file will be created containing all the songs in the order shown in the ChordPro file list.\n",
+
+###
  "<T SS><S Single File>\n",
- "<M>This section allows you to operate on ONE of the ChordPro Files (above) and perform various actions on it:\n",
+ "<M>This section allows you to operate on ONE selected ChordPro File and perform various actions on it:\n",
 
  "<P  Edit > ",
  "<M>Opens the selected file in the <B CPgedi> Editor.\n",
@@ -254,11 +260,6 @@ sub help {
 
  "<P  Transpose > ",
  "<M>Unlike when you create a PDF (see PDF Options below), this will permanently transpose all chords to the key defined in the option list and writes the new version back out to disk.\n",
-
-###
- "<T PD><S PDFs>\n",
- "<M>You can elect to <B View>, <B Create> and/or <B Print> all listed ChordPro files or just a single selected file.\nThe viewer is <B SumatraPDF> on Windows systems (installed with Chordy), <B Preview> on Mac and <B acroread> on Linux.",
- "The <R Single Song> button will view/create/print a PDF file for the one selected ChordPro file.\nThe <R All Songs> button will view/create/print a PDF file for each ChordPro file in the list unless the <R Single PDF> checkbox is active in which case a single PDF file will be created containing all the songs in the order shown in the ChordPro file list.\n",
 
 ###
  "<T Op><S PDF Options>\n",
@@ -309,9 +310,9 @@ sub help {
  "<T SL><H Setlists\n>",
  "<V5>",
 
- "This tab is split into an upper and lower section.",
+ "This tab is split into an upper and a lower section.",
  "<S Upper Section>\n",
- "The upper section shows (on the left) the currently available Setlists and to it's right a box which shows which Setlist is currently selected along with date/time information and to the right of that, a number of buttons to manipulate the current Setlist:\n",
+ "The upper section shows (on the left) the currently available Setlists and to it's right a box which shows which Setlist is currently selected along with date/time information and to the right and below that, a number of buttons to manipulate the current Setlist:\n",
  "<P  New > ",
  "<M>Creates a new Setlist.",
  "<V5>",
@@ -341,7 +342,8 @@ sub help {
  "The date/time information for the current Setlist may be edited by clicking on the appropriate button - the only exception is the <R Name> field which is fixed (see <R Rename> above). The various fields are completed using pop-ups - the only buttons which are unique are the ones which increment/decrement the minutes - holding the left mouse button down while over the button will cause the minutes to change rapidly.\n",
  "<S Lower Section>",
  "<V5>",
- "This is a copy of the Browser pop-up and has a Search area and 2 list boxes:",
+ "This is a copy of the Browser pop-up and has a Sort/Search area and 2 list boxes:",
+ "The Sort area allows you to sort either Alphabetically or by Date Modified and to reverse either sort mode.",
  "The Search area lets you type in a case insensitive string and will search the <R Available Files>. The search takes place as you type and throws up a message if no match is found. The <R Find Next> button does just that and will wrap back to the begining of the list if it fails to match when the end of the list is reached.\n",
  "<E><R Available Files> ",
  "<M>A list of all ChordPro files in the current collection. Double clicking a file will automatically transfer it to the <R Setlist Files>. The alphabet buttons below the <R Available Files> list enable you to quickly jump to entries starting with the appropriate letter.",
@@ -381,57 +383,11 @@ sub help {
  "<T BC><S Background Colours>\n",
  "A Comment, Highlight, Title, Verse, Chorus, Bridge or Tab section can all have their background colour defined using these buttons.\n",
 
-################
-
- "<T MU><H Miscellaneous\n>",
- "<V5>",
-
- "Normally, there would be a Menu bar at the top of the program window on Windows or at the top of the screen on Mac. However, it appears that the Mac implementation is busted and causes Perl to crash either when opening or when closing a secondary window from a menu selection. Therefore I decided to make what would have been the Chordy Menu items available as a number of buttons on a separate Tab:\n",
-
-###
- "<T Mf><S File>\n",
-
- "<P  View Error Log > ",
- "<M>Lists the contents of the Error Log in a text window.",
- "<V5>",
- "<P  Clear Error Log > ",
- "<M>Removes all content from the Error Log.",
- "<V5>",
- "<P  Delete Pro Backups > ",
- "<M>Every time a ChordPro file is edited a numbered backup file is created. This button will arbitrarily delete all backups!",
- "<V5>",
- "<P  Delete Temp PDFs > ",
- "<M>Every time a PDF file is created it is placed in a <B Temp> folder. This button will clear the <B Temp> folder",
- "<V5>",
- "<P  View Release Notes > ",
- "<M>Does what it says. The latest Release is at the top of the page.\n",
-###
- "<T Mo><S Options>\n",
-
- "<P  Edit Sort Articles > ",
- "<M>When listing ChordPro files you can elect to ignore any leading Articles - typically 'a', 'an' and 'the'. In practice, this option will ignore <I ANYTHING> at the beginning of a file name as long as it's followed by a space!",
- "<V5>",
- "<P  Edit Options File > ",
- "<M>If you don't know how Perl data structures are organised, this option enables you to edit the current Collection's Option file and screw things up completely!\n",
-
-###
  "<T AP><S Appearance>\n",
-
  "<s Colours> ",
  "<M>Allows you to change the Foreground and Background colours for Push and Menu buttons, Lists, Entry and Message boxes. Also lets you specify the Background colour for all the windows.\n",
-
  "<s Fonts> ",
  "<M>All buttons and lists can be displayed in \"Normal\" or \"<B Bold>\" text.\n",
-
- "<T Co><S Commands>\n",
-
- "<M>Normally the name of the ChordPro file will be appended to any of the commands. If you have a command that needs arguments <I after> the file name you can put the directive \%FILE\% into the Command string and this will automagically be replaced with the file name when executed.\n",
-
- "<s View PDF> ",
- "<M>The PDF file will always be created as a temporary file and this command enables you to view it. The default is to use Adobe's Acrobat Reader on Linux (on a Mac you will need to install it) and SumatraPDF on Windows.\n",
-
- "<s Print PDF> ",
- "<M>Command line used to print a PDF file. The default on Windows is to use the supplied app SumatraPDF and to send the output to the default system printer. Look for Sumatra documentation on the WEB if you want to play around with it.\n",
 
 ################
 

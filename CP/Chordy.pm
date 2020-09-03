@@ -54,7 +54,6 @@ sub new {
   $NB->add($chordy, -text => '  Chordy PDF Generator  ');
   $NB->add($setLst, -text => '  Setlists  ');
   $NB->add($opts,   -text => '  Configuration Options  ');
-#  $NB->add($misc,   -text => '  Miscellaneous  ');
 
   $NB->g_bind('<<NotebookTabChanged>>', [\&notebookTabSelect, $Chordy]);
 
@@ -198,42 +197,47 @@ sub confOpts {
 sub filesWin {
   my($Fff) = @_;
 
-  my $tFl = $Fff->new_ttk__labelframe(-text => ' Single File ');
+  my $tFl = $Fff->new_ttk__frame();
   my $tFm = $Fff->new_ttk__frame();
-  my $tFr = $Fff->new_ttk__frame();
+  my $tFr = $Fff->new_ttk__labelframe(-text => ' Single File ');
+  my $tFb = $Chordy->{ProgFrm} = $Fff->new_ttk__frame(-style => 'Pop.TFrame',
+						      -relief => 'raised',
+						      -borderwidth => 2,
+						      -padding => [4,0,4,4]);
 
-  $Fff->g_grid_columnconfigure(0, -weight => 1);
-  $Fff->g_grid_columnconfigure(2, -weight => 1);
-  $tFl->g_grid(qw/-row 0 -column 0 -sticky nse -padx 16/);
-  $tFm->g_grid(qw/-row 0 -column 1 -sticky ns/);
-  $tFr->g_grid(qw/-row 0 -column 2 -sticky nsw -padx 16/);
+#  $Fff->g_grid_columnconfigure(0, -weight => 1);
+#  $Fff->g_grid_columnconfigure(2, -weight => 1);
+  $tFl->g_grid(qw/-row 0 -column 0 -sticky nsw -padx 16/);
+  $tFm->g_grid(qw/-row 0 -column 1 -sticky nsw -padx 16/);
+  $tFr->g_grid(qw/-row 0 -column 2 -sticky nsw -padx 16/, -pady => [0,8]);
+  $tFb->g_grid(qw/-row 1 -column 0 -columnspan 3 -sticky ew -padx 16/, -pady => [4,0]);
 
 ###
-  my $onee = $tFl->new_ttk__button(
+  my $onee = $tFr->new_ttk__button(
     -text => "Edit",
     -width => 8,
     -command => \&main::editPro);
-  my $oner = $tFl->new_ttk__button(
+  my $oner = $tFr->new_ttk__button(
     -text => "Rename",
     -width => 8,
     -command => \&main::renamePro);
-  my $onec = $tFl->new_ttk__button(
+  my $onec = $tFr->new_ttk__button(
     -text => "Clone",
     -width => 8,
     -command => \&main::clonePro);
-  my $oned = $tFl->new_ttk__button(
+  my $oned = $tFr->new_ttk__button(
     -text => "Delete",
     -width => 8,
     -style => 'Red.TButton',
     -command => \&main::deletePro);
   Tkx::ttk__style_configure("Tr.Menu.TButton", -background => '#FFD0D0');
-  my $onet = $tFl->new_ttk__button(
+  my $onet = $tFr->new_ttk__button(
     -text => "Transpose",
     -width => 10,
     -style => 'Tr.Menu.TButton',
     -command => sub{$main::PDFtrans = 1;main::transposeOne(SINGLE);});
   no warnings; # stops perl bleating about '#' in array definition.
-  my $onek = $tFl->new_ttk__button(
+  my $onek = $tFr->new_ttk__button(
     -textvariable => \$Opt->{Transpose},
     -width => 3,
     -style => 'Tr.Menu.TButton',
@@ -255,8 +259,8 @@ sub filesWin {
 
 ### Key/Files
 
-  $KeyLB = CP::List->new($tFm, '', qw/-height 18 -width 4/);
-  $FileLB = CP::List->new($tFm, 'e', qw/-height 18 -selectmode browse -takefocus 1/, -width => (SLWID + 4));
+  $KeyLB = CP::List->new($tFl, '', qw/-height 18 -width 4/);
+  $FileLB = CP::List->new($tFl, 'e', qw/-height 18 -selectmode browse -takefocus 1/, -width => (SLWID + 4));
 
   $FileLB->{lb}->configure(-yscrollcommand => [sub{scroll_filelb($FileLB->{yscrbar}, @_)}]);
   $FileLB->{yscrbar}->m_configure(-command => sub {$KeyLB->{lb}->yview(@_);$FileLB->{lb}->yview(@_);});
@@ -265,21 +269,21 @@ sub filesWin {
   $FileLB->{frame}->g_pack(qw/-side left -fill y -ipadx 1/);
 
 ###
-  my $brw = $tFr->new_ttk__button(
+  my $brw = $tFm->new_ttk__button(
     -text => "Browse ...",
     -command => sub{main::selectFiles(FILE)} );
 
-  my $fsl = $tFr->new_ttk__button(
+  my $fsl = $tFm->new_ttk__button(
     -text => "From Setlist",
     -command => sub{$Chordy->{nb}->m_select(1)});
 
-  my $act = $tFr->new_ttk__labelframe(
+  my $act = $tFm->new_ttk__labelframe(
     -text => " PDFs ",
     -labelanchor => 'n',
       );
   actWin($act);
 
-  my $cob = $tFr->new_ttk__button(
+  my $cob = $tFm->new_ttk__button(
     -text => "Collection",
     -command => sub{$Chordy->{currentColl} = $Collection->name();
 		    popMenu(\$Chordy->{currentColl}, undef, [sort keys %{$Collection}]);
@@ -291,6 +295,22 @@ sub filesWin {
   $fsl->g_pack(qw/-side top -pady 4/);
   $act->g_pack(qw/-side top -pady 8/);  # LabelFrame
   $cob->g_pack(qw/-side top -pady 8/);
+
+  my $progl = $tFb->new_ttk__label(-text => "Please Wait .... PDF'ing: ", -style => 'Pop.TLabel');
+  Tkx::ttk__style_configure('Prog.Pop.TLabel', -font => "BTkDefaultFont");
+
+  my $proge = $Chordy->{ProgLab} = $tFb->new_ttk__label(-text => '',
+							-width => SLWID + 4,
+							-style => 'Prog.Pop.TLabel');
+  $Chordy->{ProgCan} = 0;
+  my $progc = $tFb->new_ttk__button(-text => ' Cancel ',
+				    -style => 'Red.TButton',
+				    -command => sub{$Chordy->{ProgCan} = 1; Tkx::update();});
+
+  $progl->g_pack(qw/-side left/);
+  $proge->g_pack(qw/-side left/);
+  $progc->g_pack(qw/-side left -padx 8/, -pady => [4,0]);
+  $tFb->g_grid_forget();
 }
 
 # This method is called when one Listbox is scrolled with the keyboard
@@ -310,18 +330,24 @@ sub actWin {
   my($act) = shift;
 
   ####
-  my $view = $act->new_ttk__checkbutton(-text => "View",   -variable => \$Opt->{PDFview});
-  my $cret = $act->new_ttk__checkbutton(-text => "Create", -variable => \$Opt->{PDFmake});
-  my $prnt = $act->new_ttk__checkbutton(-text => "Print",  -variable => \$Opt->{PDFprint});
+  my $view = $act->new_ttk__checkbutton(-text => "View",
+					-variable => \$Opt->{PDFview},
+					-command => sub{$Opt->saveOne('PDFview')});
+  my $cret = $act->new_ttk__checkbutton(-text => "Create",
+					-variable => \$Opt->{PDFmake},
+					-command => sub{$Opt->saveOne('PDFmake')});
+  my $prnt = $act->new_ttk__checkbutton(-text => "Print",
+					-variable => \$Opt->{PDFprint},
+					-command => sub{$Opt->saveOne('PDFprint')});
 
   ####
   my $sepa = $act->new_ttk__separator(qw/-orient horizontal/);
-  my $ones = $act->new_ttk__button(-text => "Single Song", -command => sub{main::Main(SINGLE);});
+  my $ones = $act->new_ttk__button(-text => "Single Song", -command => sub{main::Main($Chordy,SINGLE);});
   my $sepb = $act->new_ttk__separator(qw/-orient horizontal/);
   my $alls = $act->new_ttk__button(
     -text => "All Songs",
     -width => 8,
-    -command => sub{main::Main(MULTIPLE);});
+    -command => sub{main::Main($Chordy,MULTIPLE);});
   my $onep = $act->new_ttk__checkbutton(
     -text => "Single PDF",
     -offvalue => MULTIPLE,
