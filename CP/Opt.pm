@@ -11,7 +11,7 @@ package CP::Opt;
 
 use strict;
 
-use CP::Cconst qw/:PATH :COLOUR :SHFL :SMILIE/;
+use CP::Cconst qw/:PATH :COLOUR :TEXT :SHFL :SMILIE/;
 use CP::Global qw/:FUNC :VERS :WIN :OPT/;
 use CP::Cmsg;
 
@@ -20,6 +20,7 @@ my @strOpt = (qw/Articles Instrument Media PDFpath PrintMedia
 	         WinBG PageBG SortBy/);
 my @numOpt = (qw/AutoSave Bold Center EditScale FullLineHL FullLineCM Grid HHBL
 	         IgnArticle IgnCapo
+	         TopMargin BottomMargin LeftMargin RightMargin
 	         Italic LineSpace LyricLines LyricOnly Nbar NewLine NoWarn
 	         OnePDFfile PDFview PDFmake PDFprint
 	         Refret RevSort SLrev SharpFlat StaffSpace Together UseBold/);
@@ -38,7 +39,6 @@ sub new {
   else {
     save($self);
   }
-
   return($self);
 }
 
@@ -48,6 +48,7 @@ sub default {
   $self->{Articles}    = 'the|a|an';
   $self->{AutoSave}    = 0;
   $self->{Bold}        = 2;    # This is the 'heavyness' weight for PDF bold fonts.
+  $self->{BottomMargin}= INDENT;
   $self->{Capo}        = 'No';
   $self->{Center}      = 0;
   $self->{EditScale}   = 4;
@@ -62,6 +63,7 @@ sub default {
   $self->{Instrument}  = 'Guitar';
   $self->{Instruments} = [qw/Banjo Bass4 Bass5 Guitar Mandolin Ukelele/];
   $self->{Italic}      = 12;    # This is the slant angle for PDF italic fonts.
+  $self->{LeftMargin}  = INDENT;
   $self->{LineSpace}   = 1;
   $self->{ListFG}      = BLACK;
   $self->{ListBG}      = WHITE;
@@ -87,10 +89,12 @@ sub default {
   $self->{SLrev}       = 0;
   $self->{Refret}      = 0;
   $self->{RevSort}     = 0;
+  $self->{RightMargin} = INDENT;
   $self->{SharpFlat}   = SHARP;
   $self->{SortBy}      = 'Alphabetical';
   $self->{StaffSpace}  = 10;
   $self->{Together}    = 1;
+  $self->{TopMargin}   = INDENT;
   $self->{UseBold}     = 1;
   $self->{WinBG}       = MWBG;
 }
@@ -113,17 +117,10 @@ sub load {
     #
     # Now merge the file options into our hash.
     #
-    $self->{PDFpath} = '';
     foreach my $o (keys %opts) {
       $self->{$o} = $opts{$o};
     }
     undef %opts;
-    if (defined $self->{Scale}) {
-      # Legacy change.
-      $self->{EditScale} = $self->{Scale};
-      delete($self->{Scale});
-      $version = 0;
-    }
     if ("$version" ne "$Version") {
       print localtime."\n  $Path->{Option} saved: version mismatch - old=$version new=$Version\n";
       save($self);

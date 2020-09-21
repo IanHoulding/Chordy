@@ -298,7 +298,10 @@ sub help {
  "<M>These 2 options force all 'black' notes to be either sharps or flats. So, for example, if you want to transpose a piece to Eb, a chord that would have been Eb will be shown as D# if Force Sharp is in effect.\n",
 
  "<P  PDF Background > ",
- "<M>Pops up the colour editor and enables you to define a colour which will be placed over the whole PDF page background\n",
+ "<M>Pops up the colour editor and enables you to define a colour which will be placed over the whole PDF page background.\n",
+
+ "<s Margins> ",
+ "<M>This section lets you specify (in points) the Left, Right, Top and Bottom margins. These margins <I only> apply to any text on each page so backgrounds (behind the Title for example) will extend the whole width (and/or height) of the physical page.\n",
 
  ###
  "<T DI><S Chord Diagrams>\n",

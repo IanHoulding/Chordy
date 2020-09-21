@@ -148,9 +148,9 @@ sub offsets {
   $s{thick} = THICK;
   $s{thin}  = THIN;
   $self->{pageHeader} = $self->{titleSize} + 4; # 2 above and 2 below
-  $self->{barTop} = $self->{pageHeader} + INDENT;
+  $self->{barTop} = $self->{pageHeader} + $Opt->{TopMargin};
 
-  $s{width} = int(($Media->{width} - (INDENT * 2)) / $Opt->{Nbar});
+  $s{width} = int(($Media->{width} - ($Opt->{LeftMargin} + $Opt->{RightMargin})) / $Opt->{Nbar});
   my($t,$_t) = split('/', $Tab->{Timing});
   $Tab->{BarEnd} = $t * 8;
   $s{interval} = $s{width} / (($t * 8) + 3);
@@ -305,7 +305,7 @@ sub setXY {
   my $h = $off->{height};
   my $y = $self->{barTop};
   foreach my $r (1..$self->{rowsPP}) {
-    my $x = INDENT;
+    my $x = $Opt->{LeftMargin};
     foreach my $c (1..$Opt->{Nbar}) {
       $pageXY[$pidx++] = [$x,$y];
       $x += $w;
@@ -663,7 +663,7 @@ sub pageKey {
   if ($self->{key} ne '') {
 #    my $y = ($self->{pageHeader} / 2) + 2;
     my $y = $self->{pageHeader} - 2;
-    my $id = $can->create_text(INDENT, $y,
+    my $id = $can->create_text($Opt->{LeftMargin}, $y,
       -text   => "Key:",
       -anchor => 'sw',
       -fill   => bFG,
@@ -705,7 +705,7 @@ sub pageNote {
         -tags   => 'hdrn',
 	);
     my($x1,$y1,$x2,$y2) = split(/ /, $can->bbox($id));
-    $can->coords($id, $Media->{width} - $x2 - INDENT, $self->{pageHeader} - $y1);
+    $can->coords($id, $Media->{width} - $x2 - $Opt->{RightMargin}, $self->{pageHeader} - $y1);
   }
 }
 
@@ -730,13 +730,13 @@ sub pageNum {
   $can->delete('hdrp');
   my $id = $can->create_text(
     0, 0,
-    -text => "Page ".($self->{pageNum}+1)." of ".$self->{nPage}." ",
+    -text => "Page ".($self->{pageNum}+1)." of ".$self->{nPage},
     -fill => BROWN,
     -font => $self->{pageFont},
     -tags => 'hdrp',
       );
   my($x1,$y1,$x2,$y2) = split(/ /, $can->bbox($id));
-  $can->coords($id, $Media->{width} - $x2, $self->{pageHeader} / 2);
+  $can->coords($id, $Media->{width} - $Opt->{RightMargin} - $x2, $self->{pageHeader} / 2);
 }
 
 sub pageTempo {
@@ -768,7 +768,7 @@ sub pageTempo {
 sub pageBars {
   my($self) = shift;
 
-  my $x = INDENT;
+  my $x = $Opt->{LeftMargin};
   my $off = $self->{pOffset};
   my $pidx = 0;
   my $h = $off->{height};

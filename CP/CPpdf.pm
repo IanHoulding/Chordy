@@ -131,16 +131,16 @@ sub printSL {
     $GfxPtr->rect(0, 0, $w, $h);
     $GfxPtr->fill();
   }
-  my $hht = $Tsz + 3;
+  $h -= ($Tsz + 3);
   if ($Media->{titleBG} ne WHITE) {
-    _hline(0, $h - ($hht / 2), $w, $hht, $Media->{titleBG});
+    _bg($Media->{titleBG}, 0, $h, $w, $Tsz + 3);
   }
-  _textCenter($w/2, $h - ($hht - $Tdc), $CurSet, $pfp, $Tsz, $Tclr);
+  _textCenter($w/2, $h + $Tdc, $CurSet, $pfp, $Tsz, $Tclr);
   if ($AllSets->{meta}{date} ne '') {
-    _textRight($w - INDENT, $h - ($hht - $Tdc), $AllSets->{meta}{date}, $pfp, $Lsz, $Tclr);
+    _textRight($w - $Opt->{RightMargin}, $h + $Tdc, $AllSets->{meta}{date}, $pfp, $Lsz, $Tclr);
   }
 
-  $h -= $hht;
+  $h -= 1;
   _hline(0, $h, $w, 1, DBLUE);
 
   #
@@ -152,7 +152,7 @@ sub printSL {
   if ($AllSets->{meta}{s1end} ne '' || $AllSets->{meta}{s2end} ne '') {
     $setw += ($timew + _measure(' - ', $pfp, $Lsz));
   }
-  my $x = $w - $setw - (INDENT * 2);
+  my $x = $w - $setw - ($Opt->{RightMargin} * 2);
   my $y = $h - ($Tsz * 4);
   foreach my $xtr (['Setup','setup'], ['Sound Check','soundcheck']) {
     my($lab,$key) = (@{$xtr});
@@ -203,7 +203,7 @@ sub printSL {
   }
   my $numw = _measure("99  ", $pfp, $Lsz);
   my $keyw = _measure("G#m  ", $pfp, $Lsz - 3);
-  my $indent = INDENT * 2;
+  my $indent = $Opt->{LeftMargin} * 2;
   my $num = 1;
   foreach my $pro (@pros) {
     if ($pro->{title} =~ /^INTERVAL$/i) {
@@ -444,15 +444,15 @@ sub newPage {
   if ($Opt->{PageBG} ne WHITE) {
     _bg($Opt->{PageBG}, 0, 0, $w, $h);
   }
-  my $hht = $self->{Tsz} + 3;
+  $h -= ($self->{Tsz} + 3);
   if ($Media->{titleBG} ne WHITE) {
-    _bg($Media->{titleBG}, 0, $h - $hht, $w, $hht);
+    _bg($Media->{titleBG}, 0, $h, $w, $self->{Tsz} + 3);
   }
-  _textCenter($w/2, $h - ($hht - $self->{Tdc} - 1),
+  _textCenter($w/2, $h + $self->{Tdc},
 	      $pro->{title}, $self->{font}[TITLE], $self->{Tsz}, $Media->{Title}{color});
 
-  $h -= $hht;
-  _hline(0, $h + 0.5, $w, 1, DBLUE);
+  $h -= 1;
+  _hline(0, $h, $w, 1, DBLUE);
 
   my $offset = 0;
   my $tht = $h + $self->{Tdc} + 2;
@@ -461,10 +461,10 @@ sub newPage {
   my $cc = $Media->{Chord}{color};
 
   if ($pro->{key} ne '') {
-    my $tw = _textAdd(INDENT, $tht, "Key: ", $self->{font}[TITLE], $th, BLACK);
+    my $tw = _textAdd($Opt->{LeftMargin}, $tht, "Key: ", $self->{font}[TITLE], $th, BLACK);
     my($ch,$cname) = CP::Chord->new($pro->{key});
     $ch = $ch->trans2obj($pro) if ($Opt->{Transpose} ne 'No');
-    chordAdd($self, INDENT + $tw, $tht, $ch, $cc, $th);
+    chordAdd($self, $Opt->{LeftMargin} + $tw, $tht, $ch, $cc, $th);
   }
 
   if ($pn == 1) {
@@ -484,41 +484,42 @@ sub newPage {
       $h -= 2;
       if ($pro->{tempo} ne 0) {
 	$h -= ($th - $dc);
-	$offset = _textAdd(INDENT, $h, "Tempo: ", $self->{font}[TITLE], $th, BLACK);
-	_textAdd(INDENT + $offset, $h, "$pro->{tempo}", $self->{font}[TITLE], $th, $cc);
+	$offset = _textAdd($Opt->{LeftMargin}, $h, "Tempo: ", $self->{font}[TITLE], $th, BLACK);
+	_textAdd($Opt->{LeftMargin} + $offset, $h, "$pro->{tempo}", $self->{font}[TITLE], $th, $cc);
 	$h -= $dc;
       }
       if ($pro->{note} ne '') {
 	$h -= ($th - $dc);
-	my $tw = _textAdd(INDENT, $h, "Note: ", $self->{font}[TITLE], $th, BLACK) + INDENT;
+	my $tw = _textAdd($Opt->{LeftMargin}, $h, "Note: ", $self->{font}[TITLE], $th, BLACK) + $Opt->{LeftMargin};
 	$offset = $tw if ($offset == 0);
-	_textAdd(INDENT + $offset, $h, $pro->{note}, $self->{font}[TITLE], $th, $cc);
+	_textAdd($Opt->{LeftMargin} + $offset, $h, $pro->{note}, $self->{font}[TITLE], $th, $cc);
 	$h -= $dc;
       }
       if ($pro->{capo} ne 0 && $Opt->{LyricOnly} == 0) {
 	$h -= ($th - $dc);
-	my $tw = _textAdd(INDENT, $h, "Capo: ", $self->{font}[TITLE], $th, BLACK);
+	my $tw = _textAdd($Opt->{LeftMargin}, $h, "Capo: ", $self->{font}[TITLE], $th, BLACK);
 	$offset = $tw if ($offset == 0);
-	$tw = _textAdd(INDENT + $offset, $h, "$pro->{capo}", $self->{font}[TITLE], $th, $cc);
+	$tw = _textAdd($Opt->{LeftMargin} + $offset, $h, "$pro->{capo}", $self->{font}[TITLE], $th, $cc);
 	if ($Opt->{IgnCapo}) {
 	  $offset += $tw;
 	  $tw = int(($th / 4) * 3);
-	  _textAdd(INDENT + $offset, $h, "  (ignored)", $self->{font}[TITLE], $tw, $cc);
+	  _textAdd($Opt->{LeftMargin} + $offset, $h, "  (ignored)", $self->{font}[TITLE], $tw, $cc);
 	}
 	$h -= $dc;
       }
-      $h -= 1;
+      $h -= 2;
     }
   }
   if ($offset) {
-    _hline(0, $h, $w, 0.5, DBLUE);
+    $h -= 1;
+    _hline(0, $h, $w, 1, DBLUE);
   }
 
   if ($Opt->{Grid} != NONE && ($pn == 1 || $Opt->{Grid} == ALLP)) {
     $h -= INDENT;
     $FFSIZE = _measure("10", $self->{font}[CHORD], $self->{Csz} * $SUPHT) if ($FFSIZE == 0);
     my($cnt,$xinc) = fingersWidth();
-    my $margin = INDENT * 2;
+    my $margin = $Opt->{LeftMargin} * 2;
     $w -= $margin;
     my $maxy = 0;
     my $linex = $margin;
@@ -545,8 +546,7 @@ sub newPage {
     $GfxPtr->fill();
     $h -= INDENT;
   }
-#  $h -= INDENT;
-  $h;
+  return($h - $Opt->{TopMargin});
 }
 
 sub pageNum {
@@ -560,7 +560,7 @@ sub pageNum {
     my $pp = $self->{page}[$npg++];
     my $page = "Page ".$pn++." of $npage ";
     $TextPtr = $pp->text();
-    _textRight($Media->{width} - INDENT, $h,
+    _textRight($Media->{width} - $Opt->{RightMargin}, $h,
 	       $page, $self->{font}[TITLE], ceil($self->{Tsz} * PAGEMUL), BROWN);
     $TextPtr->textend;
   }
@@ -610,7 +610,7 @@ sub fingersHeight {
 # distance (in points) between the start of each chord
 #
 sub fingersWidth {
-  my $w = $Media->{width} - (INDENT * 4);
+  my $w = $Media->{width} - ($Opt->{LeftMargin} + $Opt->{RightMargin});
   my $cw = (($Nstring - 1) * $XSIZE) + $FFSIZE + $SPACE; # min size of a chord diagram + spacer
   my $nc = int($w / $cw);                                # number of chords we can draw
   $cw += int(($w - ($nc * $cw) + $SPACE) / ($nc - 1));   # even out any leftover space
@@ -789,7 +789,6 @@ sub commentAdd {
 
   my $dc = ($type == HLIGHT) ? $self->{Hdc}: $self->{CMdc};
   my $sz = ($type == HLIGHT) ? $self->{Hsz}: $self->{CMsz};
-  my $tw = _measure($txt, $self->{font}[$type], $sz);
   my($bw,$x) = (0,0);
   if ($type == HLIGHT) {
     $bw = $Media->{width} if ($Opt->{FullLineHL});
@@ -798,12 +797,14 @@ sub commentAdd {
   }
   if ($bw == 0) {
     # Not a full width background
-    $bw = $tw + (INDENT * 2);
-    $x = int(($Media->{width} - $bw) / 2) if ($Opt->{Center});
+    $bw = _measure($txt, $self->{font}[$type], $sz);
+    my $taw = $Media->{width} - ($Opt->{LeftMargin} + $Opt->{RightMargin});
+    $x = $Opt->{LeftMargin};
+    $x += int(($taw - $bw) / 2) if ($Opt->{Center});
   }
   $self->commentBG($x, $y, $type, $bg, $bw);
-  $x = int(($Media->{width} - $tw) / 2) - INDENT if ($Opt->{Center});
-  _textAdd($x + INDENT, $y + $dc, $txt, $self->{font}[$type], $sz, $fg);
+  $x += $Opt->{LeftMargin} if ($bw == $Media->{width});
+  _textAdd($x, $y + $dc, $txt, $self->{font}[$type], $sz, $fg);
 }
 
 sub commentBG {
@@ -826,12 +827,9 @@ sub commentBG {
 sub _hline {
   my($x,$y,$xx,$t,$clr) = @_;
 
-  $GfxPtr->linewidth($t);
-  $GfxPtr->strokecolor($clr);
   $GfxPtr->fillcolor($clr);
-  $GfxPtr->move($x, $y);
-  $GfxPtr->hline($xx);
-  $GfxPtr->stroke();
+  $GfxPtr->rect($x, $y, $xx - $x, $t);
+  $GfxPtr->fill();
 }
 
 sub _textAdd {

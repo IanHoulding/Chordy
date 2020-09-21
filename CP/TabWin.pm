@@ -874,10 +874,10 @@ sub pageCanvas {
   my $off = $Tab->{pOffset};
   my $w = $off->{width};
   my $h = $off->{height};
-  my $y = $Tab->{pageHeader} + INDENT;
+  my $y = $Tab->{pageHeader} + $Opt->{TopMargin};
   my $pidx = 0;
   foreach my $r (0..($Tab->{rowsPP} - 1)) {
-    my $x = INDENT;
+    my $x = $Opt->{LeftMargin};
     foreach (1..$Opt->{Nbar}) {
       CP::Bar::outline($Tab, $pidx++, $x, $y);
       $x += $w;

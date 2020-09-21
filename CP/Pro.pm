@@ -359,7 +359,7 @@ sub makePDF {
   my $tab_clr = $Media->{Tab}{color};
   my $lyrOnly = $Opt->{LyricOnly};
   my $pageno = 1;
-  my $lineX = INDENT;
+  my $lineX = $Opt->{LeftMargin};
   # $lineY is always where the last entry was placed so it's up to
   # the current entity to drop it down the page before placing itself.
   my $lineY = $myPDF->newPage($self, $pageno++);
@@ -369,7 +369,7 @@ sub makePDF {
     my $ln = $self->{lines}[$lnidx];
     my $type = $ln->{type};
     my $lerr = 0;
-    $lineY = $myPDF->newPage($self, $pageno++) if ($type == NP || $lineY < 0);
+    $lineY = $myPDF->newPage($self, $pageno++) if ($type == NP || $lineY < $Opt->{BottomMargin});
     next if ($type == NP);
 
     if ($type == TAB) {
@@ -382,7 +382,7 @@ sub makePDF {
     elsif ($type < NL && $Opt->{Together} && $ln->{blk_no} != $blk) {
       $blk = $ln->{blk_no};
       # Start of a new Block. Work out it's height and see if it'll fit on this Page.
-      my $ht = 0;
+      my $ht = $Opt->{BottomMargin};
       my $lref = \@{$self->{lines}};
       for(my $i = $lnidx; $i <= $#{$lref} && $lref->[$i]->{blk_no} == $blk; $i++) {
 	my $sp = $lref->[$i];
@@ -426,7 +426,7 @@ sub makePDF {
       # As a side note - Tcl/Tk doesn't handle half point sizes for
       #   fonts but PDF::API2 can - so we do.
       while (1) {
-	$lineX = INDENT + $ln->measure($self,$myPDF);
+	$lineX = $Opt->{LeftMargin} + $ln->measure($self,$myPDF);
 	last if ($lineX < $Media->{width});
 	$lerr = $lineX if ($lerr == 0);
 	$myPDF->{Lsz} -= 0.5;
@@ -460,7 +460,7 @@ sub makePDF {
 	# Finally we can get the Line offset to Center the text.
 	$off = int(($Media->{width} - $lineX - $ln->{segs}[$off]{x}) / 2);
       } else {
-	$off = INDENT;
+	$off = $Opt->{LeftMargin};
       }
       #
       # Now go through the segments on this line and insert into the PDF
@@ -531,7 +531,7 @@ sub makePDF {
       foreach my $line (split(/\n/, $ln->{text})) {
 	$lineY -= $tabht;
 	if ($line ne '') {
-	  CP::CPpdf::_textAdd(INDENT, $lineY,
+	  CP::CPpdf::_textAdd($Opt->{LeftMargin}, $lineY,
 			      $line, $myPDF->{font}[TAB], $Media->{Tab}{size}, $tab_clr);
 	}
       }
@@ -562,11 +562,11 @@ sub makePDF {
       my $cells = $grid->{measures} * $grid->{beats};
       $cells += $grid->{lmargw} if ($maxl == 0);
       $cells += $grid->{rmargw} if ($maxr == 0);
-      my $cellw = $Media->{width} - INDENT - ($maxl + $maxr) - ($div * ($grid->{measures} + 1)) - INDENT;
+      my $cellw = $Media->{width} - $Opt->{LeftMargin} - ($maxl + $maxr) - ($div * ($grid->{measures} + 1)) - $Opt->{RightMargin};
       $cellw /= $cells;
       $maxl = $cellw * $grid->{lmargw} if ($maxl == 0);
       foreach my $gl (@{$grid->{lines}}) {
-	my $x = INDENT;
+	my $x = $Opt->{LeftMargin};
 	$lineY -= $chordht;
 	my $idx = 0;
 	while (scalar @$gl) {
@@ -628,7 +628,7 @@ sub makePDF {
       }
       $lnidx--;
       while (@chords) {
-	$lineX = INDENT * 2;
+	$lineX = $Opt->{LeftMargin};
 	my $max = 0;
 	foreach my $i (1..$nc) {
 	  last if (@chords == 0);

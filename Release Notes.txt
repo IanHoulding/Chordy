@@ -7,6 +7,7 @@ Bit late starting with 2.6.4 but about time I documented it :-)
 	   Going to try and revisit the window Menu system now we've changed to Tk/Tcl.
 	   Now have Menu system working on both Windows and Mac. Involved a lot of layout
 	     changes - some were deletions and others just moving things around.
+	   Left/Right/Top/Bottom Margins (for text ONLY) are now options.
 	   Update the Help file.
 
 3.8.7

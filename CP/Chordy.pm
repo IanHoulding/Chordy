@@ -367,7 +367,7 @@ sub actWin {
 }
 
 sub optWin {
-  my($frm) = @_;
+  my($frm) = shift;
 
   my $wid = $frm->new_ttk__frame();
   $wid->g_pack(qw/-side left -anchor n/);
@@ -397,6 +397,7 @@ sub optWin {
       my($fg,$bg) = $ColourEd->Show(BLACK, $Opt->{PageBG}, BACKGRND);
       if ($bg ne '') {
 	$Opt->{PageBG} = $bg;
+	$Opt->saveOne('PageBG');
 	Tkx::ttk__style_configure("PDF.TButton", -background => $bg);
       }
     });
@@ -471,6 +472,31 @@ sub optWin {
 
   $g->g_grid(qw/-row 3 -column 2 -columnspan 2 -sticky w/, -padx => [14,0]);
   $h->g_grid(qw/-row 4 -column 2 -columnspan 2 -sticky nw/, -padx => [14,0]);
+
+  ################
+  my $mrgn = $wid->new_ttk__labelframe(-text => " Margins ", -padding => [4,2,0,4]);
+  $mrgn->g_grid(qw/-row 5 -column 0 -columnspan 4 -sticky we/);
+
+  Tkx::ttk__style_configure("TSpinbox",
+			    -foreground => $Opt->{MenuFG},
+			    -arrowcolor => BLACK,
+			    -fieldbackground => $Opt->{MenuBG},
+			    -background => $Opt->{MenuBG});
+  my $col = 0;
+  foreach my $m (qw/Left Right Top Bottom/) {
+    $a = $mrgn->new_ttk__label(-text => "$m", -anchor => 'e');
+
+    $b = $mrgn->new_ttk__spinbox(
+      -textvariable => \$Opt->{"${m}Margin"},
+      -style => 'TSpinbox',
+      -from => 0,
+      -to => 72,
+      -wrap => 1,
+      -width => 2,
+      -command => sub{$Opt->saveOne("${m}Margin");});
+    $a->g_grid(qw/-row 0 -sticky e/, -column => $col++);
+    $b->g_grid(qw/-row 0 -sticky w/, -column => $col++, -padx => [2,16]);
+  }
 
   ################
   my $fcd = $frm->new_ttk__labelframe(

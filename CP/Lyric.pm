@@ -51,17 +51,19 @@ sub widgets {
   if ((my $ll = $Opt->{LyricLines}) && $Tab->{rowsPP}) {
     my $can = $Tab->{pCan};
     my $off = $Tab->{pOffset};
-    my $w = $Media->{width} - (INDENT * 2);
+    my $w = $Media->{width} - ($Opt->{LeftMargin} + $Opt->{RightMargin});
     my $h = $off->{lyricHeight};
     my $ht = $off->{height};
-    my $y = $Tab->{pageHeader} + INDENT + $off->{lyricY};
+    my $y = $Tab->{pageHeader} + $Opt->{TopMargin} + $off->{lyricY};
 
     my $wid = $self->{widget};
     my $font = $Tab->{wordFont};
     my $fg = $Tab->{wordColor};
     my $rc = 0;
     foreach my $row (0..($Tab->{rowsPP} - 1)) {
-      my $frm = $can->new_ttk__frame(-width => $w, -height => $h * $ll, -padding => [0,0,0,0]);
+      my $frm = $can->new_ttk__frame(-width => $Media->{width},
+				     -height => $h * $ll,
+				     -padding => [0,0,0,0]);
       foreach my $line (0..($ll - 1)) {
 	my $wdgt = $frm->new_tk__text(
 	  qw/-wrap none -borderwidth 0 -spacing1 0 -spacing2 0 -spacing3 0 -height 1/,
@@ -73,7 +75,7 @@ sub widgets {
 #	$wdgt->g_bind('<<WidgetViewSync>>' => sub{linechk($self, $wdgt, $myrc)});
 	$wid->[$rc++] = $wdgt;
       }
-      my $win = $can->create_window(INDENT, $y,
+      my $win = $can->create_window($Opt->{LeftMargin}, $y,
 				    -window => $frm,
 				    -width  => $w,
 				    -height => $h,
@@ -89,7 +91,7 @@ sub linechk {
   return if ($Ignore);
   my ($package, $filename, $line) = caller;
   print "$filename  $line";
-  my $w = $Media->{width} - (INDENT * 2);
+  my $w = $Media->{width} - ($Opt->{LeftMargin} + $Opt->{RightMargin});
   my $ln = $wid->get('1.0', 'end');
   if ($ln =~ /\n/) {
     $ln =~ s/\n.*//;

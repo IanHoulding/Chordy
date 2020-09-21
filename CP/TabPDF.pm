@@ -211,7 +211,7 @@ sub make {
   #
   my $pageht = $Media->{height};
   my $pageNum = 0;
-  my($x,$y) = (INDENT,$pageht);
+  my($x,$y) = ($Opt->{LeftMargin},$pageht);
   my $off = $Tab->{bars}{offset};
   my $h = $off->{height};
   my $w = $off->{width};
@@ -230,11 +230,11 @@ sub make {
   }
   for(my $bar = $Tab->{bars}; $bar != 0; $bar = $bar->{next}) {
     if ($bar->{newpage}) {
-      $x = INDENT;
+      $x = $Opt->{LeftMargin};
       $y = $pageht;
     }
-    elsif ($bar->{newline} && $x > INDENT) {
-      $x = INDENT;
+    elsif ($bar->{newline} && $x > $Opt->{LeftMargin}) {
+      $x = $Opt->{LeftMargin};
       $y -= $h;
       $y = $pageht if (($y - $h) < 0);
     }
@@ -263,7 +263,7 @@ sub make {
 
     $x += $w;
     if (($x + $w) > $Media->{width}) {
-      $x = INDENT;
+      $x = $Opt->{LeftMargin};
       $y -= $h;
       $y = $pageht if (($y - $h) < 0);
     }
@@ -281,7 +281,7 @@ sub make {
 
     $pdf->bar($bar);
 
-    if ($bar->{xy}{x} == INDENT && $Opt->{LyricLines}) {
+    if ($bar->{xy}{x} == $Opt->{LeftMargin} && $Opt->{LyricLines}) {
       $pdf->lyrics($lidx++, $bar->{xy}{x}, $bar->{xy}{y});
     }
   }
@@ -329,18 +329,20 @@ sub newPage {
   }
   _textCenter($self, $w/2, $h + $self->{Tdc} + 2, $Tab->{title}, TITLE, $self->{Tsz}, $self->{Tclr});
 
-  _hline(0, $h, $h + $w, 0.75, DBLUE);
+  $h -= 1;
+  _bg(DBLUE, 0, $h, $w, 1);
+#  _hline(0, $h, $h + $w, 0.75, DBLUE);
 
   my $tht = ($Media->{height} - $h) / 2;
   my $th = int($self->{Tsz} * KEYMUL);
   my $dc = int($self->{Tdc} * KEYMUL);
   if ($Tab->{key} ne '') {
-    my $tw = _textAdd($self, INDENT, $h + $self->{Tdc} + 2, "Key: ", TITLE, $th, bFG);
+    my $tw = _textAdd($self, $Opt->{LeftMargin}, $h + $self->{Tdc} + 2, "Key: ", TITLE, $th, bFG);
     my $ch = [split('',$Tab->{key})];
-    chordAdd($self, INDENT + $tw, $h + $self->{Tdc} + 2, $ch, $Media->{Chord}{color}, $th);
+    chordAdd($self, $Opt->{LeftMargin} + $tw, $h + $self->{Tdc} + 2, $ch, $Media->{Chord}{color}, $th);
   }
   if ($Tab->{note} ne '') {
-    _textRight($self, $Media->{width} - INDENT, $h - $th, "Note: $Tab->{note}", TITLE, $th, DGREEN);
+    _textRight($self, $Media->{width} - $Opt->{RightMargin}, $h - $th, "Note: $Tab->{note}", TITLE, $th, DGREEN);
   }
 
   if (defined $Tab->{tempo} && @{$self->{page}} == 1) {
@@ -349,7 +351,7 @@ sub newPage {
     my $wid = _textAdd($self, $x, $h - $ht + 2, 'O', RESTS, $ht, BLACK);
     _textAdd($self, $x + $wid, $h - $ht, " = ".$Tab->{tempo}, TITLE, $ht, BLACK);
   }
-  $h -= INDENT;
+  $h -= $Opt->{TopMargin};
 }
 
 sub pageNum {
@@ -358,7 +360,7 @@ sub pageNum {
   my $fntht = POSIX::ceil($self->{Tsz} * PAGEMUL);
   my $y = $Media->{height} - $Tab->{pageHeader} + (($Tab->{pageHeader} - $fntht) / 2);
   my $npg = @{$self->{page}} + 0;
-  _textRight($self, $Media->{width} - INDENT, $y, "Page $pn of $npg ", TITLE, $fntht, BROWN);
+  _textRight($self, $Media->{width} - $Opt->{RightMargin}, $y, "Page $pn of $npg ", TITLE, $fntht, BROWN);
 }
 
 sub chordAdd {
@@ -405,7 +407,7 @@ sub bar {
   # end marker, it would get overwritten.
   #
   $ly += (THIN / 2);
-  if ($x == INDENT || ($bar->{prev}{rep} ne 'End')) {
+  if ($x == $Opt->{LeftMargin} || ($bar->{prev}{rep} ne 'End')) {
     _vline($x, $ly, $ly + $h - THIN, THICK, BLACK);
   }
   _vline($x + $w, $ly, $ly + $h - THIN, THICK, BLACK);
