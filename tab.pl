@@ -282,7 +282,7 @@ sub collectionSel {
 
 sub mediaSel {
   popMenu(\$Opt->{Media}, undef, [CP::Media::list()]);
-  $Media->change(\$Opt->{Media});
+  $Media = $Media->change($Opt->{Media});
   $Tab->drawPageWin();
 }
 

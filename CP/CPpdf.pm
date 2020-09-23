@@ -41,6 +41,7 @@ sub new {
 		 ['Lyric',     VERSE],
 		 ['Chord',     CHORD],
 		 ['Tab',       TAB],
+		 ['Label',     LABEL],
 		 ['Comment',   CMMNT],
 		 ['Highlight', HLIGHT]) {
     my($media,$idx) = @{$m};
@@ -96,7 +97,7 @@ sub printSL {
 
   my $tmpMedia = $Opt->{Media};
   $Opt->{Media} = $Opt->{PrintMedia};
-  $Media->change(\$Opt->{Media});
+  $Media = $Media->change($Opt->{Media});
 
   my $list = $AllSets->{browser}{selLB}{array};
   my $tmpPDF = "$Path->{Temp}/$CurSet.pdf";
@@ -229,7 +230,7 @@ sub printSL {
   $Opt->{PDFprint} = $print;
 
   $Opt->{Media} = $tmpMedia;
-  $Media->change(\$Opt->{Media});
+  $Media = $Media->change($Opt->{Media});
 }
 
 sub getFont {
@@ -751,6 +752,11 @@ sub chordLen {
     }
   }
   $nx;
+}
+
+sub labelAdd {
+  my($self,$x,$y,$txt,$clr) = @_;
+  _textAdd($x, $y, $txt, $self->{font}[LABEL], $self->{Lsz}, $clr);
 }
 
 sub lyricAdd {

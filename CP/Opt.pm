@@ -19,7 +19,7 @@ my @strOpt = (qw/Articles Instrument Media PDFpath PrintMedia
 	         PopFG PopBG PushFG PushBG MenuFG MenuBG ListFG ListBG EntryFG EntryBG
 	         WinBG PageBG SortBy/);
 my @numOpt = (qw/AutoSave Bold Center EditScale FullLineHL FullLineCM Grid HHBL
-	         IgnArticle IgnCapo
+	         IgnArticle IgnCapo ShowLabels
 	         TopMargin BottomMargin LeftMargin RightMargin
 	         Italic LineSpace LyricLines LyricOnly Nbar NewLine NoWarn
 	         OnePDFfile PDFview PDFmake PDFprint
@@ -93,6 +93,7 @@ sub default {
   $self->{SharpFlat}   = SHARP;
   $self->{SortBy}      = 'Alphabetical';
   $self->{StaffSpace}  = 10;
+  $self->{ShowLabels}  = 0;
   $self->{Together}    = 1;
   $self->{TopMargin}   = INDENT;
   $self->{UseBold}     = 1;
@@ -154,14 +155,10 @@ sub save {
 }
 
 sub saveOne {
-  my($self,$opt,$new) = @_;
+  my($self,$opt) = @_;
 
   our($version,%opts);
   do "$Path->{Option}";
-  if (defined $new) {
-    return if ("$opts{$opt}" eq "$new");
-    $self->{$opt} = $new;
-  }
   $opts{$opt} = $self->{$opt};
   save(\%opts);
 }

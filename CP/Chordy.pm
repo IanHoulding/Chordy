@@ -111,12 +111,6 @@ sub notebookTabSelect {
       fontWin();
     }
   }
-#  elsif ($idx == 3) {
-#    if ($Chordy->{made3nb} == 0) {
-#      miscOpts();
-#      $Chordy->{made3nb} = 1;
-#    }
-#  }
 }
 
 ##
@@ -142,12 +136,6 @@ sub confOpts {
   my $cf = $opts->new_ttk__labelframe(-text => " Chordy Appearance ");
   lookFrm($cf);
 
-#  my $cmd = $opts->new_ttk__labelframe(-text => " Commands ", -padding => [4,4,4,4]);
-#  commandWin($cmd);
-
-#  my $bf = $opts->new_ttk__frame(); #-padding => [0,16,0,0]);
-#  CP::Win::defButtons($bf, 'Media', \&main::saveMed, \&main::loadMed, \&main::resetMed);
-
   my $fw = $Chordy->{fontFr};
   $tf->g_pack( qw/-side top -fill x/, -pady => [4,0]);
   $col->g_pack(qw/-side left -anchor n -expand 1 -fill both/, -padx => [0,8]);
@@ -157,32 +145,7 @@ sub confOpts {
   $bgf->g_pack(qw/-side top -anchor n -expand 1 -fill both/, -pady => [12,0]);
 
   $cf->g_pack(qw/-side top -fill x/, -pady => [12,0]);
-#  $cmd->g_pack(qw/-side top -fill x/, -pady => [12,0]);
- # $bf->g_pack( qw/-side bottom -pady 4 -fill x/);
 }
-
-##
-## Misc Options Tab
-##
-#sub miscOpts {
-#  my $misc = $Chordy->{misc};
-#  my $ff = $misc->new_ttk__labelframe(-text => " File ");
-#  $ff->g_pack(qw/-side top -fill x/, -pady => [8,0]);
-#
-#  my $of = $misc->new_ttk__labelframe(-text => " Options ");
-#  $of->g_pack(qw/-side top -fill x/, -pady => [16,0]);
-#
-#  my $cf = $misc->new_ttk__labelframe(-text => " Appearance ");
-#  $cf->g_pack(qw/-side top -fill x/, -pady => [16,0]);
-#
-#  my $cmd = $misc->new_ttk__labelframe(-text => " Commands ", -padding => [4,4,4,4]);
-#  $cmd->g_pack(qw/-side top -fill x/, -pady => [16,0]);
-#
-#  fileFrm($ff);
-#  optFrm($of);
-#  lookFrm($cf);
-#  commandWin($cmd);
-#}
 
 ###############################
 # Now all the various windows #
@@ -370,9 +333,9 @@ sub optWin {
   my($frm) = shift;
 
   my $wid = $frm->new_ttk__frame();
-  $wid->g_pack(qw/-side left -anchor n/);
+  $wid->g_grid(qw/-row 0 -column 0/);
 
-  my($a,$b,$c,$d,$e,$f,$g,$h,$z);
+  my($a,$b,$c,$d,$e,$f,$g,$h,$i);
   #########################
 
   $a = $wid->new_ttk__checkbutton(-text => 'Center Lyrics',
@@ -389,41 +352,32 @@ sub optWin {
   $d = $wid->new_ttk__checkbutton(-text => '1/2 Height Blank Lines',
 				  -variable => \$Opt->{HHBL},
 				  -command => sub{$Opt->saveOne('HHBL')});
-  $z = $wid->new_ttk__button(
-    -text => ' PDF Background ',
-    -style => 'PDF.TButton',
-    -command => sub{
-      CP::FgBgEd->new('PDF Background');
-      my($fg,$bg) = $ColourEd->Show(BLACK, $Opt->{PageBG}, BACKGRND);
-      if ($bg ne '') {
-	$Opt->{PageBG} = $bg;
-	$Opt->saveOne('PageBG');
-	Tkx::ttk__style_configure("PDF.TButton", -background => $bg);
-      }
-    });
-  $e = $wid->new_ttk__checkbutton(-text => "No Long Line warnings",
-				  -variable => \$Opt->{NoWarn},
-				  -command => sub{$Opt->saveOne('NoWarn')});
-  $f = $wid->new_ttk__checkbutton(-text => "Ignore Capo Directives",
-				  -variable => \$Opt->{IgnCapo},
-				  -command => sub{$Opt->saveOne('IgnCapo')});
-  $g = $wid->new_ttk__checkbutton(-text => "Highlight full line",
+  $e = $wid->new_ttk__checkbutton(-text => 'Show Labels',
+				  -variable => \$Opt->{ShowLabels},
+				  -command => sub{$Opt->saveOne('ShowLabels')});
+  $f = $wid->new_ttk__checkbutton(-text => "Highlight full line",
 				  -variable => \$Opt->{FullLineHL},
 				  -command => sub{$Opt->saveOne('FullLineHL')});
-  $h = $wid->new_ttk__checkbutton(-text => "Comment full line",
+  $g = $wid->new_ttk__checkbutton(-text => "Comment full line",
 				  -variable => \$Opt->{FullLineCM},
 				  -command => sub{$Opt->saveOne('FullLineCM')});
+  $h = $wid->new_ttk__checkbutton(-text => "Ignore Capo Directives",
+				  -variable => \$Opt->{IgnCapo},
+				  -command => sub{$Opt->saveOne('IgnCapo')});
+  $i = $wid->new_ttk__checkbutton(-text => "No Long Line warnings",
+				  -variable => \$Opt->{NoWarn},
+				  -command => sub{$Opt->saveOne('NoWarn')});
 
   $a->g_grid(qw/-row 0 -column 0 -sticky w -pady 1/, -padx => [0,12]);
   $b->g_grid(qw/-row 1 -column 0 -sticky w -pady 1/, -padx => [0,12]);
   $c->g_grid(qw/-row 2 -column 0 -sticky w -pady 1/, -padx => [0,12]);
   $d->g_grid(qw/-row 3 -column 0 -sticky w -pady 1/, -padx => [0,12]);
-  $z->g_grid(qw/-row 4 -column 0 -sticky w -pady 6/, -padx => [0,12]);
+  $e->g_grid(qw/-row 4 -column 0 -sticky w -pady 1/, -padx => [0,12]);
 
-  $e->g_grid(qw/-row 0 -column 1 -sticky w -pady 1/, -padx => [0,12]);
-  $f->g_grid(qw/-row 1 -column 1 -sticky w -pady 1/, -padx => [0,12]);
-  $g->g_grid(qw/-row 2 -column 1 -sticky w -pady 1/, -padx => [0,12]);
-  $h->g_grid(qw/-row 3 -column 1 -sticky w -pady 1/, -padx => [0,12]);
+  $f->g_grid(qw/-row 0 -column 1 -sticky w -pady 1/, -padx => [0,12]);
+  $g->g_grid(qw/-row 1 -column 1 -sticky w -pady 1/, -padx => [0,12]);
+  $h->g_grid(qw/-row 2 -column 1 -sticky w -pady 1/, -padx => [0,12]);
+  $i->g_grid(qw/-row 3 -column 1 -sticky w -pady 1/, -padx => [0,12]);
   ################
   
   $a = $wid->new_ttk__label(-text => "Line Spacing:");
@@ -471,38 +425,13 @@ sub optWin {
   $f->g_grid(qw/-row 2 -column 3 -sticky w/, -padx => [2,4]);
 
   $g->g_grid(qw/-row 3 -column 2 -columnspan 2 -sticky w/, -padx => [14,0]);
-  $h->g_grid(qw/-row 4 -column 2 -columnspan 2 -sticky nw/, -padx => [14,0]);
-
-  ################
-  my $mrgn = $wid->new_ttk__labelframe(-text => " Margins ", -padding => [4,2,0,4]);
-  $mrgn->g_grid(qw/-row 5 -column 0 -columnspan 4 -sticky we/);
-
-  Tkx::ttk__style_configure("TSpinbox",
-			    -foreground => $Opt->{MenuFG},
-			    -arrowcolor => BLACK,
-			    -fieldbackground => $Opt->{MenuBG},
-			    -background => $Opt->{MenuBG});
-  my $col = 0;
-  foreach my $m (qw/Left Right Top Bottom/) {
-    $a = $mrgn->new_ttk__label(-text => "$m", -anchor => 'e');
-
-    $b = $mrgn->new_ttk__spinbox(
-      -textvariable => \$Opt->{"${m}Margin"},
-      -style => 'TSpinbox',
-      -from => 0,
-      -to => 72,
-      -wrap => 1,
-      -width => 2,
-      -command => sub{$Opt->saveOne("${m}Margin");});
-    $a->g_grid(qw/-row 0 -sticky e/, -column => $col++);
-    $b->g_grid(qw/-row 0 -sticky w/, -column => $col++, -padx => [2,16]);
-  }
+  $h->g_grid(qw/-row 4 -column 2 -columnspan 2 -sticky w/, -padx => [14,0]);
 
   ################
   my $fcd = $frm->new_ttk__labelframe(
     -text => " Chord Diagrams ",
     -labelanchor => 'n');
-  $fcd->g_pack(qw/-side right -anchor n/, -padx => [2,4]);
+  $fcd->g_grid(qw/-row 0 -column 1 -sticky n/, -padx => [8,4]);
   $a = $fcd->new_ttk__label(-text => "Instrument");
   $b = $fcd->new_ttk__button(
     -textvariable => \$Opt->{Instrument},
@@ -528,6 +457,46 @@ sub optWin {
   $c->g_grid(qw/-row 1 -column 0 -columnspan 2 -sticky w -padx 4/);
   $d->g_grid(qw/-row 2 -column 0 -columnspan 2 -sticky w -padx 4/);
   $e->g_grid(qw/-row 3 -column 0 -columnspan 2 -sticky w -padx 4/);
+
+  ################
+  my $mrgn = $frm->new_ttk__labelframe(-text => " Margins ", -padding => [4,2,0,4]);
+  $mrgn->g_grid(qw/-row 1 -column 0 -sticky we/);
+
+  Tkx::ttk__style_configure("TSpinbox",
+			    -foreground => $Opt->{MenuFG},
+			    -arrowcolor => BLACK,
+			    -fieldbackground => $Opt->{MenuBG},
+			    -background => $Opt->{MenuBG});
+  my $col = 0;
+  foreach my $m (qw/Left Right Top Bottom/) {
+    $a = $mrgn->new_ttk__label(-text => "$m", -anchor => 'e');
+
+    $b = $mrgn->new_ttk__spinbox(
+      -textvariable => \$Opt->{"${m}Margin"},
+      -style => 'TSpinbox',
+      -from => 0,
+      -to => 72,
+      -wrap => 1,
+      -width => 2,
+      -command => sub{$Opt->saveOne("${m}Margin");});
+    $a->g_grid(qw/-row 0 -sticky e/, -column => $col++);
+    $b->g_grid(qw/-row 0 -sticky w/, -column => $col++, -padx => [2,16]);
+  }
+
+  ################
+  $a = $frm->new_ttk__button(
+    -text => ' PDF Background ',
+    -style => 'PDF.TButton',
+    -command => sub{
+      CP::FgBgEd->new('PDF Background');
+      my($fg,$bg) = $ColourEd->Show(BLACK, $Opt->{PageBG}, BACKGRND);
+      if ($bg ne '') {
+	$Opt->{PageBG} = $bg;
+	$Opt->saveOne('PageBG');
+	Tkx::ttk__style_configure("PDF.TButton", -background => $bg);
+      }
+    });
+  $a->g_grid(qw/-row 1 -column 1 -pady 6/, -padx => [8,4]);
 }
 
 ##############
@@ -958,7 +927,7 @@ sub mediaWin {
 
 sub newMedia {
 #  $Opt->changeOne('Media');
-  $Media->change(\$Opt->{Media});
+  $Media = $Media->change($Opt->{Media});
   showSize();
   fontWin();
 }
@@ -975,7 +944,7 @@ sub fontWin {
     foreach my $c (Tkx::SplitList(Tkx::winfo_children($Chordy->{fontFr}))) {
       Tkx::destroy($c);
     }
-    CP::Fonts::fonts($Chordy->{fontFr}, [qw/Title Chord Lyric Tab Comment Highlight Editor/]);
+    CP::Fonts::fonts($Chordy->{fontFr}, [qw/Title Chord Lyric Tab Label Comment Highlight Editor/]);
     Tkx::update();
   }
 }
@@ -1124,10 +1093,12 @@ sub lookFrm {
   my($a,$b,$c,$d,$e,$f,$g,$h,$i,$j,$k,$m);
   $a = $frm->new_ttk__label(-text => "Colours:");
   $b = $frm->new_ttk__button(
-    -text => "Push Button",
+    -text => "Button",
+    -width => 8,
     -command => \&CP::Win::PBclr );
   $c = $frm->new_ttk__button(
-    -text => "Menu Button",
+    -text => "Menu",
+    -width => 8,
     -style => 'Menu.TButton',
     -command => \&CP::Win::MBclr );
   $d = $frm->new_ttk__button(
@@ -1151,17 +1122,18 @@ sub lookFrm {
     -style => 'Msg.TButton',
     -command => \&CP::Win::MSGclr );
 
-  $h = $frm->new_ttk__button(
-    -text => "Defaults",
-    -style => 'Green.TButton',
-    -command => \&CP::Win::defLook );
+  $h = $frm->new_ttk__label(-text => "Fonts:");
+  $i = $frm->new_ttk__button(-text => "Normal/Bold", -command => \&main::useBold );
 
-  $i = $frm->new_ttk__label(-text => "Fonts:");
-  $j = $frm->new_ttk__button(-text => "Normal/Bold", -command => \&main::useBold );
-  $k = $frm->new_ttk__button(
+#  my $bfrm = $frm->new_ttk__frame(-padding => [4,4,4,4]);
+  $j = $frm->new_ttk__button(
     -text => "Save",
     -style => 'Green.TButton',
     -command => sub{$Opt->save()} );
+  $k = $frm->new_ttk__button(
+    -text => "Defaults",
+    -style => 'Green.TButton',
+    -command => \&CP::Win::defLook );
   $m = $frm->new_ttk__button(
     -text => "Copy To All Collections",
     -style => 'Green.TButton',
@@ -1175,12 +1147,13 @@ sub lookFrm {
   $e->g_grid(qw/-row 0 -column 4 -padx 4/, -pady => [0,8]);
   $f->g_grid(qw/-row 0 -column 5 -padx 4/, -pady => [0,8]);
   $g->g_grid(qw/-row 0 -column 6 -padx 4/, -pady => [0,8]);
-  $i->g_grid(qw/-row 1 -column 0 -sticky e/, -pady => [0,8]);
-  $j->g_grid(qw/-row 1 -column 1 -sticky ew -padx 4/, -pady => [0,8]);
+  $h->g_grid(qw/-row 0 -column 7 -sticky e/, -padx => [12,0], -pady => [0,8]);
+  $i->g_grid(qw/-row 0 -column 8 -padx 4/, -pady => [0,8]);
 
-  $k->g_grid(qw/-row 2 -column 2 /, -padx => [0,4], -pady => [0,8]);
-  $h->g_grid(qw/-row 2 -column 3 /, -padx => [0,4], -pady => [0,8]);
-  $m->g_grid(qw/-row 2 -column 4 -columnspan 3 -sticky w/, -padx => [4,8], -pady => [0,8]);
+#  $bfrm->g_grid(qw/-row 1 -column 0 -columnspan 8/);
+  $j->g_grid(qw/-row 1 -column 1 -columnspan 2 -pady 4/);
+  $k->g_grid(qw/-row 1 -column 3 -columnspan 2 -pady 4/);
+  $m->g_grid(qw/-row 1 -column 5 -columnspan 3 -pady 4/);
 }
 
 1;

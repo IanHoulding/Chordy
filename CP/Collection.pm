@@ -62,7 +62,7 @@ sub change {
   $Home = "$Parent/$name";
   $Path->change($Home);
   $Opt->load();
-  $Media->change(\$Opt->{Media});
+  $Media = $Media->change($Opt->{Media});
   $Swatches->load();
   if (defined $MW && Tkx::winfo_exists($MW) && defined $AllSets) {
     $AllSets->change();

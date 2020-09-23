@@ -482,7 +482,7 @@ sub Main {
 	$Opt->{PDFview} = 1;
 	$tmpMedia = $Opt->{Media};
 	$Opt->{Media} = $Opt->{PrintMedia};
-	$Media->change(\$Opt->{Media});
+	$Media = $Media->change($Opt->{Media});
 	$Opt->{PDFprint} = 69;
       } elsif ($ans eq 'Cancel') {
 	return;
@@ -560,7 +560,7 @@ sub Main {
   if ($tmpMedia ne '') {
     $Opt->{PDFview} = $tmpView;
     $Opt->{Media} = $tmpMedia;
-    $Media->change(\$Opt->{Media});
+    $Media = $Media->change($Opt->{Media});
   }
   # $LenError is set in CP::Pro::makePDF()
   if ($LenError) {

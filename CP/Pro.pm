@@ -83,14 +83,14 @@ sub decompose {
     return(0);
   }
   @{$self->{lines}} = ();
-  my @verseLines;
-  my @chorusLines;
-  my @bridgeLines;
-  my @tabLines;
+  my %verseLines = ();
+  my %chorusLines = ();
+  my %bridgeLines = ();
+  my %tabLines = ();
   my $gridlref;
   my $tablref;
   my $lvcb = LYRIC;
-  my($vidx,$cidx,$bidx,$tidx,$blk_no) = qw/0 0 0 0 0/;
+  my($vidx,$cidx,$bidx,$tidx,$blk_no) = qw/dflt dflt dflt dflt 0/;
   my $key = "";
   my $bg = '';
   my $lineNum = 0;
@@ -184,18 +184,30 @@ sub decompose {
 	}
 	elsif ($cmd =~ /^(sov|start_of_verse)$/i) {
 	  $lvcb = VERSE;
-	  $vidx = $1 if ($txt =~ /(\d+)/);
-	  @{$verseLines[$vidx]} = ();
+	  $vidx = $txt if ($txt ne '');
+	  @{$verseLines{$vidx}} = ();
+	  if ($txt ne '') {
+	    $lref = CP::Line->new($lvcb, $txt, $blk_no, $bg);
+	    $lref->{label} = 1;
+	  }
 	}
 	elsif ($cmd =~ /^(soc|start_of_chorus)$/i) {
 	  $lvcb = CHORUS;
-	  $cidx = $1 if ($txt =~ /(\d+)/);
-	  @{$chorusLines[$cidx]} = ();
+	  $cidx = $txt if ($txt ne '');
+	  @{$chorusLines{$cidx}} = ();
+	  if ($txt ne '') {
+	    $lref = CP::Line->new($lvcb, $txt, $blk_no, $bg);
+	    $lref->{label} = 1;
+	  }
 	}
 	elsif ($cmd =~ /^(sob|start_of_bridge)$/i) {
 	  $lvcb = BRIDGE;
-	  $bidx = $1 if ($txt =~ /(\d+)/);
-	  @{$bridgeLines[$bidx]} = ();
+	  $bidx = $txt if ($txt ne '');
+	  @{$bridgeLines{$bidx}} = ();
+	  if ($txt ne '') {
+	    $lref = CP::Line->new($lvcb, $txt, $blk_no, $bg);
+	    $lref->{label} = 1;
+	  }
 	}
 	elsif ($cmd =~ /^(sog|start_of_grid)$/i) {
 	  $lvcb = GRID;
@@ -203,9 +215,13 @@ sub decompose {
 	}
 	elsif ($cmd =~ /^(sot|start_of_tab)$/i) {
 	  $lvcb = TAB;
-	  $tidx = $1 if ($txt =~ /(\d+)/);
-	  $tablref = CP::Line->new($lvcb, $txt, $blk_no, $bg);
-	  @{$tabLines[$tidx]} = ();
+	  $tidx = $txt if ($txt ne '');
+	  @{$tabLines{$tidx}} = ();
+	  if ($txt ne '') {
+	    $tablref = CP::Line->new($lvcb, '', $blk_no, $bg);
+	    $lref = CP::Line->new($lvcb, $txt, $blk_no, $bg);
+	    $lref->{label} = 1;
+	  }
 	}
 	elsif ($cmd =~ /^eo[vcbgt]$|^end_of_(verse|chorus|bridge|grid|tab)$/i) {
 	  if ($lvcb == GRID) {
@@ -218,7 +234,7 @@ sub decompose {
 	    $tablref = undef;
 	  }
 	  $lvcb = LYRIC;
-	  $vidx = $cidx = $bidx = $tidx = 0;
+	  $vidx = $cidx = $bidx = $tidx = 'dflt';
 	  $bg = '';
 	  $blk_no++;
 	}
@@ -227,19 +243,33 @@ sub decompose {
 	  $bg = '';
 	}
 	elsif ($cmd =~ /^(verse|chorus|bridge|tab)$/i) {
-	  my $idx = ($txt =~ /(\d+)/) ? $1 : 0;
 	  # Chorus backgrounds stay in effect until changed by another colour directive.
-	  my $lp = ($cmd =~ /^v/i) ? \@{$verseLines[$idx]} :
-	           ($cmd =~ /^c/i) ? \@{$chorusLines[$idx]} :
-	           ($cmd =~ /^b/i) ? \@{$bridgeLines[$idx]} : \@{$tabLines[$idx]};
-	  if ($idx && @{$lp} == 0) {
-	    $lp = ($cmd =~ /^v/i) ? \@{$verseLines[0]} :
-		  ($cmd =~ /^c/i) ? \@{$chorusLines[0]} :
-		  ($cmd =~ /^b/i) ? \@{$bridgeLines[0]} : \@{$tabLines[0]};
+	  my $lp = ($cmd =~ /^v/i) ? \%verseLines :
+	           ($cmd =~ /^c/i) ? \%chorusLines :
+	           ($cmd =~ /^b/i) ? \%bridgeLines : \%tabLines;
+	  if ($txt eq '') {
+	    $txt = ($cmd =~ /^v/i) ? $vidx :
+	           ($cmd =~ /^c/i) ? $cidx :
+		   ($cmd =~ /^b/i) ? $bidx : $tidx;
 	  }
-	  foreach my $cl (@{$lp}) {
-	    my $cln = $cl->clone($blk_no);
-	    $cln->{bg} = ($bg ne '') ? $bg : $cl->{bg};
+	  if (! defined $lp->{$txt}) {
+	    $lp = \@{$lp->{dflt}};
+	  } else {
+	    $lp = \@{$lp->{$txt}};
+	  }
+	  foreach my $cl (0..$#{$lp}) {
+	    my $cln = $lp->[$cl]->clone($blk_no);
+	    if ($cl == 0 && $txt ne 'dflt') {
+	      if ($cln->{label} == 0) {
+		my $ref = CP::Line->new($cln->{type}, $txt, $blk_no, $bg);
+		$ref->{label} = 1;
+		$ref->{bg} = ($bg ne '') ? $bg : $lp->[$cl]->{bg};
+		push(@{$self->{lines}}, $ref);
+	      } else {
+		$cln->{text} = $txt;
+	      }
+	    }
+	    $cln->{bg} = ($bg ne '') ? $bg : $lp->[$cl]->{bg};
 	    push(@{$self->{lines}}, $cln);
 	  }
 	  $blk_no++;
@@ -286,13 +316,13 @@ sub decompose {
       $lref->{num} = $lineNum;
       push(@{$self->{lines}}, $lref);
       if ($lvcb == VERSE) {
-	push(@{$verseLines[$vidx]}, $lref);
+	push(@{$verseLines{$vidx}}, $lref);
       } elsif ($lvcb == CHORUS) {
-	push(@{$chorusLines[$cidx]}, $lref);
+	push(@{$chorusLines{$cidx}}, $lref);
       } elsif ($lvcb == BRIDGE) {
-	push(@{$bridgeLines[$bidx]}, $lref);
+	push(@{$bridgeLines{$bidx}}, $lref);
       } elsif ($lvcb == TAB) {
-	push(@{$tabLines[$tidx]}, $lref);
+	push(@{$tabLines{$tidx}}, $lref);
       }
     }
   }
@@ -357,6 +387,7 @@ sub makePDF {
   my $lyr_clr = $Media->{Lyric}{color};
   my $chd_clr = $Media->{Chord}{color};
   my $tab_clr = $Media->{Tab}{color};
+  my $lab_clr = $Media->{Label}{color};
   my $lyrOnly = $Opt->{LyricOnly};
   my $pageno = 1;
   my $lineX = $Opt->{LeftMargin};
@@ -375,8 +406,12 @@ sub makePDF {
     if ($type == TAB) {
       # Tab block contents are ALWAYS kept together on one page.
       if ($lyrOnly == 0) {
+	my $ht = 0;
+	if ($ln->{label}) {
+	  $ht += $linespc if ($ln->{text} ne '' && $Opt->{ShowLabels});
+	}
 	my @lns = split(/\n/, $ln->{text});
-	$lineY = $myPDF->newPage($self, $pageno++) if (($tabht * @lns) > $lineY);
+	$lineY = $myPDF->newPage($self, $pageno++) if ((($tabht * @lns) + $ht) > $lineY);
       }
     }
     elsif ($type < NL && $Opt->{Together} && $ln->{blk_no} != $blk) {
@@ -392,9 +427,13 @@ sub makePDF {
 	} elsif ($ty == GRID) {
 	  $ht += ($chordht * $sp->{ch_cnt}) if ($lyrOnly == 0);
 	} elsif ($ty == LYRIC || $ty == VERSE || $ty == CHORUS) {
-	  my $h = ($sp->{ly_cnt}) ? $lyricht: 0;
-	  $h += $chordht if ($sp->{ch_cnt} && $lyrOnly == 0);
-	  $ht += ($linespc + $h) if ($h);
+	  if ($ln->{label}) {
+	    $ht += $linespc if ($ln->{text} ne '' && $Opt->{ShowLabels});
+	  } else {
+	    my $h = ($sp->{ly_cnt}) ? $lyricht: 0;
+	    $h += $chordht if ($sp->{ch_cnt} && $lyrOnly == 0);
+	    $ht += ($linespc + $h) if ($h);
+	  }
 	} elsif ($ty == CHRD) {
 	  my @chords = split(' ', $sp->{text});
 	  while ($lref->[++$i]->{type} == CHRD) {
@@ -421,60 +460,76 @@ sub makePDF {
       # First pass - sort out the Lyric offsets.
       #
       my $heightAdj = 0;
-      # Adjust the font size until the lyrics fit on the page.
-      # Side effect of measure() sets the x offset for each segment.
-      # As a side note - Tcl/Tk doesn't handle half point sizes for
-      #   fonts but PDF::API2 can - so we do.
-      while (1) {
-	$lineX = $Opt->{LeftMargin} + $ln->measure($self,$myPDF);
-	last if ($lineX < $Media->{width});
-	$lerr = $lineX if ($lerr == 0);
-	$myPDF->{Lsz} -= 0.5;
-	$myPDF->{Csz} -= 0.5;
-	$myPDF->{Ssz} -= 0.5;
-	$heightAdj += 0.5;
-	$LenError++;
-	last if ($myPDF->{Lsz} < 6); # Sanity check!
-      }
-      if ($lerr) {
-	my $str = "";
-	if ($ln->{ly_cnt}) {
-	  foreach my $s (@{$ln->{segs}}) {
-	    $str .= "$s->{lyric}";
-	  }
-	} else {
-	  foreach my $s (@{$ln->{segs}}) {
-	    $str .= join("", @{$s->{chord}});
-	  }
+      my $label = 0;
+      if ($ln->{label}) {
+	if ($ln->{text} ne '' && $Opt->{ShowLabels}) {
+	  $label++;
 	}
-	print localtime."\n";
-	printf "  LINE $ln->{num} TOO LONG by %.1fmm: %s/%s\n  -->%s\n\n",
-	    ($lerr - $Media->{width}) * (25.4 / 72), $self->{path}, $self->{name}, $str;
+      } else {
+	# Adjust the font size until the lyrics fit on the page.
+	# Side effect of measure() sets the x offset for each segment.
+	# As a side note - Tcl/Tk doesn't handle half point sizes for
+	#   fonts but PDF::API2 can - so we do.
+	while (1) {
+	  $lineX = $Opt->{LeftMargin} + $ln->measure($self,$myPDF);
+	  last if ($lineX < $Media->{width});
+	  $lerr = $lineX if ($lerr == 0);
+	  $myPDF->{Lsz} -= 0.5;
+	  $myPDF->{Csz} -= 0.5;
+	  $myPDF->{Ssz} -= 0.5;
+	  $heightAdj += 0.5;
+	  $LenError++;
+	  last if ($myPDF->{Lsz} < 6); # Sanity check!
+	}
+	if ($lerr) {
+	  my $str = "";
+	  if ($ln->{ly_cnt}) {
+	    foreach my $s (@{$ln->{segs}}) {
+	      $str .= "$s->{lyric}";
+	    }
+	  } else {
+	    foreach my $s (@{$ln->{segs}}) {
+	      $str .= join("", @{$s->{chord}});
+	    }
+	  }
+	  print localtime."\n";
+	  printf "  LINE $ln->{num} TOO LONG by %.1fmm: %s/%s\n  -->%s\n\n",
+	      ($lerr - $Media->{width}) * (25.4 / 72), $self->{path}, $self->{name}, $str;
+	}
       }
       my $off = 0;
       if ($Opt->{Center}) {
-	if ($ln->{ly_cnt} > 0) {
-	  # Find the X offset to the first Lyric.
-	  while ($ln->{segs}[$off]{lyric} eq "") { $off++; }
+	if ($label) {
+	  $off = $Media->{width} - ($Opt->{LeftMargin} + $Opt->{RightMargin}) - $myPDF->lyricLen($ln->{text});
+	  $off /= 2;
+	} else {
+	  if ($ln->{ly_cnt} > 0) {
+	    # Find the X offset to the first Lyric.
+	    while ($ln->{segs}[$off]{lyric} eq "") { $off++; }
+	  }
+	  # Finally we can get the Line offset to Center the text.
+	  $off = int(($Media->{width} - $lineX - $ln->{segs}[$off]{x}) / 2);
 	}
-	# Finally we can get the Line offset to Center the text.
-	$off = int(($Media->{width} - $lineX - $ln->{segs}[$off]{x}) / 2);
-      } else {
-	$off = $Opt->{LeftMargin};
       }
+      $off += $Opt->{LeftMargin};
       #
       # Now go through the segments on this line and insert into the PDF
       # Do the BackGrounds first so that chord descenders can go down
       # into the lyric space (even if only marginally).
       #
       my($lineht,$chordY,$lyricY) = (0,0,0);
-      if ($ln->{ch_cnt} && $lyrOnly == 0) {
-	$lineht = $chordht;
-	$chordY = $lineY - $halfspc - $lineht + $chorddc;
-      }
-      if ($ln->{ly_cnt}) {
-	$lineht += $lyricht;
+      if ($label) {
+	$lineht = $lyricht;
 	$lyricY = $lineY - $halfspc - $lineht + $lyricdc;
+      } else {
+	if ($ln->{ch_cnt} && $lyrOnly == 0) {
+	  $lineht = $chordht;
+	  $chordY = $lineY - $halfspc - $lineht + $chorddc;
+	}
+	if ($ln->{ly_cnt}) {
+	  $lineht += $lyricht;
+	  $lyricY = $lineY - $halfspc - $lineht + $lyricdc;
+	}
       }
       if ($lineht) {
 	$lineY -= ($lineht + $linespc);
@@ -498,20 +553,25 @@ sub makePDF {
 	  $bg = $ln->{bg};
 	}
 	if ($bg ne '') {
+	  $bg = CP::FgBgEd::darken($bg, 60) if ($label);
 	  CP::CPpdf::_bg($bg, 0, $lineY, $Media->{width}, $lineht + $linespc);
 	}
 	#
 	# Now the actual text
 	#
-	foreach my $s (@{$ln->{segs}}) {
-	  $lineX = $s->{x} + $off;
-	  # Chords
-	  if (@{$s->{chord}} && $lyrOnly == 0) {
-	    $myPDF->chordAdd($lineX, $chordY, $s->{chord}->trans2obj($self), $chd_clr);
-	  }
-	  # Lyrics
-	  if ($s->{lyric} ne "") {
-	    $myPDF->lyricAdd($lineX, $lyricY, $s->{lyric}, $lyr_clr);
+	if ($label) {
+	  $myPDF->lyricAdd($off, $lyricY, $ln->{text}, $lab_clr);
+	} else {
+	  foreach my $s (@{$ln->{segs}}) {
+	    $lineX = $s->{x} + $off;
+	    # Chords
+	    if (@{$s->{chord}} && $lyrOnly == 0) {
+	      $myPDF->chordAdd($lineX, $chordY, $s->{chord}->trans2obj($self), $chd_clr);
+	    }
+	    # Lyrics
+	    if ($s->{lyric} ne "") {
+	      $myPDF->lyricAdd($lineX, $lyricY, $s->{lyric}, $lyr_clr);
+	    }
 	  }
 	}
       }

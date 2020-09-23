@@ -233,15 +233,21 @@ sub MWoptions {
 }
 
 sub TButtonBGset {
+  my($media) = shift;
+
+  $media = $Media if (! defined $media);
   foreach my $h (qw/comment highlight title verse chorus bridge tab/) {
-    Tkx::ttk__style_configure(ucfirst($h).".BG.TButton", -background => $Media->{$h."BG"});
+    Tkx::ttk__style_configure(ucfirst($h).".BG.TButton", -background => $media->{$h."BG"});
   }
 }
 
 sub TLabelBGset {
+  my($media) = shift;
+
+  $media = $Media if (! defined $media);
   foreach my $h (qw/comment highlight title chord lyric tab/) {
-    my $bg = ($h =~ /cho|lyr/) ? $Media->{verseBG} : $Media->{"$h.BG"};
-    Tkx::ttk__style_configure(ucfirst($h).".Font.TLabel", -background => $Media->{"$h.BG"});
+    my $bg = ($h =~ /cho|lyr/) ? $media->{verseBG} : $media->{"$h.BG"};
+    Tkx::ttk__style_configure(ucfirst($h).".Font.TLabel", -background => $media->{"$h.BG"});
   }
 }
 

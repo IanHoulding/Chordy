@@ -295,7 +295,7 @@ sub setDefaults {
   $Path = CP::Path->new();
   $Cmnd = CP::Cmnd->new();
   $Opt = CP::Opt->new();
-  $Media = CP::Media->new(\$Opt->{Media});
+  $Media = CP::Media->new($Opt->{Media});
   $Swatches = CP::Swatch->new();
 
   # Remove any old versions.
