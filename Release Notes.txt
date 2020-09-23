@@ -8,6 +8,9 @@ Bit late starting with 2.6.4 but about time I documented it :-)
 	   Now have Menu system working on both Windows and Mac. Involved a lot of layout
 	     changes - some were deletions and others just moving things around.
 	   Left/Right/Top/Bottom Margins (for text ONLY) are now options.
+	   Changed Verse/Chorus/Bridge/Tab handling to match the ChordPro standard
+	     where the argument can be a Label. Added the Show Labels option.
+	   Progress frame now only shown when handling multiple ChordPro files.
 	   Update the Help file.
 
 3.8.7
