@@ -489,9 +489,6 @@ sub Main {
       }
     }
   }
-  $chordy->{ProgFrm}->g_grid(qw/-row 1 -column 0 -columnspan 3 -sticky ew -padx 16/,
-			     -pady => [4,0]);
-  $chordy->{ProgCan} = 0;
   if ($oneorall == SINGLE) {
     ### Handle one single ChordPro file
     my $idx = $FileLB->curselection(0);
@@ -501,14 +498,12 @@ sub Main {
       actionPDF($chordy, "$Path->{Temp}/$name", $name);
     } else {
       message(SAD, "You don't appear to have selected a ChordPro file.");
-      $chordy->{ProgFrm}->g_grid_forget();
       return;
     }
   } else {
     my $toKey = $Opt->{Transpose};
     my $msg = "This will Transpose ALL files to the key of $toKey.\nDo you want to continue?";
     if ($toKey ne "No" && msgYesNo($msg) eq 'No') {
-      $chordy->{ProgFrm}->g_grid_forget();
       return;
     }
 
@@ -522,18 +517,18 @@ sub Main {
       ### One monster PDF
       if (! defined $CurSet || $CurSet eq "") {
 	my $ans = msgSet("You need to provide a name for the PDF File:",\$CurSet);
-	 if ($ans eq "Cancel" || $CurSet eq "") {
-	   $chordy->{ProgFrm}->g_grid_forget();
-	   return;
-	 }
+	if ($ans eq "Cancel" || $CurSet eq "") {
+	  return;
+	}
       }
+      progressEnable($chordy);
       my $PdfFileName = "$CurSet.pdf";
       my $pdf = undef;
       foreach my $idx (@pfn) {
 	($pdf,$PdfFileName) = makeOnePDF($ProFiles[$idx], $PdfFileName, $pdf, $chordy->{ProgLab});
 	if ($chordy->{ProgCan}) {
 	  $pdf->close();
-	  $chordy->{ProgFrm}->g_grid_forget();
+	  progressDisable($chordy);
 	  return;
 	}
 	Tkx::after(500); # Give user a chance to hit Cancel!
@@ -542,21 +537,22 @@ sub Main {
       actionPDF($chordy, "$Path->{Temp}/$PdfFileName", "$PdfFileName");
     } else {
       ### Action each PDF independantly
+      progressEnable($chordy);
       foreach my $idx (@pfn) {
 	if ($chordy->{ProgCan}) {
-	  $chordy->{ProgFrm}->g_grid_forget();
+	  progressDisable($chordy);
 	  return;
 	}
 	my($pdf,$name) = makeOnePDF($ProFiles[$idx], undef, undef, $chordy->{ProgLab});
 	$pdf->close();
 	if ($chordy->{ProgCan} || actionPDF($chordy, "$Path->{Temp}/$name", $name) < 0) {
-	  $chordy->{ProgFrm}->g_grid_forget();
+	  progressDisable($chordy);
 	  return;
 	}
       }
     }
   }
-  $chordy->{ProgFrm}->g_grid_forget();
+  progressDisable($chordy);
   if ($tmpMedia ne '') {
     $Opt->{PDFview} = $tmpView;
     $Opt->{Media} = $tmpMedia;
@@ -572,6 +568,20 @@ sub Main {
     message(SMILE, ' Done ', 1) if ($PDFtrans || $oneorall == MULTIPLE);
   }
   $PDFtrans = 0;
+}
+
+sub progressEnable {
+  my($chdy) = shift;
+
+  $chdy->{ProgFrm}->g_grid(qw/-row 1 -columnspan 3 -sticky ew -padx 16/, -pady => [4,0]);
+  $chdy->{ProgCan} = 0;
+}
+
+sub progressDisable {
+  my($chdy) = shift;
+
+  $chdy->{ProgFrm}->g_grid_forget();
+  $chdy->{ProgCan} = 0;
 }
 
 sub makeOnePDF {
