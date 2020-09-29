@@ -18,6 +18,7 @@ use CP::Tab;
 use CP::Cmsg;
 use CP::Lyric;
 use PDF::API2;
+use PDF::API2::Resource::CIDFont::TrueType;
 use POSIX;
 use Math::Trig;
 
@@ -182,7 +183,7 @@ sub batch {
     CP::Cmsg::position($x,$y);
     message(SMILE, " Done ", -1);
   }
-  $pop->destroy();
+  $pop->popDestroy();
 }
 
 sub textConf {

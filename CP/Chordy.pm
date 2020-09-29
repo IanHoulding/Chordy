@@ -837,7 +837,7 @@ sub collItems {
   my $cc = $Collection->name();
   $Chordy->{currentColl} = $cc;
   $Chordy->{collectionPath} = $Collection->{$cc}.'/'.$cc;
-  main::title();
+  CP::Win::title();
 }
 
 #################################
@@ -1037,7 +1037,7 @@ sub commandWin {
   if ($Done eq "OK") {
     main::saveCmnd();
   }
-  $pop->destroy();
+  $pop->popDestroy();
 }
 
 sub CmdS {

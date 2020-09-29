@@ -210,7 +210,7 @@ sub fontPick {
     $font->{slant}  = $Fslant;
   }
 
-  $pop->destroy();
+  $pop->popDestroy();
   $Done;
 }
 

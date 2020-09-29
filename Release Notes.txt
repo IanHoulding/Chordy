@@ -12,6 +12,7 @@ Bit late starting with 2.6.4 but about time I documented it :-)
 	     where the argument can be a Label. Added the Show Labels option.
 	   Progress frame now only shown when handling multiple ChordPro files.
 	   Update the Help file.
+     Tab - Changed the Media Edit logic - now works properly.
 
 3.8.7
   Chordy - Notebook Tabs and the FG/Bg Editor now built on demand to improve

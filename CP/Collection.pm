@@ -260,7 +260,7 @@ sub _move {
     }
     Tkx::vwait(\$done);
   }
-  $pop->destroy();
+  $pop->popDestroy();
 }
 
 sub rmove {
@@ -466,7 +466,7 @@ sub edit {
     $CurrentCollection = $orgcol;
     $CollectionPath = $self->{$CurrentCollection};
   }
-  $pop->destroy();
+  $pop->popDestroy();
   $Done;
 }
 

@@ -23,12 +23,6 @@ use CP::Cmsg;
 # but a way to keep all the menu code together.
 #
 sub new {
-  my($proto) = @_;
-  my $class = ref($proto) || $proto;
-
-  my $self = {};
-  bless $self, $class;
-  Tkx::option_add("*tearOff", 0);
   my($m,$menu,$file,$edit,$opt,$media,$setl,$misc,$help);
 
   if (OS eq 'aqua') {
@@ -37,20 +31,17 @@ sub new {
     $m->add_cascade(-menu => $menu);
   } else {
     $menu = $MW->new_menu();
+    $MW->configure(-menu => $menu);
   }
   $file  = $menu->new_menu();
   $edit  = $menu->new_menu();
   $opt   = $menu->new_menu();
-#  $media = $menu->new_menu();
-#  $setl  = $menu->new_menu();
   $misc  = $menu->new_menu();
   $help  = $menu->new_menu();
 
   $menu->add_cascade(-menu => $file, -label => "File");
   $menu->add_cascade(-menu => $edit, -label => "Edit");
   $menu->add_cascade(-menu => $opt,  -label => "Options");
-#  $menu->add_cascade(-menu => $media,-label => "Media");
-#  $menu->add_cascade(-menu => $setl, -label => "Setlists");
   $menu->add_cascade(-menu => $misc, -label => "Misc");
   $menu->add_cascade(-menu => $help, -label => "Help");
 
@@ -90,7 +81,7 @@ sub new {
   $edit->add_command(-label => "Chord Editor",  -command => sub{CHedit('Save');});
   $edit->add_separator;
   $edit->add_command(-label => 'Collections',   -command => \&CP::Chordy::collEdit);
-  $edit->add_command(-label => 'PDF Page Size', -command => sub{newMedia() if ($Media->edit() eq "OK");});
+  $edit->add_command(-label => 'PDF Page Size', -command => sub{CP::Chordy::newMedia() if ($Media->edit() eq "OK");});
   $edit->add_command(-label => 'Sort Articles', -command => \&main::editArticles);
   $edit->add_command(-label => 'Options File',  -command => [\&CP::Editor::Edit, $Path->{Option}, 1]);
 
@@ -122,16 +113,6 @@ sub new {
   $opt->add_separator;
   $opt->add_command(-label => 'Defaults', -command => sub{$Opt->resetOpt()});
   
-#  $media->add_command(-label => 'Save',  -command => \&saveMed);
-#  $media->add_command(-label => 'Load',  -command => \&loadMed);
-#  $media->add_command(-label => 'Reset', -command => \&resetMed);
-#  $media->add_command(-label => 'Edit',  -command => \&editMed);
-
-#  $setl->add_command(-label => 'New',    -command => sub{selectFiles(SLNEW);});
-#  $setl->add_command(-label => 'Clone',  -command => sub{selectFiles(SLCLN);});
-#  $setl->add_command(-label => 'Rename', -command => sub{selectFiles(SLREN);});
-#  $setl->add_command(-label => 'Delete', -command => sub{selectFiles(SLDEL);});
-
   $misc->add_command(-label => 'View Error Log', -command => \&viewElog);
   $misc->add_command(-label => 'Clear Error Log', -command => \&clearElog);
   $misc->add_command(-label => 'View Release Notes', -command => \&viewRelNt);
@@ -145,8 +126,6 @@ sub new {
   $help->add_command(-label => 'About', -command => sub{message(SMILE, "Version $Version\nian\@houlding.me.uk");});
   if (OS eq 'aqua') {
     $MW->configure(-menu => $m);
-  } else {
-    $MW->configure(-menu => $menu);
   }
 }
 

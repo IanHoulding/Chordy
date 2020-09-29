@@ -18,24 +18,16 @@ BEGIN {
 }
 
 use strict;
+use warnings;
 
-use PDF::API2;
-use PDF::API2::Resource::CIDFont::TrueType;
 use CP::Cconst qw(:OS :PATH :LENGTH :PDF :MUSIC :TEXT :SHFL :INDEX :BROWSE :SMILIE :COLOUR);
 use CP::Global qw/:FUNC :PATH :OPT :WIN :CHORD :SCALE :XPM/;
-use CP::Pop qw/:POP :MENU/;
-use CP::Collection;
-use CP::Path;
-use CP::Cmnd;
-use CP::Opt;
-use CP::Media;
-use CP::Swatch;
-use CP::Browser;
-use CP::Cmsg;
-use CP::Fonts qw/&fontSetup/;
-use CP::Win;
 use CP::Tab;
-use CP::TabPDF;
+use CP::Win;
+use CP::Fonts qw/&fontSetup/;
+use CP::TabMenu;
+use CP::Browser;
+use CP::Pop qw/:POP :MENU/;
 
 #
 #  Directive = {...:txt}
@@ -88,22 +80,20 @@ if (!defined $opt_d) {
 }
 
 our $FN = '';
-if (@ARGV) {
-  if (-e $ARGV[0]) {
-    $FN = $ARGV[0];
-  }
+if (@ARGV && -e $ARGV[0]) {
+  $FN = $ARGV[0];
 }
+
+$SIG{CHLD} = sub {wait if (shift eq "CHLD");};
 
 ##########################################
 #### Define a whole bunch of defaults ####
 
 setDefaults();
-
 fontSetup();
-
 restXPMs();
-
 CP::Win::init();
+
 makeImage("Ticon", \%XPM);
 $MW->g_wm_iconphoto("Ticon");
 $MW->g_wm_protocol('WM_DELETE_WINDOW' => \&exitTab);
@@ -116,21 +106,13 @@ my $sc = POSIX::ceil(Tkx::tk_scaling()*10) / 10;
 if ($sc != 1) {
   Tkx::tk_scaling(1);
   foreach (qw/TkDefaultFont TkTextFont TkFixedFont TkMenuFont TkHeadingFont TkCaptionFont TkSmallCaptionFont TkIconFont TkTooltipFont BTkDefaultFont STkDefaultFont/) {
-    my $sz = Tkx::font_actual($_, '-size');
-    $sz = int($sz * $sc);
+    my $sz = int(Tkx::font_actual($_, '-size') * $sc);
     Tkx::font_configure($_, -size => $sz);
   }
 }
 
 CP::Tab->new($FN);
-
-tabTitle($FN);
-
-#Tkx::set("perl_bgerror", sub {
-#  print "Error: @_\n";
-#});
-
-$SIG{CHLD} = sub {wait if (shift eq "CHLD");};
+CP::TabMenu->new();
 
 $MW->g_wm_deiconify();
 $MW->g_raise();
@@ -148,7 +130,7 @@ sub tabTitle {
   my($fn) = shift;
 
   my $ed = ($Tab->{edited}) ? ' (edited)' : '';
-  $MW->g_wm_title("Tab Editor  |  Collection: ".$Collection->name()."  |  Media: $Opt->{Media}  |  File: $fn$ed");
+  $MW->g_wm_title("Tab Editor  |  Collection: ".$Collection->name()."  |  Media: $Opt->{Media}  |  Tab: $fn$ed");
 }
 
 sub openTab {
@@ -160,31 +142,28 @@ sub openTab {
 
 sub newTab {
   if (checkSave() ne 'Cancel') {
-    makeNew() if ($Tab->{fileName} eq '');
+    if ($Tab->{fileName} eq '') {
+      my $fn = "";
+      my $ans = msgSet("Enter a name for the new file", \$fn);
+      return(0) if ($ans eq "Cancel");
+      if ($fn eq "") {
+	message(QUIZ, "How about a file name then?");
+	return(0);
+      }
+      (my $title = $fn) =~ s/.tab$//i;
+      $fn = $title.'.tab';
+      if (-e "$Path->{Tab}/$fn") {
+	$ans = msgYesNo("$fn already exists.\nDo you want to overwrite it?");
+	return(0) if ($ans eq "No");
+      }
+      open OFH, ">", "$Path->{Tab}/$fn" or die "failed open '$Path->{Tab}/$fn' : $!\n";
+      print OFH "{title:$title}\n";
+      close OFH;
+      $Tab->{fileName} = $fn;
+    }
     CP::Tab->new("$Path->{Tab}/$Tab->{fileName}");
     tabTitle($Tab->{fileName});
   }
-}
-
-sub makeNew {
-  my $fn = "";
-  my $ans = msgSet("Enter a name for the new file", \$fn);
-  return if ($ans eq "Cancel");
-  if ($fn eq "") {
-    message(QUIZ, "How about a file name then?");
-    return(0);
-  }
-  (my $title = $fn) =~ s/.tab$//i;
-  $fn = $title.'.tab';
-  if (-e "$Path->{Tab}/$fn") {
-    $ans = msgYesNo("$fn already exists.\nDo you want to overwrite it?");
-    return(0) if ($ans eq "No");
-  }
-  open OFH, ">", "$Path->{Tab}/$fn" or die "failed open '$Path->{Tab}/$fn' : $!\n";
-  print OFH "{title:$title}\n";
-  close OFH;
-  $Tab->{fileName} = $fn;
-  return(1);
 }
 
 sub delTab {
@@ -286,8 +265,14 @@ sub mediaSel {
   $Tab->drawPageWin();
 }
 
+sub mediaEdit {
+  if ($Media->edit() eq "OK") {
+    $Tab->drawPageWin();
+  }
+}
+
 sub mediaSave {
-  $Media->save($Opt->{Media});
+  $Media->save();
 }
 
 sub mediaLoad {
@@ -296,48 +281,6 @@ sub mediaLoad {
 
 sub mediaDefault {
   $Media->default();
-}
-
-sub fontEdit {
-  my $pop = CP::Pop->new(0, '.fo', 'Font Selector', -1, -1);
-  return if ($pop eq '');
-  my($top,$wt) = ($pop->{top}, $pop->{frame});
-
-  my $Done;
-  my $mcopy = {};
-  $Media->copy($mcopy);
-
-  $wt->m_configure(qw/-relief raised -borderwidth 2/);
-
-  my $tf = $wt->new_ttk__frame(qw/-borderwidth 2 -relief ridge/, -padding => [4,4,4,4]);
-  $tf->g_pack(qw/-side top/);
-
-  my $ff = $tf->new_ttk__frame();
-  $ff->g_pack(qw/-side top -expand 1 -fill x/);
-
-  my $df = $tf->new_ttk__frame();
-  $df->g_pack(qw/-side bottom -expand 1 -fill x/, -pady => [12,4]);
-  CP::Win::defButtons($df, 'Fonts', \&mediaSave, \&mediaLoad, \&mediaDefault);
-
-  my $bf = $wt->new_ttk__frame();
-  $bf->g_pack(qw/-side top -expand 1 -fill x/);
-
-  makeImage("tick", \%XPM);
-
-  CP::Fonts::fonts($ff, [qw/Title Header Notes SNotes Words/]);
-
-  ($bf->new_ttk__button(-text => "Cancel", -command => sub{$Done = "Cancel";})
-  )->g_grid(qw/-row 0 -column 0 -padx 60/, -pady => [4,0]);
-  ($bf->new_ttk__button(-text => "OK", -command => sub{$Done = "OK";})
-  )->g_grid(qw/-row 0 -column 1 -sticky e -padx 60/, -pady => [4,0]);
-
-  Tkx::vwait(\$Done);
-  if ($Done eq "OK") {
-    $Tab->drawPageWin();
-  } else {
-    $mcopy->copy($Media);
-  }
-  $pop->destroy();
 }
 
 sub saveOpt {

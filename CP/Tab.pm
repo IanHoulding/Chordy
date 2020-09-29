@@ -36,9 +36,9 @@ BEGIN {
   require Exporter;
 }
 
+use Tkx;
 use CP::Cconst qw/:LENGTH :SHFL :TEXT :SMILIE :COLOUR :FONT :TAB/;
 use CP::Global qw/:FUNC :OPT :WIN :PATH :XPM :CHORD :SCALE/;
-use Tkx;
 use File::Basename;
 use File::Slurp;
 use CP::Offset;

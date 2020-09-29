@@ -13,7 +13,7 @@ use strict;
 use warnings;
 
 use Tkx;
-use CP::Global qw/:WIN :XPM/;
+use CP::Global qw(:WIN :XPM);
 
 BEGIN {
   our @ISA = qw(Exporter);
@@ -34,7 +34,7 @@ sub new {
   my $self = {};
   bless $self, $class;
 
-  if (CP::Pop::exists($path)) {
+  if (popExists($path)) {
     Tkx::bell();
     $Pops{$path}->{top}->g_focus();
     return('');
@@ -48,7 +48,7 @@ sub new {
     my $icon = (defined $Images{Ticon}) ? 'Ticon' : (defined $Images{Cicon}) ? 'Cicon' : 'Eicon';
     $top->g_wm_iconphoto($icon);
     $top->g_wm_title($title) if ($title ne '');
-    $top->g_wm_protocol('WM_DELETE_WINDOW' => sub{$self->destroy()});
+    $top->g_wm_protocol('WM_DELETE_WINDOW' => sub{$self->popDestroy()});
   }
 
   $self->{frame} = $top->new_ttk__frame(
@@ -78,17 +78,17 @@ sub pop {
   return((! defined $Pops{$path}) ? '' : $Pops{$path});
 }
 
-sub destroy {
+sub popDestroy {
   my($self) = shift;
 
   $self->{top}->g_destroy();
   $Pops{$self->{path}} = '';
 }
 
-sub exists {
+sub popExists {
   my($path) = shift;
 
-  return((! defined $Pops{$path} || $Pops{$path} eq '') ? 0 : 1);
+  return((! defined $Pops{$path} || $Pops{$path} eq '') ? 0 : $Pops{$path});
 }
 
 sub popMenu {
@@ -110,7 +110,6 @@ sub popMenu {
   Tkx::update();
 }
 
-#my $Ball = '';
 sub balloon {
   my($wid,$text) = @_;
 

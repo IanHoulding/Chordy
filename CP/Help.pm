@@ -29,7 +29,7 @@ sub new {
   my($win,$tf) = ($pop->{top}, $pop->{frame});
 
   $self->{win} = $win;
-  $win->g_wm_protocol('WM_DELETE_WINDOW' => sub{$pop->destroy()} );
+  $win->g_wm_protocol('WM_DELETE_WINDOW' => sub{$pop->popDestroy()} );
 
   my $textf = $tf->new_ttk__frame();
   $textf->g_pack(qw/-side top -expand 1 -fill both/);
@@ -52,7 +52,7 @@ sub new {
   my $bf = $tf->new_ttk__frame();
   $bf->g_pack(qw/-side bottom -fill x/);
 
-  my $bc = $bf->new_ttk__button(-text => "Close", -command => sub{$pop->destroy()});
+  my $bc = $bf->new_ttk__button(-text => "Close", -command => sub{$pop->popDestroy()});
   $bc->g_pack(qw/-side left -padx 30 -pady 4/);
 
   my $bt = $bf->new_ttk__button(-text => " Top ", -command => sub{$self->{text}->see("1.0")});

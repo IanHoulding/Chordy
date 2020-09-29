@@ -84,14 +84,13 @@ if (!defined $opt_d) {
 #### Define a whole bunch of defaults ####
 
 setDefaults();
-
 fontSetup();
-
 CP::Win::init();
 
 makeImage("Cicon", \%XPM);
 $MW->g_wm_iconphoto("Cicon");
-title();
+$MW->g_wm_protocol('WM_DELETE_WINDOW' => sub{$MW->g_destroy()}); 
+CP::Win::title();
 
 CP::Chordy->new();
 CP::CPmenu->new();
@@ -122,7 +121,7 @@ sub impProFile {
 }
 
 sub expFile {
-  my($path, $ext, $just1) = @_;
+  my($path,$ext,$just1) = @_;
 
   if (@{$FileLB->{array}}) {
     my $idx = (defined $just1) ? $FileLB->curselection(0) : -1;
@@ -215,7 +214,7 @@ sub expPP {
 }
 
 sub mailFile {
-  my($path, $ext, $just1) = @_;
+  my($path,$ext,$just1) = @_;
 
   if (@{$FileLB->{array}}) {
     my $idx = $FileLB->curselection(0);
@@ -311,11 +310,11 @@ sub editArticles {
   if ($done eq 'OK') {
     $Opt->{Articles} = $arts;
   }
-  $pop->destroy();
+  $pop->popDestroy();
 }
 
 sub saveMed {
-  message(SMILE, "Media Config Saved", 1) if ($Media->save($Opt->{Media}));
+  message(SMILE, "Media Config Saved", 1) if ($Media->save());
 }
 
 sub loadMed {

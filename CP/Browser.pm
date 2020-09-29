@@ -24,7 +24,7 @@ my $Arrows = 0;
 sub new {
   my($proto,$top,$what,$path,$ext,$list) = @_;
 
-  return if ($top eq $MW && CP::Pop::exists('.fb'));
+  return('') if ($top eq $MW && popExists('.fb'));
   my($pop,$fileBr,$frame);
   if ($top eq $MW) {
     $pop = CP::Pop->new(0, '.fb', "File Browser  |  Collection: ".$Collection->name());
@@ -92,7 +92,7 @@ sub new {
   }
 
   if (readInAvail($self, $path, $ext) == 0 && $what & (FILE | TABBR)) {
-    popDestroy($fileBr);
+    $fileBr->popDestroy();
     message(SAD, "Sorry - couldn't find any '$ext' files!");
     return('');
   }
@@ -223,8 +223,10 @@ sub new {
       } else {
 	@sl = @{$select->{array}};
       }
+    } else {
+      $sl[0] = '';
     }
-    $pop->destroy();
+    $pop->popDestroy();
     return(@sl);
   }
   return($self);

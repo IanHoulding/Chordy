@@ -14,9 +14,6 @@ package CP::Global;
 use strict;
 use warnings;
 
-use Tkx;
-use File::Path qw(make_path remove_tree);
-
 BEGIN {
   our @ISA = qw(Exporter);
   our @EXPORT_OK = qw/
@@ -56,8 +53,17 @@ BEGIN {
   require Exporter;
 }
 
+use Tkx;
+use File::Path qw(make_path remove_tree);
 use CP::Cconst qw/:OS :PATH :SHFL :SMILIE :COLOUR/;
-use CP::Cmsg qw/&message &msgYesNo &msgYesNoCan &msgSet &msgYesNoAll/;
+use CP::Cmsg;
+use CP::Collection;
+use CP::Path;
+use CP::Cmnd;
+use CP::Opt;
+use CP::Media;
+
+#use CP::Cmsg qw/&message &msgYesNo &msgYesNoCan &msgSet &msgYesNoAll/;
 
 our $Version = "3.9";
 
@@ -280,7 +286,7 @@ sub syncFiles {
       }
     }
   }
-  $pop->destroy();
+  $pop->popDestroy();
 }
 
 #
@@ -509,7 +515,7 @@ sub viewFile {
 
   my $bp = $bf->new_ttk__button(-text => "Print", -command => sub{printFile($fn)} );
   $bp->g_pack(qw/-side left -padx 40 -pady 8/);
-  my $bc = $bf->new_ttk__button(-text => "Close", -command => sub{$pop->destroy()});
+  my $bc = $bf->new_ttk__button(-text => "Close", -command => sub{$pop->popDestroy()});
   $bc->g_pack(qw/-side right -padx 40 -pady 8/);
 
   open(FH, "<", "$fn");

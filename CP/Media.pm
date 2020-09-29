@@ -114,6 +114,7 @@ sub copy {
     }
   }
   bless $dst, 'CP::Media';
+  $dst;
 }
 
 sub change {
@@ -166,8 +167,6 @@ sub load {
 }
 
 sub save {
-  my($self,$type) = @_;
-
   my $OFH = openConfig("$Path->{Media}");
   if ($OFH == 0) {
     errorPrint("Failed to open '$Path->{Media}': $@");
@@ -189,12 +188,7 @@ sub save {
   print $OFH "\%medias = (\n";
   foreach my $s (sort keys %AllMedia) {
     next if ($s =~ /^tmp/);
-    my $ref;
-    if (defined $type && $s eq $type) {
-      $ref = $self;
-    } else {
-      $ref = \%{$AllMedia{$s}};
-    }
+    my $ref = \%{$AllMedia{$s}};
     print $OFH "  '$s' => {\n";
     print $OFH "    width  => ".$ref->{width}.",\n";
     print $OFH "    height => ".$ref->{height}.",\n";
@@ -212,7 +206,7 @@ sub save {
   close($OFH);
 }
 
-our($Done,%Edit,$Tmp,$TmpMedia);
+our(%Edit,$Tmp,$TmpMedia);
 
 sub edit {
   my($self) = shift;
@@ -223,9 +217,10 @@ sub edit {
   return if ($pop eq '');
   my($top,$wt) = ($pop->{top}, $pop->{frame});
 
+  $TmpMedia = $Opt->{Media};
   $top->g_wm_protocol(
     'WM_DELETE_WINDOW',
-    sub {copy($AllMedia{$Opt->{Media}}, $self); $pop->destroy();});
+    sub {copy($AllMedia{$Opt->{Media}}, $self); $pop->popDestroy();});
 
   my $tf = $wt->new_ttk__frame(qw/-borderwidth 2 -relief ridge/);
   $tf->g_pack(qw/-side top -expand 1 -fill x/);
@@ -233,13 +228,11 @@ sub edit {
   my $bf = $wt->new_ttk__frame();
   $bf->g_pack(qw/-side top -expand 1 -fill x/);
 
-  my $orgMedia = $TmpMedia = $Opt->{Media};
-  $Tmp = new('CP::Media', \$TmpMedia);
+  $Tmp = {};
+  $Tmp = copy($self, $Tmp);
   $Edit{NewName} = '';
   $Edit{U} = $Edit{NewU} = 'pt';
-  $Edit{W} = $self->{width};
-  $Edit{H} = $self->{height};
-  changeUnits($self);
+  changeUnits();
 
   $a = $tf->new_ttk__label(-text => "Media:");
   $b = $tf->new_ttk__button(
@@ -251,10 +244,10 @@ sub edit {
       popMenu(\$TmpMedia, \&changeMedia, \@lst);
     });
 
-  $c = $tf->new_ttk__button(qw/-text Delete -width 8 -command/ => sub{mdelete($self)} );
+  $c = $tf->new_ttk__button(qw/-text Delete -width 8 -command/ => \&mdelete );
 
   $d = $tf->new_ttk__label(-text => "Width: ");
-  $e = $tf->new_ttk__entry(qw/-width 6 -textvariable/ => \$Edit{W});
+  $e = $tf->new_ttk__entry(qw/-width 6 -textvariable/ => \$Tmp->{width}); #\$Edit{W});
   $f = $tf->new_ttk__button(
     -width => 5,
     -textvariable => \$Edit{U},
@@ -264,7 +257,7 @@ sub edit {
     });
 
   $g = $tf->new_ttk__label(-text => "Height: ", -width => 10, -anchor => 'e');
-  $h = $tf->new_ttk__entry(qw/-width 6 -textvariable/ => \$Edit{H});
+  $h = $tf->new_ttk__entry(qw/-width 6 -textvariable/ => \$Tmp->{height}); #\$Edit{H});
   $i = $tf->new_ttk__button(
     -width => 5,
     -textvariable => \$Edit{U},
@@ -299,43 +292,43 @@ sub edit {
   $n->g_grid(qw/-row 3 -column 3/, -pady => [0,4]);
   $o->g_grid(qw/-row 3 -column 4 -sticky w -columnspan 2/, -pady => [0,4]);
 
+  our $done = '';
   ($bf->new_ttk__button(
      -text => "Cancel",
-     -command => sub{$Done = "Cancel";},
+     -command => sub{$done = "Cancel";},
       ))->g_grid(qw/-row 0 -column 0 -sticky w -padx 40/, -pady => [4,2]);
 
   ($bf->new_ttk__button(
      -text => "OK",
-     -command => sub{$Done = "OK";},
+     -command => sub{$done = "OK";},
       ))->g_grid(qw/-row 0 -column 1 -sticky e -padx 40/, -pady => [4,2]);
 
-  Tkx::vwait(\$Done);
-  if ($Done eq "OK") {
-    $Opt->{Media} = $TmpMedia;
-    change($Media, \$Opt->{Media});
-    $Media->{width} = $Edit{W};
-    $Media->{height} = $Edit{H};
-    message(SMILE, "Changes have been made but not saved.");
-  } else {
-    $Opt->{Media} = $orgMedia;
-    change($Media, \$Opt->{Media});
+  Tkx::vwait(\$done);
+  if ($done eq "OK") {
+    $Edit{NewU} = 'pt';
+    changeUnits();
+    copy($Tmp, $AllMedia{$TmpMedia});
+    if ($TmpMedia ne $Opt->{Media}) {
+      $Media = change($Media, $TmpMedia);
+      $Opt->{Media} = $TmpMedia;
+      $Opt->saveOne('Media');
+    }
+    save();
   }
-  $pop->destroy();
-  $Done;
+  $pop->popDestroy();
+  $done;
 }
 
 sub changeMedia {
-  change($Tmp, \$TmpMedia);
+  copy($AllMedia{$TmpMedia}, $Tmp);
   $Edit{U} = $Edit{NewU} = 'pt';
-  $Edit{W} = $Tmp->{width};
-  $Edit{H} = $Tmp->{height};
   changeUnits();
 }
 
 sub changeUnits {
   my $newu = $Edit{NewU};
-  my $w = $Edit{W};
-  my $h = $Edit{H};
+  my $w = $Tmp->{width};
+  my $h = $Tmp->{height};
   # Convert from current units to points then to new units.
   if ($Edit{U} ne 'pt') {
     my $un = ($Edit{U} eq 'mm') ? MM : IN;
@@ -355,17 +348,19 @@ sub changeUnits {
       $h = int($h * 100) / 100;
     }
   }
-  $Edit{W} = $w;
-  $Edit{H} = $h;
+  $Tmp->{width} = $w;
+  $Tmp->{height} = $h;
   $Edit{U} = $newu;
 }
 
 sub mdelete {
   if (CP::Cmsg::msgYesNo("Do you really want to\ndelete Media: $TmpMedia") eq "Yes") {
     delete($AllMedia{$TmpMedia});
-    $TmpMedia = (list())[0];
-    changeMedia($Tmp, \$TmpMedia);
-    save($Tmp, $TmpMedia);
+    if ($TmpMedia eq $Opt->{Media}) {
+      $Opt->{Media} = $TmpMedia = (list())[0];
+    }
+    changeMedia();
+    save();
   }
 }
 
@@ -380,8 +375,8 @@ sub mnew {
       $AllMedia{$nn} = {};
       copy(\%{$AllMedia{a4}}, \%{$AllMedia{$nn}});
       $TmpMedia = $nn;
-      changeMedia($Tmp, \$TmpMedia);
-      save($Tmp, $TmpMedia);
+      changeMedia();
+      save();
     }
   }
 }
@@ -398,8 +393,8 @@ sub mrename {
       my $onam = $TmpMedia;
       $TmpMedia = $nn;
       $Edit{NewName} = '';
-      changeMedia($Tmp, \$TmpMedia);
-      save($Tmp, $TmpMedia);
+      changeMedia();
+      save();
       # Now we have to go through each Collection and change the
       # $Opts->{Media} entry if it matches the old name.
       $Opt->changeAll('Media', $onam, $nn);

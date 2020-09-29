@@ -300,9 +300,9 @@ my $Pop = '';
 sub popCancel {
   my($name) = shift;
 
-  if (CP::Pop::exists('.ch')) {
+  if (popExists('.ch')) {
     Tkx::after_cancel($IDs{$name}) if ($IDs{$name} ne '');
-    $Pop->destroy();
+    $Pop->popDestroy();
     $IDs{$name} = '';
   }
 }
@@ -310,7 +310,7 @@ sub popCancel {
 sub popChords {
   my($but,$name,$func) = @_;
 
-  if (CP::Pop::exists('.ch')) {
+  if (popExists('.ch')) {
     $Pop->{top}->g_raise();
   } elsif (@{$Groups{$name}}) {
     if ($but->m_instate('active')) {
@@ -323,7 +323,7 @@ sub popChords {
 	  -text => $ch,
 	  -variable => \$chord,
 	  -value => $ch,
-	  -command => sub{&$func($chord);$Pop->destroy();},
+	  -command => sub{&$func($chord);$Pop->popDestroy();},
 	    );
 	$rb->g_grid(-row => $row++, -column => $col, -sticky => 'w');
 	if ($row == 8) {
@@ -341,7 +341,7 @@ sub popChords {
 }
 
 sub Where {
-  if (CP::Pop::exists('.ch')) {
+  if (popExists('.ch')) {
     my $top = $Pop->{top};
     my $x = pX();
     my $y = pY();
@@ -350,7 +350,7 @@ sub Where {
     my $Pw = Tkx::winfo_reqwidth($top);
     my $Ph = Tkx::winfo_reqheight($top);
     if ($x < $Px || $x >= ($Px + $Pw) || $y < $Py || $y >= ($Py + $Ph)) {
-      $Pop->destroy();
+      $Pop->popDestroy();
     } else {
       Tkx::after(400, \&Where);
     }

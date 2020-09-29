@@ -304,7 +304,7 @@ sub topUp {
   if (defined $var) {
     $foc->g_focus() if (defined $foc);
     Tkx::vwait($var);
-    $pop->destroy();
+    $pop->popDestroy();
     Tkx::update();
   }
 }
@@ -312,7 +312,7 @@ sub topUp {
 sub topDown {
   my($pop,$val,$var) = @_;
 
-  $pop->destroy();
+  $pop->popDestroy();
   $$var = $val;
   Tkx::update();
 }

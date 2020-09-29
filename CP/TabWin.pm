@@ -216,13 +216,13 @@ sub menu_buttons {
   my $midM = $frame->new_ttk__labelframe(-text => ' Media ',
 					 -labelanchor => 'n', -padding => 0);
   $midM->g_pack(qw/-side top -pady 4/);
-  oneMbutton($midM, 'Select', '', sub{main::mediaSel()}, 0,0,1,1);
-  oneMbutton($midM, 'Edit',   '', sub{$Media->edit()},   1,0,1,1);
+  oneMbutton($midM, 'Select', '', \&main::mediaSel,  0,0,1,1);
+  oneMbutton($midM, 'Edit',   '', \&main::mediaEdit, 1,0,1,1);
 
   my $midF = $frame->new_ttk__labelframe(-text => ' Fonts ',
 					 -labelanchor => 'n', -padding => 0);
   $midF->g_pack(qw/-side top -pady 4/);
-  oneMbutton($midF, 'Select', '', sub{main::fontEdit()}, 0,0,1,1);
+  oneMbutton($midF, 'Select', '', \&fontEdit, 0,0,1,1);
 
   my $botF = $frame->new_ttk__frame(qw/-relief raised -borderwidth 2/, -padding => 0);
   $botF->g_pack(qw/-side bottom/);
@@ -231,6 +231,48 @@ sub menu_buttons {
 		 ['Help',  'Tab Help', [\&CP::HelpTab::help], 1,0,1,1] ) {
     oneMbutton($botF, @{$t});
   }
+}
+
+sub fontEdit {
+  my $pop = CP::Pop->new(0, '.fo', 'Font Selector', -1, -1);
+  return if ($pop eq '');
+  my($top,$wt) = ($pop->{top}, $pop->{frame});
+
+  my $Done;
+  my $mcopy = {};
+  $Media->copy($mcopy);
+
+  $wt->m_configure(qw/-relief raised -borderwidth 2/);
+
+  my $tf = $wt->new_ttk__frame(qw/-borderwidth 2 -relief ridge/, -padding => [4,4,4,4]);
+  $tf->g_pack(qw/-side top/);
+
+  my $ff = $tf->new_ttk__frame();
+  $ff->g_pack(qw/-side top -expand 1 -fill x/);
+
+  my $df = $tf->new_ttk__frame();
+  $df->g_pack(qw/-side bottom -expand 1 -fill x/, -pady => [12,4]);
+  CP::Win::defButtons($df, 'Fonts', \&main::mediaSave, \&main::mediaLoad, \&main::mediaDefault);
+
+  my $bf = $wt->new_ttk__frame();
+  $bf->g_pack(qw/-side top -expand 1 -fill x/);
+
+  makeImage("tick", \%XPM);
+
+  CP::Fonts::fonts($ff, [qw/Title Header Notes SNotes Words/]);
+
+  ($bf->new_ttk__button(-text => "Cancel", -command => sub{$Done = "Cancel";})
+  )->g_grid(qw/-row 0 -column 0 -padx 60/, -pady => [4,0]);
+  ($bf->new_ttk__button(-text => "OK", -command => sub{$Done = "OK";})
+  )->g_grid(qw/-row 0 -column 1 -sticky e -padx 60/, -pady => [4,0]);
+
+  Tkx::vwait(\$Done);
+  if ($Done eq "OK") {
+    $Tab->drawPageWin();
+  } else {
+    $mcopy->copy($Media);
+  }
+  $pop->popDestroy();
 }
 
 sub saveCloseTab {
@@ -586,9 +628,6 @@ sub pageOpts {
   my $frm = $subfrm->new_ttk__frame(-padding => [0,0,4,4]);
   $frm->g_pack(qw/-side top -expand 1 -fill both/);
 
-  my $frd = $subfrm->new_ttk__frame(-padding => [4,8,4,8]);
-  $frd->g_pack(qw/-side top/);
-
   my $frb = $subfrm->new_ttk__labelframe(-text => ' Transpose ');
   $frb->g_pack(qw/-side top -expand 1 -fill both -padx 4 -pady 4/);
 
@@ -626,6 +665,7 @@ sub pageOpts {
     -command => sub{popMenu(\$Opt->{Instrument},
 			    sub{$Tab->drawPageWin();main::setEdited(1);},
 			    $Opt->{Instruments});
+		    $Opt->saveOne('Instruments');
     });
 ###
   my $tml = $frm->new_ttk__label(-text => 'Timing');
@@ -670,6 +710,7 @@ sub pageOpts {
     -command => sub{popMenu(\$Opt->{StaffSpace},
 			    sub{$Tab->drawPageWin();editWindow();main::setEdited(1);},
 			    [qw/6 7 8 9 10 11 12 13 14 15 16/]);
+		    $Opt->saveOne('StaffSpace');
     });
 ###
   my $sgl = $frm->new_ttk__label(-text => "Inter\nStave Gap");
@@ -693,6 +734,7 @@ sub pageOpts {
     -command => sub{popMenu(\$Opt->{EditScale},
 			    sub{editWindow();},
 			    [qw/3 3.5 4 4.5 5 5.5 6/]);
+		    $Opt->saveOne('EditScale');
     });
 ###
   my $lll = $frm->new_ttk__label(-text => "Lyric\nLines");
@@ -706,6 +748,7 @@ sub pageOpts {
 				$Tab->drawPageWin();
 				main::setEdited(1);},
 			    [qw/0 1 2 3/]);
+		    $Opt->saveOne('LyricLines');
     });
 ###
   my $lsl = $frm->new_ttk__label(-text => "Lyric\nSpacing");
@@ -741,8 +784,6 @@ sub pageOpts {
   $lsl->g_grid(qw/-row 2 -column 4 -sticky e/, -padx => [16,0],-pady => [0,4]);
   $lsm->g_grid(qw/-row 2 -column 5 -sticky w/, -padx => [2,0], -pady => [0,4]);
 
-###
-  defButtons($frd, \&main::saveOpt, \&main::loadOpt, \&main::resetOpt);
 ###
   shiftOpt($frb, PAGE);
 }

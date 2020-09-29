@@ -29,7 +29,6 @@ sub init {
   $MW = Tkx::widget->new(".");
   $MW->g_wm_withdraw();
   Tkx::update();
-  $MW->g_wm_protocol('WM_DELETE_WINDOW' => sub{$MW->g_destroy()}); 
   foreach (Tkx::SplitList(Tkx::ttk__style_theme_names())) {
     if ($_ eq 'clam') {
       Tkx::ttk__style_theme_use('clam');

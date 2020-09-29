@@ -109,7 +109,7 @@ sub newDate {
   $top->g_raise();
   Tkx::vwait(\$done);
 
-  $pop->destroy();
+  $pop->popDestroy();
   if ($done eq 'OK') {
     ($self->{day},$self->{month},$self->{months},$self->{year}) = ($Day,$Month,$Months[$Month],$Year);
     return(1);
@@ -313,7 +313,7 @@ sub newTime {
   $top->g_raise();
   Tkx::vwait(\$done);
 
-  $pop->destroy();
+  $pop->popDestroy();
   return(($done eq 'OK') ? 1 : 0);
 }
 

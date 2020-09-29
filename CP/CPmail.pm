@@ -72,7 +72,7 @@ sub cpmail {
 
   if ($SMTP->{server} eq '') {
     if (get_smtp($SMTP) == 0) {
-      $pop->destroy();
+      $pop->popDestroy();
       return(0);
     }
     save_smtp($SMTP);
@@ -179,7 +179,7 @@ sub cpmail {
 	unless (open OFH, ">$body") {
 	  errorPrint("Couldn't create Mail Body file '$body': $!");
 	  $SMTP = {};
-	  $pop->destroy();
+	  $pop->popDestroy();
 	  return($ret);
 	}
 	print OFH $txt;
@@ -195,7 +195,7 @@ sub cpmail {
       $SMTP = {};
     }
   }
-  $pop->destroy();
+  $pop->popDestroy();
   $ret;
 }
 
@@ -275,7 +275,7 @@ sub get_smtp {
   $ok->g_pack(qw/-side right -padx 30/);
 
   Tkx::vwait(\$done);
-  $pop->destroy();
+  $pop->popDestroy();
   if ($done eq "OK") {
     if ($SMTP->{server} ne '' && $SMTP->{username} ne '') {
       save_smtp($SMTP);

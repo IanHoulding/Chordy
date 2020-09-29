@@ -515,7 +515,7 @@ sub fontUpdt {
     'dirtv',
     -font => "\{$EditFont{family}\} $EditFont{bracesz} $EditFont{weight} $EditFont{slant}",
     -foreground => $EditFont{brace});
-  $Media->save($Opt->{Media});
+  $Media->save();
 }
 
 sub bgSet {
@@ -1043,7 +1043,7 @@ EOF
   my $tl = $fr->new_ttk__label(-text => $txt, -justify => 'center');
   $tl->g_pack();
 
-  my $ok = $fr->new_ttk__button(-text=>'OK', -command => sub {$pop->destroy()});
+  my $ok = $fr->new_ttk__button(-text=>'OK', -command => sub {$pop->popDestroy()});
   $ok->g_pack();
   $top->g_wm_resizable('no','no');
 }
