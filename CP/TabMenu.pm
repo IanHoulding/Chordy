@@ -328,11 +328,7 @@ sub fontEdit {
   $tf->g_pack(qw/-side top/);
 
   my $ff = $tf->new_ttk__frame();
-  $ff->g_pack(qw/-side top -expand 1 -fill x/);
-
-  my $df = $tf->new_ttk__frame();
-  $df->g_pack(qw/-side bottom -expand 1 -fill x/, -pady => [12,4]);
-  CP::Win::defButtons($df, 'Fonts', \&main::mediaSave, \&main::mediaLoad, \&main::mediaDefault);
+  $ff->g_pack(qw/-side top -expand 1 -fill x/, -pady => [0,4]);
 
   my $bf = $wt->new_ttk__frame();
   $bf->g_pack(qw/-side top -expand 1 -fill x/);
@@ -349,6 +345,7 @@ sub fontEdit {
     $Tab->drawPageWin();
   } else {
     $mcopy->copy($Media);
+    $Media->save();
   }
   $pop->popDestroy();
 }

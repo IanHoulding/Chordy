@@ -425,6 +425,7 @@ sub pickFG {
   my($title,$fontp,$bg) = @_;
 
   CP::FgBgEd->new("$title Font");
+  my $save = 0;
   my $op = FOREGRND;
   $op |= BACKGRND if ($title =~ /Com|Hig|Tab|Tit|Cho|Lyr/);
   (my $fg,$bg) = $ColourEd->Show($fontp->{color}, $bg, $op);
@@ -432,7 +433,7 @@ sub pickFG {
     $fontp->{color} = $fg;
     Tkx::ttk__style_configure("$title.Font.TLabel", -foreground => $fg);
     Tkx::ttk__style_configure("$title.FG.TButton", -background => $fg);
-    $Media->save();
+    $save++;
   }
   if ($bg ne '' && ($op & BACKGRND)) {
     Tkx::ttk__style_configure("$title.Font.TLabel", -background => $bg);
@@ -445,8 +446,9 @@ sub pickFG {
     } else {
       $Media->{lc($title)."BG"} = $bg;
     }
-    $Media->save();
+    $save++;
   }
+  $Media->save() if ($save);
 }
 
 sub labUpdate {

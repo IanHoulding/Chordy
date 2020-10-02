@@ -367,27 +367,4 @@ sub newLook {
   BGclr(MWBG);
 }
 
-sub defButtons {
-  my($wid,$str,$save,$load,$reset) = @_;
-
-  my $sa = $wid->new_ttk__button(
-    -text => " Save as Default $str ",
-    -style => 'Green.TButton',
-    -command => $save);
-
-  my $lo = $wid->new_ttk__button(
-    -text => " Load Default $str ",
-    -style => 'Green.TButton',
-    -command => $load);
-
-  my $re = $wid->new_ttk__button(
-    -text => " Reset $str to Default ",
-    -style => 'Red.TButton',
-    -command => $reset);
-
-  $sa->g_pack(qw/-side left -padx/ => [10,6]);
-  $lo->g_pack(qw/-side left -padx/ => [6,0]);
-  $re->g_pack(qw/-side right -padx/ => [6,10]);
-}
-
 1;

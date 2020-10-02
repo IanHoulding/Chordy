@@ -632,31 +632,6 @@ sub pageOpts {
   shiftOpt($frb, PAGE);
 }
 
-# This is a duplicate of the CP::WIN sub except we use
-# the grid manager to spread the buttons over 2 rows
-sub defButtons {
-  my($wid,$save,$load,$reset) = @_;
-
-  my $sa = $wid->new_ttk__button(
-    -text => " Save as Default Options ",
-    -style => 'Green.TButton',
-    -command => $save);
-
-  my $lo = $wid->new_ttk__button(
-    -text => " Load Saved Options ",
-    -style => 'Green.TButton',
-    -command => $load);
-
-  my $re = $wid->new_ttk__button(
-    -text => " Reset Options to Default ",
-    -style => 'Red.TButton',
-    -command => $reset);
-
-  $sa->g_grid(qw/-row 0 -column 0 -padx/ => [10,6]);
-  $lo->g_grid(qw/-row 0 -column 1 -padx/ => [6,10]);
-  $re->g_grid(qw/-row 1 -column 0 -columnspan 2 -pady 8/);
-}
-
 #############################
 #############################
 ##
