@@ -436,7 +436,7 @@ sub transposeOne {
     message(QUIZ, "Can't do anything without a ChordPro file.");
     return;
   }
-  if ($Opt->{Transpose} eq "No") {
+  if ($Opt->{Transpose} eq "-") {
     message(QUIZ, "Hmmm ... If you want to Transpose some\nfiles you have to tell me what key!");
     $PDFtrans = 0;
     return;
@@ -450,7 +450,7 @@ sub transposeOne {
 	$KeyLB->{array}[$idx] = "$ProFiles[$idx]->{key}";
 	$KeyLB->a2tcl();
       }
-      $Opt->{Transpose} = 'No';
+      $Opt->{Transpose} = '-';
     }
   }
 }
@@ -496,10 +496,11 @@ sub Main {
       return;
     }
   } else {
-    my $toKey = $Opt->{Transpose};
-    my $msg = "This will Transpose ALL files to the key of $toKey.\nDo you want to continue?";
-    if ($toKey ne "No" && msgYesNo($msg) eq 'No') {
-      return;
+    if ($Opt->{Transpose} ne "-") {
+      my $msg = "This will Transpose ALL files to the key of $Opt->{Transpose}.\nDo you want to continue?";
+      if (msgYesNo($msg) eq 'No') {
+	return;
+      }
     }
 
     my $maxi = $#ProFiles;

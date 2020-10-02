@@ -47,7 +47,7 @@ sub new {
     my($media,$idx) = @{$m};
     my $cap = substr($media, 0, 1);
     $cap .= 'M' if ($idx == CMMNT);
-    $cap .= 'B' if ($idx == TAB);
+    $cap .= 'B' if ($idx == LABEL || $idx == TAB);
     my $fp = $Media->{"$media"};
     my $fam = $fp->{family};
     my $size = ceil($fp->{size});
@@ -464,7 +464,7 @@ sub newPage {
   if ($pro->{key} ne '') {
     my $tw = _textAdd($Opt->{LeftMargin}, $tht, "Key: ", $self->{font}[TITLE], $th, BLACK);
     my($ch,$cname) = CP::Chord->new($pro->{key});
-    $ch = $ch->trans2obj($pro) if ($Opt->{Transpose} ne 'No');
+    $ch = $ch->trans2obj($pro) if ($Opt->{Transpose} ne '-');
     chordAdd($self, $Opt->{LeftMargin} + $tw, $tht, $ch, $cc, $th);
   }
 
@@ -756,7 +756,7 @@ sub chordLen {
 
 sub labelAdd {
   my($self,$x,$y,$txt,$clr) = @_;
-  _textAdd($x, $y, $txt, $self->{font}[LABEL], $self->{Lsz}, $clr);
+  _textAdd($x, $y, $txt, $self->{font}[LABEL], $self->{LBsz}, $clr);
 }
 
 sub lyricAdd {

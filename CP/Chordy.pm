@@ -160,54 +160,54 @@ sub confOpts {
 sub filesWin {
   my($Fff) = @_;
 
-  my $tFl = $Fff->new_ttk__frame();
-  my $tFm = $Fff->new_ttk__frame();
-  my $tFr = $Fff->new_ttk__labelframe(-text => ' Single File ');
-  my $tFb = $Chordy->{ProgFrm} = $Fff->new_ttk__frame(-style => 'Pop.TFrame',
+  my $tFsf  = $Fff->new_ttk__labelframe(-text => ' Single File ');
+  my $tFlst = $Fff->new_ttk__frame();
+  my $tFact = $Fff->new_ttk__frame();
+  my $tFbot = $Chordy->{ProgFrm} = $Fff->new_ttk__frame(-style => 'Pop.TFrame',
 						      -relief => 'raised',
 						      -borderwidth => 2,
 						      -padding => [4,0,4,4]);
 
 #  $Fff->g_grid_columnconfigure(0, -weight => 1);
 #  $Fff->g_grid_columnconfigure(2, -weight => 1);
-  $tFl->g_grid(qw/-row 0 -column 0 -sticky nsw -padx 16/);
-  $tFm->g_grid(qw/-row 0 -column 1 -sticky nsw -padx 16/);
-  $tFr->g_grid(qw/-row 0 -column 2 -sticky nsw -padx 16/, -pady => [0,8]);
-  $tFb->g_grid(qw/-row 1 -column 0 -columnspan 3 -sticky ew -padx 16/, -pady => [4,0]);
+  $tFsf->g_grid( qw/-row 0 -column 0 -sticky nsw -padx 16/, -pady => [0,8]);
+  $tFlst->g_grid(qw/-row 0 -column 1 -sticky nsw -padx 16/);
+  $tFact->g_grid(qw/-row 0 -column 2 -sticky nsw -padx 16/);
+  $tFbot->g_grid(qw/-row 1 -column 0 -columnspan 3 -sticky ew -padx 16/, -pady => [4,0]);
 
 ###
-  my $onee = $tFr->new_ttk__button(
+  my $onee = $tFsf->new_ttk__button(
     -text => "Edit",
     -width => 8,
     -command => \&main::editPro);
-  my $oner = $tFr->new_ttk__button(
+  my $oner = $tFsf->new_ttk__button(
     -text => "Rename",
     -width => 8,
     -command => \&main::renamePro);
-  my $onec = $tFr->new_ttk__button(
+  my $onec = $tFsf->new_ttk__button(
     -text => "Clone",
     -width => 8,
     -command => \&main::clonePro);
-  my $oned = $tFr->new_ttk__button(
+  my $oned = $tFsf->new_ttk__button(
     -text => "Delete",
     -width => 8,
     -style => 'Red.TButton',
     -command => \&main::deletePro);
   Tkx::ttk__style_configure("Tr.Menu.TButton", -background => '#FFD0D0');
-  my $onet = $tFr->new_ttk__button(
+  my $onet = $tFsf->new_ttk__button(
     -text => "Transpose",
     -width => 10,
     -style => 'Tr.Menu.TButton',
     -command => sub{$main::PDFtrans = 1;main::transposeOne(SINGLE);});
   no warnings; # stops perl bleating about '#' in array definition.
-  my $onek = $tFr->new_ttk__button(
+  my $onek = $tFsf->new_ttk__button(
     -textvariable => \$Opt->{Transpose},
     -width => 3,
     -style => 'Tr.Menu.TButton',
     -command => sub{popMenu(
 		      \$Opt->{Transpose},
 		      undef,
-		      [qw/No Ab A A# Bb B C C# Db D D# Eb E F F# Gb G G#/])
+		      [qw/- Ab A A# Bb B C C# Db D D# Eb E F F# Gb G G#/])
     });
   use warnings;
 
@@ -222,8 +222,8 @@ sub filesWin {
 
 ### Key/Files
 
-  $KeyLB = CP::List->new($tFl, '', qw/-height 18 -width 4/);
-  $FileLB = CP::List->new($tFl, 'e', qw/-height 18 -selectmode browse -takefocus 1/, -width => (SLWID + 4));
+  $KeyLB = CP::List->new($tFlst, '', qw/-height 18 -width 4/);
+  $FileLB = CP::List->new($tFlst, 'e', qw/-height 18 -selectmode browse -takefocus 1/, -width => (SLWID + 4));
 
   $FileLB->{lb}->configure(-yscrollcommand => [sub{scroll_filelb($FileLB->{yscrbar}, @_)}]);
   $FileLB->{yscrbar}->m_configure(-command => sub {$KeyLB->{lb}->yview(@_);$FileLB->{lb}->yview(@_);});
@@ -232,21 +232,21 @@ sub filesWin {
   $FileLB->{frame}->g_pack(qw/-side left -fill y -ipadx 1/);
 
 ###
-  my $brw = $tFm->new_ttk__button(
+  my $brw = $tFact->new_ttk__button(
     -text => "Browse ...",
     -command => sub{main::selectFiles(FILE)} );
 
-  my $fsl = $tFm->new_ttk__button(
+  my $fsl = $tFact->new_ttk__button(
     -text => "From Setlist",
     -command => sub{$Chordy->{nb}->m_select(1)});
 
-  my $act = $tFm->new_ttk__labelframe(
+  my $act = $tFact->new_ttk__labelframe(
     -text => " PDFs ",
     -labelanchor => 'n',
       );
   actWin($act);
 
-  my $cob = $tFm->new_ttk__button(
+  my $cob = $tFact->new_ttk__button(
     -text => "Collection",
     -command => sub{$Chordy->{currentColl} = $Collection->name();
 		    popMenu(\$Chordy->{currentColl}, undef, [sort keys %{$Collection}]);
@@ -259,21 +259,21 @@ sub filesWin {
   $act->g_pack(qw/-side top -pady 8/);  # LabelFrame
   $cob->g_pack(qw/-side top -pady 8/);
 
-  my $progl = $tFb->new_ttk__label(-text => "Please Wait .... PDF'ing: ", -style => 'Pop.TLabel');
+  my $progl = $tFbot->new_ttk__label(-text => "Please Wait .... PDF'ing: ", -style => 'Pop.TLabel');
   Tkx::ttk__style_configure('Prog.Pop.TLabel', -font => "BTkDefaultFont");
 
-  my $proge = $Chordy->{ProgLab} = $tFb->new_ttk__label(-text => '',
+  my $proge = $Chordy->{ProgLab} = $tFbot->new_ttk__label(-text => '',
 							-width => SLWID + 4,
 							-style => 'Prog.Pop.TLabel');
   $Chordy->{ProgCan} = 0;
-  my $progc = $tFb->new_ttk__button(-text => ' Cancel ',
+  my $progc = $tFbot->new_ttk__button(-text => ' Cancel ',
 				    -style => 'Red.TButton',
 				    -command => sub{$Chordy->{ProgCan} = 1; Tkx::update();});
 
   $progl->g_pack(qw/-side left/);
   $proge->g_pack(qw/-side left/);
   $progc->g_pack(qw/-side left -padx 8/, -pady => [4,0]);
-  $tFb->g_grid_forget();
+  $tFbot->g_grid_forget();
 }
 
 # This method is called when one Listbox is scrolled with the keyboard
@@ -396,7 +396,7 @@ sub optWin {
     -width => 3,
     -command => sub{popMenu(\$Opt->{Capo}, sub{$Opt->{Capo} = 'No' if ($Opt->{Capo} == 0)}, [0..12])});
 
-  $Opt->{Transpose} = "No";
+  $Opt->{Transpose} = "-";
   $e = $wid->new_ttk__label(-text => "Transpose To:");
   no warnings; # stops perl bleating about '#' in array definition.
   $f = $wid->new_ttk__button(
@@ -406,7 +406,7 @@ sub optWin {
     -command => sub{popMenu(
 		      \$Opt->{Transpose},
 		      undef,
-		      [qw/No Ab A A# Bb B C C# Db D D# Eb E F F# Gb G G#/])
+		      [qw/- Ab A A# Bb B C C# Db D D# Eb E F F# Gb G G#/])
     });
   use warnings;
 

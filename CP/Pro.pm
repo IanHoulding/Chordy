@@ -46,7 +46,7 @@ sub new {
 #   title  => "",
 #   capo   => 0,
 #   tempo  => 0,
-#   key    => "",
+#   key    => "-",
 #   instrument => "",
 #   chords => {},
 #   finger => {},
@@ -73,7 +73,7 @@ sub decompose {
   ($self->{title} = $fn) =~ s/\.pro$//;
   $self->{tempo} = 0;
   $self->{capo} = 0;
-  $self->{key} = '';
+  $self->{key} = '-';
   $self->{note} = '';
   $self->{instrument} = $Opt->{Instrument};
   $self->{chords} = {}; # a hash of all chords used in this .pro
@@ -336,7 +336,7 @@ sub makePDF {
   # We can't transpose if there is no 'key' directive.
   $KeyShift = 0;
   if ($self->{key} ne '') {
-    if ($Opt->{Transpose} ne "No") {
+    if ($Opt->{Transpose} ne "-") {
       $KeyShift = setIdx("$self->{key}");
     }
     if ($Opt->{IgnCapo} == 0 && $self->{capo} != 0) {
@@ -362,6 +362,9 @@ sub makePDF {
   my $chorddc = $myPDF->{Cdc} / 2;
   my $chordht = $myPDF->{Cas} + $chorddc;
   my $superht = $myPDF->{Ssz};
+
+  my $labeldc = $myPDF->{LBdc};
+  my $labelht = $myPDF->{LBas} + $labeldc;
 
   my $tabht   = $myPDF->{TBsz};
   my $tabdc   = $myPDF->{TBdc};
@@ -426,9 +429,9 @@ sub makePDF {
 	  $ht += ($sp->{text} =~ /([\.\d]+)\s?([\.\d]+)?/) ? $1 : 5;
 	} elsif ($ty == GRID) {
 	  $ht += ($chordht * $sp->{ch_cnt}) if ($lyrOnly == 0);
-	} elsif ($ty == LYRIC || $ty == VERSE || $ty == CHORUS) {
+	} elsif ($ty == LYRIC || $ty == VERSE || $ty == CHORUS || $ty == BRIDGE) {
 	  if ($ln->{label}) {
-	    $ht += $linespc if ($ln->{text} ne '' && $Opt->{ShowLabels});
+	    $ht += ($linespc + $labelht) if ($ln->{text} ne '' && $Opt->{ShowLabels});
 	  } else {
 	    my $h = ($sp->{ly_cnt}) ? $lyricht: 0;
 	    $h += $chordht if ($sp->{ch_cnt} && $lyrOnly == 0);
@@ -519,8 +522,8 @@ sub makePDF {
       #
       my($lineht,$chordY,$lyricY) = (0,0,0);
       if ($label) {
-	$lineht = $lyricht;
-	$lyricY = $lineY - $halfspc - $lineht + $lyricdc;
+	$lineht = $labelht;
+	$lyricY = $lineY - $halfspc - $lineht + $labeldc;
       } else {
 	if ($ln->{ch_cnt} && $lyrOnly == 0) {
 	  $lineht = $chordht;
@@ -560,7 +563,7 @@ sub makePDF {
 	# Now the actual text
 	#
 	if ($label) {
-	  $myPDF->lyricAdd($off, $lyricY, $ln->{text}, $lab_clr);
+	  $myPDF->labelAdd($off, $lyricY, $ln->{text}, $lab_clr);
 	} else {
 	  foreach my $s (@{$ln->{segs}}) {
 	    $lineX = $s->{x} + $off;
@@ -806,7 +809,7 @@ sub transpose {
   my $orgKey;
  AGAIN:
   $orgKey = $self->{key};
-  if ($orgKey eq '') {
+  if ($orgKey eq '-') {
     my $resp = msgYesNoCan("There is no Key defined for this file.\nIf you edit the file - add a {key:X} directive.", "Guess the key", "Edit File");
     return(0) if ($resp eq 'Cancel');
     if ($resp eq 'No') { # == Edit File
@@ -814,7 +817,7 @@ sub transpose {
       goto AGAIN;
     }
   }
-  $KeyShift = setIdx($orgKey) if ($orgKey ne '');
+  $KeyShift = setIdx($orgKey) if ($orgKey ne '-');
   my $org = $self->{path}."/".$self->{name};
   my $new = $Path->{Temp}."/".$self->{name};
 
@@ -842,7 +845,7 @@ sub transpose {
           $chord .= $c if ($c ne ']');
         } while ($c ne ']' && @ch);
 	my($chrd,$name) = CP::Chord->new($chord);
-	if ($orgKey eq '' && @$chrd > 1) {
+	if ($orgKey eq '-' && @$chrd > 1) {
 	  $orgKey = $chrd->[0].$chrd->[1];
 	  $KeyShift = setIdx($orgKey);
 	}
