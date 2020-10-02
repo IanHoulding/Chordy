@@ -33,7 +33,7 @@ sub new {
   $self->{bars} = [];
   if ($Tab->{PDFname} eq '') {
     if ($Tab->{fileName} eq '') {
-      return '' if (main::checkSave() eq 'Cancel' || $Tab->{fileName} eq '');
+      return '' if ($Tab->checkSave() eq 'Cancel' || $Tab->{fileName} eq '');
     } else {
       ($Tab->{PDFname} = $Tab->{fileName}) =~ s/.tab$/.pdf/i;
     }
@@ -130,7 +130,7 @@ sub batch {
   my $x = Tkx::winfo_pointerx($MW);
   my $y = Tkx::winfo_pointery($MW);
   my @files = CP::Browser->new($MW, FILE, $Path->{Tab}, '.tab');
-  return if (@files == 0);
+  return if ($files[0] eq '');
   my $pl = (@files > 1) ? 's' : '';
 
   my $lab = $frm->new_ttk__label(
@@ -164,6 +164,7 @@ sub batch {
     $text->insert('end', "$fn\n");
   }
   $text->configure(-state => 'disabled');
+  $con->g_focus();
   Tkx::vwait(\$done);
   if ($done eq 'Continue') {
     $text->tag_configure('red',   -foreground => RFG, -font => 'BTkDefaultFont');
@@ -175,11 +176,13 @@ sub batch {
     foreach my $fn (@files) {
       textConf($text, $idx, 'red');
       $Tab->new("$Path->{Tab}/$fn");
+      $Tab->drawPageWin();
       CP::Cmsg::position($x,$y);
       make('M');
       textConf($text, $idx++, 'green');
     }
     $Tab->new('');
+    $Tab->drawPageWin();
     CP::Cmsg::position($x,$y);
     message(SMILE, " Done ", -1);
   }
@@ -198,6 +201,7 @@ sub textConf {
 sub make {
   my($what) = @_;
 
+  return if ($Tab->{bars} == 0);
   $Tab->{lyrics}->collect() if ($Opt->{LyricLines});
   return if ((my $pdf = CP::TabPDF->new()) eq '');
   # There doesn't seem to be an easy way round this -
@@ -337,7 +341,7 @@ sub newPage {
   my $tht = ($Media->{height} - $h) / 2;
   my $th = int($self->{Tsz} * KEYMUL);
   my $dc = int($self->{Tdc} * KEYMUL);
-  if ($Tab->{key} ne '') {
+  if ($Tab->{key} ne '-') {
     my $tw = _textAdd($self, $Opt->{LeftMargin}, $h + $self->{Tdc} + 2, "Key: ", TITLE, $th, bFG);
     my $ch = [split('',$Tab->{key})];
     chordAdd($self, $Opt->{LeftMargin} + $tw, $h + $self->{Tdc} + 2, $ch, $Media->{Chord}{color}, $th);

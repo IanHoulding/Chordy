@@ -69,9 +69,9 @@ sub new {
   # These keys do NOT get reset:
   #   eCan nFrm nCan pFrm pCan pOffset eOffset
   #
-#  $Opt->{AutoSave} = 0;
   $Tab->{fileName} = '';
   $Tab->{PDFname}  = '';
+  $Tab->{loaded}   = 0;
   $Tab->{pageNum}  = 0;   # Keeps track of the current page we're working on. (1st page = 0)
   $Tab->{nPage}    = 0;   # Keeps track of the number of pages.
   $Tab->{rowsPP}   = 0;
@@ -81,7 +81,7 @@ sub new {
   $Tab->{select1}  = 0;
   $Tab->{select2}  = 0;
   $Tab->{title}    = '';
-  $Tab->{key}      = '';
+  $Tab->{key}      = '-';
   $Tab->{note}     = '';
   $Tab->{tempo}    = 40;
   $Tab->{Timing}   = '4/4';
@@ -107,11 +107,7 @@ sub new {
     ($Tab->{title} = $Tab->{fileName}) =~ s/\.tab$//;
     $Tab->{PDFname} = $Tab->{title}.'.pdf';
     load($Tab, $fn);
-#    if ($Opt->{AutoSave}) {
-#      $SaveID = Tkx::after(($Opt->{AutoSave} * 60000), \&save);
-#    }
   }
-  drawPageWin($Tab);
 }
 
 sub drawPageWin {
@@ -375,9 +371,6 @@ sub indexBars {
 }
 
 sub startEdit {
-#  if ($Opt->{AutoSave}) {
-#    $SaveID = Tkx::after(($Opt->{AutoSave} * 60000), \&save);
-#  }
   main::setEdited(0);
 }
 
@@ -461,7 +454,7 @@ sub load {
   }
   $Tab->{Timing} .= '/4' if (length($Tab->{Timing}) == 1);
   close(IFH);
-  $self->guessKey() if ($self->{key} eq '');
+  $self->guessKey() if ($self->{key} eq '-');
   $self->{loaded} = 1;
 }
 
@@ -513,7 +506,7 @@ sub saveAs {
       $ans = msgYesNo("$path/$newfn\nFile already exists.\nDo you want to replace it?");
       return if ($ans eq "No");
     }
-    if (main::checkSave() ne 'Cancel') {
+    if (checkSave($self) ne 'Cancel') {
       my $txt = read_file("$path/$self->{fileName}");
       if (write_file("$path/$newfn", $txt) != 1) {
 	message(SAD, "Failed to write new file $path/$newfn\n    $!");
@@ -522,6 +515,20 @@ sub saveAs {
       $self->new("$path/$newfn");
     }
   }
+}
+
+sub checkSave {
+  my($self) = shift;
+
+  my $ans = '';
+  if ($self->{edited}) {
+    $ans = msgYesNoCan("Do you want to save any changes made to:\n$self->{fileName}");
+    if ($ans eq 'Yes') {
+      $self->save();
+      $self->{fileName} = '';
+    }
+  }
+  return($ans);
 }
 
 sub save {
@@ -561,7 +568,7 @@ sub save {
       print $OFH '{title:'.$self->{title}."}\n";
       print $OFH '{PDFname:'.$self->{PDFname}."}\n" if ($self->{PDFname} ne '');
       print $OFH '{instrument:'.$Opt->{Instrument}."}\n";
-      print $OFH '{key:'.$self->{key}."}\n"   if ($self->{key} ne '');
+      print $OFH '{key:'.$self->{key}."}\n"   if ($self->{key} ne '-');
       print $OFH '{note:'.$self->{note}."}\n" if ($self->{note} ne '');
       print $OFH '{tempo:'.$self->{tempo}."}\n";
       print $OFH '{bars_per_stave:'.$Opt->{Nbar}."}\n";
@@ -660,7 +667,7 @@ sub pageKey {
 
   my $can = $self->{pCan};
   $can->delete('hdrk');
-  if ($self->{key} ne '') {
+  if ($self->{key} ne '-') {
 #    my $y = ($self->{pageHeader} / 2) + 2;
     my $y = $self->{pageHeader} - 2;
     my $id = $can->create_text($Opt->{LeftMargin}, $y,
@@ -1218,7 +1225,7 @@ sub ud1string {
 sub setKey {
   my($self,$shft) = @_;
 
-  if ($self->{key} ne '') {
+  if ($self->{key} ne '-') {
     my $idx = idx($self->{key}) + $shft;
     $idx %= 12;
     my $c = $Scale->[$idx];
@@ -1325,7 +1332,8 @@ sub saveAsText {
   }
 
   print OFH "  $self->{title}\n\n";
-  print OFH "  Key: $self->{key}\n\n";
+  print OFH "  Key: $self->{key}\n" if ($self->{key} ne '-');
+  print OFH "\n";
   print OFH "  Tuning: ".join(' ', @Tuning)."\n\n";
   for(my $bp = 0; $bp < @bars; ) {
     my $last = $bp + 3;

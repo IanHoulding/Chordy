@@ -28,6 +28,7 @@ use CP::Fonts qw/&fontSetup/;
 use CP::TabMenu;
 use CP::Browser;
 use CP::Pop qw/:POP :MENU/;
+use CP::Cmsg;
 
 #
 #  Directive = {...:txt}
@@ -94,9 +95,11 @@ fontSetup();
 restXPMs();
 CP::Win::init();
 
+makeImage("tick", \%XPM);
 makeImage("Ticon", \%XPM);
 $MW->g_wm_iconphoto("Ticon");
-$MW->g_wm_protocol('WM_DELETE_WINDOW' => \&exitTab);
+$MW->g_wm_protocol('WM_DELETE_WINDOW' => \&CP::TabMenu::exitTab);
+
 #
 # To be able to realisticaly manipulate Canvas fonts to look like the PDF result we
 # need a screen scaling of 1:1 but that makes (on my screen, at least) all the button
@@ -113,6 +116,7 @@ if ($sc != 1) {
 
 CP::Tab->new($FN);
 CP::TabMenu->new();
+$Tab->drawPageWin();
 
 $MW->g_wm_deiconify();
 $MW->g_raise();
@@ -133,125 +137,6 @@ sub tabTitle {
   $MW->g_wm_title("Tab Editor  |  Collection: ".$Collection->name()."  |  Media: $Opt->{Media}  |  Tab: $fn$ed");
 }
 
-sub openTab {
-  my $fn = (CP::Browser->new($MW, TABBR, $Path->{Tab}, '.tab'))[0];
-  if ($fn ne '') {
-    CP::Tab->new("$Path->{Tab}/$fn");
-  }
-}
-
-sub newTab {
-  if (checkSave() ne 'Cancel') {
-    if ($Tab->{fileName} eq '') {
-      my $fn = "";
-      my $ans = msgSet("Enter a name for the new file", \$fn);
-      return(0) if ($ans eq "Cancel");
-      if ($fn eq "") {
-	message(QUIZ, "How about a file name then?");
-	return(0);
-      }
-      (my $title = $fn) =~ s/.tab$//i;
-      $fn = $title.'.tab';
-      if (-e "$Path->{Tab}/$fn") {
-	$ans = msgYesNo("$fn already exists.\nDo you want to overwrite it?");
-	return(0) if ($ans eq "No");
-      }
-      open OFH, ">", "$Path->{Tab}/$fn" or die "failed open '$Path->{Tab}/$fn' : $!\n";
-      print OFH "{title:$title}\n";
-      close OFH;
-      $Tab->{fileName} = $fn;
-    }
-    CP::Tab->new("$Path->{Tab}/$Tab->{fileName}");
-    tabTitle($Tab->{fileName});
-  }
-}
-
-sub delTab {
-  if ($Tab->{fileName} ne '') {
-    my $ans = msgYesNo("Do you really want to delete\n  $Tab->{fileName}");
-    return if ($ans eq "No");
-    unlink("$Path->{Tab}/$Tab->{fileName}");
-    CP::Tab->new('');
-  }
-}
-
-sub renameTab {
-  if ($Tab->{fileName} ne '') {
-    my $ofn = $Tab->{fileName};
-    my $newfn = $ofn;
-    my $ans = msgSet("Enter a new name for the file:", \$newfn);
-    return if ($ans eq 'Cancel');
-    $newfn =~ s/\.tab$//i;
-    $newfn .= '.tab';
-    if (-e "$Path->{Tab}/$newfn") {
-      $ans = msgYesNo("$Path->{Tab}/$newfn\nFile already exists.\nDo you want to replace it?");
-      return if ($ans eq "No");
-    }
-    rename("$Path->{Tab}/$ofn", "$Path->{Tab}/$newfn");
-    $Tab->{fileName} = $newfn;
-    tabTitle("$newfn");
-  } else {
-    Tkx::bell();
-  }
-}
-
-sub closeTab {
-  if (checkSave() ne 'Cancel') {
-    CP::Tab->new('');
-  }
-}
-
-sub exportTab {
-  if ($Tab->{loaded} == 0) {
-    Tkx::bell();
-    return;
-  }
-  my $dest = Tkx::tk___chooseDirectory(
-    -title => "Choose Destination Folder",
-    -initialdir => "$Home",);
-  $dest =~ s/\/$//;
-  if ($dest ne '') {
-    if ($dest eq $Path->{Tab}) {
-      message(QUIZ, "Destination Folder cannot be:\n    \"$dest\"\nPlease try again!");
-      return;
-    }
-    if (! -e $dest) {
-      make_path($dest, {chmod => 0777});
-    }
-    if ($Tab->save($dest, 0) == 1) {
-      # We now have the current Tab in a temporary file: "$Path->{Temp}/$Tab->{fileName}"
-      my $tmp = "$Path->{Temp}/$Tab->{fileName}";
-      my $txt = read_file($tmp);
-      if (write_file("$dest/$Tab->{fileName}", $txt) == 1) {
-	unlink($tmp);
-      } else {
-	message(SAD, "Failed to write \"$Tab->{fileName}\" to \"$dest\"\nOriginal is in: \"$tmp\"");
-	return;
-      }
-      message(SMILE, "\"$Tab->{fileName}\" Exported", -1);
-    }
-  }
-}
-
-sub exitTab {
-  if (checkSave() ne 'Cancel') {
-    $MW->g_destroy();
-    exit(0);
-  }
-}
-
-sub checkSave {
-  my $ans = '';
-  if ($Tab->{edited}) {
-    $ans = msgYesNoCan("Do you want to save any changes made to:\n$Tab->{fileName}");
-    if ($ans eq 'Yes') {
-      $Tab->save();
-      $Tab->{fileName} = '';
-    }
-  }
-  return($ans);
-}
-
 sub collectionSel {
   my $cc = $Collection->name();
   popMenu(\$cc, undef, [sort keys %{$Collection}]);
@@ -263,12 +148,6 @@ sub mediaSel {
   popMenu(\$Opt->{Media}, undef, [CP::Media::list()]);
   $Media = $Media->change($Opt->{Media});
   $Tab->drawPageWin();
-}
-
-sub mediaEdit {
-  if ($Media->edit() eq "OK") {
-    $Tab->drawPageWin();
-  }
 }
 
 sub mediaSave {
@@ -283,19 +162,13 @@ sub mediaDefault {
   $Media->default();
 }
 
-sub saveOpt {
-  $Opt->save();
-}
-
-sub loadOpt {
-  $Opt = CP::Opt->new();
-}
-
 # Place-holder for Collection.pm which calls this in chordy.pl
 sub selectClear {}
 
 #################################################
 # The rest of this file is XPM image definitions
+# They're here instead of in Global.pm because
+# they're only used by the Tab editor.
 #################################################
 
 sub restXPMs {

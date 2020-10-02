@@ -99,10 +99,6 @@ $MW->g_wm_deiconify();
 $MW->g_raise();
 Tkx::MainLoop();
 
-sub title {
-  CP::Win::title("Chordy | Collection: ".$Collection->name()." | Media: ".$Opt->{Media});
-}
-
 sub impProFile {
   my $types = [
     ['ChordPro Files', '.pro'],

@@ -42,13 +42,13 @@ sub pageWindow {
     my $outer = $MW->new_ttk__frame(qw/-relief raised -borderwidth 2/, -padding => 0);
     $outer->g_pack(qw//);
 
-    my $menuF = $outer->new_ttk__frame();
-    $menuF->g_pack(qw/-side left -fill y -padx 4 -pady 4/);
+#    my $menuF = $outer->new_ttk__frame();
+#    $menuF->g_pack(qw/-side left -fill y -padx 4 -pady 4/);
 
-    menu_buttons($menuF);
+#    menu_buttons($menuF);
 
-    my $sep = $outer->new_ttk__separator(qw/-orient vertical/);
-    $sep->g_pack(qw/-side left -fill y/);
+#    my $sep = $outer->new_ttk__separator(qw/-orient vertical/);
+#    $sep->g_pack(qw/-side left -fill y/);
 
     my $leftF = $outer->new_ttk__frame(qw/-borderwidth 0/);
     $leftF->g_pack(qw/-side left -anchor nw/);
@@ -231,54 +231,6 @@ sub menu_buttons {
 		 ['Help',  'Tab Help', [\&CP::HelpTab::help], 1,0,1,1] ) {
     oneMbutton($botF, @{$t});
   }
-}
-
-sub fontEdit {
-  my $pop = CP::Pop->new(0, '.fo', 'Font Selector', -1, -1);
-  return if ($pop eq '');
-  my($top,$wt) = ($pop->{top}, $pop->{frame});
-
-  my $Done;
-  my $mcopy = {};
-  $Media->copy($mcopy);
-
-  $wt->m_configure(qw/-relief raised -borderwidth 2/);
-
-  my $tf = $wt->new_ttk__frame(qw/-borderwidth 2 -relief ridge/, -padding => [4,4,4,4]);
-  $tf->g_pack(qw/-side top/);
-
-  my $ff = $tf->new_ttk__frame();
-  $ff->g_pack(qw/-side top -expand 1 -fill x/);
-
-  my $df = $tf->new_ttk__frame();
-  $df->g_pack(qw/-side bottom -expand 1 -fill x/, -pady => [12,4]);
-  CP::Win::defButtons($df, 'Fonts', \&main::mediaSave, \&main::mediaLoad, \&main::mediaDefault);
-
-  my $bf = $wt->new_ttk__frame();
-  $bf->g_pack(qw/-side top -expand 1 -fill x/);
-
-  makeImage("tick", \%XPM);
-
-  CP::Fonts::fonts($ff, [qw/Title Header Notes SNotes Words/]);
-
-  ($bf->new_ttk__button(-text => "Cancel", -command => sub{$Done = "Cancel";})
-  )->g_grid(qw/-row 0 -column 0 -padx 60/, -pady => [4,0]);
-  ($bf->new_ttk__button(-text => "OK", -command => sub{$Done = "OK";})
-  )->g_grid(qw/-row 0 -column 1 -sticky e -padx 60/, -pady => [4,0]);
-
-  Tkx::vwait(\$Done);
-  if ($Done eq "OK") {
-    $Tab->drawPageWin();
-  } else {
-    $mcopy->copy($Media);
-  }
-  $pop->popDestroy();
-}
-
-sub saveCloseTab {
-  $Tab->save();
-  CP::TabPDF::make('M');
-  $Tab->new('');
 }
 
 sub oneMbutton {
@@ -625,7 +577,7 @@ sub pageOpts {
   my $hl = $subfrm->new_ttk__separator(qw/-orient horizontal/);
   $hl->g_pack(qw/-side top -expand 1 -fill x -pady 4/);
 
-  my $frm = $subfrm->new_ttk__frame(-padding => [0,0,4,4]);
+  my $frm = $subfrm->new_ttk__labelframe(-text => ' Select ');
   $frm->g_pack(qw/-side top -expand 1 -fill both/);
 
   my $frb = $subfrm->new_ttk__labelframe(-text => ' Transpose ');
@@ -657,132 +609,24 @@ sub pageOpts {
   $en6->g_grid(qw/-row 3 -column 1 -sticky w/, -padx => [0,0], -pady => [0,4]);
 ##########
 
-  my $inl = $frm->new_ttk__label(-text => 'Instrument');
-  my $inm = $frm->new_ttk__button(
-    -textvariable => \$Opt->{Instrument},
+  my $coll = $frm->new_ttk__label(-text => 'Collection');
+  my $coln = $Collection->name();
+  my $colb = $frm->new_ttk__button(
+    -textvariable => \$coln,
     -style => 'Menu.TButton',
-    -width => 8,
-    -command => sub{popMenu(\$Opt->{Instrument},
-			    sub{$Tab->drawPageWin();main::setEdited(1);},
-			    $Opt->{Instruments});
-		    $Opt->saveOne('Instruments');
-    });
-###
-  my $tml = $frm->new_ttk__label(-text => 'Timing');
-  my $tmm = $frm->new_ttk__button(
-    -textvariable => \$Tab->{Timing},
+    -command => sub{main::collectionSel();$coln = $Collection->name()}
+    );
+  my $medl = $frm->new_ttk__label(-text => 'Media');
+  my $medb = $frm->new_ttk__button(
+    -textvariable => \$Opt->{Media},
     -style => 'Menu.TButton',
-    -width => 4,
-    -command => sub{popMenu(\$Tab->{Timing},
-			    sub{my($t,$_t) = split('/', $Tab->{Timing});
-				$Tab->{BarEnd} = $t * 8;
-				$Tab->drawPageWin();
-				editWindow();
-				main::setEdited(1);},
-			    [qw{2/4 3/4 4/4}]);
-    });
-###
-  my $kyl = $frm->new_ttk__label(-text => 'Set Key as');
-  my $kym = $frm->new_ttk__button(
-    -textvariable => \$Tab->{key},
-    -width => 3,
-    -style => 'Menu.TButton',
-    -command => sub{popMenu(\$Tab->{key},
-			    sub{$Tab->pageKey();main::setEdited(1);},
-			    [' ', qw/Ab Abm A Am A# A#m Bb Bbm B Bm C Cm C# C#m Db Dbm D Dm D# D#m Eb Ebm E Em F Fm F# F#m Gb Gbm G Gm G# G#m/]);
-    });
-######
-  my $bsl = $frm->new_ttk__label(-text => "Bars/Stave");
-  my $bsm = $frm->new_ttk__button(
-    -textvariable => \$Opt->{Nbar},
-    -style => 'Menu.TButton',
-    -width => 3,
-    -command => sub{popMenu(\$Opt->{Nbar},
-			    sub{$Tab->drawPageWin();main::setEdited(1);},
-			    [qw/3 4 5 6 7 8 9 10/]);
-    });
-###
-  my $ssl = $frm->new_ttk__label(-text => "String\nSpacing");
-  my $ssm = $frm->new_ttk__button(
-    -textvariable => \$Opt->{StaffSpace},
-    -style => 'Menu.TButton',
-    -width => 3,
-    -command => sub{popMenu(\$Opt->{StaffSpace},
-			    sub{$Tab->drawPageWin();editWindow();main::setEdited(1);},
-			    [qw/6 7 8 9 10 11 12 13 14 15 16/]);
-		    $Opt->saveOne('StaffSpace');
-    });
-###
-  my $sgl = $frm->new_ttk__label(-text => "Inter\nStave Gap");
-  my $sgm = $frm->new_ttk__button(
-    -textvariable => \$Tab->{staveGap},
-    -style => 'Menu.TButton',
-    -width => 3,
-    -command => sub{popMenu(\$Tab->{staveGap},
-			    sub{
-			      $Tab->drawPageWin();
-			      main::setEdited(1);;
-			    },
-			    [qw/0 1 2 3 4 5 6 8 9 10 11 12 13 14 16 18 20/]);
-    });
-###
-  my $esl = $frm->new_ttk__label(-text => "Edit\nScale");
-  my $esm = $frm->new_ttk__button(
-    -textvariable => \$Opt->{EditScale},
-    -style => 'Menu.TButton',
-    -width => 3,
-    -command => sub{popMenu(\$Opt->{EditScale},
-			    sub{editWindow();},
-			    [qw/3 3.5 4 4.5 5 5.5 6/]);
-		    $Opt->saveOne('EditScale');
-    });
-###
-  my $lll = $frm->new_ttk__label(-text => "Lyric\nLines");
-  my $llm = $frm->new_ttk__button(
-    -textvariable => \$Opt->{LyricLines},
-    -style => 'Menu.TButton',
-    -width => 3,
-    -command => sub{my $ll = $Opt->{LyricLines};
-		    popMenu(\$ll,
-			    sub{$Tab->{lyrics}->adjust($ll);
-				$Tab->drawPageWin();
-				main::setEdited(1);},
-			    [qw/0 1 2 3/]);
-		    $Opt->saveOne('LyricLines');
-    });
-###
-  my $lsl = $frm->new_ttk__label(-text => "Lyric\nSpacing");
-  my $lsm = $frm->new_ttk__button(
-    -textvariable => \$Tab->{lyricSpace},
-    -style => 'Menu.TButton',
-    -width => 3,
-    -command => sub{popMenu(\$Tab->{lyricSpace},
-			    sub{$Tab->drawPageWin();main::setEdited(1);},
-			    [qw/0 2 4 6 8 10 12 14 16 18 20/]);
-    });
-###
+    -command => sub{main::mediaSel()}
+    );
 
-  $inl->g_grid(qw/-row 0 -column 0 -sticky e/,                 -pady => [2,4]);
-  $inm->g_grid(qw/-row 0 -column 1 -sticky w/, -padx => [2,0], -pady => [0,4]);
-  $tml->g_grid(qw/-row 1 -column 0 -sticky e/,                 -pady => [0,4]);
-  $tmm->g_grid(qw/-row 1 -column 1 -sticky w/, -padx => [2,0], -pady => [0,4]);
-  $kyl->g_grid(qw/-row 2 -column 0 -sticky e/,                 -pady => [0,4]);
-  $kym->g_grid(qw/-row 2 -column 1 -sticky w/, -padx => [2,0], -pady => [0,4]);
-
-
-  $bsl->g_grid(qw/-row 0 -column 2 -sticky e/, -padx => [16,0],-pady => [0,4]);
-  $bsm->g_grid(qw/-row 0 -column 3 -sticky w/, -padx => [2,0], -pady => [0,4]);
-  $ssl->g_grid(qw/-row 1 -column 2 -sticky e/,                 -pady => [0,4]);
-  $ssm->g_grid(qw/-row 1 -column 3 -sticky w/, -padx => [2,0], -pady => [0,4]);
-  $sgl->g_grid(qw/-row 2 -column 2 -sticky e/,                 -pady => [0,4]);
-  $sgm->g_grid(qw/-row 2 -column 3 -sticky w/, -padx => [2,0], -pady => [0,4]);
-
-  $esl->g_grid(qw/-row 0 -column 4 -sticky e/,                 -pady => [0,4]);
-  $esm->g_grid(qw/-row 0 -column 5 -sticky w/, -padx => [2,0], -pady => [0,4]);
-  $lll->g_grid(qw/-row 1 -column 4 -sticky e/,                 -pady => [0,4]);
-  $llm->g_grid(qw/-row 1 -column 5 -sticky w/, -padx => [2,0], -pady => [0,4]);
-  $lsl->g_grid(qw/-row 2 -column 4 -sticky e/, -padx => [16,0],-pady => [0,4]);
-  $lsm->g_grid(qw/-row 2 -column 5 -sticky w/, -padx => [2,0], -pady => [0,4]);
+  $coll->g_grid(qw/-row 0 -column 0 -sticky e/, -padx => [4,0], -pady => [0,4]);
+  $colb->g_grid(qw/-row 0 -column 1 -sticky w/, -padx => [2,0], -pady => [0,4]);
+  $medl->g_grid(qw/-row 0 -column 2 -sticky e/, -padx => [16,0], -pady => [0,4]);
+  $medb->g_grid(qw/-row 0 -column 3 -sticky w/, -padx => [2,0], -pady => [0,4]);
 
 ###
   shiftOpt($frb, PAGE);
