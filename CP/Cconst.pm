@@ -162,7 +162,7 @@ use constant {
   HEADER => 3,
   WORDS  => 4,
   RESTS  => 5,
-  RESTFONT => 'Gonville-20',
+  RESTFONT => 'TabSym',
 };
 # Constants for Bar copy & insertion
 use constant {

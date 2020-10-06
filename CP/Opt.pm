@@ -18,7 +18,7 @@ use CP::Cmsg;
 my @strOpt = (qw/Articles Instrument Media PDFpath PrintMedia
 	         PopFG PopBG PushFG PushBG MenuFG MenuBG ListFG ListBG EntryFG EntryBG
 	         WinBG PageBG SortBy/);
-my @numOpt = (qw/AutoSave Bold Center EditScale FullLineHL FullLineCM Grid HHBL
+my @numOpt = (qw/AutoSave Bold Heavy Center EditScale FullLineHL FullLineCM Grid HHBL
 	         IgnArticle IgnCapo ShowLabels
 	         TopMargin BottomMargin LeftMargin RightMargin
 	         Italic LineSpace LyricLines LyricOnly Nbar NewLine NoWarn
@@ -57,6 +57,7 @@ sub default {
   $self->{FullLineCM}  = 0;
   $self->{FullLineHL}  = 0;
   $self->{Grid}        = 0;
+  $self->{Heavy}       = 5;
   $self->{HHBL}        = 0;    # Half Height Blank Lines
   $self->{IgnArticle}  = 0;
   $self->{IgnCapo}     = 0;

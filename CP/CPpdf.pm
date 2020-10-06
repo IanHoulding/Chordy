@@ -53,7 +53,7 @@ sub new {
     my $size = ceil($fp->{size});
     # return Bold, BoldItalic or Regular
     my $wt = pdfWeight($fp->{weight}, $fp->{slant});
-    my $pfp = getFont($pdf, $fam, $wt);
+    my $pfp = CP::Fonts::getFont($pdf, $fam, $wt);
     # Font metrics don't seem to follow the accepted standard where the total
     # height used by a font is (ascender + descender) and where the ascender
     # includes any extra height added by the composer.
@@ -78,12 +78,12 @@ sub new {
      $self->{hscale}[CMMNTB] = $self->{hscale}[CMMNTI] = 100;
      $self->{font}[CMMNTB] = $pfp;
      $wt = ($wt eq 'Bold') ? 'BoldItalic' : 'Italic';
-     $self->{font}[CMMNTI] = getFont($pdf, $fam, $wt);
+     $self->{font}[CMMNTI] = CP::Fonts::getFont($pdf, $fam, $wt);
     }
     $self->{"${cap}fam"} = $fam;
     $self->{"${cap}wt"} = $wt;
   }
-  $self->{font}[GRID] = getFont($pdf, RESTFONT, 'Regular');
+  $self->{font}[GRID] = CP::Fonts::getFont($pdf, RESTFONT, 'Regular');
 
   $self->{page} = [];
   $FFSIZE = 0;
@@ -111,7 +111,7 @@ sub printSL {
   my $Tsz = ceil($fp->{size});
   # return Bold, BoldItalic or Regular
   my $Twt = pdfWeight($fp->{weight}, $fp->{slant});
-  my $pfp = getFont($pdf, $Tfam, $Twt);
+  my $pfp = CP::Fonts::getFont($pdf, $Tfam, $Twt);
   my $Tdc = abs(ceil(($pfp->descender * $Tsz) / 1000)) + 1;
   my $Tclr = $fp->{color};
   my $Lsz = $Media->{Lyric}{size} + 1;
@@ -233,32 +233,6 @@ sub printSL {
   $Media = $Media->change($Opt->{Media});
 }
 
-sub getFont {
-  my($pdf,$fam,$wt) = @_;
-
-  my $pfp;
-  if (! defined $FontList{"$fam"}) {
-    $fam = 'Times New Roman';
-    errorPrint("Font '$fam' not found.\nSubstituting 'Times New Roman'");
-  }
-  my $path = $FontList{"$fam"}{Path};
-  my $file = $FontList{"$fam"}{$wt};
-  if ($file eq '') {
-    my %opts = ();
-    if ($wt =~ /Bold/) {
-      $opts{'-bold'} = $Opt->{Bold};
-    }
-    if ($wt =~ /Italic/) {
-      $opts{'-oblique'} = $Opt->{Italic};
-    }
-    my $tmp = $pdf->ttfont($path.'/'.$FontList{"$fam"}{Regular});
-    $pfp = $pdf->synfont($tmp, %opts);
-  } else {
-    $pfp = $pdf->ttfont($path.'/'.$file);
-  }
-  $pfp;
-}
-
 sub chordSize {
   my($self,$size) = @_;
 
@@ -285,7 +259,7 @@ sub chordFont {
   if (defined $FontList{"$fam"}) {
     my $fp;
     if ($self->{Cfam} ne $fam || $self->{Cwt} ne $wt) {
-      $fp = getFont($self->{pdf}, $fam, $wt);
+      $fp = CP::Fonts::getFont($self->{pdf}, $fam, $wt);
       $self->{font}[CHORD] = $fp;
       $self->{Cfam} = $fam;
       $self->{Cwt} = $wt;
@@ -327,7 +301,7 @@ sub lyricFont {
   if (defined $FontList{"$fam"}) {
     my $fp;
     if ($self->{Lfam} ne $fam || $self->{Lwt} ne $wt) {
-      $fp = getFont($self->{pdf}, $fam, $wt);
+      $fp = CP::Fonts::getFont($self->{pdf}, $fam, $wt);
       $self->{font}[VERSE] = $fp;
       $self->{Lfam} = $fam;
       $self->{Lwt} = $wt;
@@ -369,7 +343,7 @@ sub tabFont {
   if (defined $FontList{"$fam"}) {
     my $fp;
     if ($self->{TBfam} ne $fam || $self->{TBwt} ne $wt) {
-      $fp = getFont($self->{pdf}, $fam, $wt);
+      $fp = CP::Fonts::getFont($self->{pdf}, $fam, $wt);
       $self->{font}[TAB] = $fp;
       $self->{TBfam} = $fam;
       $self->{TBwt} = $wt;

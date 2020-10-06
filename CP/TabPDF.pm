@@ -58,14 +58,14 @@ sub new {
       my $fam = $fp->{family};
       my $size = ceil($fp->{size});
       my $wt = pdfWeight($fp->{weight}, $fp->{slant});
-      $pfp = getFont($pdf, $fam, $wt);
+      $pfp = CP::Fonts::getFont($pdf, $fam, $wt);
       $self->{"${cap}dc"} = ceil((abs($pfp->descender) * $size) / 1000);
       $self->{"${cap}cap"} = $size - $self->{"${cap}dc"};
       $self->{"${cap}mid"} = $self->{"${cap}cap"} / 2;
       $self->{"${cap}sz"} = $size;
       $self->{"${cap}clr"} = $fp->{color};
     } else {
-      $pfp = getFont($pdf, RESTFONT, 'Regular');
+      $pfp = CP::Fonts::getFont($pdf, RESTFONT, 'Regular');
     }
     $self->{hscale}[$idx] = 100;
     $self->{font}[$idx] = $pfp;
@@ -78,38 +78,10 @@ sub new {
 sub pdfWeight {
   my($wt,$sl) = @_;
 
-  my $nwt = ($wt eq 'bold') ? 'Bold' : '';
+  my $nwt = ($wt eq 'bold') ? 'Bold' : ($wt eq 'heavy') ? 'Heavy' : '';
   $nwt .= 'Italic' if ($sl eq 'italic');
   $nwt = 'Regular' if ($nwt eq '');
   $nwt;
-}
-
-# We need this sub because PDF::API2 needs a PATH to a specific
-# font file unlike Windows which handles it automagically.
-sub getFont {
-  my($pdf,$fam,$wt) = @_;
-
-  my $pfp;
-  if (! defined $FontList{"$fam"}) {
-    $fam = 'Times New Roman';
-    errorPrint("Font '$fam' not found.\nSubstituting 'Times New Roman'");
-  }
-  my $path = $FontList{"$fam"}{Path};
-  my $file = $FontList{"$fam"}{$wt};
-  if ($file eq '') {
-    my %opts = ();
-    if ($wt =~ /Bold/) {
-      $opts{'-bold'} = $Opt->{Bold};
-    }
-    if ($wt =~ /Italic/) {
-      $opts{'-oblique'} = $Opt->{Italic};
-    }
-    my $tmp = $pdf->ttfont($path."/".$FontList{"$fam"}{Regular});
-    $pfp = $pdf->synfont($tmp, %opts);
-  } else {
-    $pfp = $pdf->ttfont($path."/".$file);
-  }
-  $pfp;
 }
 
 sub newTextGfx {

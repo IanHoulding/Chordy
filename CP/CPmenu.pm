@@ -45,9 +45,9 @@ sub new {
   $menu->add_cascade(-menu => $misc, -label => "Misc");
   $menu->add_cascade(-menu => $help, -label => "Help");
 
+  $file->add_command(-label => "New ChordPro", -command => \&main::newProFile);
   $file->add_command(-label => "Open File(s)", -command => [\&main::selectFiles, FILE]);
   $file->add_command(-label => "From Setlist", -command => \&CP::Chordy::fromSetlist);
-  $file->add_command(-label => "New ChordPro", -command => \&main::newProFile);
   $file->add_separator;
   $file->add_command(-label => "Import ChordPro", -command => \&main::impProFile);
   {
@@ -57,6 +57,7 @@ sub new {
 		      -command => sub{main::expFile($Path->{Pro}, '.pro', 1)});
     $exp->add_command(-label => 'All ChordPros',
 		      -command => sub{main::expFile($Path->{Pro}, '.pro')});
+    $exp->add_separator;
     $exp->add_command(-label => 'One PDF',
 		      -command => sub{main::expFile($Path->{PDF}, '.pdf', 1)});
     $exp->add_command(-label => 'All PDFs',
@@ -69,6 +70,7 @@ sub new {
 		       -command => sub{main::mailFile($Path->{Pro}, '.pro', 1)});
     $mail->add_command(-label => 'All ChordPros',
 		       -command => sub{main::mailFile($Path->{Pro}, '.pro')});
+    $mail->add_separator;
     $mail->add_command(-label => 'One PDF',
 		       -command => sub{main::mailFile($Path->{PDF}, '.pdf', 1)});
     $mail->add_command(-label => 'All PDFs',

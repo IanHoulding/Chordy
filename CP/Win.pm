@@ -222,6 +222,12 @@ sub MWoptions {
   Tkx::ttk__style_map('TEntry', -foreground => "disabled ".BROWN." readonly ".BROWN);
   Tkx::ttk__style_map('TEntry', -fieldbackground => "disabled ".LGREY." readonly ".LGREY);
 
+  Tkx::ttk__style_configure("TSpinbox",
+			    -foreground => $Opt->{MenuFG},
+			    -arrowcolor => BLACK,
+			    -fieldbackground => $Opt->{MenuBG},
+			    -background => $Opt->{MenuBG});
+
   Tkx::ttk__style_configure('TScrollbar',
 			    -relief => 'raised',
 			    -borderwidth => 1);

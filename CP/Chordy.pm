@@ -372,12 +372,13 @@ sub optWin {
   $b->g_grid(qw/-row 1 -column 0 -sticky w -pady 1/, -padx => [0,12]);
   $c->g_grid(qw/-row 2 -column 0 -sticky w -pady 1/, -padx => [0,12]);
   $d->g_grid(qw/-row 3 -column 0 -sticky w -pady 1/, -padx => [0,12]);
-  $e->g_grid(qw/-row 4 -column 0 -sticky w -pady 1/, -padx => [0,12]);
 
   $f->g_grid(qw/-row 0 -column 1 -sticky w -pady 1/, -padx => [0,12]);
   $g->g_grid(qw/-row 1 -column 1 -sticky w -pady 1/, -padx => [0,12]);
   $h->g_grid(qw/-row 2 -column 1 -sticky w -pady 1/, -padx => [0,12]);
   $i->g_grid(qw/-row 3 -column 1 -sticky w -pady 1/, -padx => [0,12]);
+  $e->g_grid(qw/-row 4 -column 1 -sticky w -pady 1/, -padx => [0,12]);
+
   ################
   
   $a = $wid->new_ttk__label(-text => "Line Spacing:");
@@ -478,6 +479,7 @@ sub optWin {
       -to => 72,
       -wrap => 1,
       -width => 2,
+      -state => 'readonly',
       -command => sub{$Opt->saveOne("${m}Margin");});
     $a->g_grid(qw/-row 0 -sticky e/, -column => $col++);
     $b->g_grid(qw/-row 0 -sticky w/, -column => $col++, -padx => [2,16]);
@@ -930,6 +932,7 @@ sub newMedia {
   $Media = $Media->change($Opt->{Media});
   showSize();
   fontWin();
+  CP::Win::title();
 }
 
 sub showSize {
