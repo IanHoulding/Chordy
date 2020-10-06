@@ -1,4 +1,5 @@
-#!/usr/bin/perl
+#!/Applications/Chordy.app/Chordy
+# Windows ignores the above but a Mac needs it.
 
 ###############################################################################
 # Copyright (c) 2018 Ian Houlding
