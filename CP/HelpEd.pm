@@ -288,8 +288,8 @@ sub help {
 
  "<T HL><s {x_hl|x_horizontal_line:height length colour}> ",
  "<M>THIS IS NOT A STANDARD ChordPro DIRECTIVE!",
- "<M>This will draw a horizontal line on the page. The default is 1 point (1/72 of an inch) high the width of the page and transparent. The actual values you can place after the ':' are one or more of:",
- "<M>     <B line height>, <B line length> and <B line colour> (each separated by a space).\nAll lengths are in points (72 per inch) and the colour is defined in either of the usual ways.\nIf there is just one number before a colour definition, it is taken as being the line height - the width being the default of the page width.\nAlthough this is designed to draw a line, if you leave out the colour value this directive will insert a vertical space into the page so, for example, {hl:18} will insert a blank line about 1/4\" high into the page. A more efficient way is to use the {vspace} directive - see below.\n",
+ "<M>This will draw a horizontal line centered on the page. The default is 1 point (1/72 of an inch) high the width of the page and transparent. The actual values you can place after the ':' are one or more of:",
+ "<M>     <B line height>, <B line length> and <B line colour> (each separated by a space).\nAll lengths are in points (72 per inch) and the colour is defined in either of the usual ways. The only variant is the <B length> which can alternatively have a decimal value between 0.0 and 1.0 if which case it is considered to be that fraction of the page width.\nIf there is just one number before a colour definition, it is taken as being the line height - the width being the default of the page width.\nAlthough this is designed to draw a line, if you leave out the colour value this directive will insert a vertical space into the page so, for example, {hl:18} will insert a blank line about 1/4\" high into the page. A more efficient way is to use the {vspace} directive - see below.\n",
 
  "<T VS><s {x_vs|x_vspace:height}> ",
  "<M>THIS IS NOT A STANDARD ChordPro DIRECTIVE!",

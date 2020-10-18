@@ -48,46 +48,84 @@ sub new {
   $menu->add_cascade(-menu => $misc, -label => "Misc");
   $menu->add_cascade(-menu => $help, -label => "Help");
 
-  $file->add_command(-label => "Open Tab",   -command => \&openTab);
-  $file->add_command(-label => "New Tab",    -command => \&newTab);
-  $file->add_command(-label => "Close Tab",  -command => \&closeTab);
-  $file->add_command(-label => "Delete Tab", -command => \&delTab);
+  $file->add_command(-label => "Open Tab",   -font => 'TkMenuFont', -command => \&openTab);
+  $file->add_command(-label => "New Tab",    -font => 'TkMenuFont', -command => \&newTab);
+  $file->add_command(-label => "Close Tab",  -font => 'TkMenuFont', -command => \&closeTab);
+  $file->add_command(-label => "Delete Tab", -font => 'TkMenuFont', -command => \&delTab);
   $file->add_separator;  #########
-  $file->add_command(-label => "Save Tab",   -command => sub{$Tab->save()});
-  $file->add_command(-label => "Save As",    -command => sub{$Tab->saveAs()});
-  $file->add_command(-label => "Rename Tab", -command => \&renameTab);
-  $file->add_command(-label => "Export Tab", -command => \&exportTab);
+  $file->add_command(-label => "Save Tab",
+		     -font => 'TkMenuFont',
+		     -command => sub{$Tab->save()});
+  $file->add_command(-label => "Save As",
+		     -font => 'TkMenuFont',
+		     -command => sub{$Tab->saveAs()});
+  $file->add_command(-label => 'Save, Make & Close',
+		     -font => 'TkMenuFont',
+		     -command => \&saveCloseTab);
+  $file->add_command(-label => "Rename Tab",
+		     -font => 'TkMenuFont',
+		     -command => \&renameTab);
+  $file->add_command(-label => "Export Tab",
+		     -font => 'TkMenuFont',
+		     -command => \&exportTab);
   $file->add_separator;  #########
-  $file->add_command(-label => "Exit",       -command => \&exitTab);
+  $file->add_command(-label => "Exit",
+		     -font => 'TkMenuFont',
+		     -command => \&exitTab);
 
-  $edit->add_command(-label => "Collection", -command => sub{$Collection->edit()});
-  $edit->add_command(-label => "Media",      -command => \&mediaEdit);
-  $edit->add_command(-label => "Fonts",      -command => \&fontEdit);
+  $edit->add_command(-label => "Collection",
+		     -font => 'TkMenuFont',
+		     -command => sub{$Collection->edit()});
+  $edit->add_command(-label => "Media",
+		     -font => 'TkMenuFont',
+		     -command => \&mediaEdit);
+  $edit->add_command(-label => "Fonts",
+		     -font => 'TkMenuFont',
+		     -command => \&fontEdit);
   
-  $PDF->add_command(-label => "View",       -command => [\&CP::TabPDF::make, 'V']);
-  $PDF->add_command(-label => 'Make',       -command => [\&CP::TabPDF::make, 'M']);
-  $PDF->add_command(-label => 'Batch Make', -command =>  \&CP::TabPDF::batch);
-  $PDF->add_command(-label => 'Print',      -command => [\&CP::TabPDF::make, 'P']);
+  $PDF->add_command(-label => "View",
+		    -font => 'TkMenuFont',
+		    -command => [\&CP::TabPDF::make, 'V']);
+  $PDF->add_command(-label => 'Make',
+		    -font => 'TkMenuFont',
+		    -command => [\&CP::TabPDF::make, 'M']);
+  $PDF->add_command(-label => 'Batch Make',
+		    -font => 'TkMenuFont',
+		    -command =>  \&CP::TabPDF::batch);
+  $PDF->add_command(-label => 'Print',
+		    -font => 'TkMenuFont',
+		    -command => [\&CP::TabPDF::make, 'P']);
   $PDF->add_separator;  #########
-  $PDF->add_command(-label => 'Save, Make & Close',  -command => \&saveCloseTab);
-  $PDF->add_command(-label => 'Save As Text',        -command => sub{$Tab->saveAsText()});
+  $PDF->add_command(-label => 'Save, Make & Close',
+		    -font => 'TkMenuFont',
+		    -command => \&saveCloseTab);
+  $PDF->add_command(-label => 'Save As Text',
+		    -font => 'TkMenuFont',
+		    -command => sub{$Tab->saveAsText()});
 
   my $inst = $opt->new_menu;
-  $opt->add_cascade(-menu => $inst, -label => 'Instrument'." - $Opt->{Instrument}");
+  $opt->add_cascade(-menu => $inst,
+		    -font => 'TkMenuFont',
+		    -label => 'Instrument'." - $Opt->{Instrument}");
   foreach (@{$Opt->{Instruments}}) {
     $inst->add_radiobutton(-label => $_,
 			   -variable => \$Opt->{Instrument},
+			   -font => 'TkMenuFont',
 			   -command =>
 			   sub{$Tab->drawPageWin();
 			       main::setEdited(1);
 			       config($opt, 0, 'Instrument', $Opt->{Instrument});
+			       $Opt->saveOne('Instrument');
 			   });
   }
   my $tim = $opt->new_menu;
-  $opt->add_cascade(-menu => $tim, -label => 'Timing'." - $Tab->{Timing}");
+  $opt->add_cascade(-menu => $tim,
+		    -font => 'TkMenuFont',
+		    -label => 'Timing'." - $Tab->{Timing}");
   foreach (qw{2/4 3/4 4/4}) {
     $tim->add_radiobutton(-label => $_,
 			  -variable => \$Tab->{Timing},
+			  -font => 'TkMenuFont',
 			  -command => sub{my($t,$_t) = split('/', $Tab->{Timing});
 					  $Tab->{BarEnd} = $t * 8;
 					  $Tab->drawPageWin();
@@ -97,11 +135,14 @@ sub new {
 			  });
   }
   my $key = $opt->new_menu;
-  $opt->add_cascade(-menu => $key, -label => 'Set Key'." - $Tab->{key}");
+  $opt->add_cascade(-menu => $key,
+		    -font => 'TkMenuFont',
+		    -label => 'Set Key'." - $Tab->{key}");
   no warnings; # stops perl bleating about '#' in array definition.
   foreach (qw/- Ab Abm A Am A# A#m Bb Bbm B Bm C Cm C# C#m Db Dbm D Dm D# D#m Eb Ebm E Em F Fm F# F#m Gb Gbm G Gm G# G#m/) {
     $key->add_radiobutton(-label => $_,
 			  -variable => \$Tab->{key},
+			  -font => 'TkMenuFont',
 			  -command => sub{$Tab->pageKey();
 					  main::setEdited(1);
 					  config($opt, 2, 'Set Key', $Tab->{key});
@@ -109,76 +150,109 @@ sub new {
   }
   use warnings;
   my $bps = $opt->new_menu;
-  $opt->add_cascade(-menu => $bps, -label => 'Bars/Stave'." - $Opt->{Nbar}");
+  $opt->add_cascade(-menu => $bps,
+		    -font => 'TkMenuFont',
+		    -label => 'Bars/Stave'." - $Opt->{Nbar}");
   foreach (qw/3 4 5 6 7 8 9 10/) {
     $bps->add_radiobutton(-label => $_,
 			  -variable => \$Opt->{Nbar},
+			  -font => 'TkMenuFont',
 			  -command => sub{$Tab->drawPageWin();
 					  main::setEdited(1);
 					  config($opt, 3, 'Bars/Stave', $Opt->{Nbar});
+					  $Opt->saveOne('Nbar');
 			  });
   }
   my $ss = $opt->new_menu;
-  $opt->add_cascade(-menu => $ss, -label => 'String Spacing'." - $Opt->{StaffSpace}");
+  $opt->add_cascade(-menu => $ss,
+		    -font => 'TkMenuFont',
+		    -label => 'String Spacing'." - $Opt->{StaffSpace}");
   foreach (qw/6 7 8 9 10 11 12 13 14 15 16/) {
     $ss->add_radiobutton(-label => $_,
 			 -variable => \$Opt->{StaffSpace},
+			 -font => 'TkMenuFont',
 			 -command => sub{$Tab->drawPageWin();
 					 CP::TabWin::editWindow();
 					 main::setEdited(1);
 					 config($opt, 4, 'String Spacing', $Opt->{StaffSpace});
+					 $Opt->saveOne('StaffSpace');
 			 });
   }
   my $sg = $opt->new_menu;
-  $opt->add_cascade(-menu => $sg, -label => 'Stave Gap'." - $Tab->{staveGap}");
+  $opt->add_cascade(-menu => $sg,
+		    -font => 'TkMenuFont',
+		    -label => 'Stave Gap'." - $Tab->{staveGap}");
   foreach (qw/0 1 2 3 4 5 6 8 9 10 11 12 13 14 16 18 20/) {
     $sg->add_radiobutton(-label => $_,
 			 -variable => \$Tab->{staveGap},
+			 -font => 'TkMenuFont',
 			 -command => sub{$Tab->drawPageWin();
 					 main::setEdited(1);
 					 config($opt, 5, 'Stave Gap', $Tab->{staveGap});
 			 });
   }
   my $es = $opt->new_menu;
-  $opt->add_cascade(-menu => $es, -label => 'Edit Scale'." - $Opt->{EditScale}");
+  $opt->add_cascade(-menu => $es,
+		    -font => 'TkMenuFont',
+		    -label => 'Edit Scale'." - $Opt->{EditScale}");
   foreach (qw/3 3.5 4 4.5 5 5.5 6/) {
     $es->add_radiobutton(-label => $_,
 			 -variable => \$Opt->{EditScale},
+			 -font => 'TkMenuFont',
 			 -command => sub{CP::TabWin::editWindow();
 					 config($opt, 6, 'Edit Scale', $Opt->{EditScale});
+					 $Opt->saveOne('EditScale');
 			 });
   }
   my $ll = $opt->new_menu;
-  $opt->add_cascade(-menu => $ll, -label => 'Lyric Lines'." - $Opt->{LyricLines}");
-  my $lln = $Opt->{LyricLines};
+  $opt->add_cascade(-menu => $ll,
+		    -font => 'TkMenuFont',
+		    -label => 'Lyric Lines'." - $Opt->{LyricLines}");
   foreach (qw/0 1 2 3/) {
     $ll->add_radiobutton(-label => $_,
-			 -variable => \$lln,
-			 -command => sub{$Tab->{lyrics}->adjust($lln);
+			 -variable => \$Opt->{LyricLines},
+			 -font => 'TkMenuFont',
+			 -command => sub{$Tab->{lyrics}->adjust($Opt->{LyricLines});
 					 $Tab->drawPageWin();
 					 main::setEdited(1);
 					 config($opt, 7, 'Lyric Lines', $Opt->{LyricLines});
+					 $Opt->saveOne('LyricLines');
 			 });
   }
   my $ls = $opt->new_menu;
-  $opt->add_cascade(-menu => $ls, -label => 'Lyric Spacing'." - $Tab->{lyricSpace}");
+  $opt->add_cascade(-menu => $ls,
+		    -font => 'TkMenuFont',
+		    -label => 'Lyric Spacing'." - $Tab->{lyricSpace}");
   foreach (qw/0 2 4 6 8 10 12 14 16 18 20/) {
     $ls->add_radiobutton(-label => $_,
 			 -variable => \$Tab->{lyricSpace},
+			 -font => 'TkMenuFont',
 			 -command => sub{$Tab->drawPageWin();
 					 main::setEdited(1);
 					 config($opt, 8, 'Lyric Spacing', $Tab->{lyricSpace});
 			 });
   }
   
-  $misc->add_command(-label => 'View Error Log',     -command => \&viewElog);
-  $misc->add_command(-label => 'Clear Error Log',    -command => \&clearElog);
-  $misc->add_command(-label => 'View Release Notes', -command => \&viewRelNt);
+  $misc->add_command(-label => 'View Error Log',
+		     -font => 'TkMenuFont',
+		     -command => \&viewElog);
+  $misc->add_command(-label => 'Clear Error Log',
+		     -font => 'TkMenuFont',
+		     -command => \&clearElog);
+  $misc->add_command(-label => 'View Release Notes',
+		     -font => 'TkMenuFont',
+		     -command => \&viewRelNt);
   $misc->add_separator;
-  $misc->add_command(-label => "Delete Tab Backups", -command => [\&DeleteBackups, '.tab', $Path->{Temp}]);
+  $misc->add_command(-label => "Delete Tab Backups",
+		     -font => 'TkMenuFont',
+		     -command => [\&DeleteBackups, '.tab', $Path->{Temp}]);
   
-  $help->add_command(-label => 'Help',  -command => \&CP::HelpTab::help);
-  $help->add_command(-label => 'About', -command => sub{message(SMILE, "Version $Version\nian\@houlding.me.uk");});
+  $help->add_command(-label => 'Help',
+		     -font => 'TkMenuFont',
+		     -command => \&CP::HelpTab::help);
+  $help->add_command(-label => 'About',
+		     -font => 'TkMenuFont',
+		     -command => sub{message(SMILE, "Version $Version\nian\@houlding.me.uk");});
   if (OS eq 'aqua') {
     $MW->configure(-menu => $m);
   }
@@ -305,6 +379,7 @@ sub saveCloseTab {
   $Tab->save();
   CP::TabPDF::make('M');
   $Tab->new('');
+  $Tab->drawPageWin();
 }
 
 sub mediaEdit {

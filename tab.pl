@@ -1,5 +1,4 @@
-#!/Applications/Chordy.app/Chordy
-# Windows ignores the above but a Mac needs it.
+#!/usr/bin/perl
 
 # This file is part of Chordy.
 #

@@ -16,6 +16,7 @@ use POSIX qw/ceil/;
 use CP::Cconst qw/:FONT :MUSIC :TEXT :INDEX :COLOUR/;
 use CP::Global qw/:FUNC :OPT :WIN :CHORD :SCALE :SETL/;
 use PDF::API2;
+use CP::PDFfont;
 use CP::Chord;
 
 my($TextPtr,$GfxPtr);
@@ -23,7 +24,6 @@ my($TextPtr,$GfxPtr);
 my $XSIZE = 8;
 my $YSIZE = 10;
 my $SPACE = 15;
-my $FFSIZE = 0;
 
 my $SUPHT = 0.6;
 
@@ -32,11 +32,14 @@ sub new {
 
   my $class = ref($proto) || $proto;
   my $self = {};
+  bless $self, $class;
+
   my $pdf = PDF::API2->new(-file => "$fn");
   $self->{pdf} = $pdf;
   #
   # Do all the font jiggery-pokery ...
   #
+  my $copy;
   foreach my $m (['Title',     TITLE],
 		 ['Lyric',     VERSE],
 		 ['Chord',     CHORD],
@@ -45,54 +48,27 @@ sub new {
 		 ['Comment',   CMMNT],
 		 ['Highlight', HLIGHT]) {
     my($media,$idx) = @{$m};
-    my $cap = substr($media, 0, 1);
-    $cap .= 'M' if ($idx == CMMNT);
-    $cap .= 'B' if ($idx == LABEL || $idx == TAB);
-    my $fp = $Media->{"$media"};
-    my $fam = $fp->{family};
-    my $size = ceil($fp->{size});
-    # return Bold, BoldItalic or Regular
-    my $wt = pdfWeight($fp->{weight}, $fp->{slant});
-    my $pfp = CP::Fonts::getFont($pdf, $fam, $wt);
-    # Font metrics don't seem to follow the accepted standard where the total
-    # height used by a font is (ascender + descender) and where the ascender
-    # includes any extra height added by the composer.
-    $self->{"${cap}sz"} = $size;
-    $self->{"${cap}dc"} = abs(ceil(($pfp->descender * $size) / 1000));
-    if ($idx == CHORD) {
-      $self->{Cas} = $size;
-      $self->{Ssz} = ceil($size * $SUPHT * 2) / 2;
-    } else {
-      if ($idx == CMMNT || $idx == HLIGHT) {
-	$self->{"${cap}as"} = ceil(($pfp->ascender * $size) / 1000);
-      } else {
-	# This is essentially the height of a Capital.
-	$self->{"${cap}as"} = $size - $self->{"${cap}dc"};
-      }
-      $self->{"${cap}dc"} += 2;
-    }
-    $self->{"${cap}clr"} = $fp->{color};
-    $self->{hscale}[$idx] = 100;
-    $self->{font}[$idx] = $pfp;
+    my $pfp = $self->{fonts}[$idx] = CP::PDFfont->new($media, $idx, $pdf);
     if ($idx == CMMNT) {
-     $self->{hscale}[CMMNTB] = $self->{hscale}[CMMNTI] = 100;
-     $self->{font}[CMMNTB] = $pfp;
-     $wt = ($wt eq 'Bold') ? 'BoldItalic' : 'Italic';
-     $self->{font}[CMMNTI] = CP::Fonts::getFont($pdf, $fam, $wt);
+      $self->{fonts}[CMMNTB] = $pfp;
+      $copy = $self->{fonts}[CMMNTI] = $pfp->copy();
+      $copy->{sl} = $Opt->{Italic};
     }
-    $self->{"${cap}fam"} = $fam;
-    $self->{"${cap}wt"} = $wt;
   }
-  $self->{font}[GRID] = CP::Fonts::getFont($pdf, RESTFONT, 'Regular');
+  $copy = $self->{fonts}[GRID] = $self->{fonts}[CHORD]->copy();
+  $copy->{fam} = RESTFONT;
+  $copy->{wt} = $copy->{sl} = 0;
+  $self->{fonts}[GRID]{font} = $copy->getFont($pdf, GRID);
 
   $self->{page} = [];
-  $FFSIZE = 0;
+  $self->{ffSize} = 0;
 
-  bless $self, $class;
   return($self);
 }
 
 sub printSL {
+  my($chordy) = shift;
+
   return if ($CurSet eq '');
 
   my $tmpMedia = $Opt->{Media};
@@ -106,14 +82,12 @@ sub printSL {
   #
   # Do the font jiggery-pokery ...
   #
-  my $fp = $Media->{"Title"};
-  my $Tfam = $fp->{family};
-  my $Tsz = ceil($fp->{size});
-  # return Bold, BoldItalic or Regular
-  my $Twt = pdfWeight($fp->{weight}, $fp->{slant});
-  my $pfp = CP::Fonts::getFont($pdf, $Tfam, $Twt);
-  my $Tdc = abs(ceil(($pfp->descender * $Tsz) / 1000)) + 1;
-  my $Tclr = $fp->{color};
+  my $fp = CP::PDFfont->new("Title", TITLE, $pdf);
+  my $pfp = $fp->{font};
+  my $Tsz = $fp->{sz};
+  my $Tdc = $fp->{dc};
+  my $Tclr = $fp->{clr};
+
   my $Lsz = $Media->{Lyric}{size} + 1;
   my $Lclr = $Media->{Lyric}{color};
 
@@ -127,8 +101,8 @@ sub printSL {
   #
   # Set BackGround colour and show the title
   #
-  if ($Media->{verseBG} ne WHITE) {
-    $GfxPtr->fillcolor($Media->{verseBG});
+  if ($Opt->{PageBG} ne WHITE) {
+    $GfxPtr->fillcolor($Opt->{PageBG});
     $GfxPtr->rect(0, 0, $w, $h);
     $GfxPtr->fill();
   }
@@ -136,7 +110,7 @@ sub printSL {
   if ($Media->{titleBG} ne WHITE) {
     _bg($Media->{titleBG}, 0, $h, $w, $Tsz + 3);
   }
-  _textCenter($w/2, $h + $Tdc, $CurSet, $pfp, $Tsz, $Tclr);
+  _textCenter($w/2, $h + $Tdc + 2, $CurSet, $pfp, $Tsz, $Tclr);
   if ($AllSets->{meta}{date} ne '') {
     _textRight($w - $Opt->{RightMargin}, $h + $Tdc, $AllSets->{meta}{date}, $pfp, $Lsz, $Tclr);
   }
@@ -226,174 +200,11 @@ sub printSL {
   $pdf->end();
   my $print = $Opt->{PDFprint};
   $Opt->{PDFprint} = 69;
-  main::PDFprint($tmpPDF) if (main::PDFview($tmpPDF));
+  main::PDFprint($tmpPDF) if (main::PDFview($chordy, $tmpPDF));
   $Opt->{PDFprint} = $print;
 
   $Opt->{Media} = $tmpMedia;
   $Media = $Media->change($Opt->{Media});
-}
-
-sub chordSize {
-  my($self,$size) = @_;
-
-  if (!defined $size || $size eq '') {
-    $size = $Media->{Chord}{size};
-  }
-  my $fp = $self->{font}[CHORD]; 
-  $self->{Cas} = $self->{Csz} = $size;
-  $self->{Cdc} = abs(ceil(($fp->descender * $size) / 1000)) + 2;
-  $self->{Ssz} = ceil($size * $SUPHT * 2) / 2;
-  $FFSIZE = _measure("10", $fp, $self->{Csz} * $SUPHT) if (defined $TextPtr);
-}
-
-# Called in response to a {chordfont} directive.
-sub chordFont {
-  my($self,$font) = @_;
-
-  if (!defined $font || $font eq '') {
-    my $fp = $Media->{Chord};
-    $font = "\{$fp->{family}\} $fp->{size} $fp->{weight} $fp->{slant}";
-  }
-  my ($fam,$sz,$wt) = fontAttr($self->{Cwt}, $font);
-
-  if (defined $FontList{"$fam"}) {
-    my $fp;
-    if ($self->{Cfam} ne $fam || $self->{Cwt} ne $wt) {
-      $fp = CP::Fonts::getFont($self->{pdf}, $fam, $wt);
-      $self->{font}[CHORD] = $fp;
-      $self->{Cfam} = $fam;
-      $self->{Cwt} = $wt;
-    } else {
-      $fp = $self->{font}[CHORD];
-    }
-    $self->{Cas} = $self->{Csz} = $sz;
-    $self->{Cdc} = abs(ceil(($fp->descender * $sz) / 1000)) + 2;
-    $self->{Ssz} = ceil($sz * $SUPHT * 2) / 2;
-    $FFSIZE = _measure("10", $fp, $self->{Csz} * $SUPHT) if (defined $TextPtr);
-  } else {
-    error("Chord", $fam, $wt);
-  }
-}
-
-sub lyricSize {
-  my($self,$size) = @_;
-
-  if (!defined $size || $size eq '') {
-    $size = $Media->{Lyric}{size};
-  }
-  my $fp = $self->{font}[VERSE]; 
-  $self->{Lsz} = $size;
-  $self->{Ldc} = abs(ceil(($fp->descender * $size) / 1000));
-  $self->{Las} = $size - $self->{Ldc};
-  $self->{Ldc} += 2;
-}
-
-# Called in response to a {textfont} directive.
-sub lyricFont {
-  my($self,$font) = @_;
-
-  if (!defined $font || $font eq '') {
-    my $fp = $Media->{Lyric};
-    $font = "\{$fp->{family}\} $fp->{size} $fp->{weight} $fp->{slant}";
-  }
-  my($fam,$sz,$wt) = fontAttr($self->{Lwt},$font);
-
-  if (defined $FontList{"$fam"}) {
-    my $fp;
-    if ($self->{Lfam} ne $fam || $self->{Lwt} ne $wt) {
-      $fp = CP::Fonts::getFont($self->{pdf}, $fam, $wt);
-      $self->{font}[VERSE] = $fp;
-      $self->{Lfam} = $fam;
-      $self->{Lwt} = $wt;
-    } else {
-      $fp = $self->{font}[VERSE];
-    }
-    $self->{Lsz} = $sz;
-    $self->{Ldc} = abs(ceil(($fp->descender * $sz) / 1000));
-    $self->{Las} = $sz - $self->{Ldc};
-    $self->{Ldc} += 2;
-  } else {
-    error("Lyric", $fam, $wt);
-  }
-}
-
-sub tabSize {
-  my($self,$size) = @_;
-
-  if (!defined $size || $size eq '') {
-    $size = $Media->{Tab}{size};
-  }
-  my $fp = $self->{font}[TAB]; 
-  $self->{TBsz} = $size;
-  $self->{TBdc} = abs(ceil(($fp->descender * $size) / 1000));
-  $self->{TBas} = $size - $self->{TBdc};
-  $self->{TBdc} += 2;
-}
-
-# Called in response to a {textfont} directive.
-sub tabFont {
-  my($self,$font) = @_;
-
-  if (!defined $font || $font eq '') {
-    my $fp = $Media->{Tab};
-    $font = "\{$fp->{family}\} $fp->{size} $fp->{weight} $fp->{slant}";
-  }
-  my($fam,$sz,$wt) = fontAttr($self->{TBwt},$font);
-
-  if (defined $FontList{"$fam"}) {
-    my $fp;
-    if ($self->{TBfam} ne $fam || $self->{TBwt} ne $wt) {
-      $fp = CP::Fonts::getFont($self->{pdf}, $fam, $wt);
-      $self->{font}[TAB] = $fp;
-      $self->{TBfam} = $fam;
-      $self->{TBwt} = $wt;
-    } else {
-      $fp = $self->{font}[TAB];
-    }
-    $self->{TBsz} = $sz;
-    $self->{TBdc} = abs(ceil(($fp->descender * $sz) / 1000));
-    $self->{TBas} = $sz - $self->{TBdc};
-    $self->{TBdc} += 2;
-  } else {
-    error("Tab", $fam, $wt);
-  }
-}
-
-sub fontAttr {
-  my($pwt,$str) = @_;
-
-  my $owt = ($pwt =~ /bold/i) ? 'bold' : '';
-  my $osl = ($pwt =~ /italic/i) ? 'italic' : '';
-  my ($fam,$sz,$nwt,$nsl);
-  if ($str =~ /^\s*\{([^\}]+)\}\s*(\d*)\s*(\S*)\s*(\S*)/) {
-    $fam = $1;
-    $sz = $2;
-    $nwt = $3;
-    $nsl = $4;
-  }
-  else {
-    ($fam,$sz,$nwt,$nsl) = split(' ',$str);
-    $sz = '' if (!defined $sz);
-    $nwt = '' if (!defined $nwt);
-    $nsl = '' if (!defined $nsl);
-  }
-  $nwt = $owt if ($nwt eq '');
-  $nsl = $osl if ($nsl eq '');
-  ($fam,$sz,pdfWeight($nwt, $nsl));
-}
-
-sub pdfWeight {
-  my($wt,$sl) = @_;
-
-  my $nwt = ($wt eq 'bold') ? 'Bold' : '';
-  $nwt .= 'Italic' if ($sl eq 'italic');
-  $nwt = 'Regular' if ($nwt eq '');
-  $nwt;
-}
-
-sub error {
-  my($type,$fam,$wt) = @_;
-  errorPrint("$type Font '$fam $wt' does not exist - reverting to original font.");
 }
 
 sub newTextGfx {
@@ -408,6 +219,9 @@ sub newTextGfx {
 sub newPage {
   my($self,$pro,$pn) = @_;
 
+  my $tFontP = $self->{fonts}[TITLE];
+  my $tfp = $tFontP->{font};
+
   my $w = $Media->{width};
   my $h = $Media->{height};
   my $pp = $self->{pdf}->page;
@@ -419,27 +233,28 @@ sub newPage {
   if ($Opt->{PageBG} ne WHITE) {
     _bg($Opt->{PageBG}, 0, 0, $w, $h);
   }
-  $h -= ($self->{Tsz} + 3);
+  $h -= ($tFontP->{sz} + 3);
+  $self->{headerBase} = $h + 1;
   if ($Media->{titleBG} ne WHITE) {
-    _bg($Media->{titleBG}, 0, $h, $w, $self->{Tsz} + 3);
+    _bg($Media->{titleBG}, 0, $h, $w, $tFontP->{sz} + 3);
   }
-  _textCenter($w/2, $h + $self->{Tdc},
-	      $pro->{title}, $self->{font}[TITLE], $self->{Tsz}, $Media->{Title}{color});
+  _textCenter($w/2, $self->{headerBase} + $tFontP->{dc},
+	      $pro->{title}, $tfp, $tFontP->{sz}, $tFontP->{clr});
 
   $h -= 1;
   _hline(0, $h, $w, 1, DBLUE);
 
   my $offset = 0;
-  my $tht = $h + $self->{Tdc} + 2;
-  my $th = $self->{Tsz} * KEYMUL;
-  my $dc = $self->{Tdc} * KEYMUL;
-  my $cc = $Media->{Chord}{color};
+  my $tbl = $self->{headerBase} + $tFontP->{dc};
+  my $th = $tFontP->{sz} * KEYMUL;
+  my $dc = $tFontP->{dc} * KEYMUL;
+  my $cc = $tFontP->{clr};
 
   if ($pro->{key} ne '') {
-    my $tw = _textAdd($Opt->{LeftMargin}, $tht, "Key: ", $self->{font}[TITLE], $th, BLACK);
+    my $tw = _textAdd($Opt->{LeftMargin}, $tbl, "Key: ", $tfp, $th, BLACK);
     my($ch,$cname) = CP::Chord->new($pro->{key});
     $ch = $ch->trans2obj($pro) if ($Opt->{Transpose} ne '-');
-    chordAdd($self, $Opt->{LeftMargin} + $tw, $tht, $ch, $cc, $th);
+    chordAdd($self, $Opt->{LeftMargin} + $tw, $tbl, $ch, $cc, $th);
   }
 
   if ($pn == 1) {
@@ -459,26 +274,26 @@ sub newPage {
       $h -= 2;
       if ($pro->{tempo} ne 0) {
 	$h -= ($th - $dc);
-	$offset = _textAdd($Opt->{LeftMargin}, $h, "Tempo: ", $self->{font}[TITLE], $th, BLACK);
-	_textAdd($Opt->{LeftMargin} + $offset, $h, "$pro->{tempo}", $self->{font}[TITLE], $th, $cc);
+	$offset = _textAdd($Opt->{LeftMargin}, $h, "Tempo: ", $tfp, $th, BLACK);
+	_textAdd($Opt->{LeftMargin} + $offset, $h, "$pro->{tempo}", $tfp, $th, $cc);
 	$h -= $dc;
       }
       if ($pro->{note} ne '') {
 	$h -= ($th - $dc);
-	my $tw = _textAdd($Opt->{LeftMargin}, $h, "Note: ", $self->{font}[TITLE], $th, BLACK) + $Opt->{LeftMargin};
+	my $tw = _textAdd($Opt->{LeftMargin}, $h, "Note: ", $tfp, $th, BLACK) + $Opt->{LeftMargin};
 	$offset = $tw if ($offset == 0);
-	_textAdd($Opt->{LeftMargin} + $offset, $h, $pro->{note}, $self->{font}[TITLE], $th, $cc);
+	_textAdd($Opt->{LeftMargin} + $offset, $h, $pro->{note}, $tfp, $th, $cc);
 	$h -= $dc;
       }
       if ($pro->{capo} ne 0 && $Opt->{LyricOnly} == 0) {
 	$h -= ($th - $dc);
-	my $tw = _textAdd($Opt->{LeftMargin}, $h, "Capo: ", $self->{font}[TITLE], $th, BLACK);
+	my $tw = _textAdd($Opt->{LeftMargin}, $h, "Capo: ", $tfp, $th, BLACK);
 	$offset = $tw if ($offset == 0);
-	$tw = _textAdd($Opt->{LeftMargin} + $offset, $h, "$pro->{capo}", $self->{font}[TITLE], $th, $cc);
+	$tw = _textAdd($Opt->{LeftMargin} + $offset, $h, "$pro->{capo}", $tfp, $th, $cc);
 	if ($Opt->{IgnCapo}) {
 	  $offset += $tw;
 	  $tw = int(($th / 4) * 3);
-	  _textAdd($Opt->{LeftMargin} + $offset, $h, "  (ignored)", $self->{font}[TITLE], $tw, $cc);
+	  _textAdd($Opt->{LeftMargin} + $offset, $h, "  (ignored)", $tfp, $tw, $cc);
 	}
 	$h -= $dc;
       }
@@ -490,10 +305,12 @@ sub newPage {
     _hline(0, $h, $w, 1, DBLUE);
   }
 
+  my $chFontP = $self->{fonts}[CHORD];
+  my $chfp = $chFontP->{font};
   if ($Opt->{Grid} != NONE && ($pn == 1 || $Opt->{Grid} == ALLP)) {
     $h -= INDENT;
-    $FFSIZE = _measure("10", $self->{font}[CHORD], $self->{Csz} * $SUPHT) if ($FFSIZE == 0);
-    my($cnt,$xinc) = fingersWidth();
+    $self->{ffSize} = _measure("10", $chfp, $chFontP->{sz} * $SUPHT) if ($self->{ffSize} == 0);
+    my($cnt,$xinc) = fingersWidth($self);
     my $margin = $Opt->{LeftMargin} * 2;
     $w -= $margin;
     my $maxy = 0;
@@ -527,16 +344,19 @@ sub newPage {
 sub pageNum {
   my($self,$npage) = @_;
 
-  my $h = $Media->{height} - $self->{Tsz} + $self->{Tdc};
+  my $tifp = $self->{fonts}[TITLE];
+  my $fp = $tifp->{font};
+  my $h = $self->{headerBase} + $tifp->{dc};
   my $npg = 0 - $npage;
   my $pn = 1;
   my $ptext = $TextPtr;
+  my $rightIdx = $Media->{width} - $Opt->{RightMargin};
+  my $size = ceil($tifp->{sz} * PAGEMUL);
   while ($npg) {
     my $pp = $self->{page}[$npg++];
     my $page = "Page ".$pn++." of $npage ";
     $TextPtr = $pp->text();
-    _textRight($Media->{width} - $Opt->{RightMargin}, $h,
-	       $page, $self->{font}[TITLE], ceil($self->{Tsz} * PAGEMUL), BROWN);
+    _textRight($rightIdx, $h, $page, $fp, $size, BROWN);
     $TextPtr->textend;
   }
   $TextPtr = $ptext;
@@ -548,9 +368,10 @@ sub pageNum {
 sub fingerHeight {
   my($self,$name) = @_;
 
-  my $tht = $self->{Csz} * $SUPHT;
-  my $tdc = $self->{Cdc} * $SUPHT;
-  my $ly = $self->{Csz} + $tht + $tdc;
+  my $chfp = $self->{fonts}[CHORD];
+  my $tht = $chfp->{sz} * $SUPHT;
+  my $tdc = $chfp->{dc} * $SUPHT;
+  my $ly = $chfp->{sz} + $tht + $tdc;
   my $max = 0;
   foreach my $fr (@{$Fingers{$name}{fret}}) {
     $max = $fr if ($fr =~ /\d+/ && $fr > $max);
@@ -566,7 +387,7 @@ sub fingerHeight {
 sub fingersHeight {
   my($self,@chords) = @_;
 
-  my($nc,$inc) = fingersWidth();
+  my($nc,$inc) = fingersWidth($self);
   my $h = 0;
   while (@chords) {
     my $max = 0;
@@ -585,8 +406,10 @@ sub fingersHeight {
 # distance (in points) between the start of each chord
 #
 sub fingersWidth {
+  my($self) = shift;
+
   my $w = $Media->{width} - ($Opt->{LeftMargin} + $Opt->{RightMargin});
-  my $cw = (($Nstring - 1) * $XSIZE) + $FFSIZE + $SPACE; # min size of a chord diagram + spacer
+  my $cw = (($Nstring - 1) * $XSIZE) + $self->{ffSize} + $SPACE; # min size of a chord diagram + spacer
   my $nc = int($w / $cw);                                # number of chords we can draw
   $cw += int(($w - ($nc * $cw) + $SPACE) / ($nc - 1));   # even out any leftover space
   ($nc,$cw);
@@ -605,12 +428,14 @@ sub drawFinger {
   my $ly = $y;
   my $lmy = $y;
   my $mx = $x;
-  my $fp = $self->{font}[CHORD];
-  my $fc = $Media->{Chord}{color};
-  my $tht = $self->{Csz} * $SUPHT;
-  my $tdc = $self->{Cdc} * $SUPHT;
+
+  my $chFontP = $self->{fonts}[CHORD];
+  my $chfp = $chFontP->{font};
+  my $fc = $chFontP->{clr};
+  my $tht = $chFontP->{sz} * $SUPHT;
+  my $tdc = $chFontP->{dc} * $SUPHT;
   my $vsz = $YSIZE/2;
-  $ly -= $self->{Csz};  # minus Cdc?
+  $ly -= $chFontP->{sz};  # minus Cdc?
   chordAdd($self, $x+(($XSIZE*$ns/2)-$dx), $ly, $ch, $fc);
   $ly -= $tht;
 
@@ -637,7 +462,7 @@ sub drawFinger {
     foreach (0..$ns) {
       my $fr = $frptr->[$_];
       if ($fr =~ /[-xX0]/) {
-	_textCenter($mx, $ly, ($fr eq '0') ? 'o' : 'x', $fp, $tht, $fc);
+	_textCenter($mx, $ly, ($fr eq '0') ? 'o' : 'x', $chfp, $tht, $fc);
       }
       $mx += $XSIZE;
       $max = $fr if ($fr =~ /\d+/ && $fr > $max);
@@ -658,8 +483,8 @@ sub drawFinger {
     }
     # Draw the base fret number to the right of the first fret
     # NOTE: the nut is NOT considered to be a fret.
-    _textAdd($x + $mx + 3, $ly - $YSIZE - $tdc, "$base", $fp, $tht, $fc);
-    my $bfw = $mx + 3 + $FFSIZE;
+    _textAdd($x + $mx + 3, $ly - $YSIZE - $tdc, "$base", $chfp, $tht, $fc);
+    my $bfw = $mx + 3 + $self->{ffSize};
     # Strings and finger positions
     $GfxPtr->linewidth(1);
     $GfxPtr->fillcolor(DBLUE);
@@ -678,9 +503,9 @@ sub drawFinger {
     }
     $mx = $bfw;
   } else {
-    $ly -= ($self->{Csz}*2);
-    _textCenter($x+($XSIZE*$ns/2), $ly, 'X', $fp, $self->{Csz}*2, RED);
-    $mx = (($XSIZE * $ns) + 3 + $FFSIZE);
+    $ly -= ($chFontP->{sz}*2);
+    _textCenter($x+($XSIZE*$ns/2), $ly, 'X', $chfp, $chFontP->{sz}*2, RED);
+    $mx = (($XSIZE * $ns) + 3 + $self->{ffSize});
     $lmy = $ly;
   }
   ($mx,$y-int($lmy + 1));
@@ -690,8 +515,9 @@ sub drawFinger {
 sub chordAdd {
   my($self,$x,$y,$ch,$clr,$ht) = @_;
 
-  $ht = $self->{Csz} if (!defined $ht);
-  my $fp = $self->{font}[CHORD];
+  my $chfp = $self->{fonts}[CHORD];
+  my $fp = $chfp->{font};
+  $ht = $chfp->{sz} if (!defined $ht);
   $x += _textAdd($x, $y, $ch->[0], $fp, $ht, $clr);
   if ($#$ch > 0) {
     my $sht = ceil($ht * $SUPHT);
@@ -711,18 +537,19 @@ sub chordAdd {
 sub chordLen {
   my($self, $ch) = @_;
 
-  my $fp = $self->{font}[CHORD];
-  my $nx = _measure($ch->[0], $fp, $self->{Csz});
+  my $chfp = $self->{fonts}[CHORD];
+  my $fp = $chfp->{font};
+  my $nx = _measure($ch->[0], $fp, $chfp->{sz});
   if ($#$ch > 0) {
-    my $sht = ceil($self->{Csz} * $SUPHT);
+    my $sht = ceil($chfp->{sz} * $SUPHT);
     my $s = $ch->[1].$ch->[2];
     $nx += _measure($s, $fp, $sht) if ($s ne "");
-    $nx += _measure($ch->[3], $fp, $self->{Csz}) if ($ch->[3] ne "");
+    $nx += _measure($ch->[3], $fp, $chfp->{sz}) if ($ch->[3] ne "");
     if ($#$ch > 3) {
-      $nx += _measure($ch->[4], $fp, $self->{Csz});
+      $nx += _measure($ch->[4], $fp, $chfp->{sz});
       $s = $ch->[5].$ch->[6];
       $nx += _measure($s, $fp, $sht) if ($s ne "");
-      $nx += _measure($ch->[7], $fp, $self->{Csz}) if ($ch->[7] ne "");
+      $nx += _measure($ch->[7], $fp, $chfp->{sz}) if ($ch->[7] ne "");
     }
   }
   $nx;
@@ -730,17 +557,23 @@ sub chordLen {
 
 sub labelAdd {
   my($self,$x,$y,$txt,$clr) = @_;
-  _textAdd($x, $y, $txt, $self->{font}[LABEL], $self->{LBsz}, $clr);
+
+  my $fp = $self->{fonts}[LABEL];
+  _textAdd($x, $y, $txt, $fp->{font}, $fp->{sz}, $clr);
 }
 
 sub lyricAdd {
   my($self,$x,$y,$txt,$clr) = @_;
-  _textAdd($x, $y, $txt, $self->{font}[VERSE], $self->{Lsz}, $clr);
+
+  my $fp = $self->{fonts}[VERSE];
+  _textAdd($x, $y, $txt, $fp->{font}, $fp->{sz}, $clr);
 }
 
 sub lyricLen {
   my($self,$txt) = @_;
-  _measure($txt, $self->{font}[VERSE], $self->{Lsz});
+
+  my $fp = $self->{fonts}[VERSE];
+  _measure($txt, $fp->{font}, $fp->{sz});
 }
 
 sub hline {
@@ -767,8 +600,11 @@ sub hline {
 sub commentAdd {
   my($self,$type,$y,$txt,$fg,$bg) = @_;
 
-  my $dc = ($type == HLIGHT) ? $self->{Hdc}: $self->{CMdc};
-  my $sz = ($type == HLIGHT) ? $self->{Hsz}: $self->{CMsz};
+  my $cfp = ($type == HLIGHT) ? $self->{fonts}[HLIGHT] : $self->{fonts}[CMMNT];
+  my $fp = $cfp->{font};
+
+  my $dc = $cfp->{dc};
+  my $sz = $cfp->{sz};
   my($bw,$x) = (0,0);
   if ($type == HLIGHT) {
     $bw = $Media->{width} if ($Opt->{FullLineHL});
@@ -777,14 +613,14 @@ sub commentAdd {
   }
   if ($bw == 0) {
     # Not a full width background
-    $bw = _measure($txt, $self->{font}[$type], $sz);
+    $bw = _measure($txt, $fp, $sz);
     my $taw = $Media->{width} - ($Opt->{LeftMargin} + $Opt->{RightMargin});
     $x = $Opt->{LeftMargin};
     $x += int(($taw - $bw) / 2) if ($Opt->{Center});
   }
   $self->commentBG($x, $y, $type, $bg, $bw);
   $x += $Opt->{LeftMargin} if ($bw == $Media->{width});
-  _textAdd($x, $y + $dc, $txt, $self->{font}[$type], $sz, $fg);
+  _textAdd($x, $y + $dc, $txt, $fp, $sz, $fg);
 }
 
 sub commentBG {
@@ -794,7 +630,8 @@ sub commentBG {
     # These can be changed dynamically in "Background Colours".
     $bg = ($type == HLIGHT) ? $Media->{highlightBG} : $Media->{commentBG};
   }
-  my $ht = ($type == HLIGHT) ? $self->{Hdc} + $self->{Has}: $self->{CMdc} + $self->{CMas};
+  my $fp = ($type == HLIGHT) ? $self->{fonts}[HLIGHT] : $self->{fonts}[CMMNT];
+  my $ht = $fp->{dc} + $fp->{as};
   _bg($bg, $x, $y, $w, $ht);
   if ($type == CMMNTB) {
     $GfxPtr->linewidth(1);
@@ -805,10 +642,10 @@ sub commentBG {
 }
 
 sub _hline {
-  my($x,$y,$xx,$t,$clr) = @_;
+  my($x,$y,$xx,$ht,$clr) = @_;
 
   $GfxPtr->fillcolor($clr);
-  $GfxPtr->rect($x, $y, $xx - $x, $t);
+  $GfxPtr->rect($x, $y, $xx - $x, $ht);
   $GfxPtr->fill();
 }
 
@@ -832,6 +669,8 @@ sub _textRight {
   int($TextPtr->text_right($txt) + 0.5);
 }
 
+# Centers text on the X axis but with
+# the font base-line on the Y axis.
 sub _textCenter {
   my($x,$y,$txt,$font,$sz,$fg) = @_;
 

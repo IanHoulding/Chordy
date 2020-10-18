@@ -143,7 +143,7 @@ sub offsets {
   $s{fat}   = FAT;
   $s{thick} = THICK;
   $s{thin}  = THIN;
-  $self->{pageHeader} = $self->{titleSize} + 4; # 2 above and 2 below
+  $self->{pageHeader} = $self->{titleSize} + 3;
   $self->{barTop} = $self->{pageHeader} + $Opt->{TopMargin};
 
   $s{width} = int(($Media->{width} - ($Opt->{LeftMargin} + $Opt->{RightMargin})) / $Opt->{Nbar});
@@ -275,10 +275,10 @@ sub makeFonts {
 
   $size = int($Opt->{StaffSpace} * 2.5);
 
-  $self->{symFont} = "{".RESTFONT."} $size normal roman";
+  $self->{symFont} = RESTFONT." $size normal roman";
   $self->{symSize} = $size;
   $size *= $Opt->{EditScale};
-  $self->{esymFont} = "{".RESTFONT."} $size normal roman";
+  $self->{esymFont} = RESTFONT." $size normal roman";
   $self->{esymSize} = $size;
 }
 
@@ -724,7 +724,7 @@ sub pageTitle {
   my $can = $self->{pCan};
   $can->delete('hdrt');
   $can->create_text(
-    ($Media->{width} / 2), $self->{pageHeader} / 2,
+    ($Media->{width} / 2), ($self->{pageHeader} / 2) - 2,
     -text => $self->{title},
     -fill => $self->{titleColor},
     -font => $self->{titleFont},

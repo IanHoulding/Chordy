@@ -97,9 +97,9 @@ sub new {
   {
     my $ol = $opt->new_menu;
     $opt->add_cascade(-menu => $ol, -label => 'Lyrics');
-    $ol->add_checkbutton(-label => "Center Lyrics", -variable => \$Opt->{Center});
-    $ol->add_checkbutton(-label => "Lyrics Only",   -variable => \$Opt->{LyricOnly});
-    $ol->add_checkbutton(-label => "Group Lines",   -variable => \$Opt->{Together});
+    $ol->add_checkbutton(-label => "Center Lyrics",      -variable => \$Opt->{Center});
+    $ol->add_checkbutton(-label => "Lyrics Only",        -variable => \$Opt->{LyricOnly});
+    $ol->add_checkbutton(-label => "Group Lines",        -variable => \$Opt->{Together});
     $ol->add_checkbutton(-label => "1/2 Ht Blank Lines", -variable => \$Opt->{HHBL});
     {
       my $ls = $opt->new_menu;
@@ -111,20 +111,21 @@ sub new {
   }
   $opt->add_checkbutton(-label => "Highlight Full Line", -variable => \$Opt->{FullLineHL});
   $opt->add_checkbutton(-label => "Comment Full Line",   -variable => \$Opt->{FullLineCM});
+  $opt->add_checkbutton(-label => "Show Labels",         -variable => \$Opt->{ShowLabels});
 
   $opt->add_separator;
   $opt->add_command(-label => 'Defaults', -command => sub{$Opt->resetOpt()});
   
-  $misc->add_command(-label => 'View Error Log', -command => \&viewElog);
-  $misc->add_command(-label => 'Clear Error Log', -command => \&clearElog);
+  $misc->add_command(-label => 'View Error Log',     -command => \&viewElog);
+  $misc->add_command(-label => 'Clear Error Log',    -command => \&clearElog);
   $misc->add_command(-label => 'View Release Notes', -command => \&viewRelNt);
   $misc->add_separator;
   $misc->add_command(-label => "Delete ChordPro Backups", -command => [\&DeleteBackups, '.pro']);
-  $misc->add_command(-label => "Delete Temporary PDFs", -command => [\&DeleteBackups, '.pdf']);
+  $misc->add_command(-label => "Delete Temporary PDFs",   -command => [\&DeleteBackups, '.pdf']);
   $misc->add_separator;
   $misc->add_command(-label => "Commands", -command => \&CP::Chordy::commandWin);
 
-  $help->add_command(-label => 'Help', -command => \&CP::HelpCh::help);
+  $help->add_command(-label => 'Help',  -command => \&CP::HelpCh::help);
   $help->add_command(-label => 'About', -command => sub{message(SMILE, "Version $Version\nian\@houlding.me.uk");});
   if (OS eq 'aqua') {
     $MW->configure(-menu => $m);

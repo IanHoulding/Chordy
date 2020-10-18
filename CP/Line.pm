@@ -51,12 +51,14 @@ sub clone {
   $l->{ch_cnt} = $self->{ch_cnt};
   $l->{segs} = $self->{segs};
   $l->{num} = $self->{num};
+  $l->{label} = $self->{label};
   return($l);
 }
 
 sub segment {
-  my($self,$pro,$line) = @_;
+  my($self,$pro) = @_;
 
+  my $line = $self->{text};
   my $segno = 0;
   # Look for a line starting with anything other than a '['
   # and leave the '[' plus whatever follows to be processed.

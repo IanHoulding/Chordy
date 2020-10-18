@@ -667,7 +667,7 @@ sub setLists {
     -text => "Print",
     -width => 8,
     -style => 'Green.TButton',
-    -command => \&CP::CPpdf::printSL);
+    -command => [\&CP::CPpdf::printSL, $Chordy]);
   my $butInp = $slFt->new_ttk__button(
     -text => "Import",
     -width => 8,

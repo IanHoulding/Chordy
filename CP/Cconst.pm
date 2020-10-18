@@ -44,20 +44,20 @@ use constant {
 };
 # Constants for use with fonts and decomposing the ChordPro files
 use constant {
-  TITLE  =>  0,
-  LYRIC  =>  1,
-  VERSE  =>  2,
-  CHORUS =>  3,
-  BRIDGE =>  4,
-  CMMNT  =>  5,
-  CMMNTI =>  6,
+  TITLE  =>  0, # The 1st 7 match with the user definable fonts.
+  VERSE  =>  1,
+  CHORD  =>  2,
+  TAB    =>  3,
+  LABEL  =>  4,
+  HLIGHT =>  5,
+  CMMNT  =>  6,
   CMMNTB =>  7,
-  HLIGHT =>  8,
-  CHORD  =>  9,
-  CHRD   => 10,
-  GRID   => 11,
-  TAB    => 12,
-  LABEL  => 13,
+  CMMNTI =>  8,
+  GRID   =>  9,
+  CHORUS => 10,
+  BRIDGE => 11,
+  LYRIC  => 12,
+  CHRD   => 13,
   HLINE  => 14,
   VSPACE => 15,
 };
@@ -175,7 +175,7 @@ use constant {
   UPDATE  =>  2,
 };
 # Constant for the Bar number Canvas width
-use constant BNUMW => 30;
+use constant BNUMW => 20;
 # Constants for Drawing Staves
 use constant {
   FAT   => 1.5,

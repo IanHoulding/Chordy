@@ -23,6 +23,7 @@ Bit late starting with 2.6.4 but about time I documented it :-)
 	   Update the Help file.
      Tab - Changed the Media Edit logic - now works properly.
            Removed the lefthand side buttons - now implemented in the window menu.
+	   Reorganised the Page edit/option frames to be more readable.
 
 3.8.7
   Chordy - Notebook Tabs and the FG/Bg Editor now built on demand to improve
