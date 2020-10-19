@@ -31,6 +31,7 @@ use CP::Cmsg;
 use CP::Bar;
 use CP::HelpTab;
 use CP::Play;
+use CP::LyricEd;
 
 my $helpWin = '';
 
@@ -48,17 +49,25 @@ sub pageWindow {
 
     my $leftFt = $leftF->new_ttk__frame();
     $leftFt->g_grid(qw/-row 0 -column 1 -sticky we -pady 4/);
+    $leftFt->g_grid_columnconfigure(0, -weight => 1);
+    $leftFt->g_grid_columnconfigure(1, -weight => 1);
+    $leftFt->g_grid_columnconfigure(2, -weight => 1);
 
     my $bup = $leftFt->new_ttk__button(
       -text => '<<< Prev Page ',
       -style => "Blue.TButton",
       -command => sub{$Tab->PrevPage});
-    $bup->g_pack(qw/-side left -padx 16/);
+    $bup->g_grid(qw/-row 0 -column 0 -sticky w -padx 16/);
+    my $bue = $leftFt->new_ttk__button(
+      -text => 'Edit Lyrics',
+      -style => "Blue.TButton",
+      -command => sub{CP::LyricEd->Edit($Tab->{lyrics});});
+    $bue->g_grid(qw/-row 0 -column 1/);
     my $bun = $leftFt->new_ttk__button(
       -text => ' Next Page >>>',
       -style => "Blue.TButton",
       -command => sub{$Tab->NextPage});
-    $bun->g_pack(qw/-side right -padx 16/);
+    $bun->g_grid(qw/-row 0 -column 2 -sticky e -padx 16/);
 
     $Tab->{nCan} = $leftF->new_tk__canvas(
       -bg => MWBG,
@@ -495,9 +504,6 @@ sub pageOpts {
       -pady 0/;
   my $frt = $subfrm->new_ttk__frame(qw/-relief raised -borderwidth 2/);
   $frt->g_pack(qw/-side top -expand 1 -fill both -padx 4 -pady/ => [8,4]);
-
-#  my $hl = $subfrm->new_ttk__separator(qw/-orient horizontal/);
-#  $hl->g_pack(qw/-side top -expand 1 -fill x -pady 4/);
 
   my $frm = $subfrm->new_ttk__labelframe(-text => ' Select ');
   $frm->g_pack(qw/-side top -expand 1 -fill both -padx 4 -pady 4/);

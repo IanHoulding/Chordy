@@ -3,14 +3,14 @@ Bit late starting with 2.6.4 but about time I documented it :-)
 
 3.9
            Changed the way fonts are handled. We now only look for "Regular" fonts
-	   and use Windows built-in mechanism for Bold and Italic selection and the
-	   PDF API2 ability to generate synthetic fonts from the Regular one.
-	   This means we can now have a "Heavy" font as well as "Bold" in PDFs and
-	   can individually specify the boldness weight of each.
-	   The Italic slant is now also variable from negative to positive slants.
-	   A side effect of the above is that what was the Tab Gonville-20 font
-	   (for symbols) is now renamed as "TabSym.ttf" with its internal tables
-	   modified to reflect this - the original "Style" was 20 instead of Regular!
+	     and use Windows built-in mechanism for Bold and Italic selection and the
+	     PDF API2 ability to generate synthetic fonts from the Regular one.
+	     This means we can now have a "Heavy" font as well as "Bold" in PDFs and
+	     can individually specify the boldness weight of each.
+	     The Italic slant is now also variable from negative to positive slants.
+	     A side effect of the above is that what was the Tab Gonville-20 font
+	     (for symbols) is now renamed as "TabSym.ttf" with its internal tables
+	     modified to reflect this - the original "Style" was 20 instead of Regular!
   Chordy - Bugfix - hitting the 'Close Window' cross on the Fg/Bg Editor caused
              an error the next time the Editor was opened.
 	   Going to try and revisit the window Menu system now we've changed to Tk/Tcl.
@@ -24,6 +24,9 @@ Bit late starting with 2.6.4 but about time I documented it :-)
      Tab - Changed the Media Edit logic - now works properly.
            Removed the lefthand side buttons - now implemented in the window menu.
 	   Reorganised the Page edit/option frames to be more readable.
+	   Added LyricEd.pm to make moving lyric lines around easier.
+	   Bugfix - Options menu refreshes each time a file is loaded - changes to
+	     options were not being shown.
 
 3.8.7
   Chordy - Notebook Tabs and the FG/Bg Editor now built on demand to improve

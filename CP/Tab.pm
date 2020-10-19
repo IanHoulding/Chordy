@@ -144,7 +144,7 @@ sub offsets {
   $s{thick} = THICK;
   $s{thin}  = THIN;
   $self->{pageHeader} = $self->{titleSize} + 3;
-  $self->{barTop} = $self->{pageHeader} + $Opt->{TopMargin};
+  $self->{barTop} = $self->{pageHeader} + 1 + $Opt->{TopMargin};
 
   $s{width} = int(($Media->{width} - ($Opt->{LeftMargin} + $Opt->{RightMargin})) / $Opt->{Nbar});
   my($t,$_t) = split('/', $Tab->{Timing});
@@ -655,7 +655,8 @@ sub pageHdr {
   $self->pageTempo();
 
   my $ln = $self->{pageHeader};
-  $self->{pCan}->create_line(0, $ln, $Media->{width}, $ln, -fill => DBLUE, -tags => 'phdr');
+  $self->{pCan}->create_line(0, $ln, $Media->{width}, $ln,
+			     -width => THICK, -fill => DBLUE, -tags => 'phdr');
 }
 
 sub clearHdr {
@@ -670,7 +671,6 @@ sub pageKey {
   my $can = $self->{pCan};
   $can->delete('hdrk');
   if ($self->{key} ne '-') {
-#    my $y = ($self->{pageHeader} / 2) + 2;
     my $y = $self->{pageHeader} - 2;
     my $id = $can->create_text($Opt->{LeftMargin}, $y,
       -text   => "Key:",
@@ -724,7 +724,7 @@ sub pageTitle {
   my $can = $self->{pCan};
   $can->delete('hdrt');
   $can->create_text(
-    ($Media->{width} / 2), ($self->{pageHeader} / 2) - 2,
+    ($Media->{width} / 2), ($self->{pageHeader} / 2) - 1,
     -text => $self->{title},
     -fill => $self->{titleColor},
     -font => $self->{titleFont},
@@ -745,7 +745,7 @@ sub pageNum {
     -tags => 'hdrp',
       );
   my($x1,$y1,$x2,$y2) = split(/ /, $can->bbox($id));
-  $can->coords($id, $Media->{width} - $Opt->{RightMargin} - $x2, $self->{pageHeader} / 2);
+  $can->coords($id, $Media->{width} - $Opt->{RightMargin} - $x2, ($self->{pageHeader} / 2) - 1);
 }
 
 sub pageTempo {

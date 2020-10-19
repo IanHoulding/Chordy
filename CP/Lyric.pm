@@ -40,7 +40,6 @@ sub new {
   my $self = {};
   bless $self, $class;
   $self->{text} = [];    # Contains all the lyric lines as a linear array.
-  $self->{modified} = [];# 1-to-1 map with {text}
   $self->{widget} = [];  # Contains enough Text widgets for a page.
   $self;
 }
@@ -72,7 +71,8 @@ sub widgets {
 	  -fg   => $fg);
 	$wdgt->g_pack(qw/-side top -anchor nw -fill x/);
 	my $myrc = $rc;
-#	$wdgt->g_bind('<<WidgetViewSync>>' => sub{linechk($self, $wdgt, $myrc)});
+	$wdgt->g_bind('<Key-Up>' => sub{moveWidget($wid, $myrc, -1)});
+	$wdgt->g_bind('<Key-Down>' => sub{moveWidget($wid, $myrc, 1)});
 	$wid->[$rc++] = $wdgt;
       }
       my $win = $can->create_window($Opt->{LeftMargin}, $y,
@@ -83,6 +83,31 @@ sub widgets {
       $y += $ht;
     }
   }
+}
+
+# $wid is the pointer to the page list of text widgets.
+# $idx is a valuee from 0 to # of text widgets (minus 1) on one page.
+# $dir is either -1 or +1
+sub moveWidget {
+  my($wid,$idx,$dir) = @_;
+
+  my $mark = $wid->[$idx]->index('insert');
+  my $npage = $Tab->{nPage} - 1;
+  my $pn = -1;
+  if ($idx == 0 && $dir < 0) {
+    $idx = $#{$wid};
+    $pn = ($Tab->{pageNum} == 0) ? $npage : $Tab->{pageNum} - 1;
+  } elsif ($idx == $#{$wid} && $dir > 0) {
+    $idx = 0;
+    $pn = ($Tab->{pageNum} == $npage) ? 0 : $Tab->{pageNum} + 1;
+  } else {
+    $idx += $dir;
+  }
+  if ($pn >= 0) {
+    $Tab->newPage($pn);
+  }
+  $wid->[$idx]->g_focus();
+  $wid->[$idx]->mark_set('insert', $mark);
 }
 
 sub linechk {
@@ -101,7 +126,7 @@ sub linechk {
   print "  rc=$rc  w=$w  lw=$lw\n";
   my $bg = ($lw > $w) ? '#FFD0D0' : MWBG;
   $wid->configure(-background => $bg);
-  $self->{modified}[$rc] = 1;
+#  $self->{modified}[$rc] = 1;
 }
 
 sub set {
@@ -139,13 +164,14 @@ sub show {
   if (my $ll = $Opt->{LyricLines}) {
     my $lidx = $Tab->{pageNum} * $Tab->{rowsPP} * $ll;
     my $text = $self->{text};
-    my $mod = $self->{modified};
+#    my $mod = $self->{modified};
     my $rc = 0;
     foreach my $wid (@{$self->{widget}}) {
       $wid->replace('1.0', 'end', $text->[$lidx]);
-      $mod->[$lidx++] = 0;
+#      $mod->[$lidx++] = 0;
       $wid->edit_reset();
       $wid->edit_modified(0);
+      $lidx++;
     }
     $Ignore = 0;
   }
@@ -221,7 +247,7 @@ sub adjust {
       foreach my $idx (0..($lidx - 1)) {
 	if (! defined $self->{text}[$idx]) {
 	  $self->{text}[$idx] = '';
-	  $self->{modified}[$idx] = 0;
+#	  $self->{modified}[$idx] = 0;
 	}
       }
     } elsif ($new > $ll) {

@@ -19,6 +19,7 @@ use CP::Tab;
 use CP::TabPDF;
 use CP::Cmsg;
 
+my %Opts = ();
 #
 # Not really a module in the strictest sense
 # but a way to keep all the menu code together.
@@ -103,6 +104,8 @@ sub new {
 		    -font => 'TkMenuFont',
 		    -command => sub{$Tab->saveAsText()});
 
+  $Opts{menu} = $opt;
+  $Opts{ent}[0] = {text => 'Instrument', var => \$Opt->{Instrument}};
   my $inst = $opt->new_menu;
   $opt->add_cascade(-menu => $inst,
 		    -font => 'TkMenuFont',
@@ -118,6 +121,7 @@ sub new {
 			       $Opt->saveOne('Instrument');
 			   });
   }
+  $Opts{ent}[1] = {text => 'Timing', var => \$Tab->{Timing}};
   my $tim = $opt->new_menu;
   $opt->add_cascade(-menu => $tim,
 		    -font => 'TkMenuFont',
@@ -134,6 +138,7 @@ sub new {
 					  config($opt, 1, 'Timing', $Tab->{Timing});
 			  });
   }
+  $Opts{ent}[2] = {text => 'Set Key', var => \$Tab->{key}};
   my $key = $opt->new_menu;
   $opt->add_cascade(-menu => $key,
 		    -font => 'TkMenuFont',
@@ -149,6 +154,7 @@ sub new {
 			  });
   }
   use warnings;
+  $Opts{ent}[3] = {text => 'Bars/Stave', var => \$Opt->{Nbar}};
   my $bps = $opt->new_menu;
   $opt->add_cascade(-menu => $bps,
 		    -font => 'TkMenuFont',
@@ -163,6 +169,7 @@ sub new {
 					  $Opt->saveOne('Nbar');
 			  });
   }
+  $Opts{ent}[4] = {text => 'String Spacing', var => \$Opt->{StaffSpace}};
   my $ss = $opt->new_menu;
   $opt->add_cascade(-menu => $ss,
 		    -font => 'TkMenuFont',
@@ -178,6 +185,7 @@ sub new {
 					 $Opt->saveOne('StaffSpace');
 			 });
   }
+  $Opts{ent}[5] = {text => 'Stave Gap', var => \$Tab->{staveGap}};
   my $sg = $opt->new_menu;
   $opt->add_cascade(-menu => $sg,
 		    -font => 'TkMenuFont',
@@ -191,6 +199,7 @@ sub new {
 					 config($opt, 5, 'Stave Gap', $Tab->{staveGap});
 			 });
   }
+  $Opts{ent}[6] = {text => 'Edit Scale', var => \$Opt->{EditScale}};
   my $es = $opt->new_menu;
   $opt->add_cascade(-menu => $es,
 		    -font => 'TkMenuFont',
@@ -204,6 +213,7 @@ sub new {
 					 $Opt->saveOne('EditScale');
 			 });
   }
+  $Opts{ent}[7] = {text => 'Lyric Lines', var => \$Opt->{LyricLines}};
   my $ll = $opt->new_menu;
   $opt->add_cascade(-menu => $ll,
 		    -font => 'TkMenuFont',
@@ -219,6 +229,7 @@ sub new {
 					 $Opt->saveOne('LyricLines');
 			 });
   }
+  $Opts{ent}[8] = {text => 'Lyric Spacing', var => \$Tab->{lyricSpace}};
   my $ls = $opt->new_menu;
   $opt->add_cascade(-menu => $ls,
 		    -font => 'TkMenuFont',
@@ -258,6 +269,14 @@ sub new {
   }
 }
 
+sub refresh {
+  my $menu = $Opts{menu};
+  my $idx = 0;
+  foreach my $ep (@{$Opts{ent}}) {
+    $menu->entryconfigure($idx++, -label => "$ep->{text} - ${$ep->{var}}");
+  }
+}
+
 sub config {
   my($menu,$idx,$opt,$val) = @_;
 
@@ -269,6 +288,7 @@ sub openTab {
   if ($fn ne '') {
     CP::Tab->new("$Path->{Tab}/$fn");
     $Tab->drawPageWin();
+    refresh();
   }
 }
 

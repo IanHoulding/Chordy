@@ -21,7 +21,7 @@ use strict;
 use warnings;
 
 use CP::Cconst qw(:OS :PATH :LENGTH :PDF :MUSIC :TEXT :SHFL :INDEX :BROWSE :SMILIE :COLOUR);
-use CP::Global qw/:FUNC :PATH :OPT :WIN :CHORD :SCALE :XPM/;
+use CP::Global qw/:FUNC :PATH :OPT :WIN :CHORD :SCALE :XPM :MEDIA/;
 use CP::Tab;
 use CP::Win;
 use CP::Fonts qw/&fontSetup/;
@@ -112,6 +112,7 @@ if ($sc != 1) {
     my $sz = int(Tkx::font_actual($_, '-size') * $sc);
     Tkx::font_configure($_, -size => $sz);
   }
+  $EditFont{size} = int($EditFont{size} * $sc);
 }
 
 CP::Tab->new($FN);
@@ -141,6 +142,13 @@ sub collectionSel {
   my $cc = $Collection->name();
   popMenu(\$cc, undef, [sort keys %{$Collection}]);
   $Collection->change($cc);
+  if ((my $fn = $Tab->{fileName}) ne '') {
+    if (-e "$Path->{Tab}/$fn") {
+      $Tab->new("$Path->{Tab}/$fn");
+    } else {
+      $Tab->new('');
+    }
+  }
   $Tab->drawPageWin();
 }
 
@@ -148,18 +156,6 @@ sub mediaSel {
   popMenu(\$Opt->{Media}, undef, [CP::Media::list()]);
   $Media = $Media->change($Opt->{Media});
   $Tab->drawPageWin();
-}
-
-sub mediaSave {
-  $Media->save();
-}
-
-sub mediaLoad {
-  $Media->load();
-}
-
-sub mediaDefault {
-  $Media->default();
 }
 
 # Place-holder for Collection.pm which calls this in chordy.pl
