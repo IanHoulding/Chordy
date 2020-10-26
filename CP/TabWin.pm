@@ -304,19 +304,22 @@ sub editBarFret {
   my $fr3 = $frm->new_ttk__labelframe(-text => ' Slide/Hammer/Bend/Release ', -padding => [0,0,4,0]);
   $fr3->g_grid(qw/-row 0 -column 2 -sticky new -padx 4 -pady 4/);
 
-  foreach my $b (['Slide','s',0,0], ['Hammer','h',0,1], ['Bend','b',1,0], ['Bend/Release','r',1,1]) {
-      my $rb = $fr3->new_ttk__radiobutton(
-	-text => $b->[0],
-	-variable => \$Tab->{shbr},
-	-value => $b->[1],
-	-style => 'Toolbutton',
-	-command => sub{$EditBar->deselect()});
+  foreach my $b (['Slide',       's',0,0],
+		 ['Hammer',      'h',0,1],
+		 ['Bend',        'b',1,0],
+		 ['Bend/Release','r',1,1]) {
+    my $rb = $fr3->new_ttk__radiobutton(
+      -text => $b->[0],
+      -variable => \$Tab->{shbr},
+      -value => $b->[1],
+      -style => 'Toolbutton',
+      -command => sub{$EditBar->deselect()});
     $rb->g_grid(-row => $b->[2], -column => $b->[3], -sticky => 'ew', -padx => 8, -pady => 4);
   }
   my $c = $fr3->new_ttk__radiobutton(
 	-text => '  Off  ',
 	-variable => \$Tab->{shbr},
-	-value => $b->[1],
+	-value => '',
 	-style => 'Toolbutton',
 	-command => sub{$Tab->{shbr} = ''});
   $c->g_grid(-row => 0, -column => 2, -rowspan => 2, -padx => [16,8], -pady => 4);
@@ -511,7 +514,10 @@ sub pageOpts {
   my $frb = $subfrm->new_ttk__labelframe(-text => ' Transpose ');
   $frb->g_pack(qw/-side top -expand 1 -fill both -padx 4 -pady 4/);
 
-##########
+  my $mrgn = $subfrm->new_ttk__labelframe(-text => " Margins ", -padding => [4,2,0,4]);
+  $mrgn->g_pack(qw/-side top -expand 1 -fill both -padx 4 -pady 4/);
+
+  ##########
 
   my $lb2 = $frt->new_ttk__label(-text => 'Tab File Name');
   my $en2 = $frt->new_ttk__entry(-textvariable => \$Tab->{fileName}, -width => 38,
@@ -538,11 +544,10 @@ sub pageOpts {
 ##########
 
   my $coll = $frm->new_ttk__label(-text => 'Collection');
-  my $coln = $Collection->name();
   my $colb = $frm->new_ttk__button(
-    -textvariable => \$coln,
+    -textvariable => \$CP::Collection::CurrentCollection,
     -style => 'Menu.TButton',
-    -command => sub{main::collectionSel();$coln = $Collection->name()}
+    -command => sub{main::collectionSel()}
     );
   my $medl = $frm->new_ttk__label(-text => 'Media');
   my $medb = $frm->new_ttk__button(
@@ -558,6 +563,23 @@ sub pageOpts {
 
 ###
   shiftOpt($frb, PAGE);
+###
+  my $col = 0;
+  foreach my $m (qw/Left Right Top Bottom/) {
+    $a = $mrgn->new_ttk__label(-text => "$m", -anchor => 'e');
+
+    $b = $mrgn->new_ttk__spinbox(
+      -textvariable => \$Opt->{"${m}Margin"},
+      -style => 'TSpinbox',
+      -from => 0,
+      -to => 72,
+      -wrap => 1,
+      -width => 2,
+      -state => 'readonly',
+      -command => sub{$Opt->saveOne("${m}Margin");$Tab->drawPageWin();});
+    $a->g_grid(qw/-row 0 -sticky e/, -column => $col++);
+    $b->g_grid(qw/-row 0 -sticky w/, -column => $col++, -padx => [2,16]);
+  }
 }
 
 #############################
@@ -620,7 +642,7 @@ sub pButtons {
 				 -command => sub{$Tab->PasteAfter});
   $bu8->g_grid(qw/-row 2 -column 3 -sticky we -padx 4 -pady 4/);
 ######
-  my $sel = $frm->new_ttk__labelframe(-text => ' Select ');
+  my $sel = $frm->new_ttk__labelframe(-text => ' Selection ');
   $sel->g_pack(qw/-side top -expand 1 -fill both -padx 4 -pady 4/);
   my $bu9 = $sel->new_ttk__button(-text => 'Clear Selection',
 				   -style => "Red.TButton",

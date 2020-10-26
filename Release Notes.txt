@@ -27,6 +27,7 @@ Bit late starting with 2.6.4 but about time I documented it :-)
 	   Added LyricEd.pm to make moving lyric lines around easier.
 	   Bugfix - Options menu refreshes each time a file is loaded - changes to
 	     options were not being shown.
+	   Remade the Help to reflect the change back to using window menus.
 
 3.8.7
   Chordy - Notebook Tabs and the FG/Bg Editor now built on demand to improve

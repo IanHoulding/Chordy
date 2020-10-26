@@ -137,73 +137,73 @@ sub offsets {
   # we have the correct Font distances.
   makeFonts($self);
 
-  my %s = ();
-  $s{scale} = 1;
+  my %off = ();
+  $off{scale} = 1;
   # thick must be twice thin - see Cconst.pm
-  $s{fat}   = FAT;
-  $s{thick} = THICK;
-  $s{thin}  = THIN;
+  $off{fat}   = FAT;
+  $off{thick} = THICK;
+  $off{thin}  = THIN;
   $self->{pageHeader} = $self->{titleSize} + 3;
   $self->{barTop} = $self->{pageHeader} + 1 + $Opt->{TopMargin};
 
-  $s{width} = int(($Media->{width} - ($Opt->{LeftMargin} + $Opt->{RightMargin})) / $Opt->{Nbar});
+  $off{width} = int(($Media->{width} - ($Opt->{LeftMargin} + $Opt->{RightMargin})) / $Opt->{Nbar});
   my($t,$_t) = split('/', $Tab->{Timing});
   $Tab->{BarEnd} = $t * 8;
-  $s{interval} = $s{width} / (($t * 8) + 3);
+  $off{interval} = $off{width} / (($t * 8) + 3);
   # Distance between lines of a Staff.
-  $s{staffSpace} = $Opt->{StaffSpace};
-  $s{staffHeight} = $s{staffSpace} * ($Nstring - 1);
+  $off{staffSpace} = $Opt->{StaffSpace};
+  $off{staffHeight} = $off{staffSpace} * ($Nstring - 1);
 
   # Something like a "Verse" above a bar is:
   #    Volta bar + The Text + 1/2 Note text size
-  $s{staffX} = 0;
-  $s{headY}  = $s{fat} + $self->{headSize} + 1;
-  $s{staffY} = $s{header} = ceil($s{headY} + ($self->{noteCap} / 2));
-  $s{staff0} = $s{header} + $s{staffHeight};
+  $off{staffX} = 0;
+  $off{headY}  = $off{fat} + $self->{headSize} + 1;
+  $off{staffY} = $off{header} = ceil($off{headY} + ($self->{noteCap} / 2));
+  $off{staff0} = $off{header} + $off{staffHeight};
 
   # This is the TOP of the lyric area
-  $s{lyricY} = int($s{staff0} + ceil($self->{noteSize} / 2));
+  $off{lyricY} = int($off{staff0} + ceil($self->{noteSize} / 2));
 
-  $s{lyricHeight} = 0;
+  $off{lyricHeight} = 0;
   if ($Opt->{LyricLines}) {
     my $wid = $MW->new_tk__text(
       qw/-height 1 -borderwidth 0 -selectborderwidth 0 -spacing1 0 -spacing2 0/,
       -spacing3 => $self->{lyricSpace},
       -font => $self->{wordFont});
-    $s{lyricHeight} = Tkx::winfo_reqheight($wid) * $Opt->{LyricLines};
+    $off{lyricHeight} = Tkx::winfo_reqheight($wid) * $Opt->{LyricLines};
     $wid->g_destroy();
   }
 
-  my $pht = $Media->{height} - $self->{barTop};
+  my $pht = $Media->{height} - $self->{barTop} - $Opt->{BottomMargin};
 
-  $s{height} = $s{lyricY} + $s{lyricHeight} + $self->{staveGap};
+  $off{height} = $off{lyricY} + $off{lyricHeight} + $self->{staveGap};
 
-  $self->{rowsPP} = int($pht / $s{height});
+  $self->{rowsPP} = int($pht / $off{height});
   $self->{barsPP} = $Opt->{Nbar} * $self->{rowsPP};
-  $s{pos0} = $s{interval} * 2;
+  $off{pos0} = $off{interval} * 2;
 
   if (! defined $self->{pOffset}) {
-    $self->{pOffset} = CP::Offset->new(\%s);
+    $self->{pOffset} = CP::Offset->new(\%off);
   } else {
-    $self->{pOffset}->update(\%s);
+    $self->{pOffset}->update(\%off);
   }
   #
   # Now scale everything up for the Edit Bar
   #
   my $editsc = $Opt->{EditScale};
   foreach my $v (qw/interval pos0 scale staffHeight staffSpace width fat thick thin/) {
-    $s{$v} *= $editsc;
+    $off{$v} *= $editsc;
   }
   # These entries are not just multiples of the Edit Scale because
   # they depend (amonst other things) on the font size differences.
-  $s{headY}  = $s{fat} + $self->{eheadSize} + 2;
-  $s{staffY} = $s{header} = ceil($s{headY} + ceil($self->{enoteCap} / 2)); 
-  $s{staff0} = $s{staffY} + $s{staffHeight};
-  $s{height} = $s{staff0} + $self->{enoteCap};
+  $off{headY}  = $off{fat} + $self->{eheadSize} + 2;
+  $off{staffY} = $off{header} = ceil($off{headY} + ceil($self->{enoteCap} / 2)); 
+  $off{staff0} = $off{staffY} + $off{staffHeight};
+  $off{height} = $off{staff0} + $self->{enoteCap};
   if (! defined $self->{eOffset}) {
-    $self->{eOffset} = CP::Offset->new(\%s);
+    $self->{eOffset} = CP::Offset->new(\%off);
   } else {
-    $self->{eOffset}->update(\%s);
+    $self->{eOffset}->update(\%off);
   }
 }
 
@@ -644,25 +644,18 @@ sub save {
 sub pageHdr {
   my($self) = shift;
 
+  $self->{pCan}->delete(qw/hdrk hdrn hdrt hdrp hdrb/);
   if ($Media->{titleBG} ne WHITE) {
     my @ft = ('-width', 0, '-fill', $Media->{titleBG});
-    my $id = $self->{pCan}->create_rectangle(0, 0, $Media->{width}, $self->{pageHeader}, @ft);
+    $self->{pCan}->create_rectangle(0, 0, $Media->{width}, $self->{pageHeader}, @ft);
   }
   $self->pageKey();
-  $self->pageNote();
   $self->pageTitle();
   $self->pageNum();
-  $self->pageTempo();
 
   my $ln = $self->{pageHeader};
   $self->{pCan}->create_line(0, $ln, $Media->{width}, $ln,
 			     -width => THICK, -fill => DBLUE, -tags => 'phdr');
-}
-
-sub clearHdr {
-  my($self) = shift;
-
-  $self->{pCan}->delete(qw/hdrk hdrn hdrt hdrp hdrb/);
 }
 
 sub pageKey {
@@ -704,17 +697,24 @@ sub pageNote {
   my $can = $self->{pCan};
   $can->delete('hdrn');
   if ($self->{note} ne '') {
-    my $x = ($Media->{width} / 2) + 30;
-    my $y = $self->{pageHeader} + $self->{noteSize} + 4;
     my $id = $can->create_text(0, 0,
-        -text   => "Note: $self->{note}",
+        -text   => " $self->{note} ",
         -anchor => 'sw',
-        -fill   => DGREEN,
+        -fill   => '#000060',
         -font   => $self->{keyFont},
         -tags   => 'hdrn',
 	);
     my($x1,$y1,$x2,$y2) = split(/ /, $can->bbox($id));
-    $can->coords($id, $Media->{width} - $x2 - $Opt->{RightMargin}, $self->{pageHeader} - $y1);
+    my $w = $x2 - $x1;
+    my $h = $y2 - $y1;
+    my $x = $Media->{width} - $Opt->{RightMargin} - $w - 2;
+    my $y = $self->{pageHeader} + $Opt->{TopMargin} + $h;
+    $can->create_rectangle($x, $y, $x + $w, $y - $h,
+			   -width => 0,
+			   -fill => '#FFFF80',
+			   -tags   => 'hdrn');
+    $can->coords($id, $x, $y - 1);
+    $can->raise($id);
   }
 }
 
@@ -757,16 +757,16 @@ sub pageTempo {
     my $x = ($Media->{width} / 2) - 12;
     my $y = $self->{pageHeader} + 8;
     my $sz = $self->{symSize};
-    my $nsz = int(($sz * 0.6) + 0.5);
+    my $nsz = int(($sz * (PAGEMUL - 0.1)) + 0.5);
     (my $fnt = $self->{symFont}) =~ s/ $sz / $nsz /;
     my $wid = $can->create_text(
-      $x, $y + 4,
+      $x, $y + $Opt->{TopMargin} + 1,
       -text => 'O',     # crotchet symbol
       -font => $fnt,
       -tags => 'hdrb');
     my($x1,$y1,$x2,$y2) = split(/ /, $can->bbox($wid));
     $can->create_text(
-      $x + ($x2 - $x1), $y,
+      $x + ($x2 - $x1), $y + $Opt->{TopMargin} - 2,
       -text => '= '.$self->{tempo},
       -font => $self->{pageFont},
       -anchor => 'w',
@@ -818,8 +818,12 @@ sub newPage {
 
   $self->{pageNum} = $pn;    # first page is 0
   $self->{pstart}[$pn] = 0 if (! defined $self->{pstart}[$pn]);
-  $self->pageNum();
+  $self->pageHdr();
   $self->pageBars();
+  if ($self->{pageNum} == 0) {
+    $self->pageNote();
+    $self->pageTempo();
+  }
   $self->{lyrics}->show() if ($Opt->{LyricLines});
 }
 

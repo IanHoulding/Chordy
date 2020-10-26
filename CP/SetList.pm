@@ -269,9 +269,12 @@ sub export {
   my($self) = shift;
 
   return if ($CurSet eq '');
+
   my $newC = my $orgC = $Collection->name();
-  my @lst = sort keys %{$Collection};
-  unshift(@lst, 'All');
+  my @lst = ('All');
+  foreach (sort keys %{$Collection}) {
+    push(@lst, $_) if ($_ ne $orgC);
+  }
   push(@lst, 'SeP', 'File');
   popMenu(
     \$newC,

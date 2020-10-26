@@ -198,7 +198,7 @@ sub make {
     elsif ($bar->{newline} && $x > $Opt->{LeftMargin}) {
       $x = $Opt->{LeftMargin};
       $y -= $h;
-      $y = $pageht if (($y - $h) < 0);
+      $y = $pageht if (($y - $h) < $Opt->{BottomMargin});
     }
     if ($y == $pageht) {
       $y = $pdf->newPage();
@@ -227,24 +227,48 @@ sub make {
     if (($x + $w) > $Media->{width}) {
       $x = $Opt->{LeftMargin};
       $y -= $h;
-      $y = $pageht if (($y - $h) < 0);
+      $y = $pageht if (($y - $h) < $Opt->{BottomMargin});
     }
   }
 
   # PASS 2
   #
-  my $lidx = my $pn = 0;
+  my $lidx = my $pn = my $tn = 0;
   for(my $bar = $Tab->{bars}; $bar != 0; $bar = $bar->{next}) {
     if ($bar->{pageNum} != $pn) {
       newTextGfx($pdf->{page}[$pn]);
       $lidx = $pn * $Tab->{rowsPP};
       $pdf->pageNum(++$pn);
+      $tn++ if ($pn == 1);
     }
 
     $pdf->bar($bar);
 
     if ($bar->{xy}{x} == $Opt->{LeftMargin} && $Opt->{LyricLines}) {
       $pdf->lyrics($lidx++, $bar->{xy}{x}, $bar->{xy}{y});
+    }
+    if ($tn == 1) {
+      $h = $pdf->{headerBase} - $Opt->{TopMargin};
+      my $tifp = $pdf->{fonts}[TITLE];
+      my $th = int($tifp->{sz} * KEYMUL);
+      my $dc = int($tifp->{dc} * KEYMUL);
+      if ($Tab->{note} ne '') {
+	my $txt = " $Tab->{note} ";
+	my $tw = _measure($pdf, $txt, TITLE, $th, 100);
+	my $x = $Media->{width} - $Opt->{RightMargin} - $tw - 2;
+	my $y = $h - $th - $dc;
+	_bg('#FFFF80', $x, $y - 1, $tw, $th + 2);
+	_textAdd($pdf, $x, $y + $dc, $txt, TITLE, $th, '#000060');
+      }
+      if (defined $Tab->{tempo}) {
+	my $ht = int($Tab->{symSize} * (PAGEMUL - 0.1));
+	my $y = $h - $ht;
+	my $x = ($Media->{width} / 2) - $ht;
+	my $wid = _textAdd($pdf, $x, $y + 2, 'O', RESTS, $ht, BLACK);
+	$ht = $Tab->{titleSize} * PAGEMUL;
+	_textAdd($pdf, $x + $wid, $y + 1, " = ".$Tab->{tempo}, TITLE, $ht, BLACK);
+      }
+      $tn++;
     }
   }
   $pdf->close();
@@ -306,16 +330,6 @@ sub newPage {
     my $tw = _textAdd($self, $Opt->{LeftMargin}, $tbl, "Key: ", TITLE, $th, bFG);
     my $ch = [split('',$Tab->{key})];
     chordAdd($self, $Opt->{LeftMargin} + $tw, $tbl, $ch, $Media->{Chord}{color}, $th);
-  }
-  if ($Tab->{note} ne '') {
-    _textRight($self, $Media->{width} - $Opt->{RightMargin}, $h - $th, "Note: $Tab->{note}", TITLE, $th, DGREEN);
-  }
-
-  if (defined $Tab->{tempo} && @{$self->{page}} == 1) {
-    my $ht = $Tab->{symSize} * 0.6;
-    my $x = ($Media->{width} / 2) - $ht;
-    my $wid = _textAdd($self, $x, $h - $ht + 2, 'O', RESTS, $ht, BLACK);
-    _textAdd($self, $x + $wid, $h - $ht, " = ".$Tab->{tempo}, TITLE, $ht, BLACK);
   }
   $h -= $Opt->{TopMargin};
 }
@@ -790,7 +804,7 @@ sub lyrics {
 }
 
 sub _adjTextAdd {
-  my($self,$x,$y,$txt,$fnt,$fidx,$sz,$bg) = @_;
+  my($self,$x,$y,$txt,$fnt,$fidx,$sz,$clr) = @_;
 
   my $fp = $self->{fonts}[$fidx];
   my $can = $Tab->{pCan};
@@ -800,29 +814,29 @@ sub _adjTextAdd {
   my $plen = _measure($self, $txt, $fidx, $sz, 100);
   $len /= $plen;
   $fp->{hscale} = int(($len * 100) + 0.5);
-  _textAdd($self, $x, $y, $txt, $fidx, $sz, $bg);
+  _textAdd($self, $x, $y, $txt, $fidx, $sz, $clr);
   $fp->{hscale} = 100;
 }
 
 sub _textAdd {
-  my($self,$x,$y,$txt,$fidx,$sz,$bg) = @_;
+  my($self,$x,$y,$txt,$fidx,$sz,$clr) = @_;
 
   my $fp = $self->{fonts}[$fidx];
   $TextPtr->hscale($fp->{hscale});
   $TextPtr->font($fp->{font}, $sz);
-  $TextPtr->fillcolor($bg);
+  $TextPtr->fillcolor($clr);
   $TextPtr->translate($x, $y);
   # Returns the width of the text added
   int($TextPtr->text($txt) + 0.5);
 }
 
 sub _textRight {
-  my($self,$x,$y,$txt,$fidx,$sz,$bg) = @_;
+  my($self,$x,$y,$txt,$fidx,$sz,$clr) = @_;
 
   my $fp = $self->{fonts}[$fidx];
   $TextPtr->hscale($fp->{hscale});
   $TextPtr->font($fp->{font}, $sz);
-  $TextPtr->fillcolor($bg);
+  $TextPtr->fillcolor($clr);
   $TextPtr->translate($x, $y);
   # Returns the width of the text added
   int($TextPtr->text_right($txt) + 0.5);

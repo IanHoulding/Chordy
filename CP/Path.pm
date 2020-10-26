@@ -37,14 +37,6 @@ sub new {
   $self->{Font} = (OS eq "win32") ? "C:/Windows/Fonts" :
       (OS eq "aqua") ? "/Library/Fonts,/System/Library/Fonts/Supplemental" :
                        "/usr/share/fonts/truetype";
-  # This test is useless - the folder may be there but may be empty!!
-  # As in the Apple move from High Sierra to Mojave !!!!
-#  if (! -d $self->{Font}) {
-#    errorPrint("Don't know where your Fonts are - tried: '$self->{Font}'\n".
-#	       "  Please submit a bug detailing OS type and version\n".
-#	       "  and this Chordy version ($Version) - thanks.");
-#    exit(1);
-#  }
   bless $self, $class;
   check_dir($self);
   if (-e PROG."/Release Notes.txt") {

@@ -1000,6 +1000,25 @@ static char * checkbox_xpm[] = {
 "     oooooooooooooo     "};
 EOXPM
 
+$XPM{scheckbox} = <<'EOXPM';
+/* XPM */
+static char * scheckbox_xpm[] = {
+"13 9 4 1",
+"  c None",
+"o c #000000",
+". c #A0A0A0",
+", c #D0D0D0",
+" ooooooooo   ",
+" oo.,,,.oo   ",
+" o.o. .o.o   ",
+" o,.o.o.,o   ",
+" o, .o. ,o   ",
+" o,.o.o.,o   ",
+" o.o. .o.o   ",
+" oo.,,,.oo   ",
+" ooooooooo   "};
+EOXPM
+
 $XPM{'chordL'} = <<'EOXPM';
 /* XPM */
 static char *chordL_xpm[] = {
@@ -1401,16 +1420,11 @@ EOXPM
 $XPM{hyphen} = <<'EOXPM';
 /* XPM */
 static char *hyphen[] = {
-"10 6 3 1",
+"8 2 2 1",
 "  c None",
 "x c #000000",
-"c c #909090",
-"          ",
-"          ",
-" cxxxxxxc ",
-" cxxxxxxc ",
-"          ",
-"          ",
+"xxxxxxxx",
+"xxxxxxxx",
 EOXPM
 
 $XPM{exit} = <<'EOXPM';

@@ -48,6 +48,7 @@ sub new {
 
   if (ref($Ed) eq 'CP::Editor') {
     $Ed->{TxtWin}->delete('1.0', 'end');
+    $Ed->{TxtWin}->configure(-font => "\{$EditFont{family}\} $EditFont{size} $EditFont{weight} $EditFont{slant}");
     return();
   }
   bless $Ed, $class;
@@ -201,10 +202,6 @@ sub new {
   $tw->g_bind('<KeyRelease-]>' => \&chordend);
   $tw->g_bind('<KeyRelease-{>' => \&dirstart);
   $tw->g_bind('<KeyRelease-}>' => \&dirend);
-#  $MW->g_bind('<Control-Left>'  => sub{Tkx::after(20, [\&moveChord, '-1c'])});
-#  $MW->g_bind('<Control-Right>' => sub{Tkx::after(20, [\&moveChord, '+1c'])});
-#  $tw->g_bind('<Control-Up>'    => sub{Tkx::after(20, [\&moveChord, '-1l'])});
-#  $tw->g_bind('<Control-Down>'  => sub{Tkx::after(20, [\&moveChord, '+1l'])});
   $Ed->{chordstart} = '';
   $Ed->{dirstart} = '';
 

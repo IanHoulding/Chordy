@@ -463,11 +463,6 @@ sub optWin {
   my $mrgn = $frm->new_ttk__labelframe(-text => " Margins ", -padding => [4,2,0,4]);
   $mrgn->g_grid(qw/-row 1 -column 0 -sticky we/);
 
-  Tkx::ttk__style_configure("TSpinbox",
-			    -foreground => $Opt->{MenuFG},
-			    -arrowcolor => BLACK,
-			    -fieldbackground => $Opt->{MenuBG},
-			    -background => $Opt->{MenuBG});
   my $col = 0;
   foreach my $m (qw/Left Right Top Bottom/) {
     $a = $mrgn->new_ttk__label(-text => "$m", -anchor => 'e');
@@ -814,7 +809,6 @@ sub collEdit {
     collItems($Chordy);
   } else {
     showSize();
-#    fontWin();
   }
 }
 

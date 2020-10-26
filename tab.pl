@@ -112,11 +112,11 @@ if ($sc != 1) {
     my $sz = int(Tkx::font_actual($_, '-size') * $sc);
     Tkx::font_configure($_, -size => $sz);
   }
-  $EditFont{size} = int($EditFont{size} * $sc);
 }
 
 CP::Tab->new($FN);
 CP::TabMenu->new();
+$Tab->{scaling} = $sc;
 $Tab->drawPageWin();
 
 $MW->g_wm_deiconify();

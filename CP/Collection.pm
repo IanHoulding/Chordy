@@ -25,9 +25,9 @@ use CP::Cmsg;
 #
 # Our $CurrentCollection keeps track of the currently selected Collection.
 #
-my $CollectionPath;
-my $CurrentCollection;
-my $NewCollection;
+our $CollectionPath;
+our $CurrentCollection;
+our $NewCollection;
 
 sub new {
   my($proto) = @_;

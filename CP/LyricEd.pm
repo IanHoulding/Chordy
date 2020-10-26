@@ -63,14 +63,15 @@ sub Edit {
     ## set up for autosizing.
 
     my $fp = $Media->{Words};
+    my $sz = int($EditFont{size} * $Tab->{scaling});
     $txtWin = $Ed->{TxtWin} = $topF->new_tk__text(
       -width => 80,
       -height => 24,
       -insertwidth => 2,
-      -font => "\{$fp->{family}\} $EditFont{size} $fp->{weight} $fp->{slant}",
+      -font => "\{$fp->{family}\} $sz $fp->{weight} $fp->{slant}",
       -relief => 'raised',
       -foreground => $fp->{color},
-      -background => $EditFont{background},
+      -background => WHITE,  # $EditFont{background},
       -borderwidth => 2,
       -highlightthickness => 0,
       -selectborderwidth => 0,
@@ -78,25 +79,20 @@ sub Edit {
       -selectbackground => SELECT,
       -selectforeground => BLACK,
       -wrap=> 'none',
-      -spacing1 => 6,
+      -spacing1 => 3,
+      -spacing3 => 3,
       -undo => 1,
       -setgrid => 'true'); # use this for autosizing
     $txtWin->g_pack(qw/-expand 1 -fill both/);
-#    $txtWin->g_bind("<<Modified>>",  sub{Tkx::after(20, sub{drawBlinds($txtWin)} )});
     $txtWin->g_bind("<KeyRelease>",  sub{Tkx::after(20, sub{drawBlinds($txtWin)} )});
-
-    if (OS eq 'aqua') {
-      $txtWin->g_bind("<Command-v>", [\&clipPaste, 1]);
-    } else {
-      $txtWin->g_bind("<Control-v>", [\&clipPaste, 1]);
-    }
-    Tkx::clipboard_clear();
 
     my $sv = $topF->new_ttk__scrollbar(-orient => "vertical",   -command => [$txtWin, "yview"]);
     my $sh = $topF->new_ttk__scrollbar(-orient => "horizontal", -command => [$txtWin, "xview"]);
 
     $txtWin->configure(-yscrollcommand => [$sv, 'set']);
     $txtWin->configure(-xscrollcommand => [$sh, 'set']);
+
+    Tkx::clipboard_clear();
 
     $botF->g_grid_columnconfigure(0, -weight => 1);
     $botF->g_grid_columnconfigure(1, -weight => 1);
@@ -166,7 +162,7 @@ sub drawBlinds {
   for(my $i = 1; $i <= $nlines; $i += $ll) {
     $txtWin->tag_add('B', "$i.0", ($i+$Opt->{LyricLines}).".0");
   }
-  $txtWin->tag_configure('B', -background => "#E0E0E0");
+  $txtWin->tag_configure('B', -background => "#F0F0F0");
 }
 
 sub update {
