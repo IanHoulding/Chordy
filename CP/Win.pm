@@ -42,7 +42,7 @@ sub init {
 }
 
 sub title {
-  $MW->g_wm_title("Chordy | Collection: ".$Collection->name()." | Media: ".$Opt->{Media});
+  $MW->g_wm_title("Chordy | Collection: ".$Collection->{name}." | Media: ".$Opt->{Media});
 }
 
 sub MWoptions {

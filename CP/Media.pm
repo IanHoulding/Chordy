@@ -14,6 +14,7 @@ use strict;
 use Tkx;
 use CP::Cconst qw/:LENGTH :SMILIE :COLOUR/;
 use CP::Global qw/:FUNC :OPT :WIN :PRO :SETL :MEDIA :XPM/;
+use CP::Tab;
 use CP::Pop qw/:POP :MENU/;
 use CP::Fonts;
 use CP::Cmsg;
@@ -129,6 +130,15 @@ sub change {
   $self = $AllMedia{$new};
   CP::Win::TButtonBGset($self);
   $self;
+}
+
+sub mediaSel {
+  my($self) = shift;
+
+  popMenu(\$Opt->{Media}, undef, [list()]);
+  $Media = $self->change($Opt->{Media});
+  $Tab->drawPageWin();
+  CP::TabMenu::refresh();
 }
 
 sub load {

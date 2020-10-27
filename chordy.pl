@@ -127,12 +127,7 @@ sub expFile {
     }
     if ($ext eq '.pro') {
       my $exp = '';
-      my $orgC = $Collection->name();
-      my @lst = ('All');
-      foreach (sort keys %{$Collection}) {
-	push(@lst, $_) if ($_ ne $orgC);
-      }
-      push(@lst, 'SeP', 'FOLDER');
+      my @lst = ('All', @{$Collection->list()}, 'SeP', 'FOLDER');
       popMenu(\$exp, sub{}, \@lst);
       return if ($exp eq '');
       if ($exp ne 'FOLDER') {
@@ -144,8 +139,8 @@ sub expFile {
 	my @toExp = ($idx >= 0) ? ($FileLB->{array}[$idx]): @{$FileLB->{array}};
 	my $all = 0;
 	foreach my $col (@lst) {
-	  next if ($col =~ /^SeP|FOLDER/);
-	  my $dest = "$Collection->{$col}/$col/Pro";
+	  last if ($col eq 'SeP');
+	  my $dest = $Collection->path($col)."/$col/Pro";
 	  foreach (@toExp) {
 	    (my $fn = $_) =~ s/.*\///;
 	    if (-e "$dest/$fn") {
@@ -638,7 +633,7 @@ sub PDFview {
       $Pact = "$Cmnd->{Acro} \"$tmpPDF\"";
     }
   } else {
-    message(SAD, "You need to have a PDF viewer installed\nto be able to view (and possibly print)\nthe PDF file just created.\nSee the 'Collections and Commands' tab.");
+    message(SAD, "You need to have a PDF viewer installed\nto be able to view (and possibly print)\nthe PDF file just created.\nSee the 'Commands' entry under the 'Misc' menu.");
     return(0);
   }
   jobSpawn($Pact) if ($Pact ne "");
@@ -666,7 +661,7 @@ sub PDFprint {
       $Pact = "$Cmnd->{Print} \"$tmpPDF\"";
     }
   } else {
-    message(SAD, "You need to have a PDF print capable command installed\nto be able to print the PDF file just created.\nSee the 'Collections and Commands' tab.");
+    message(SAD, "You need to have a PDF print capable command installed\nto be able to print the PDF file just created.\nSee the 'Commands' entry under the 'Misc' menu.");
     return(0);
   }
   jobSpawn($Pact) if ($Pact ne "");

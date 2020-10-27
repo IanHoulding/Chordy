@@ -80,7 +80,6 @@ sub new {
 #### This is NoteBook Tab 0 and is always made and displayed first.
 #### Chordy PDF Generator Tab
   $Chordy->{currentColl} = '';
-  $Chordy->{collectionPath} = '';
   my $ctf = $chordy->new_ttk__labelframe(-text => " ChordPro Files ", -padding => [4,4,4,4]);
   filesWin($ctf);
 
@@ -248,9 +247,8 @@ sub filesWin {
 
   my $cob = $tFact->new_ttk__button(
     -text => "Collection",
-    -command => sub{$Chordy->{currentColl} = $Collection->name();
-		    popMenu(\$Chordy->{currentColl}, undef, [sort keys %{$Collection}]);
-		    $Collection->change($Chordy->{currentColl});
+    -command => sub{popMenu(\$Collection->{name}, undef, $Collection->list());
+		    $Collection->change($Collection->{name});
 		    collItems($Chordy);} );
 
   ## Browse/From Setlist/PDFs
@@ -773,24 +771,25 @@ sub slAct {
 sub collectionWin {
   my($wid) = @_;
 
-  $Chordy->{currentColl} = $Collection->name();
-  $Chordy->{collectionPath} = $Collection->{$Chordy->{currentColl}}.'/'.$Chordy->{currentColl};
+  $Chordy->{currentColl} = $Collection->{name};
+  my $collectionPath = $Collection->{path}.'/'.$Collection->{name};
   my $ccsub = sub{
-    my @lst = (sort keys %{$Collection});
-    popMenu(\$Chordy->{currentColl}, sub{}, \@lst);
-    if ($Collection->name() ne $Chordy->{currentColl}) {
-      $Collection->change($Chordy->{currentColl});
-      collItems($Chordy);
-      showSize();
-      fontWin();
-    }	    
+    popMenu(\$Collection->{name},
+	    sub{$Collection->change($Collection->{name});
+		collItems($Chordy);
+		showSize();
+		fontWin();
+		$collectionPath = $Collection->{path}.'/'.$Collection->{name};
+	    }, $Collection->list() );
   };
   my($a,$b,$c,$d,$e);
 
-  $a = $wid->new_ttk__button(-textvariable => \$Chordy->{currentColl}, -width => 10,
-			     -style => 'Menu.TButton',    -command => $ccsub);
+  $a = $wid->new_ttk__button(-textvariable => \$Collection->{name},
+			     -width => 10,
+			     -style => 'Menu.TButton',
+			     -command => $ccsub);
   $b = $wid->new_ttk__label(-text => "Path: ");
-  $c = $wid->new_ttk__label(-textvariable => \$Chordy->{collectionPath});
+  $c = $wid->new_ttk__label(-textvariable => \$collectionPath);
 
   $d = $wid->new_ttk__label(-text => "Common PDF Path: ");
   $e = $wid->new_ttk__label(-textvariable => \$Opt->{PDFpath});
@@ -804,8 +803,8 @@ sub collectionWin {
 }
 
 sub collEdit {
-  if ($Collection->edit() eq 'OK' && $Collection->name() ne $Chordy->{currentColl}) {
-    $Chordy->{currentColl} = $Collection->name();
+  if ($Collection->edit() eq 'OK' && $Collection->{name} ne $Chordy->{currentColl}) {
+    $Chordy->{currentColl} = $Collection->{name};
     collItems($Chordy);
   } else {
     showSize();
@@ -830,9 +829,7 @@ sub collItems {
     $KeyLB->remove($idx);
     $FileLB->remove($idx);
   }
-  my $cc = $Collection->name();
-  $Chordy->{currentColl} = $cc;
-  $Chordy->{collectionPath} = $Collection->{$cc}.'/'.$cc;
+  $Chordy->{currentColl} = $Collection->{name};
   CP::Win::title();
 }
 

@@ -62,27 +62,14 @@ sub change {
 sub check_dir {
   my($self) = shift;
 
-  foreach my $col (sort keys %{$Collection}) {
-    my $home = "$Collection->{$col}/$col";
+  foreach my $col ($Collection->listAll()) {
+    my $home = $Collection->path($col)."/$col";
     foreach my $dir (qw/Pro PDF Tab Temp/) {
       if (! -d "$home/$dir") {
 	make_path("$home/$dir", {chmod => 0644});
       }
     }
   }
-  ## THIS IS A BAD IDEA!!! Doing an upgrade using the non-upgrade
-  ## .pkg would overwrite all the ChordPro files!!!
-#  if (OS eq 'aqua') {
-#    my $src = "/Applications/Chordy.app/Contents/Resources/Pro";
-#    if (-d $src) {
-#      opendir DIR, "$src";
-#      foreach my $f (grep /\.pro$/, readdir DIR) {
-#	my $txt = read_file("$src/$f");
-#	write_file("$self->{Pro}/$f", $txt);
-#      }
-#      closedir(DIR);
-#    }
-#  }
 }
 
 1;

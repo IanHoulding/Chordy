@@ -792,7 +792,7 @@ sub update_indicators {
   $Ed->{TotlLabel}->m_configure(-text => $tot);
 
   my $edit_flag = ($Ed->{TxtWin}->edit_modified()) ? 'edited' : '';
-  $Ed->{Top}->g_wm_title("Editor  |  Collection: ".$Collection->name()."  |  $edit_flag $Ed->{FileName}");
+  $Ed->{Top}->g_wm_title("Editor  |  Collection: ".$Collection->{name}."  |  $edit_flag $Ed->{FileName}");
   if ($Ed->{Tagged}) {
     $Ed->{TxtWin}->tag_remove('mysel', '1.0', 'end');
     $Ed->{Tagged} = 0;

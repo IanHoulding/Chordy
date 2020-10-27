@@ -545,15 +545,15 @@ sub pageOpts {
 
   my $coll = $frm->new_ttk__label(-text => 'Collection');
   my $colb = $frm->new_ttk__button(
-    -textvariable => \$CP::Collection::CurrentCollection,
+    -textvariable => \$Collection->{name},
     -style => 'Menu.TButton',
-    -command => sub{main::collectionSel()}
+    -command => sub{$Collection->select()}
     );
   my $medl = $frm->new_ttk__label(-text => 'Media');
   my $medb = $frm->new_ttk__button(
     -textvariable => \$Opt->{Media},
     -style => 'Menu.TButton',
-    -command => sub{main::mediaSel()}
+    -command => sub{$Media->mediaSel()}
     );
 
   $coll->g_grid(qw/-row 0 -column 0 -sticky e/, -padx => [4,0], -pady => [0,4]);

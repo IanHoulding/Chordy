@@ -195,8 +195,8 @@ sub changeAll {
   my($self,$opt,$old,$new) = @_;
 
   my $opath = $Path->{Option};
-  foreach my $c (keys %{$Collection}) {
-    $Path->{Option} = $Collection->{$c}."/Option.cfg";
+  foreach my $c ($Collection->list()) {
+    $Path->{Option} = $Collection->path($c)."/Option.cfg";
     our($version,%opts);
     do "$Path->{Option}";
     if ($opts{$opt} eq $old) {

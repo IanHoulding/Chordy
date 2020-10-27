@@ -27,7 +27,7 @@ sub new {
   return('') if ($top eq $MW && popExists('.fb'));
   my($pop,$fileBr,$frame);
   if ($top eq $MW) {
-    $pop = CP::Pop->new(0, '.fb', "File Browser  |  Collection: ".$Collection->name());
+    $pop = CP::Pop->new(0, '.fb', "File Browser  |  Collection: ".$Collection->{name});
     ($fileBr,$frame) = ($pop->{top}, $pop->{frame});
   } else {
     $frame = $top;

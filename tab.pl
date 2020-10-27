@@ -135,27 +135,7 @@ sub tabTitle {
   my($fn) = shift;
 
   my $ed = ($Tab->{edited}) ? ' (edited)' : '';
-  $MW->g_wm_title("Tab Editor  |  Collection: ".$Collection->name()."  |  Media: $Opt->{Media}  |  Tab: $fn$ed");
-}
-
-sub collectionSel {
-  my $cc = $Collection->name();
-  popMenu(\$cc, undef, [sort keys %{$Collection}]);
-  $Collection->change($cc);
-  if ((my $fn = $Tab->{fileName}) ne '') {
-    if (-e "$Path->{Tab}/$fn") {
-      $Tab->new("$Path->{Tab}/$fn");
-    } else {
-      $Tab->new('');
-    }
-  }
-  $Tab->drawPageWin();
-}
-
-sub mediaSel {
-  popMenu(\$Opt->{Media}, undef, [CP::Media::list()]);
-  $Media = $Media->change($Opt->{Media});
-  $Tab->drawPageWin();
+  $MW->g_wm_title("Tab Editor  |  Collection: ".$Collection->{name}."  |  Media: $Opt->{Media}  |  Tab: $fn$ed");
 }
 
 # Place-holder for Collection.pm which calls this in chordy.pl
