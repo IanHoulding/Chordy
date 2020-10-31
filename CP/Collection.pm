@@ -132,15 +132,15 @@ sub select {
   popMenu(\$cc, undef, list());
   if ($cc ne $self->{name}) {
     change($self, $cc);
-    if ((my $fn = $Tab->{fileName}) ne '') {
-      if (-e "$Path->{Tab}/$fn") {
-	$Tab->new("$Path->{Tab}/$fn");
-      } else {
-	$Tab->new('');
+    if (defined $Tab) {
+      # Only run in the Tab Editor.
+      if ((my $fn = $Tab->{fileName}) ne '') {
+	$fn = (-e $fn) ? "$Path->{Tab}/$fn" : '';
+	$Tab->new($fn);
       }
+      $Tab->drawPageWin();
+      CP::TabMenu::refresh();
     }
-    $Tab->drawPageWin();
-    CP::TabMenu::refresh();
   }
 }
 

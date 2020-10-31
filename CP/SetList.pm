@@ -270,7 +270,7 @@ sub export {
 
   return if ($CurSet eq '');
 
-  my $newC = $Collection->{name};
+  my $newC = my $orgC = $Collection->{name};
   my @lst = ('All', @{$Collection->list()}, 'SeP', 'File');
   popMenu(
     \$newC,

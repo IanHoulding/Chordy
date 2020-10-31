@@ -116,6 +116,13 @@ sub help {
 
  "<T CEO><O EO:h:   Page Editing & Options   >",
  "<V 10>",
+
+ "<O TFN:s: Tab File Name>",
+ "<O PFN:s: PDF File Name>",
+ "<O TI:s: Title>",
+ "<O HN:s: Heading Note>",
+ "<V 5>",
+
  " <O EE:S:Edit>",
  "<V 1>",
  "  <O Ee:P: Edit Bar ><V3>",
@@ -149,12 +156,6 @@ sub help {
  "<V 1>",
  "  <O Lu:P: Shift Up One Line ><V3>",
  "  <O Ld:P: Shift Down One Line ><V3>",
- "<V 5>",
-
- "<O TFN:s: Tab File Name>",
- "<O PFN:s: PDF File Name>",
- "<O TI:s: Title>",
- "<O HN:s: Heading Note>",
  "<V 5>",
 
  " <O SL:S:Select>",
@@ -261,18 +262,18 @@ sub help {
  "<V 3>",
  "<T MEc><s  Collections> ",
  "<M>Pops up the Collection Editor.",
- "<M>The selected Collection can be <B Delete>d or <B Move>d - the <B move> function is actually a <B copy> unless the <X scheckbox><B Delete origial> box is checked.",
- "<M>Entering a name into the <B New Name> box lets you either create a <B New> Collection or <B Rename> the existing one.",
- "<M>The <B Common PDF Path> allows you to share a folder with Chordy for PDF files. Any PDFs created will be placed here <I as well as> in the Collections PDF folder.",
+ "<M>The selected Collection can be <R Delete>d or <R Move>d - the <R Move> function is actually a <R Copy> unless the<X scheckbox><R Delete origial> box is checked.",
+ "<M>Entering a name into the <R New Name> box lets you either create a <R New> Collection or <R Rename> the existing one.",
+ "<M>The <R Common PDF Path> allows you to share a folder with Chordy for PDF files. Any PDFs created will be placed here <I as well as> in the Collections PDF folder.",
  "<V 1>",
 
  "<T MEm><s  Media> ",
- "<M>Lets you modify any of the Media types - essentially there to modify PDF page sizes. Internally, Tab uses <B points> for all measurements but you can enter <B Width> of <B Height> values in <b inches> or <B millimeters>.",
- "<M>As with <B Collections> above, the <B New Media Name> box lets you create a <B New> type of media or <B Rename> the existing one.",
+ "<M>Lets you modify any of the Media types - essentially there to modify PDF page sizes. Internally, Tab uses <B points> for all measurements but you can enter <R Width> or <R Height> values in <b inches> or <B millimeters>.",
+ "<M>As with <O MEc:K: Collections> above, the <R New Media Name> box lets you create a <R New> type of Media or <R Rename> the existing one.",
  "<V 1>",
 
  "<T MEf><s  Fonts> ",
- "<M>The Font Editor lets you change the Font, Colour, Weight and Slant for various items displayed in a Tab. Some Fonts allow the text and background colour to be changed - most only allow the text to be changed. You'll notice that you can select a Font to <B Bold> or <B Heavy> (or neither) - the <B Font Attributes> section lets you set how bold or heavy a Font is. The Font on the screen will not reflect these settings and will only display as <B Bold>. You'll have to <B View> the PDF to see the difference. The <B Italic> attribute lets you vary the slope angle of the Font - again, you can only see this in the PDF.",
+ "<M>The Font Editor lets you change the Font, Colour, Weight and Slant for various items displayed in a Tab. Some Fonts allow the text and background colour to be changed - most only allow the text colour to be changed. You'll notice that you can select a Font to <R Bold> or <R Heavy> (or neither) - the <R Font Attributes> section lets you set how bold or heavy a Font is. The Font on the screen will not reflect these settings and will only display as <R Bold>. You'll have to <R View> the PDF to see the difference. The <R Italic> attribute lets you vary the slope angle of the Font - again, you can only see this in the PDF as the window display uses a fixed angle.",
  "<V 10>",
 ####
  "<T MP><S PDF>",
@@ -282,7 +283,7 @@ sub help {
  "<T Mpv><s  Make> ",
  "<M>Makes a new PDF and stores it in the Collection's PDF folder.",
  "<T Mpv><s  Batch Make> ",
- "<M>The same as <B Make> but does it on a selected number of tab files.",
+ "<M>The same as <R Make> but does it on a selected number of tab files.",
 
  "<T Mpv><s  Print> ",
  "<M>Creates a temporary PDF and prints it. Be aware that if your Media type is not <B A4> but your printer paper is, then the resulting printout will either be smaller than a page or will overflow a page, depending on the relevant sizes.",
@@ -344,16 +345,20 @@ sub help {
  "<V 10>",
  "<E><T PO> <s Overview> ",
  "<M>This area shows a representation of what the final PDF will look like (approximately). Down the left side of the page are Bar numbers for the first Bar in the adjacent Stave.",
+ "<V1>",
  "<M>You select a Bar by left-clicking on it or a shortcut to edit a Bar is to right-click on it. To select a range of Bars, left-click on the first one and then shift-left-click on the second. It is valid to do both on the same Bar ie. selecting a range of one Bar.",
- "<M>The only parts of this page which are directly modifiable are the Lyric lines (assuming you've selected to show any). Each line is an individual entity - even when you've selected more than one Lyric line per stave. You can move between lines with the Up and Down arrow keys but moving along a line to the end will <I not> move up onto the next line.",
- "<M>This does make moving whole lines around awkward - see <B Edit Lyrics> below.",
+ "<V1>",
+ "<M>The only parts of this page which are directly modifiable are the Lyric lines (assuming you've selected to show any). Each line is an individual entity - even when you've selected more than one Lyric line per stave. You can move between lines with the Up and Down arrow keys but moving along a line to the end will <I not> move down to the next line.",
+ "<V1>",
+ "<M>This does make moving whole lines around awkward - see <O PE:K:Edit Lyrics> below.",
+ "<V1>",
  "<M>Above the page display are 3 buttons:",
  "<V 5>",
  "<E><T PP> <P  {{{ Prev Page > ",
  "<M>Moves to the previous page.",
  "<V 5>",
  "<E><T PE> <P  Edit Lyrics > ",
- "<M>This button pops up an edit window populated with all the Lyric lines. To try and make it easier to match lines with staves the backgound colour is alternately white and grey. Although you can make changes and hit the <B Update> button to see what the changes look like, pressing the <B Cancel> button will undo any changes and revert the page Lyrics to the way they were originally.",
+ "<M>This button pops up an edit window populated with all the Lyric lines. To try and make it easier to match lines with staves the backgound colour is alternately white and grey. Although you can make changes and hit the <R Update> button to see what the changes look like, pressing the <R Cancel> button will undo any changes and revert the page Lyrics to the way they were originally.",
  "<V 5>",
  "<E><T PN> <P  Next Page }}} > ",
  "<M>Moves to the next page.\n",
@@ -362,6 +367,16 @@ sub help {
 
  "<T EO><H Page Editing & Options\n>",
  "<V 10><E>",
+ "<E><T TFN><s  Tab File Name>",
+ "<V 5><E>",
+ "<T PFN><s  PDF File Name>",
+ "<V 5><E>",
+ "<T TI><s  Title> ",
+ "<M>The <R Tab File Name>, <R PDF File Name> and <R Title> are inter-related in that, by default, the <R PDF File Name> is taken from the <R Tab File Name> with a <s .pdf> extension or visa versa, depending on which comes first. The <R Title> is the same text but without an extension. The only immutable item is the <R Tab File Name>, both the other entries can be changed to your own preference.",
+ "<V 5><E>",
+ "<T HN><s  Heading Note> ",
+ "<M>This gets placed at the top right of the page.\n",
+
  "<T EE> <S Edit> ",
  "<V 5><E>",
  "<T Ee> <P  Edit Bar > ",
@@ -417,21 +432,11 @@ sub help {
  "<T Ld><P  Shift Down One Line > ",
  "<M>Moves all the Lyrics Down one Lyric line. The Lyric line at the bottom of the last page will be placed at the start of the first page.\n\n",
 
- "<E><T TFN><s  Tab File Name>",
- "<V 5><E>",
- "<T PFN><s  PDF File Name>",
- "<V 5><E>",
- "<T TI><s  Title> ",
- "<M>The <B Tab File Name, PDF File Name> and <B Title> are inter-related in that, by default, the <B PDF File Name> is taken from the <B Tab File Name> with a <s .pdf> extension or visa versa, depending on which comes first. The <B Title> is the same text but without an extension. The only immutable item is the <B Tab File Name>, both the other entries can be changed to your own preference.",
- "<V 5><E>",
- "<T HN><s  Heading Note> ",
- "<M>This gets placed at the top right of the page.\n\n",
-
  "<E><T SL> <S Select> ",
  "<V 5><E>",
  "<T So><s  Collection > ",
  "<T Sm><s  Media > ",
- "<M>These two buttons let you select which Collection to use and which Media.\n",
+ "<M>These two buttons let you select which Collection to use and with which Media.\n",
 
  "<E><T TR> <S Transpose> ",
  "<V 5><E>",
@@ -439,7 +444,7 @@ sub help {
  "<M>Select how many semitones you want to shift the Selection and press the <P  Go > button. If you Select one Bar then every Note up to the end will be transposed. If you Select a range of Bars then only Notes in those Selected will be transposed. If no Bars are Selected then <I ALL> Notes will be transposed",
  "<V 5><E>",
  "<T To><s  One String > ",
- "<M>With the selection criteria as above the Selected Bars will have there Notes shifted Up or Down one string.",
+ "<M>With the selection criteria as above the Selected Bars will have their Notes shifted Up or Down one string.",
  "<V 5><E>",
  "<X scheckbox><T Ta><s  Adjust Stings> ",
  "<M>With this box checked, any Note that would move below the nut is adjusted to the next lower string unless it was already on the lowest string in which case the Note will be shifted up one octave. If this box is unchecked then the Notes will be shown in <R RED>.\n",
@@ -454,7 +459,7 @@ sub help {
       [
        "<E><T TP> <S Tab Player> ",
        "<V 5>",
-       "<M>Use the slider to set the tempo of the piece (beats/minute). If no start or stop bar is selected then the whole piece will be played. If just the start is selected then play will continue to the end of the piece. If both are selected then the (inclusive) bars will be played. The same applies to the 'Loop' function. If you 'Pause' play, you can continue with either the 'Play' or the 'Loop' button and play will continue in that mode.\n"
+       "<M>Use the slider to set the tempo of the piece (beats/minute). If no start or stop bar is selected then the whole piece will be played. If just the start is selected then play will continue to the end of the piece. If both are selected then the (inclusive) bars will be played. The same applies to the 'Loop' function. If you 'Pause' play, you can continue with either the <R Play> or the <R Loop> button and play will continue in that mode.\n"
       ]);
   }
 
@@ -462,8 +467,7 @@ sub help {
 [
 
 #####################
-
- "<E><T CE><H Colour Editor (Backgrounds and Fonts)\n>",
+ "\n<E><T CE><H Colour Editor (Backgrounds and Fonts)\n>",
  "<V 10>",
  "<M>The Colour Editor works in one of three ways - ForeGround only, BackGround only or ForeGround & Background mode. Which mode depends on where you come from and what you are changing. In all modes you can change both Fore & Back-ground colours so that you can see what the effects are on either choice.",
  "<V2>",
@@ -475,7 +479,7 @@ sub help {
  "<V2>",
  "The \"My Colours\" box gives you the ability to mix and save 16 different colours you might want to use on a regular basis. Clicking on one of the 16 buttons will set that Fore/Back-ground colour. If you then change the colour with the sliders, you can change the selected colour swatch with the <R Set Colour> button. These colours are only saved if you hit the <R OK> button.",
  "<V2>",
- "Given that you have defined a colour, the <B Lighten> and <B Darken> buttons will adjust the sliders approximately 3% in the appropraite direction.\n",
+ "Given that you have defined a colour, the <R Lighten> and <R Darken> buttons will adjust the sliders approximately 3% in the appropraite direction.\n",
 
 #####################
 
@@ -527,11 +531,11 @@ sub help {
  "<T Bp><S Bar Options>",
  "<V 5>",
  "These are mainly to handle stuff other than Fret Numbers and Rests.",
- "Place any text you want above the staff in the <B Header Text> box. This can be <B Left> or <B Right> justified and can have <B Volta brackets> included by selecting the appropriate button option.",
- "The <B Repeat> options place a start or end Repeat sign into the Bar.",
- "The <B Note Font> option lets you reduce the size of the font - useful where frets are played very close together and would otherwise overlap. One of the issues here is that PDF fonts can be horizontally compressed but displayed fonts can't. To try and compensate for this, any fret number of 10 and above is rendered on the display in a smaller font - View the PDF to see the difference.",
- "The <B Bar Starts New Line/Page> option does just that - it forces the Bar onto a new line or page.",
- "The <B Note Shift> section works in the same way as the main page <O TR:B:Transpose> section does.",
+ "Place any text you want above the staff in the <R Header Text> box. This can be <R Left> or <R Right> justified and can have <R Volta brackets> included by selecting the appropriate button option.",
+ "The <R Repeat> options place a start or end Repeat sign into the Bar.",
+ "The <R Note Font> option lets you reduce the size of the font - useful where frets are played very close together and would otherwise overlap. One of the issues here is that PDF fonts can be horizontally compressed but displayed fonts can't. To try and compensate for this, any fret number of 10 and above is rendered on the display in a smaller font - View the PDF to see the difference.",
+ "The <R Bar Starts New Line/Page> option does just that - it forces the Bar onto a new line or page.",
+ "The <R Note Shift> section works in the same way as the main page <O TR:K:Transpose> section does.",
  "Finally, you can navigate to the Previous or Next Bar via the 4 buttons at the lower right of the window. The <P  Prev Bar > and <P  Next Bar > buttons will prompt to save any changes (if there are any) whereas the two <P  w/Save > buttons will, fairly obviously, save any changes before bringing in the appropriate Bar.\n",
     ]);
 

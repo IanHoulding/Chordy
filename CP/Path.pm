@@ -62,7 +62,7 @@ sub change {
 sub check_dir {
   my($self) = shift;
 
-  foreach my $col ($Collection->listAll()) {
+  foreach my $col (@{$Collection->listAll()}) {
     my $home = $Collection->path($col)."/$col";
     foreach my $dir (qw/Pro PDF Tab Temp/) {
       if (! -d "$home/$dir") {

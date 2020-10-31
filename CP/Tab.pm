@@ -48,7 +48,7 @@ use CP::TabWin;
 use CP::Lyric;
 use POSIX;
 
-our $Tab = 0;
+our $Tab;
 our($EditBar, $EditBar1);
 our(@pageXY, $SaveID);
 our $OneOrMore = "Please select one or more bars first.";
@@ -60,7 +60,7 @@ our $OneOrMore = "Please select one or more bars first.";
 sub new {
   my($proto,$fn) = @_;
 
-  if ($Tab == 0) {
+  if (! defined $Tab) {
     my $class = ref($proto) || $proto;
     $Tab = {};
     $Tab->{eWin} = '';
@@ -855,11 +855,12 @@ sub setBG {
   if ($a == 0) {
     message(QUIZ, $OneOrMore);
   } else {
-    my $bg = $a->bgGet();
-    while ($a && $a->{prev} != $b) {
-      $a->{bg} = $bg;
-      $a->show();
-      $a = $a->{next};
+    if ((my $bg = $a->bgGet()) ne '') {
+      while ($a && $a->{prev} != $b) {
+	$a->{bg} = $bg;
+	$a->show();
+	$a = $a->{next};
+      }
     }
   }
   $self->ClearSel();

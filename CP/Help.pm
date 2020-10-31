@@ -34,8 +34,9 @@ sub new {
   my $textf = $tf->new_ttk__frame();
   $textf->g_pack(qw/-side top -expand 1 -fill both/);
 
+  my $sz = 13;
   $self->{text} = $textf->new_tk__text(
-    -font => "Times 13 normal",
+    -font => "Times $sz normal",
     -bg => 'white',
     -wrap => 'word',
     -borderwidth => 2,
@@ -59,7 +60,6 @@ sub new {
   $bt->g_pack(qw/-side right -padx 30 -pady 4/);
 
   my $textWin = $self->{text};
-  my $sz = 13;
   # The following 3 tags control indenting. Indents stay in effect
   # until explicitly ended with an <E> tag OR a Heading tag.
 #  $textWin->tag_configure('m', -lmargin1 => 20,
@@ -106,6 +106,9 @@ sub new {
   $textWin->tag_configure('c', -font => "Courier ".($sz-2)." bold");
   $textWin->tag_configure('U', -font => "Courier ".($sz-3)." bold",
 			       -offset => int($sz/3));
+  # Link
+    $textWin->tag_configure('K', -font => "Times $sz bold",
+			         -foreground => HFG);
   # Bold Italic
   $textWin->tag_configure('I', -font => "Times $sz bold italic");
   # Bold

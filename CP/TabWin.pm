@@ -40,7 +40,7 @@ my $helpWin = '';
 #
 sub pageWindow {
   if ($Tab->{pFrm} eq '') {
-    my $outer = $MW->new_ttk__frame(qw/-relief raised -borderwidth 2/, -padding => 0);
+    my $outer = $MW->new_ttk__frame(qw/-relief raised -borderwidth 2/, -padding => [0,0,0,4]);
     $outer->g_pack(qw//);
     $Tab->{pFrm} = $outer;
 
@@ -77,7 +77,7 @@ sub pageWindow {
       -selectborderwidth => 0,
       -width => BNUMW,
       -height => $Media->{height});
-    $Tab->{nCan}->g_grid(qw/-row 1 -column 0 -sticky ns/);
+    $Tab->{nCan}->g_grid(qw/-row 1 -column 0 -sticky n/);
 
     $Tab->{pCan} = $leftF->new_tk__canvas(
       -bg => "WHITE",
@@ -87,7 +87,7 @@ sub pageWindow {
       -borderwidth => 1,
       -selectborderwidth => 0,
       -highlightthickness => 0);
-    $Tab->{pCan}->g_grid(qw/-row 1 -column 1/);
+    $Tab->{pCan}->g_grid(qw/-row 1 -column 1 -sticky n/);
 
 
     my $rightF = $outer->new_ttk__frame(qw/-borderwidth 0/);
@@ -98,8 +98,7 @@ sub pageWindow {
 
     pageCanvas();
 
-    pButtons($rightF);
-    pageOpts($rightF);
+    pageButtons($rightF);
 
     if (OS eq 'win32') {
       my $rightFb = $rightF->new_ttk__frame(qw/-borderwidth 0/);
@@ -192,6 +191,7 @@ sub editWindow {
 ##
 ############################
 ############################
+
 sub eButtons {
   my($frm) = @_;
 
@@ -457,16 +457,16 @@ sub shiftOpt {
 
   my $cb4 = $frm->new_ttk__checkbutton(-variable => \$Opt->{Refret});
 
-  $lb1->g_grid(qw/-row 0 -column 0 -columnspan 2/, -padx => [8,4], -pady => [0,4]);
+  $lb1->g_grid(qw/-row 0 -column 0 -columnspan 2 -sticky we/, -padx => [8,4], -pady => [0,4]);
   $me1->g_grid(qw/-row 1 -column 0 /,              -padx => [8,2], -pady => [0,4]);
   $bu1->g_grid(qw/-row 1 -column 1 /,              -padx => [2,8], -pady => [0,4]);
 
-  $lb2->g_grid(qw/-row 0 -column 2 -columnspan 2/, -padx => [8,4], -pady => [0,4]);
-  $bu2->g_grid(qw/-row 1 -column 2 /,              -padx => [8,2], -pady => [0,4]);
-  $bu3->g_grid(qw/-row 1 -column 3 /,              -padx => [2,8], -pady => [0,4]);
+  $lb2->g_grid(qw/-row 0 -column 2 -columnspan 2 -sticky we/, -padx => [16,4], -pady => [0,4]);
+  $bu2->g_grid(qw/-row 1 -column 2 /,              -padx => [16,2], -pady => [0,4]);
+  $bu3->g_grid(qw/-row 1 -column 3 /,              -padx => [2,8],  -pady => [0,4]);
 
   if ($pe == PAGE) {
-    $lb4->g_grid(qw/-row 1 -column 4 -sticky e/, -padx => [8,0], -pady => [0,4]);
+    $lb4->g_grid(qw/-row 1 -column 4 -sticky e/, -padx => [16,0], -pady => [0,4]);
     $cb4->g_grid(qw/-row 1 -column 5 -sticky w/, -padx => [2,0], -pady => [0,4]);
   } else {
     $lb4->g_grid(qw/-row 2 -column 0 -columnspan 2 -sticky e/, -padx => [8,0], -pady => [0,4]);
@@ -490,34 +490,19 @@ sub transCmnd {
   }
 }
 
-####################
-# Page Options .....
-####################
-sub pageOpts {
-  my($subfrm) = @_;
+#############################
+#############################
+##
+## Page Frame (right) Section
+##
+#############################
+#############################
 
-  my @menu_opt = qw/
-      -width 3
-      -relief solid
-      -borderwidth 1
-      -anchor c
-      -direction flush
-      -indicatoron 0
-      -tearoff 0
-      -pady 0/;
-  my $frt = $subfrm->new_ttk__frame(qw/-relief raised -borderwidth 2/);
-  $frt->g_pack(qw/-side top -expand 1 -fill both -padx 4 -pady/ => [8,4]);
+sub pageButtons {
+  my($frm) = shift;
 
-  my $frm = $subfrm->new_ttk__labelframe(-text => ' Select ');
-  $frm->g_pack(qw/-side top -expand 1 -fill both -padx 4 -pady 4/);
-
-  my $frb = $subfrm->new_ttk__labelframe(-text => ' Transpose ');
-  $frb->g_pack(qw/-side top -expand 1 -fill both -padx 4 -pady 4/);
-
-  my $mrgn = $subfrm->new_ttk__labelframe(-text => " Margins ", -padding => [4,2,0,4]);
-  $mrgn->g_pack(qw/-side top -expand 1 -fill both -padx 4 -pady 4/);
-
-  ##########
+  my $frt = $frm->new_ttk__frame(qw/-relief raised -borderwidth 2/);
+  $frt->g_pack(qw/-side top -expand 1 -fill both -padx 4 -pady/ => [0,16]);
 
   my $lb2 = $frt->new_ttk__label(-text => 'Tab File Name');
   my $en2 = $frt->new_ttk__entry(-textvariable => \$Tab->{fileName}, -width => 38,
@@ -541,73 +526,24 @@ sub pageOpts {
   $en4->g_grid(qw/-row 2 -column 1 -sticky w/, -padx => [0,4], -pady => [0,4]);
   $lb6->g_grid(qw/-row 3 -column 0 -sticky e/, -padx => [0,2], -pady => [0,4]);  # HN
   $en6->g_grid(qw/-row 3 -column 1 -sticky w/, -padx => [0,0], -pady => [0,4]);
+
 ##########
 
-  my $coll = $frm->new_ttk__label(-text => 'Collection');
-  my $colb = $frm->new_ttk__button(
-    -textvariable => \$Collection->{name},
-    -style => 'Menu.TButton',
-    -command => sub{$Collection->select()}
-    );
-  my $medl = $frm->new_ttk__label(-text => 'Media');
-  my $medb = $frm->new_ttk__button(
-    -textvariable => \$Opt->{Media},
-    -style => 'Menu.TButton',
-    -command => sub{$Media->mediaSel()}
-    );
-
-  $coll->g_grid(qw/-row 0 -column 0 -sticky e/, -padx => [4,0], -pady => [0,4]);
-  $colb->g_grid(qw/-row 0 -column 1 -sticky w/, -padx => [2,0], -pady => [0,4]);
-  $medl->g_grid(qw/-row 0 -column 2 -sticky e/, -padx => [16,0], -pady => [0,4]);
-  $medb->g_grid(qw/-row 0 -column 3 -sticky w/, -padx => [2,0], -pady => [0,4]);
-
-###
-  shiftOpt($frb, PAGE);
-###
-  my $col = 0;
-  foreach my $m (qw/Left Right Top Bottom/) {
-    $a = $mrgn->new_ttk__label(-text => "$m", -anchor => 'e');
-
-    $b = $mrgn->new_ttk__spinbox(
-      -textvariable => \$Opt->{"${m}Margin"},
-      -style => 'TSpinbox',
-      -from => 0,
-      -to => 72,
-      -wrap => 1,
-      -width => 2,
-      -state => 'readonly',
-      -command => sub{$Opt->saveOne("${m}Margin");$Tab->drawPageWin();});
-    $a->g_grid(qw/-row 0 -sticky e/, -column => $col++);
-    $b->g_grid(qw/-row 0 -sticky w/, -column => $col++, -padx => [2,16]);
-  }
-}
-
-#############################
-#############################
-##
-## Page Frame (right) Section
-##
-#############################
-#############################
-
-sub pButtons {
-  my($frm) = shift;
-
   my $edit = $frm->new_ttk__labelframe(-text => ' Edit ');
-  $edit->g_pack(qw/-side top -expand 1 -fill both -padx 4/);
+  $edit->g_pack(qw/-side top -expand 1 -fill both/, -padx => [4,8], -pady => [4,4]);
   my $bu1 = $edit->new_ttk__button(-text => 'Edit Bar',
 				   -style => "Green.TButton",
 				   -command => sub{$Tab->editBar});
-  $bu1->g_grid(qw/-row 0 -column 0 -sticky we -padx 4 -pady/ => [0,4]);
+  $bu1->g_grid(qw/-row 0 -column 0 -sticky we/, -padx => [4,8], -pady => [0,4]);
   my $bu2 = $edit->new_ttk__button(-text => 'Clone Bar(s)',
 				   -style => "Green.TButton",
 				   -command => sub{$Tab->Clone});
-  $bu2->g_grid(qw/-row 0 -column 1 -sticky we -padx 4 -pady/ =>[0,4]);
+  $bu2->g_grid(qw/-row 0 -column 1 -sticky we/, -padx => [4,8], -pady => [0,4]);
 ######
   my $cp = $frm->new_ttk__labelframe(-text => ' Copy/Paste ');
   $cp->g_pack(qw/-side top -expand 1 -fill both -padx 4 -pady 4/);
 
-  my $cb = $cp->new_ttk__label(-text => 'Copy Buffer:');
+  my $cb = $cp->new_ttk__label(-text => 'Copy Buffer:', -font => "BTkDefaultFont");
   $cb->g_grid(qw/-row 0 -column 0 -columnspan 2 -sticky e -padx 4/);
   my $cbs = $cp->new_ttk__label(-textvariable => \$CP::Tab::CopyIdx);
   $cbs->g_grid(qw/-row 0 -column 2 -sticky w/);
@@ -617,67 +553,121 @@ sub pButtons {
   my $bu3 = $cp->new_ttk__button(-text => 'Header',
 				 -style => "Green.TButton",
 				 -command => sub{$Tab->Copy(HONLY)});
-  $bu3->g_grid(qw/-row 1 -column 1 -sticky we -padx 4 -pady 4/);
+  $bu3->g_grid(qw/-row 1 -column 1 -sticky we/, -padx => [4,8], -pady => [2,4]);
   my $bu4 = $cp->new_ttk__button(-text => 'Notes',
 				 -style => "Green.TButton",
 				 -command => sub{$Tab->Copy(NONLY)});
-  $bu4->g_grid(qw/-row 1 -column 2 -sticky we -padx 4 -pady 4/);
+  $bu4->g_grid(qw/-row 1 -column 2 -sticky we/, -padx => [4,8], -pady => [2,4]);
   my $bu5 = $cp->new_ttk__button(-text => 'All',
 				 -style => "Green.TButton",
 				 -command => sub{$Tab->Copy(HANDN)});
-  $bu5->g_grid(qw/-row 1 -column 3 -sticky we -padx 4 -pady 4/);
+  $bu5->g_grid(qw/-row 1 -column 3 -sticky we/, -padx => [4,8], -pady => [2,4]);
 
   my $paste = $cp->new_ttk__label(-text => 'Paste', -font => "BTkDefaultFont");
   $paste->g_grid(qw/-row 2 -column 0 -sticky e -padx/ => [4,0]);
   my $bu6 = $cp->new_ttk__button(-text => 'Over',
 				 -style => "Green.TButton",
 				 -command => sub{$Tab->PasteOver});
-  $bu6->g_grid(qw/-row 2 -column 1 -sticky we -padx 4 -pady 4/);
+  $bu6->g_grid(qw/-row 2 -column 1 -sticky we/, -padx => [4,8], -pady => [4,4]);
   my $bu7 = $cp->new_ttk__button(-text => 'Before',
 				 -style => "Green.TButton",
 				 -command => sub{$Tab->PasteBefore});
-  $bu7->g_grid(qw/-row 2 -column 2 -sticky we -padx 4 -pady 4/);
+  $bu7->g_grid(qw/-row 2 -column 2 -sticky we/, -padx => [4,8], -pady => [4,4]);
   my $bu8 = $cp->new_ttk__button(-text => 'After',
 				 -style => "Green.TButton",
 				 -command => sub{$Tab->PasteAfter});
-  $bu8->g_grid(qw/-row 2 -column 3 -sticky we -padx 4 -pady 4/);
+  $bu8->g_grid(qw/-row 2 -column 3 -sticky we/, -padx => [4,8], -pady => [4,4]);
 ######
   my $sel = $frm->new_ttk__labelframe(-text => ' Selection ');
   $sel->g_pack(qw/-side top -expand 1 -fill both -padx 4 -pady 4/);
   my $bu9 = $sel->new_ttk__button(-text => 'Clear Selection',
 				   -style => "Red.TButton",
 				   -command => sub{$Tab->ClearSel});
-  $bu9->g_grid(qw/-row 0 -column 0 -sticky we -padx 4 -pady/ => [0,4]);
+  $bu9->g_grid(qw/-row 0 -column 0 -sticky we/, -padx => [4,8], -pady => [0,4]);
   my $bu10 = $sel->new_ttk__button(-text => 'Clear Bar(s)',
 				   -style => "Red.TButton",
 				   -command => sub{$Tab->ClearBars});
-  $bu10->g_grid(qw/-row 0 -column 1 -sticky we -padx 4 -pady/ => [0,4]);
+  $bu10->g_grid(qw/-row 0 -column 1 -sticky we/, -padx => [4,8], -pady => [0,4]);
   my $bu11 = $sel->new_ttk__button(-text => 'Delete Bar(s)',
 				   -style => "Green.TButton",
 				   -command => sub{$Tab->DeleteBars});
-  $bu11->g_grid(qw/-row 0 -column 2 -sticky we -padx 4 -pady/ => [0,4]);
+  $bu11->g_grid(qw/-row 0 -column 2 -sticky we/, -padx => [4,8], -pady => [0,4]);
 ######
   my $bg = $frm->new_ttk__labelframe(-text => ' Background ');
   $bg->g_pack(qw/-side top -expand 1 -fill both -padx 4 -pady 4/);
   my $bu12 = $bg->new_ttk__button(-text => 'Set',
 				  -style => "Green.TButton",
 				  -command => sub{$Tab->setBG});
-  $bu12->g_grid(qw/-row 0 -column 0 -sticky we -padx 4 -pady/ => [0,4]);
+  $bu12->g_grid(qw/-row 0 -column 0 -sticky we/, -padx => [4,8], -pady => [0,4]);
   my $bu13 = $bg->new_ttk__button(-text => 'Clear',
 				  -style => "Red.TButton",
 				  -command => sub{$Tab->clearBG});
-  $bu13->g_grid(qw/-row 0 -column 1 -sticky we -padx 4 -pady/ => [0,4]);
+  $bu13->g_grid(qw/-row 0 -column 1 -sticky we/, -padx => [4,8], -pady => [0,4]);
 ######
   my $lyr = $frm->new_ttk__labelframe(-text => ' Lyrics ');
   $lyr->g_pack(qw/-side top -expand 1 -fill both -padx 4 -pady 4/);
   my $bu14 = $lyr->new_ttk__button(-text => 'Shift Up One Line',
 				   -style => "Green.TButton",
 				   -command => sub{$Tab->{lyrics}->shiftUp()});
-  $bu14->g_grid(qw/-row 0 -column 0 -sticky we -padx 4 -pady/ => [0,4]);
+  $bu14->g_grid(qw/-row 0 -column 0 -sticky we/, -padx => [4,8], -pady => [0,4]);
   my $bu15 = $lyr->new_ttk__button(-text => 'Shift Down One Line',
 				   -style => "Green.TButton",
 				   -command => sub{$Tab->{lyrics}->shiftDown()});
-  $bu15->g_grid(qw/-row 0 -column 1 -sticky we -padx 4 -pady/ => [0,4]);
+  $bu15->g_grid(qw/-row 0 -column 1 -sticky we/, -padx => [4,8], -pady => [0,4]);
+
+  my $sel = $frm->new_ttk__labelframe(-text => ' Select ');
+  $sel->g_pack(qw/-side top -expand 1 -fill both -padx 4 -pady 4/);
+
+  my $coll = $sel->new_ttk__label(-text => 'Collection');
+  my $colb = $sel->new_ttk__button(
+    -textvariable => \$Collection->{name},
+    -style => 'Menu.TButton',
+    -command => sub{$Collection->select()}
+    );
+  my $medl = $sel->new_ttk__label(-text => 'Media');
+  my $medb = $sel->new_ttk__button(
+    -textvariable => \$Opt->{Media},
+    -style => 'Menu.TButton',
+    -command => \&newMedia,
+    );
+
+  $coll->g_grid(qw/-row 0 -column 0 -sticky e/, -padx => [4,0], -pady => [0,4]);
+  $colb->g_grid(qw/-row 0 -column 1 -sticky w/, -padx => [2,0], -pady => [0,4]);
+  $medl->g_grid(qw/-row 0 -column 2 -sticky e/, -padx => [20,0], -pady => [0,4]);
+  $medb->g_grid(qw/-row 0 -column 3 -sticky w/, -padx => [2,0], -pady => [0,4]);
+
+###
+  my $frb = $frm->new_ttk__labelframe(-text => ' Transpose ');
+  $frb->g_pack(qw/-side top -expand 1 -fill both -padx 4 -pady 4/);
+
+  shiftOpt($frb, PAGE);
+###
+  my $mrgn = $frm->new_ttk__labelframe(-text => " Margins ", -padding => [4,0,0,0]);
+  $mrgn->g_pack(qw/-side top -expand 1 -fill both -padx 4 -pady 4/);
+
+  my $col = 0;
+  foreach my $m (qw/Left Right Top Bottom/) {
+    $a = $mrgn->new_ttk__label(-text => "$m", -anchor => 'e');
+
+    $b = $mrgn->new_ttk__spinbox(
+      -textvariable => \$Opt->{"${m}Margin"},
+      -from => 0,
+      -to => 72,
+      -wrap => 1,
+      -width => 2,
+      -state => 'readonly',
+      -command => sub{$Opt->saveOne("${m}Margin");$Tab->drawPageWin();});
+    $a->g_grid(-row => 0, -column => $col, -padx => [2,16], -pady => [0,4]);
+    $b->g_grid(-row => 1, -column => $col, -padx => [2,16], -pady => [0,4]);
+    $col++;
+  }
+}
+
+sub newMedia {
+  popMenu(\$Opt->{Media}, undef, $Media->list());
+  $Media = $Media->change($Opt->{Media});
+  $Tab->drawPageWin();
+  CP::TabMenu::refresh();
 }
 
 sub pageCanvas {

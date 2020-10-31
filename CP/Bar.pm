@@ -316,8 +316,6 @@ sub _pn {
       CP::Cmsg::message(SAD, "This is the first Bar.", 1);
       return;
     }
-  } else {
-    $bar = $Tab->{lastBar};
   }
   ClearEbar();
   $bar->select() if ($bar);
@@ -489,7 +487,9 @@ sub Update {
     $EditBar1->save_bar(UPDATE) if ($EditBar1->{pbar} && comp($EditBar1, $EditBar1->{pbar}));
     $EditBar->save_bar(UPDATE) if (comp($EditBar, $EditBar->{pbar}));
   } else {
-    message(SAD, "No Bar selected - don't know which bar to update!", 1);
+    # Editing a bar to tack on the end.
+    $EditBar->save_bar(UPDATE);
+#    message(SAD, "No Bar selected - don't know which bar to update!", 1);
   }
 }
 
@@ -499,7 +499,6 @@ sub save_bar {
   my($bar);
   if ($self->{pbar} == 0) {
     # We've edited a (new) blank Bar.
-#    return if ($insert == UPDATE);
     $bar = CP::Bar->new($Tab->{pOffset});
     if ($Tab->{bars} == 0) {
       $Tab->{bars} = $bar;

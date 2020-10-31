@@ -853,8 +853,7 @@ sub mediaWin {
     -width => 15,
     -style => 'Menu.TButton',
     -command => sub{
-      my @lst = $Media->list();
-      my($pop,$fr) = popMenu(\$Opt->{Media}, \&newMedia, \@lst);
+      my($pop,$fr) = popMenu(\$Opt->{Media}, \&newMedia, $Media->list());
     });
 
   my $st = 'Media.TLabel';
@@ -878,8 +877,7 @@ sub mediaWin {
     -width => 15,
     -style => 'Win.TButton',
     -command => sub{
-      my @lst = $Media->list();
-      popMenu(\$Opt->{PrintMedia}, undef, \@lst);
+      popMenu(\$Opt->{PrintMedia}, undef, $Media->list());
       # Need to delay the save otherwise Opt->{PrintMedia} = 0
       Tkx::after_idle(sub{$Opt->save()});
     });
