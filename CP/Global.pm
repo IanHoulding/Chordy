@@ -494,6 +494,8 @@ sub viewFile {
 
   my $txt = $tf->new_tk__text(
     -font => "\{$EditFont{family}\} $EditFont{size}",
+    -width => 90,
+    -height => 30,
     -relief => 'raised',
     -borderwidth => 2,
     -highlightthickness => 0,
