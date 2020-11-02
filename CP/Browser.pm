@@ -55,8 +55,7 @@ sub new {
     -textvariable => \$Opt->{SortBy},
     -width => 14,
     -style => 'Menu.TButton',
-    -command => sub{
-      popMenu(\$Opt->{SortBy}, undef, ["Alphabetical", "Date Modified"]);
+    -command => sub{$Opt->{SortBy} = ($Opt->{SortBy} eq "Alphabetical") ? "Date Modified" : "Alphabetical";
       $avail->h2tcl();
       $Opt->saveOne('SortBy');
     } );
