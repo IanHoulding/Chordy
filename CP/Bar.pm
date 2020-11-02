@@ -575,7 +575,7 @@ sub select {
       $can->itemconfigure("bg$Tab->{select1}{pidx}", -fill => $bg);
     }
     $can->itemconfigure($tag, -fill => SELECT);
-    $MW->g_bind('<KeyRelease>', [\&checkDel, Tkx::Ev('%K')]);
+    $MW->g_bind('<Key-Delete>', \&checkDel);
     $Tab->{select1} = $self;
   }
   $Tab->{select2} = 0;
@@ -600,7 +600,7 @@ sub deselect {
 sub checkDel {
   my($key) = shift;
 
-  if ($key eq 'Delete') {
+  if ($Tab->{select1}) {
     $Tab->DeleteBars();
   }
 }

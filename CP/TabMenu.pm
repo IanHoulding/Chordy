@@ -49,12 +49,12 @@ sub new {
   $menu->add_cascade(-menu => $misc, -label => "Misc");
   $menu->add_cascade(-menu => $help, -label => "Help");
 
-  $file->add_command(-label => "Open Tab",   -font => 'TkMenuFont', -command => \&openTab);
-  $file->add_command(-label => "New Tab",    -font => 'TkMenuFont', -command => \&newTab);
-  $file->add_command(-label => "Close Tab",  -font => 'TkMenuFont', -command => \&closeTab);
-  $file->add_command(-label => "Delete Tab", -font => 'TkMenuFont', -command => \&delTab);
+  $file->add_command(-label => "Open",   -font => 'TkMenuFont', -command => \&openTab);
+  $file->add_command(-label => "New",    -font => 'TkMenuFont', -command => \&newTab);
+  $file->add_command(-label => "Close",  -font => 'TkMenuFont', -command => \&closeTab);
+  $file->add_command(-label => "Delete", -font => 'TkMenuFont', -command => \&delTab);
   $file->add_separator;  #########
-  $file->add_command(-label => "Save Tab",
+  $file->add_command(-label => "Save",
 		     -font => 'TkMenuFont',
 		     -command => sub{$Tab->save()});
   $file->add_command(-label => "Save As",
@@ -63,10 +63,10 @@ sub new {
   $file->add_command(-label => 'Save, Make & Close',
 		     -font => 'TkMenuFont',
 		     -command => \&saveCloseTab);
-  $file->add_command(-label => "Rename Tab",
+  $file->add_command(-label => "Rename",
 		     -font => 'TkMenuFont',
 		     -command => \&renameTab);
-  $file->add_command(-label => "Export Tab",
+  $file->add_command(-label => "Export",
 		     -font => 'TkMenuFont',
 		     -command => \&exportTab);
   $file->add_separator;  #########
