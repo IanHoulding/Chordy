@@ -83,7 +83,7 @@ sub Edit {
       -spacing3 => 3,
       -undo => 1,
       -setgrid => 'true'); # use this for autosizing
-    $txtWin->g_pack(qw/-expand 1 -fill both/);
+#    $txtWin->g_pack(qw/-expand 1 -fill both/);
     $txtWin->g_bind("<KeyRelease>",  sub{Tkx::after(20, sub{drawBlinds($txtWin)} )});
 
     my $sv = $topF->new_ttk__scrollbar(-orient => "vertical",   -command => [$txtWin, "yview"]);
@@ -91,6 +91,13 @@ sub Edit {
 
     $txtWin->configure(-yscrollcommand => [$sv, 'set']);
     $txtWin->configure(-xscrollcommand => [$sh, 'set']);
+
+    $topF->g_grid_rowconfigure(0, -weight => 1);
+    $topF->g_grid_columnconfigure(0, -weight => 1);
+
+    $txtWin->g_grid(qw/-row 0 -column 0 -sticky nsew/);
+    $sv->g_grid(qw/-row 0 -column 1 -sticky nsw/);
+    $sh->g_grid(qw/-row 1 -column 0 -sticky new/);
 
     Tkx::clipboard_clear();
 
@@ -156,13 +163,14 @@ sub Edit {
 sub drawBlinds {
   my($txtWin) = shift;
 
+  print "Blinds\n";
   $txtWin->tag_delete('B');
   my $nlines = $txtWin->count(-lines, '1.0', 'end');
   my $ll = $Opt->{LyricLines} * 2;
   for(my $i = 1; $i <= $nlines; $i += $ll) {
     $txtWin->tag_add('B', "$i.0", ($i+$Opt->{LyricLines}).".0");
   }
-  $txtWin->tag_configure('B', -background => "#F0F0F0");
+  $txtWin->tag_configure('B', -background => "#F0F0F0", -selectbackground => SELECT);
 }
 
 sub update {
