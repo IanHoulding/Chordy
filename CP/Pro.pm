@@ -579,7 +579,7 @@ sub makePDF {
 	  $bg = $ln->{bg};
 	}
 	if ($bg ne '') {
-	  $bg = CP::FgBgEd::darken($bg, 60) if ($label);
+	  $bg = CP::FgBgEd::darken($bg, 10) if ($label);
 	  CP::CPpdf::_bg($bg, 0, $lineY, $Media->{width}, $lineht + $linespc);
 	}
 	#

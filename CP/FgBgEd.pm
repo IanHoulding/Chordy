@@ -293,8 +293,9 @@ sub lighten {
   if ($clr =~ /^#(..)(..)(..)/) {
     my @rgb = (hex($1),hex($2),hex($3),);
     $pcnt = 3 if (! defined $pcnt);
+    $pcnt = int($pcnt * 2.55);
     foreach my $c (0..2) {
-      $rgb[$c] += POSIX::ceil((256 - $rgb[$c]) * $pcnt / 100);
+      $rgb[$c] += $pcnt;
       $rgb[$c] = 255 if ($rgb[$c] > 255);
     }
     $clr = sprintf("#%02x%02x%02x", $rgb[0], $rgb[1], $rgb[2]);
@@ -308,8 +309,9 @@ sub darken {
   if ($clr =~ /^#(..)(..)(..)/) {
     my @rgb = (hex($1),hex($2),hex($3),);
     $pcnt = 3 if (! defined $pcnt);
+    $pcnt = int($pcnt * 2.55);
     foreach my $c (0..2) {
-      $rgb[$c] -= POSIX::ceil((256 - $rgb[$c]) * $pcnt / 100);
+      $rgb[$c] -= $pcnt;
       $rgb[$c] = 0 if ($rgb[$c] < 0);
     }
     $clr = sprintf("#%02x%02x%02x", $rgb[0], $rgb[1], $rgb[2]);

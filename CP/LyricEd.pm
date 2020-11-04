@@ -65,25 +65,25 @@ sub Edit {
     my $fp = $Media->{Words};
     my $sz = int($EditFont{size} * $Tab->{scaling});
     $txtWin = $Ed->{TxtWin} = $topF->new_tk__text(
-      -width => 80,
+      -width => 90,
       -height => 24,
       -insertwidth => 2,
       -font => "\{$fp->{family}\} $sz $fp->{weight} $fp->{slant}",
       -relief => 'raised',
       -foreground => $fp->{color},
-      -background => WHITE,  # $EditFont{background},
+      -background => WHITE,
       -borderwidth => 2,
       -highlightthickness => 0,
       -selectborderwidth => 0,
       -exportselection => 'true',
       -selectbackground => SELECT,
       -selectforeground => BLACK,
-      -wrap=> 'none',
+      -wrap => 'none',
       -spacing1 => 3,
       -spacing3 => 3,
+      -padx => 4,
       -undo => 1,
-      -setgrid => 'true'); # use this for autosizing
-#    $txtWin->g_pack(qw/-expand 1 -fill both/);
+      -setgrid => 1); # use this for autosizing
     $txtWin->g_bind("<KeyRelease>",  sub{Tkx::after(20, sub{drawBlinds($txtWin)} )});
 
     my $sv = $topF->new_ttk__scrollbar(-orient => "vertical",   -command => [$txtWin, "yview"]);
@@ -163,14 +163,14 @@ sub Edit {
 sub drawBlinds {
   my($txtWin) = shift;
 
-  print "Blinds\n";
   $txtWin->tag_delete('B');
   my $nlines = $txtWin->count(-lines, '1.0', 'end');
   my $ll = $Opt->{LyricLines} * 2;
   for(my $i = 1; $i <= $nlines; $i += $ll) {
     $txtWin->tag_add('B', "$i.0", ($i+$Opt->{LyricLines}).".0");
   }
-  $txtWin->tag_configure('B', -background => "#F0F0F0", -selectbackground => SELECT);
+  my $selbg = CP::FgBgEd::darken(SELECT, 10);
+  $txtWin->tag_configure('B', -background => "#F0F0F0", -selectbackground => $selbg);
 }
 
 sub update {

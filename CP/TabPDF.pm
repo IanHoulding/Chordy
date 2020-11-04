@@ -552,7 +552,7 @@ sub NoteSlideHam {
   my $topos = $nn->{pos};
 
   my $clr = $Tab->{headColor};
-  $clr = CP::FgBgEd::lighten($clr, 80) if ($bar->{pidx} == -2);
+  $clr = CP::FgBgEd::lighten($clr, PALE) if ($bar->{pidx} == -2);
 
   my $xaxis = ($nn->{bar} != $bar) ? $Tab->{BarEnd} - $pos + 3 + $topos : $topos - $pos;
   $xaxis *= $u;
@@ -583,7 +583,7 @@ sub NoteSlideHam {
       }
       $can->create_line($x, $y, $x1, $y1, -fill  => $clr, -width => $fat, -tags => $tag);
       if ($bar != $EditBar1) {
-	$clr = CP::FgBgEd::lighten($clr, 80) if ($self->{bar} == $EditBar);
+	$clr = CP::FgBgEd::lighten($clr, PALE) if ($self->{bar} == $EditBar);
 	slideTail($nn, $self->{fret}, $ymid, $clr, $tag);
       }
     }
@@ -609,7 +609,7 @@ sub NoteSlideHam {
 		       -width => $fat,   -tags    => $tag);
       # If we've just drawn the start of an arc in EditBar1, that's it.
       if ($self->{bar} != $EditBar1) {
-	$clr = CP::FgBgEd::lighten($clr, 80) if ($bar == $EditBar);
+	$clr = CP::FgBgEd::lighten($clr, PALE) if ($bar == $EditBar);
 	hammerTail($nn, $xaxis, $mid, $clr, $tag);
       }
     }
