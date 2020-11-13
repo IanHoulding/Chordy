@@ -972,6 +972,7 @@ sub clone {
 sub edit {
   my($self,$idx) = @_;
 
+  $Opt->add2recent($self->{name},'RecentPro',\&CP::CPmenu::refreshRcnt);
   my $fileName = "$self->{path}/$self->{name}";
   my $tempfn = CP::Editor::Edit($fileName);
   if ($tempfn eq $self->{name}) {

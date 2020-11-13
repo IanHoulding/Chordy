@@ -56,7 +56,8 @@ sub new {
 }
 
 sub load {
-  our($which,%coll);
+  our $which;
+  our %coll;
   do USER."/Chordy.cfg";
   $CurrentCollection = $which;
   #

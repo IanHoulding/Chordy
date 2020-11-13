@@ -99,6 +99,8 @@ sub default {
   $self->{TopMargin}   = INDENT;
   $self->{UseBold}     = 1;
   $self->{WinBG}       = MWBG;
+  $self->{RecentPro}   = [];
+  $self->{RecentTab}   = [];
 }
 
 sub resetOpt {
@@ -110,25 +112,42 @@ sub resetOpt {
   message(SMILE, "Done");
 }
 
+sub add2recent {
+  my($self,$name,$key,$refresh) = @_;
+
+  my $idx = 0;
+  foreach my $f (@{$self->{$key}}) {
+    if ($f eq $name) {
+      splice(@{$self->{$key}}, $idx, 1);
+      last;
+    }
+    $idx++;
+  }
+  unshift(@{$self->{$key}}, $name);
+  if (@{$self->{$key}} > 10) {
+    pop(@{$self->{$key}});
+  }
+  &$refresh();
+  $self->save();
+}
+
 sub load {
   my($self) = shift;
 
-  if (-e "$Path->{Option}") {
-    our($version,%opts);
-    do "$Path->{Option}";
-    #
-    # Now merge the file options into our hash.
-    #
-    foreach my $o (keys %opts) {
-      $self->{$o} = $opts{$o};
-    }
-    undef %opts;
-    if ("$version" ne "$Version") {
-      print localtime."\n  $Path->{Option} saved: version mismatch - old=$version new=$Version\n";
-      save($self);
-    }
-    CP::Win::newLook();
+  our($version,%opts);
+  do "$Path->{Option}";
+  #
+  # Now merge the file options into our hash.
+  #
+  foreach my $o (keys %opts) {
+    $self->{$o} = $opts{$o};
   }
+  undef %opts;
+  if ("$version" ne "$Version") {
+    print localtime."\n  $Path->{Option} saved: version mismatch - old=$version new=$Version\n";
+    save($self);
+  }
+  CP::Win::newLook();
 }
 
 sub save {
@@ -148,6 +167,14 @@ sub save {
 
   foreach my $num (@numOpt) {
     print $OFH "  $num => ".($self->{$num}+0).",\n";
+  }
+
+  foreach my $t (qw/Pro Tab/) {
+    print $OFH "  Recent$t => [\n";
+    foreach my $f (@{$self->{"Recent$t"}}) {
+      print $OFH "                \"$f\",\n";
+    }
+    print $OFH "               ],\n";
   }
 
   printf $OFH ");\n1;\n";

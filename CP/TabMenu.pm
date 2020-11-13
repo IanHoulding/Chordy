@@ -20,6 +20,7 @@ use CP::TabPDF;
 use CP::Cmsg;
 
 my %Opts = ();
+my $Recent;
 #
 # Not really a module in the strictest sense
 # but a way to keep all the menu code together.
@@ -51,6 +52,22 @@ sub new {
 
   $file->add_command(-label => "Open",   -font => 'TkMenuFont', -command => \&openTab);
   $file->add_command(-label => "New",    -font => 'TkMenuFont', -command => \&newTab);
+  {
+    $Recent = $file->new_menu;
+    $file->add_cascade(-menu => $Recent, -font => 'TkMenuFont', -label => 'Recent');
+    foreach (0..9) {
+      my $fn = (defined $Opt->{RecentTab}[$_]) ? $Opt->{RecentTab}[$_] : '. . .';
+      $Recent->add_command(-label => $fn,
+			   -font => 'TkMenuFont',
+			   -command => sub{
+			     if ($fn ne '. . .') {
+			       CP::Tab->new("$Path->{Tab}/$fn");
+			       $Tab->drawPageWin();
+			       $Opt->add2recent($fn, 'RecentTab', \&refresh);
+			     }
+			   });
+    }
+  }
   $file->add_command(-label => "Close",  -font => 'TkMenuFont', -command => \&closeTab);
   $file->add_command(-label => "Delete", -font => 'TkMenuFont', -command => \&delTab);
   $file->add_separator;  #########
@@ -275,6 +292,10 @@ sub refresh {
   foreach my $ep (@{$Opts{ent}}) {
     $menu->entryconfigure($idx++, -label => "$ep->{text} - ${$ep->{var}}");
   }
+  foreach (0..9) {
+    my $fn = (defined $Opt->{RecentTab}[$_]) ? $Opt->{RecentTab}[$_] : '. . .';
+    $Recent->entryconfigure($_, -label => $fn);
+  }
 }
 
 sub config {
@@ -288,7 +309,7 @@ sub openTab {
   if ($fn ne '') {
     CP::Tab->new("$Path->{Tab}/$fn");
     $Tab->drawPageWin();
-    refresh();
+    $Opt->add2recent($fn, 'RecentTab', \&refresh);
   }
 }
 
@@ -316,6 +337,7 @@ sub newTab {
     CP::Tab->new("$Path->{Tab}/$Tab->{fileName}");
     $Tab->drawPageWin();
     tabTitle($Tab->{fileName});
+    $Opt->add2recent($Tab->{fileName}, 'RecentTab', \&refresh);
   }
 }
 
@@ -351,6 +373,7 @@ sub renameTab {
     rename("$Path->{Tab}/$ofn", "$Path->{Tab}/$newfn");
     $Tab->{fileName} = $newfn;
     tabTitle("$newfn");
+    $Opt->add2recent($newfn, 'RecentTab', \&refresh);
   } else {
     Tkx::bell();
   }

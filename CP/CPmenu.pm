@@ -18,6 +18,8 @@ use CP::Global qw/:FUNC :WIN :VERS :OPT/;
 use CP::CHedit qw(&CHedit);
 use CP::Cmsg;
 
+our $Recent;
+
 #
 # Not really a module in the strictest sense
 # but a way to keep all the menu code together.
@@ -48,6 +50,19 @@ sub new {
   $file->add_command(-label => "New ChordPro", -command => \&main::newProFile);
   $file->add_command(-label => "Open File(s)", -command => [\&main::selectFiles, FILE]);
   $file->add_command(-label => "From Setlist", -command => \&CP::Chordy::fromSetlist);
+  {
+    $Recent = $file->new_menu;
+    $file->add_cascade(-menu => $Recent, -label => 'Recent');
+    foreach (0..9) {
+      my $fn = (defined $Opt->{RecentPro}[$_]) ? $Opt->{RecentPro}[$_] : '. . .';
+      $Recent->add_command(-label => $fn,
+			   -command => sub{
+			     if ($fn ne '. . .') {
+			       main::showSelection([$fn]);
+			     }
+			   });
+    }
+  }
   $file->add_separator;
   $file->add_command(-label => "Import ChordPro", -command => \&main::impProFile);
   {
@@ -129,6 +144,13 @@ sub new {
   $help->add_command(-label => 'About', -command => sub{message(SMILE, "Version $Version\nian\@houlding.me.uk");});
   if (OS eq 'aqua') {
     $MW->configure(-menu => $m);
+  }
+}
+
+sub refreshRcnt {
+  foreach (0..9) {
+    my $fn = (defined $Opt->{RecentPro}[$_]) ? $Opt->{RecentPro}[$_] : '. . .';
+    $Recent->entryconfigure($_, -label => $fn);
   }
 }
 

@@ -619,6 +619,8 @@ sub actionPDF {
     if ($Opt->{PDFpath} ne '' && $Opt->{PDFpath} ne $Path->{PDF}) {
       write_file("$Opt->{PDFpath}/$PDFfileName", $txt);
     }
+    (my $name = $PDFfileName) =~ s/\.pdf$/.pro/;
+    $Opt->add2recent($name,'RecentPro',\&CP::CPmenu::refreshRcnt);
   }
 }
 
