@@ -13,6 +13,7 @@ Bit late starting with 2.6.4 but about time I documented it :-)
 	     modified to reflect this - the original "Style" was 20 instead of Regular!
 	   Rewrote Collection.pm to be more modular and make handling easier.
 	   Browser 'Sort By' button is now just a toggle.
+	   Added "Recent"ly opened files to the File Menus.
   Chordy - Bugfix - hitting the 'Close Window' cross on the Fg/Bg Editor caused
                     an error the next time the Editor was opened.
 	   Going to try and revisit the window Menu system now we've changed to Tk/Tcl.
