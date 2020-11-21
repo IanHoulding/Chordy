@@ -52,8 +52,6 @@ sub new {
 
   $file->add_command(-label => "Open",   -font => 'TkMenuFont', -command => \&openTab);
   $file->add_command(-label => "New",    -font => 'TkMenuFont', -command => \&newTab);
-  $file->add_command(-label => "Close",  -font => 'TkMenuFont', -command => \&closeTab);
-  $file->add_command(-label => "Delete", -font => 'TkMenuFont', -command => \&delTab);
   {
     $Recent = $file->new_menu;
     $file->add_cascade(-menu => $Recent, -font => 'TkMenuFont', -label => 'Recent');
@@ -70,6 +68,8 @@ sub new {
 			   });
     }
   }
+  $file->add_command(-label => "Close",  -font => 'TkMenuFont', -command => \&closeTab);
+  $file->add_command(-label => "Delete", -font => 'TkMenuFont', -command => \&delTab);
   $file->add_separator;  #########
   $file->add_command(-label => "Save",
 		     -font => 'TkMenuFont',

@@ -41,7 +41,6 @@ sub help {
  "  <O Mfn:s: New Tab>",
  "  <O Mfc:s: Close Tab>",
  "  <O Mfd:s: Delete Tab>",
- "  <O Mfr:s: Recent>",
  "   <x hyphen> <x hyphen> <x hyphen> <x hyphen>",
  "<V 1>",
  "  <O Mfs:s: Save Tab>",
@@ -231,11 +230,6 @@ sub help {
 
  "<T Mfd><s  Delete Tab> ",
  "<M>Deletes the current Tab.",
- "<V 5>",
-
- "<T Mfr><s  Recent> ",
- "<M>Displays a list of the 10 most recent Tab files that have been edited.",
- "<V2>",
 
  "<x hyphen> <x hyphen> <x hyphen> <x hyphen> <x hyphen> ",
 
