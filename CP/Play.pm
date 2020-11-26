@@ -31,6 +31,7 @@ use Time::HiRes qw(usleep);
 
 my $Damp = 0;
 my @Bars = ();
+my %PrePack = ();
 my %Note = ();
 my $WAV = undef;
 
@@ -45,14 +46,21 @@ foreach my $tick (qw/-0.02573 0.09296 -0.14412 -0.10788 0.41505 0.14239 -0.78552
   $Tick .= pack("s", $tick);
 }
 
-# 5 String Bass tuning: B E A D G
-my @baseNotes = (qw/30.868 41.203 55 73.416 97.999/);
+my $baseNotes = {
+  Banjo    => [],
+  Bass4    => [qw/41.203 55 73.416 97.999/],
+  Bass5    => [qw/30.868 41.203 55 73.416 97.999/],
+  Guitar   => [qw/82.406 110 146.832 195.998 246.944 329.624/],
+  Mandolin => [],
+  Ukelele  => [],  
+};
 
 my $BarIdx = 0;
 my $Beat = 0;
 
 my $BpChan = 16;
 my $Nchan = 1;
+my $Two12 = 2 ** (1/12);
 
 my $Paused = 0;
 
@@ -89,7 +97,8 @@ sub resetWav {
 sub load {
   my($idx) = shift;
 
-  $WAV->Load($Note{$idx});
+#  $WAV->Load($Note{$idx});
+  $WAV->Load($idx);
   $WAV->Write();
 }
 
@@ -116,9 +125,9 @@ sub note {
       }
     }
     my $iv = $Bars[$BarIdx];
-    if (defined $iv->{$Beat} && $Tab->{play} != MET) {
+    if (defined $iv->{pos}[$Beat] && $Tab->{play} != MET) {
       resetWav();
-      my $idx = $iv->{$Beat};
+      my $idx = $iv->{pos}[$Beat][0];
       if ($idx ne 'r') {
 	load($idx);
       }
@@ -140,8 +149,7 @@ sub note {
 			-width => 2, -fill => RED, -tags => 'beat');
       if ($Tab->{play} == MET) {
 	resetWav();
-	$WAV->Load($Tick);
-	$WAV->Write();
+	load($Tick);
       }
     }
     if (++$Beat == $ticks) {
@@ -176,60 +184,95 @@ sub makeNotes {
   my($first,$last) = @_;
 
   my $time = setRate() * 2;  # how long we want a note to last
-  my $two12 = 2 ** (1/12);
+  #
+  # First pass creates all the individual notes
+  #
   for(my $bar = $first; $bar != 0; $bar = $bar->{next}) {
     my $IV = {};
+    $IV->{pos} = [];
     $IV->{bar} = $bar;
     foreach my $nt (@{$bar->{notes}}) {
       my $str = $nt->{string};
-      my $int = $nt->{pos};
+      my $pos = $nt->{pos};
       my $frt = $nt->{fret};
       next if ($frt eq 'X');
       if ($str eq 'r') {
-	$IV->{$int} = 'r';
+	$IV->{pos}[$pos][0] = 'r';
       } else {
-	#
-	##### ONLY DONE FOR BASSes AT THE MO'
-	#
-	$str += 1 if ($Opt->{Instrument} eq 'Bass4');
-SH:	my $n = "$str.$frt";
-	$IV->{$int} = "$n";
+	my $n = "$str.$frt";
+	push(@{$IV->{pos}[$pos]}, "$n");
 	if (!defined $Note{$n}) {
-	  $Note{$n} = '';
-	  my($c1,$c2,$c3) = (0,0,0);
-	  # formula for any given note is:
-	  #   fn = f0 * (a)^n
-	  # where:
-	  #   fn = the frequency of the note n frets away from f0.
-	  #   f0 = the frequency of one fixed note (usually the open sting).
-	  #   a = (2)^1/12 = the twelth root of 2 = 1.059463094359...
-	  #   n  = the number of frets away from the fixed note you are.
-	  my $f0 = $baseNotes[$str];
-	  my $fn = ($frt > 0) ? ($f0 * ($two12 ** $frt)) : $f0 ;
-	  my $i1 = $fn / RATE;
-	  my $i2 = $i1 * 2; #($fn * 2) / RATE;     # 2nd harmonic
-	  my $i3 = $i1 * 3; #($fn * 3) / RATE;     # 3rd harmonic
-	  my $vol = 32766;
-	  for my $i (reverse 1..$time) { # Generate $time samples
-	    # Calculate the pitch
-	    # (range 0..255 for 8 bits)
-	    my $v1 = sin($c1*6.28) * $vol;
-	    my $v2 = sin($c2*6.28) * $vol; # 2nd harmonic
-	    my $v3 = sin($c3*6.28) * ($vol/2); # 3rd harmonic
-	    my $v = int(($v1 + $v2 + $v3) * 0.4); # 0.4 = 1 / (1 + 1 + 0.5)
-	    # "pack" it
-	    $Note{$n} .= pack("s", $v);
-	    $c1 += $i1;
-	    $c2 += $i2;
-	    $c3 += $i3;
-	    $vol -= ($vol * (1.5 / $i));
-	  } # end for
-	} # end if (!defined $Note{$n})
-      } # end elsif ($frt ne 'X')
+	  my $note = oneNote($str, $frt, $time);
+	  $PrePack{$n} = $note;
+	  $Note{$n} = pack('s'.@{$note}, @{$note});
+	}
+      }
     }
     push(@Bars, $IV);
     last if ($bar == $last);
   }
+  #
+  # Second pass detects any multiple notes and
+  # amalgamates them into a single chord
+  #
+  my $ticks = (eval($Tab->{Timing}) * 32) - 1;
+  foreach my $iv (@Bars) {
+    my $pos = $iv->{pos};
+    foreach my $t (0..$ticks) {
+      if (defined $pos->[$t]) {
+	if (@{$pos->[$t]} > 1) {
+	  my @n = ();
+	  foreach my $strfrt (@{$pos->[$t]}) {
+	    my $idx = 0;
+	    foreach my $pp (@{$PrePack{$strfrt}}) {
+	      $n[$idx++] += $pp;
+	    }
+	  }
+	  my $cnt = @{$pos->[$t]};
+	  foreach (0..$#n) {
+	    $n[$_] = int($n[$_] / $cnt);
+	  }
+	  $pos->[$t][0] = pack('s'.@n, @n);
+	} else {
+	  $pos->[$t][0] = $Note{$pos->[$t][0]};
+	}
+      }
+    }
+  }
+}
+
+sub oneNote {
+  my($str,$frt,$time) = @_;
+
+  my $note = [];
+  my($c1,$c2,$c3) = (0,0,0);
+  # formula for any given note is:
+  #   fn = f0 * (a)^n
+  # where:
+  #   fn = the frequency of the note n frets away from f0.
+  #   f0 = the frequency of one fixed note (usually the open sting).
+  #   a = (2)^1/12 = the twelth root of 2 = 1.059463094359...
+  #   n  = the number of frets away from the fixed note you are.
+  my $f0 = $baseNotes->{$Opt->{Instrument}}[$str];
+  my $fn = ($frt > 0) ? ($f0 * ($Two12 ** $frt)) : $f0 ;
+  my $i1 = $fn / RATE;
+  my $i2 = $i1 * 2;     # 2nd harmonic
+  my $i3 = $i1 * 3;     # 3rd harmonic
+  my $vol = 32766;
+  for my $i (reverse 1..$time) { # Generate $time samples
+    # Calculate the pitch
+    # (range 0..255 for 8 bits)
+#    my $v1 = sin($c1 * 6.28) * $vol;
+#    my $v2 = sin($c2 * 6.28) * $vol;     # 2nd harmonic
+    my $v1 = (sin($c1 * 6.28) + sin($c2 * 6.28)) * $vol;
+    my $v3 = sin($c3 * 6.28) * ($vol/2); # 3rd harmonic
+    push(@{$note}, int(($v1 + $v3) * 0.4)); # 0.4 = 1 / (1 + 1 + 0.5)
+    $c1 += $i1;
+    $c2 += $i2;
+    $c3 += $i3;
+    $vol -= ($vol * (1.5 / $i));
+  }
+  $note;
 }
 
 my %CNTRL;
