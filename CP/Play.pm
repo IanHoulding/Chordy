@@ -97,7 +97,6 @@ sub resetWav {
 sub load {
   my($idx) = shift;
 
-#  $WAV->Load($Note{$idx});
   $WAV->Load($idx);
   $WAV->Write();
 }
