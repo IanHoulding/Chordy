@@ -1,6 +1,17 @@
 Chordy, Tab et al Revision history.
 Bit late starting with 2.6.4 but about time I documented it :-)
 
+3.9.1
+     Tab - Playing a Tab (Windows only still) will now handle chords and you can
+             vary the rate at which each individual note is struck.
+           Options Menu now in alphabetical order.
+	   Added Edit Lyrics to the Edit button frame.
+	   Reformatted the Copy/Paste frame.
+           Bugfix - a couple of calls in TabMenu failed because the subroutines had
+	     been moved.
+	   Bugfix - small notes at end of Bend/Release not handled with the new font
+	     mechanism.
+
 3.9
            Changed the way fonts are handled. We now only look for "Regular" fonts
 	     and use Windows built-in mechanism for Bold and Italic selection and the

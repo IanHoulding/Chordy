@@ -122,7 +122,37 @@ sub new {
 		    -command => sub{$Tab->saveAsText()});
 
   $Opts{menu} = $opt;
-  $Opts{ent}[0] = {text => 'Instrument', var => \$Opt->{Instrument}};
+  use warnings;
+  $Opts{ent}[0] = {text => 'Bars/Stave', var => \$Opt->{Nbar}};
+  my $bps = $opt->new_menu;
+  $opt->add_cascade(-menu => $bps,
+		    -font => 'TkMenuFont',
+		    -label => 'Bars/Stave'." - $Opt->{Nbar}");
+  foreach (qw/3 4 5 6 7 8 9 10/) {
+    $bps->add_radiobutton(-label => $_,
+			  -variable => \$Opt->{Nbar},
+			  -font => 'TkMenuFont',
+			  -command => sub{$Tab->drawPageWin();
+					  main::setEdited(1);
+					  config($opt, 0, 'Bars/Stave', $Opt->{Nbar});
+					  $Opt->saveOne('Nbar');
+			  });
+  }
+  $Opts{ent}[1] = {text => 'Edit Scale', var => \$Opt->{EditScale}};
+  my $es = $opt->new_menu;
+  $opt->add_cascade(-menu => $es,
+		    -font => 'TkMenuFont',
+		    -label => 'Edit Scale'." - $Opt->{EditScale}");
+  foreach (qw/3 3.5 4 4.5 5 5.5 6/) {
+    $es->add_radiobutton(-label => $_,
+			 -variable => \$Opt->{EditScale},
+			 -font => 'TkMenuFont',
+			 -command => sub{CP::TabWin::editWindow();
+					 config($opt, 1, 'Edit Scale', $Opt->{EditScale});
+					 $Opt->saveOne('EditScale');
+			 });
+  }
+  $Opts{ent}[2] = {text => 'Instrument', var => \$Opt->{Instrument}};
   my $inst = $opt->new_menu;
   $opt->add_cascade(-menu => $inst,
 		    -font => 'TkMenuFont',
@@ -134,103 +164,11 @@ sub new {
 			   -command =>
 			   sub{$Tab->drawPageWin();
 			       main::setEdited(1);
-			       config($opt, 0, 'Instrument', $Opt->{Instrument});
+			       config($opt, 2, 'Instrument', $Opt->{Instrument});
 			       $Opt->saveOne('Instrument');
 			   });
   }
-  $Opts{ent}[1] = {text => 'Timing', var => \$Tab->{Timing}};
-  my $tim = $opt->new_menu;
-  $opt->add_cascade(-menu => $tim,
-		    -font => 'TkMenuFont',
-		    -label => 'Timing'." - $Tab->{Timing}");
-  foreach (qw{2/4 3/4 4/4}) {
-    $tim->add_radiobutton(-label => $_,
-			  -variable => \$Tab->{Timing},
-			  -font => 'TkMenuFont',
-			  -command => sub{my($t,$_t) = split('/', $Tab->{Timing});
-					  $Tab->{BarEnd} = $t * 8;
-					  $Tab->drawPageWin();
-					  editWindow();
-					  main::setEdited(1);
-					  config($opt, 1, 'Timing', $Tab->{Timing});
-			  });
-  }
-  $Opts{ent}[2] = {text => 'Set Key', var => \$Tab->{key}};
-  my $key = $opt->new_menu;
-  $opt->add_cascade(-menu => $key,
-		    -font => 'TkMenuFont',
-		    -label => 'Set Key'." - $Tab->{key}");
-  no warnings; # stops perl bleating about '#' in array definition.
-  foreach (qw/- Ab Abm A Am A# A#m Bb Bbm B Bm C Cm C# C#m Db Dbm D Dm D# D#m Eb Ebm E Em F Fm F# F#m Gb Gbm G Gm G# G#m/) {
-    $key->add_radiobutton(-label => $_,
-			  -variable => \$Tab->{key},
-			  -font => 'TkMenuFont',
-			  -command => sub{$Tab->pageKey();
-					  main::setEdited(1);
-					  config($opt, 2, 'Set Key', $Tab->{key});
-			  });
-  }
-  use warnings;
-  $Opts{ent}[3] = {text => 'Bars/Stave', var => \$Opt->{Nbar}};
-  my $bps = $opt->new_menu;
-  $opt->add_cascade(-menu => $bps,
-		    -font => 'TkMenuFont',
-		    -label => 'Bars/Stave'." - $Opt->{Nbar}");
-  foreach (qw/3 4 5 6 7 8 9 10/) {
-    $bps->add_radiobutton(-label => $_,
-			  -variable => \$Opt->{Nbar},
-			  -font => 'TkMenuFont',
-			  -command => sub{$Tab->drawPageWin();
-					  main::setEdited(1);
-					  config($opt, 3, 'Bars/Stave', $Opt->{Nbar});
-					  $Opt->saveOne('Nbar');
-			  });
-  }
-  $Opts{ent}[4] = {text => 'String Spacing', var => \$Opt->{StaffSpace}};
-  my $ss = $opt->new_menu;
-  $opt->add_cascade(-menu => $ss,
-		    -font => 'TkMenuFont',
-		    -label => 'String Spacing'." - $Opt->{StaffSpace}");
-  foreach (qw/6 7 8 9 10 11 12 13 14 15 16/) {
-    $ss->add_radiobutton(-label => $_,
-			 -variable => \$Opt->{StaffSpace},
-			 -font => 'TkMenuFont',
-			 -command => sub{$Tab->drawPageWin();
-					 CP::TabWin::editWindow();
-					 main::setEdited(1);
-					 config($opt, 4, 'String Spacing', $Opt->{StaffSpace});
-					 $Opt->saveOne('StaffSpace');
-			 });
-  }
-  $Opts{ent}[5] = {text => 'Stave Gap', var => \$Tab->{staveGap}};
-  my $sg = $opt->new_menu;
-  $opt->add_cascade(-menu => $sg,
-		    -font => 'TkMenuFont',
-		    -label => 'Stave Gap'." - $Tab->{staveGap}");
-  foreach (qw/0 1 2 3 4 5 6 8 9 10 11 12 13 14 16 18 20/) {
-    $sg->add_radiobutton(-label => $_,
-			 -variable => \$Tab->{staveGap},
-			 -font => 'TkMenuFont',
-			 -command => sub{$Tab->drawPageWin();
-					 main::setEdited(1);
-					 config($opt, 5, 'Stave Gap', $Tab->{staveGap});
-			 });
-  }
-  $Opts{ent}[6] = {text => 'Edit Scale', var => \$Opt->{EditScale}};
-  my $es = $opt->new_menu;
-  $opt->add_cascade(-menu => $es,
-		    -font => 'TkMenuFont',
-		    -label => 'Edit Scale'." - $Opt->{EditScale}");
-  foreach (qw/3 3.5 4 4.5 5 5.5 6/) {
-    $es->add_radiobutton(-label => $_,
-			 -variable => \$Opt->{EditScale},
-			 -font => 'TkMenuFont',
-			 -command => sub{CP::TabWin::editWindow();
-					 config($opt, 6, 'Edit Scale', $Opt->{EditScale});
-					 $Opt->saveOne('EditScale');
-			 });
-  }
-  $Opts{ent}[7] = {text => 'Lyric Lines', var => \$Opt->{LyricLines}};
+  $Opts{ent}[3] = {text => 'Lyric Lines', var => \$Opt->{LyricLines}};
   my $ll = $opt->new_menu;
   $opt->add_cascade(-menu => $ll,
 		    -font => 'TkMenuFont',
@@ -242,11 +180,11 @@ sub new {
 			 -command => sub{$Tab->{lyrics}->adjust($Opt->{LyricLines});
 					 $Tab->drawPageWin();
 					 main::setEdited(1);
-					 config($opt, 7, 'Lyric Lines', $Opt->{LyricLines});
+					 config($opt, 3, 'Lyric Lines', $Opt->{LyricLines});
 					 $Opt->saveOne('LyricLines');
 			 });
   }
-  $Opts{ent}[8] = {text => 'Lyric Spacing', var => \$Tab->{lyricSpace}};
+  $Opts{ent}[4] = {text => 'Lyric Spacing', var => \$Tab->{lyricSpace}};
   my $ls = $opt->new_menu;
   $opt->add_cascade(-menu => $ls,
 		    -font => 'TkMenuFont',
@@ -257,8 +195,70 @@ sub new {
 			 -font => 'TkMenuFont',
 			 -command => sub{$Tab->drawPageWin();
 					 main::setEdited(1);
-					 config($opt, 8, 'Lyric Spacing', $Tab->{lyricSpace});
+					 config($opt, 4, 'Lyric Spacing', $Tab->{lyricSpace});
 			 });
+  }
+  $Opts{ent}[5] = {text => 'Set Key', var => \$Tab->{key}};
+  my $key = $opt->new_menu;
+  $opt->add_cascade(-menu => $key,
+		    -font => 'TkMenuFont',
+		    -label => 'Set Key'." - $Tab->{key}");
+  no warnings; # stops perl bleating about '#' in array definition.
+  foreach (qw/- Ab Abm A Am A# A#m Bb Bbm B Bm C Cm C# C#m Db Dbm D Dm D# D#m Eb Ebm E Em F Fm F# F#m Gb Gbm G Gm G# G#m/) {
+    $key->add_radiobutton(-label => $_,
+			  -variable => \$Tab->{key},
+			  -font => 'TkMenuFont',
+			  -command => sub{$Tab->pageKey();
+					  main::setEdited(1);
+					  config($opt, 5, 'Set Key', $Tab->{key});
+			  });
+  }
+  $Opts{ent}[6] = {text => 'Stave Gap', var => \$Tab->{staveGap}};
+  my $sg = $opt->new_menu;
+  $opt->add_cascade(-menu => $sg,
+		    -font => 'TkMenuFont',
+		    -label => 'Stave Gap'." - $Tab->{staveGap}");
+  foreach (qw/0 1 2 3 4 5 6 8 9 10 11 12 13 14 16 18 20/) {
+    $sg->add_radiobutton(-label => $_,
+			 -variable => \$Tab->{staveGap},
+			 -font => 'TkMenuFont',
+			 -command => sub{$Tab->drawPageWin();
+					 main::setEdited(1);
+					 config($opt, 6, 'Stave Gap', $Tab->{staveGap});
+			 });
+  }
+  $Opts{ent}[7] = {text => 'String Spacing', var => \$Opt->{StaffSpace}};
+  my $ss = $opt->new_menu;
+  $opt->add_cascade(-menu => $ss,
+		    -font => 'TkMenuFont',
+		    -label => 'String Spacing'." - $Opt->{StaffSpace}");
+  foreach (qw/6 7 8 9 10 11 12 13 14 15 16/) {
+    $ss->add_radiobutton(-label => $_,
+			 -variable => \$Opt->{StaffSpace},
+			 -font => 'TkMenuFont',
+			 -command => sub{$Tab->drawPageWin();
+					 CP::TabWin::editWindow();
+					 main::setEdited(1);
+					 config($opt, 7, 'String Spacing', $Opt->{StaffSpace});
+					 $Opt->saveOne('StaffSpace');
+			 });
+  }
+  $Opts{ent}[8] = {text => 'Timing', var => \$Tab->{Timing}};
+  my $tim = $opt->new_menu;
+  $opt->add_cascade(-menu => $tim,
+		    -font => 'TkMenuFont',
+		    -label => 'Timing'." - $Tab->{Timing}");
+  foreach (qw{2/4 3/4 4/4}) {
+    $tim->add_radiobutton(-label => $_,
+			  -variable => \$Tab->{Timing},
+			  -font => 'TkMenuFont',
+			  -command => sub{my($t,$_t) = split('/', $Tab->{Timing});
+					  $Tab->{BarEnd} = $t * 8;
+					  $Tab->drawPageWin();
+					  CP::TabWin::editWindow();
+					  main::setEdited(1);
+					  config($opt, 8, 'Timing', $Tab->{Timing});
+			  });
   }
   
   $misc->add_command(-label => 'View Error Log',
@@ -336,7 +336,7 @@ sub newTab {
     }
     CP::Tab->new("$Path->{Tab}/$Tab->{fileName}");
     $Tab->drawPageWin();
-    tabTitle($Tab->{fileName});
+    main::tabTitle($Tab->{fileName});
     $Opt->add2recent($Tab->{fileName}, 'RecentTab', \&refresh);
   }
 }
@@ -372,7 +372,7 @@ sub renameTab {
     }
     rename("$Path->{Tab}/$ofn", "$Path->{Tab}/$newfn");
     $Tab->{fileName} = $newfn;
-    tabTitle("$newfn");
+    main::tabTitle("$newfn");
     $Opt->add2recent($newfn, 'RecentTab', \&refresh);
   } else {
     Tkx::bell();

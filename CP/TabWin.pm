@@ -539,44 +539,61 @@ sub pageButtons {
 				   -style => "Green.TButton",
 				   -command => sub{$Tab->Clone});
   $bu2->g_grid(qw/-row 0 -column 1 -sticky we/, -padx => [4,8], -pady => [0,4]);
+  my $bue = $edit->new_ttk__button(-text => 'Edit Lyrics',
+				   -style => "Green.TButton",
+				   -command => sub{CP::LyricEd->Edit($Tab->{lyrics});});
+  $bue->g_grid(qw/-row 0 -column 2 -sticky we/, -padx => [4,8], -pady => [0,4]);
 ######
+  makeImage('hyphen', \%XPM);
   my $cp = $frm->new_ttk__labelframe(-text => ' Copy/Paste ');
   $cp->g_pack(qw/-side top -expand 1 -fill both -padx 4 -pady 4/);
 
   my $cb = $cp->new_ttk__label(-text => 'Copy Buffer:', -font => "BTkDefaultFont");
-  $cb->g_grid(qw/-row 0 -column 0 -columnspan 2 -sticky e -padx 4/);
+  $cb->g_grid(qw/-row 0 -column 0 -columnspan 3 -sticky e/);
   my $cbs = $cp->new_ttk__label(-textvariable => \$CP::Tab::CopyIdx);
-  $cbs->g_grid(qw/-row 0 -column 2 -sticky w/);
+  $cbs->g_grid(qw/-row 0 -column 3 -columnspan 4 -sticky w -padx 2/);
 
   my $copy = $cp->new_ttk__label(-text => 'Copy', -font => "BTkDefaultFont");
   $copy->g_grid(qw/-row 1 -column 0 -sticky e -padx/ => [4,0]);
+  my $ch1 = $cp->new_ttk__label(-image => 'hyphen', -font => "BTkDefaultFont");
+  $ch1->g_grid(qw/-row 1 -column 1 -padx 2/);
   my $bu3 = $cp->new_ttk__button(-text => 'Header',
 				 -style => "Green.TButton",
 				 -command => sub{$Tab->Copy(HONLY)});
-  $bu3->g_grid(qw/-row 1 -column 1 -sticky we/, -padx => [4,8], -pady => [2,4]);
+  $bu3->g_grid(qw/-row 1 -column 2 -sticky we/, -pady => [2,4]);
+  my $ch2 = $cp->new_ttk__label(-image => 'hyphen', -font => "BTkDefaultFont");
+  $ch2->g_grid(qw/-row 1 -column 3 -padx 2/);
   my $bu4 = $cp->new_ttk__button(-text => 'Notes',
 				 -style => "Green.TButton",
 				 -command => sub{$Tab->Copy(NONLY)});
-  $bu4->g_grid(qw/-row 1 -column 2 -sticky we/, -padx => [4,8], -pady => [2,4]);
+  $bu4->g_grid(qw/-row 1 -column 4 -sticky we/, -pady => [2,4]);
+  my $ch3 = $cp->new_ttk__label(-image => 'hyphen', -font => "BTkDefaultFont");
+  $ch3->g_grid(qw/-row 1 -column 5 -padx 2/);
   my $bu5 = $cp->new_ttk__button(-text => 'All',
 				 -style => "Green.TButton",
 				 -command => sub{$Tab->Copy(HANDN)});
-  $bu5->g_grid(qw/-row 1 -column 3 -sticky we/, -padx => [4,8], -pady => [2,4]);
+  $bu5->g_grid(qw/-row 1 -column 6 -sticky we/, -pady => [2,4]);
 
   my $paste = $cp->new_ttk__label(-text => 'Paste', -font => "BTkDefaultFont");
   $paste->g_grid(qw/-row 2 -column 0 -sticky e -padx/ => [4,0]);
-  my $bu6 = $cp->new_ttk__button(-text => 'Over',
-				 -style => "Green.TButton",
-				 -command => sub{$Tab->PasteOver});
-  $bu6->g_grid(qw/-row 2 -column 1 -sticky we/, -padx => [4,8], -pady => [4,4]);
-  my $bu7 = $cp->new_ttk__button(-text => 'Before',
+  my $ph1 = $cp->new_ttk__label(-image => 'hyphen', -font => "BTkDefaultFont");
+  $ph1->g_grid(qw/-row 2 -column 1 -padx 2/);
+  my $bu6 = $cp->new_ttk__button(-text => 'Before',
 				 -style => "Green.TButton",
 				 -command => sub{$Tab->PasteBefore});
-  $bu7->g_grid(qw/-row 2 -column 2 -sticky we/, -padx => [4,8], -pady => [4,4]);
+  $bu6->g_grid(qw/-row 2 -column 2 -sticky we/, -pady => [4,4]);
+  my $ph2 = $cp->new_ttk__label(-image => 'hyphen', -font => "BTkDefaultFont");
+  $ph2->g_grid(qw/-row 2 -column 3 -padx 2/);
+  my $bu7 = $cp->new_ttk__button(-text => 'Over',
+				 -style => "Green.TButton",
+				 -command => sub{$Tab->PasteOver});
+  $bu7->g_grid(qw/-row 2 -column 4 -sticky we/, -pady => [4,4]);
+  my $ph3 = $cp->new_ttk__label(-image => 'hyphen', -font => "BTkDefaultFont");
+  $ph3->g_grid(qw/-row 2 -column 5 -padx 2/);
   my $bu8 = $cp->new_ttk__button(-text => 'After',
 				 -style => "Green.TButton",
 				 -command => sub{$Tab->PasteAfter});
-  $bu8->g_grid(qw/-row 2 -column 3 -sticky we/, -padx => [4,8], -pady => [4,4]);
+  $bu8->g_grid(qw/-row 2 -column 6 -sticky we/, -pady => [4,4]);
 ######
   my $sel = $frm->new_ttk__labelframe(-text => ' Selection ');
   $sel->g_pack(qw/-side top -expand 1 -fill both -padx 4 -pady 4/);
