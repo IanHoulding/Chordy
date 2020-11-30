@@ -772,7 +772,8 @@ sub bendRel {
       $GfxPtr->arc($x, $y, $arc2, $yr, 180, 270, 1);
 
       my $clr = $Tab->{noteColor};
-      _textCenter($self, $x, $y - ($ss * 1.4), $note->{fret}, SNOTES, $self->{Ssz}, $clr);
+      my $tifp = $self->{fonts}[SNOTES];
+      _textCenter($self, $x, $y - ($ss * 1.4), $note->{fret}, SNOTES, $tifp->{sz}, $clr);
     }
   }
   $GfxPtr->stroke();

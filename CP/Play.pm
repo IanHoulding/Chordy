@@ -30,6 +30,7 @@ use CP::Bar;
 use Time::HiRes qw(usleep);
 
 my $Damp = 0;
+my $Crate = '1/64';
 my @Bars = ();
 my %PrePack = ();
 my %Note = ();
@@ -221,15 +222,28 @@ sub makeNotes {
       if (defined $pos->[$t]) {
 	if (@{$pos->[$t]} > 1) {
 	  my @n = ();
+	  my $off = 12;
 	  foreach my $strfrt (@{$pos->[$t]}) {
-	    my $idx = 0;
+	    my($str,$frt) = split(/\./, $strfrt);
+	    $off = $str if ($str < $off);
+	  }
+	  # Sample rate is RATE samples/second.
+	  # Each beat duration is (60 / $Tab->{tempo}) seconds.
+	  # Each 'tick' is 1/8 of this (there are 8 ticks per beat).
+	  # So each tick is:  60 / ($Tab->{tempo} * 8) seconds long.
+	  # Multiple RATE by this and we get the samples/tick.
+	  my $delay = RATE * (60 / $Tab->{tempo}) * eval($Crate);
+	  foreach my $strfrt (@{$pos->[$t]}) {
+	    my($str,$frt) = split(/\./, $strfrt);
+	    $str -= $off;
+	    my $idx = $str * $delay;
 	    foreach my $pp (@{$PrePack{$strfrt}}) {
 	      $n[$idx++] += $pp;
 	    }
 	  }
 	  my $cnt = @{$pos->[$t]};
 	  foreach (0..$#n) {
-	    $n[$_] = int($n[$_] / $cnt);
+	    $n[$_] = int($n[$_] / $cnt) if (defined $n[$_]);
 	  }
 	  $pos->[$t][0] = pack('s'.@n, @n);
 	} else {
@@ -496,6 +510,16 @@ sub pagePlay {
     });
   $bsl->g_grid(qw/-row 0 -column 5 -padx 4 -pady 4/);
   $bsm->g_grid(qw/-row 0 -column 6 -padx 0 -pady 4/);
+
+  my $crl = $frb->new_ttk__label(-text => "Chord Rate:");
+  my $bcr = $frb->new_ttk__button(
+    -textvariable => \$Crate,
+    -style => 'Menu.TButton',
+    -width => 4,
+    -command => sub{popMenu(\$Crate, sub{}, ['1', '1/2', '1/4', '1/8', '1/16', '1/32', '1/64', '0']);
+    });
+  $crl->g_grid(qw/-row 1 -column 5 -padx 4 -pady 4/);
+  $bcr->g_grid(qw/-row 1 -column 6 -padx 0 -pady 4/);
 }
 
 1;

@@ -134,7 +134,7 @@ sub new {
 			  -font => 'TkMenuFont',
 			  -command => sub{$Tab->drawPageWin();
 					  main::setEdited(1);
-					  config($opt, 3, 'Bars/Stave', $Opt->{Nbar});
+					  config($opt, 0, 'Bars/Stave', $Opt->{Nbar});
 					  $Opt->saveOne('Nbar');
 			  });
   }
@@ -148,7 +148,7 @@ sub new {
 			 -variable => \$Opt->{EditScale},
 			 -font => 'TkMenuFont',
 			 -command => sub{CP::TabWin::editWindow();
-					 config($opt, 6, 'Edit Scale', $Opt->{EditScale});
+					 config($opt, 1, 'Edit Scale', $Opt->{EditScale});
 					 $Opt->saveOne('EditScale');
 			 });
   }
@@ -164,7 +164,7 @@ sub new {
 			   -command =>
 			   sub{$Tab->drawPageWin();
 			       main::setEdited(1);
-			       config($opt, 0, 'Instrument', $Opt->{Instrument});
+			       config($opt, 2, 'Instrument', $Opt->{Instrument});
 			       $Opt->saveOne('Instrument');
 			   });
   }
@@ -180,7 +180,7 @@ sub new {
 			 -command => sub{$Tab->{lyrics}->adjust($Opt->{LyricLines});
 					 $Tab->drawPageWin();
 					 main::setEdited(1);
-					 config($opt, 7, 'Lyric Lines', $Opt->{LyricLines});
+					 config($opt, 3, 'Lyric Lines', $Opt->{LyricLines});
 					 $Opt->saveOne('LyricLines');
 			 });
   }
@@ -195,7 +195,7 @@ sub new {
 			 -font => 'TkMenuFont',
 			 -command => sub{$Tab->drawPageWin();
 					 main::setEdited(1);
-					 config($opt, 8, 'Lyric Spacing', $Tab->{lyricSpace});
+					 config($opt, 4, 'Lyric Spacing', $Tab->{lyricSpace});
 			 });
   }
   $Opts{ent}[5] = {text => 'Set Key', var => \$Tab->{key}};
@@ -210,7 +210,7 @@ sub new {
 			  -font => 'TkMenuFont',
 			  -command => sub{$Tab->pageKey();
 					  main::setEdited(1);
-					  config($opt, 2, 'Set Key', $Tab->{key});
+					  config($opt, 5, 'Set Key', $Tab->{key});
 			  });
   }
   $Opts{ent}[6] = {text => 'Stave Gap', var => \$Tab->{staveGap}};
@@ -224,7 +224,7 @@ sub new {
 			 -font => 'TkMenuFont',
 			 -command => sub{$Tab->drawPageWin();
 					 main::setEdited(1);
-					 config($opt, 5, 'Stave Gap', $Tab->{staveGap});
+					 config($opt, 6, 'Stave Gap', $Tab->{staveGap});
 			 });
   }
   $Opts{ent}[7] = {text => 'String Spacing', var => \$Opt->{StaffSpace}};
@@ -239,7 +239,7 @@ sub new {
 			 -command => sub{$Tab->drawPageWin();
 					 CP::TabWin::editWindow();
 					 main::setEdited(1);
-					 config($opt, 4, 'String Spacing', $Opt->{StaffSpace});
+					 config($opt, 7, 'String Spacing', $Opt->{StaffSpace});
 					 $Opt->saveOne('StaffSpace');
 			 });
   }
@@ -255,9 +255,9 @@ sub new {
 			  -command => sub{my($t,$_t) = split('/', $Tab->{Timing});
 					  $Tab->{BarEnd} = $t * 8;
 					  $Tab->drawPageWin();
-					  editWindow();
+					  CP::TabWin::editWindow();
 					  main::setEdited(1);
-					  config($opt, 1, 'Timing', $Tab->{Timing});
+					  config($opt, 8, 'Timing', $Tab->{Timing});
 			  });
   }
   
@@ -336,7 +336,7 @@ sub newTab {
     }
     CP::Tab->new("$Path->{Tab}/$Tab->{fileName}");
     $Tab->drawPageWin();
-    tabTitle($Tab->{fileName});
+    main::tabTitle($Tab->{fileName});
     $Opt->add2recent($Tab->{fileName}, 'RecentTab', \&refresh);
   }
 }
@@ -372,7 +372,7 @@ sub renameTab {
     }
     rename("$Path->{Tab}/$ofn", "$Path->{Tab}/$newfn");
     $Tab->{fileName} = $newfn;
-    tabTitle("$newfn");
+    main::tabTitle("$newfn");
     $Opt->add2recent($newfn, 'RecentTab', \&refresh);
   } else {
     Tkx::bell();
