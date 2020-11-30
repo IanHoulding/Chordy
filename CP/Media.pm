@@ -14,11 +14,12 @@ use strict;
 use Tkx;
 use CP::Cconst qw/:LENGTH :SMILIE :COLOUR/;
 use CP::Global qw/:FUNC :OPT :WIN :PRO :SETL :MEDIA :XPM/;
+use CP::Tab;
 use CP::Pop qw/:POP :MENU/;
 use CP::Fonts;
 use CP::Cmsg;
 
-our %medias;
+our %AllMedia;
 
 our %Fonts = (
   Comment   => {qw/size 16 weight normal slant roman  color #000000 family/ => "Times New Roman"},
@@ -27,6 +28,7 @@ our %Fonts = (
   Lyric     => {qw/size 16 weight normal slant roman  color #000000 family/ => "Arial"},
   Chord     => {qw/size 16 weight normal slant roman  color #700070 family/ => "Comic Sans MS"},
   Tab       => {qw/size 16 weight normal slant roman  color #000000 family/ => "Courier New"},
+  Label     => {qw/size 16 weight normal slant roman  color #000000 family/ => "Times New Roman"},
   Notes     => {qw/size  9 weight bold   slant roman  color #000000 family/ => "Tahoma"},
   SNotes    => {qw/size  5 weight bold   slant roman  color #000000 family/ => "Tahoma"},
   Header    => {qw/size  8 weight bold   slant roman  color #D00000 family/ => "Arial"},
@@ -62,32 +64,31 @@ our %Sizes = (
 );
 
 sub new {
-  my($proto,$typeref) = @_;
+  my($proto,$type) = @_;
 
   my $class = ref($proto) || $proto;
   my $self = {};
   bless $self, $class;
 
   if (-e "$Path->{Media}") {
-    load() if (scalar keys %medias == 0);
+    load() if (scalar keys %AllMedia == 0);
   } else {
     %EditFont = (qw/family Arial size 14 weight normal slant roman
 		 color #A00000 background #FFF8E0
 		 brace #008000 bracesz 12
 		 bracket #008000 bracketsz 12 bracketoff 2/);
-    copy(\%Sizes, \%medias);
+    copy(\%Sizes, \%AllMedia);
     foreach my $s (keys %Sizes) {
-      copy(\%Fonts, \%{$medias{$s}});
-      copy(\%BGs, \%{$medias{$s}});
+      copy(\%Fonts, \%{$AllMedia{$s}});
+      copy(\%BGs, \%{$AllMedia{$s}});
     }
     save();
   }
-  if ($$typeref eq '' || ! defined $medias{$$typeref}) {
-    $$typeref = 'a4';
-    $Opt->save();
+  if ($type eq '' || ! defined $AllMedia{$type}) {
+    $Opt->{Media} = $type = 'a4';
+    $Opt->saveOne('Media');
   }
-  copy($medias{$$typeref}, $self);
-  $self;
+  $self = $AllMedia{$type};
 }
 
 sub default {
@@ -98,7 +99,10 @@ sub default {
   copy($Sizes{$Opt->{Media}}, $self);
 }
 
-sub list { sort keys %medias }
+sub list {
+  my @lst = sort keys %AllMedia;
+  \@lst;
+}
 
 sub copy {
   my($src,$dst) = @_;
@@ -114,40 +118,46 @@ sub copy {
     }
   }
   bless $dst, 'CP::Media';
+  $dst;
 }
 
 sub change {
-  my($self,$newref) = @_;
+  my($self,$new) = @_;
 
-  if (! defined $medias{$$newref}) {
-    message(SAD, "Media definiton for $$newref does not exist.\nMedia type changed to: a4");
-    $$newref = 'a4';
+  if (! defined $AllMedia{$new}) {
+    message(SAD, "Media definiton for $new does not exist.\nMedia type changed to: a4");
+    $Opt->{Media} = $new = 'a4';
+    $Opt->saveOne('Media');
   }
-  copy(\%{$medias{$$newref}}, $self);
-  CP::Win::TButtonBGset();
+  #  copy(\%{$AllMedia{$$newref}}, $self);
+  $self = $AllMedia{$new};
+  CP::Win::TButtonBGset($self);
+  $self;
 }
 
 sub load {
+  our %medias;
   unless (do "$Path->{Media}") {
     errorPrint("Load '$Path->{Media}' failed: $@");
   } else {
     my $save = 0;
     foreach my $k (keys %medias) {
-      # We need to do a quick check here in case any new font user is defined.
+      copy(\%{$medias{$k}}, \%{$AllMedia{$k}});
+      # We need to do a quick check here in case any new Font entry is defined.
       foreach my $f (keys %Fonts) {
-	if (! defined $medias{$k}{$f}) {
-	  $medias{$k}{$f} = {};
-	  copy(\%{$Fonts{$f}}, \%{$medias{$k}{$f}});
+	if (! defined $AllMedia{$k}{$f}) {
+	  $AllMedia{$k}{$f} = {};
+	  copy(\%{$Fonts{$f}}, \%{$AllMedia{$k}{$f}});
 	  $save++;
 	}
       }
       foreach my $bg (keys %BGs) {
-	if (! defined $medias{$k}{$bg} || $medias{$k}{$bg} eq '') {
-	  $medias{$k}{$bg} = $BGs{$bg};
+	if (! defined $AllMedia{$k}{$bg} || $AllMedia{$k}{$bg} eq '') {
+	  $AllMedia{$k}{$bg} = $BGs{$bg};
 	  $save++;
 	}
       }
-      bless($medias{$k}, 'CP::Media');
+      bless($AllMedia{$k}, 'CP::Media');
     }
     my $sz = $EditFont{size} - 2;
     $EditFont{brace} = DRED if (! defined $EditFont{brace});
@@ -161,8 +171,6 @@ sub load {
 }
 
 sub save {
-  my($self,$type) = @_;
-
   my $OFH = openConfig("$Path->{Media}");
   if ($OFH == 0) {
     errorPrint("Failed to open '$Path->{Media}': $@");
@@ -182,9 +190,9 @@ sub save {
 
   print $OFH "#\n# width, height and size values are in 'points' (72 'points' per inch)\n#\n";
   print $OFH "\%medias = (\n";
-  foreach my $s (sort keys %medias) {
+  foreach my $s (sort keys %AllMedia) {
     next if ($s =~ /^tmp/);
-    my $ref = ($s eq $type) ? $self : \%{$medias{$s}};
+    my $ref = \%{$AllMedia{$s}};
     print $OFH "  '$s' => {\n";
     print $OFH "    width  => ".$ref->{width}.",\n";
     print $OFH "    height => ".$ref->{height}.",\n";
@@ -202,20 +210,21 @@ sub save {
   close($OFH);
 }
 
-our($Done,%Edit,$Tmp,$TmpMedia);
+our(%Edit,$Tmp);
 
 sub edit {
   my($self) = shift;
 
-  our($a,$b,$c,$d,$e,$f,$g,$h,$i,$j,$k,$m,$n,$o,$wstr,$hstr);
+  our($a,$b,$c,$d,$e,$f,$g,$h,$i,$j,$k,$m,$n,$o,$newu,$wstr,$hstr);
 
   my $pop = CP::Pop->new(0, '.me', 'Media Editor');
   return if ($pop eq '');
   my($top,$wt) = ($pop->{top}, $pop->{frame});
 
+  my $orgM = $Edit{Media} = $Opt->{Media};
   $top->g_wm_protocol(
     'WM_DELETE_WINDOW',
-    sub {copy($medias{$Opt->{Media}}, $self); $pop->destroy();});
+    sub {copy($AllMedia{$Opt->{Media}}, $self); $pop->popDestroy();});
 
   my $tf = $wt->new_ttk__frame(qw/-borderwidth 2 -relief ridge/);
   $tf->g_pack(qw/-side top -expand 1 -fill x/);
@@ -223,44 +232,41 @@ sub edit {
   my $bf = $wt->new_ttk__frame();
   $bf->g_pack(qw/-side top -expand 1 -fill x/);
 
-  my $orgMedia = $TmpMedia = $Opt->{Media};
-  $Tmp = new('CP::Media', \$TmpMedia);
+  $Tmp = {};
+  bless $Tmp, 'CP::Media';
+  $Tmp = copy($self, $Tmp);
   $Edit{NewName} = '';
-  $Edit{U} = $Edit{NewU} = 'pt';
   $Edit{W} = $self->{width};
   $Edit{H} = $self->{height};
-  changeUnits($self);
+  $Edit{U} = $newu = 'pt';
 
   $a = $tf->new_ttk__label(-text => "Media:");
   $b = $tf->new_ttk__button(
     -width => 20,
-    -textvariable => \$TmpMedia,
+    -textvariable => \$Edit{Media},
     -style => 'Menu.TButton',
-    -command => sub{
-      my @lst = list();
-      popMenu(\$TmpMedia, \&changeMedia, \@lst);
-    });
+    -command => sub{popMenu(\$Edit{Media}, \&changeMedia, list());});
 
-  $c = $tf->new_ttk__button(qw/-text Delete -width 8 -command/ => sub{mdelete($self)} );
+  $c = $tf->new_ttk__button(qw/-text Delete -width 8 -command/ => \&mdelete );
 
   $d = $tf->new_ttk__label(-text => "Width: ");
   $e = $tf->new_ttk__entry(qw/-width 6 -textvariable/ => \$Edit{W});
   $f = $tf->new_ttk__button(
     -width => 5,
-    -textvariable => \$Edit{U},
+    -textvariable => \$newu,
     -style => 'Menu.TButton',
     -command => sub{
-      popMenu(\$Edit{NewU}, \&changeUnits, [qw/in mm pt/]);
+      popMenu(\$newu, sub{changeUnits($newu)}, [qw/in mm pt/]);
     });
 
   $g = $tf->new_ttk__label(-text => "Height: ", -width => 10, -anchor => 'e');
   $h = $tf->new_ttk__entry(qw/-width 6 -textvariable/ => \$Edit{H});
   $i = $tf->new_ttk__button(
     -width => 5,
-    -textvariable => \$Edit{U},
+    -textvariable => \$newu,
     -style => 'Menu.TButton',
     -command => sub{
-      popMenu(\$Edit{NewU}, \&changeUnits, [qw/in mm pt/]);
+      popMenu(\$newu, sub{changeUnits($newu)}, [qw/in mm pt/]);
     });
 
   $j = $tf->new_ttk__separator(qw/-orient horizontal/);
@@ -289,41 +295,47 @@ sub edit {
   $n->g_grid(qw/-row 3 -column 3/, -pady => [0,4]);
   $o->g_grid(qw/-row 3 -column 4 -sticky w -columnspan 2/, -pady => [0,4]);
 
+  our $done = '';
   ($bf->new_ttk__button(
      -text => "Cancel",
-     -command => sub{$Done = "Cancel";},
+     -command => sub{$done = "Cancel";},
       ))->g_grid(qw/-row 0 -column 0 -sticky w -padx 40/, -pady => [4,2]);
 
   ($bf->new_ttk__button(
      -text => "OK",
-     -command => sub{$Done = "OK";},
+     -command => sub{$done = "OK";},
       ))->g_grid(qw/-row 0 -column 1 -sticky e -padx 40/, -pady => [4,2]);
 
-  Tkx::vwait(\$Done);
-  if ($Done eq "OK") {
-    $Opt->{Media} = $TmpMedia;
-    change($Media, \$Opt->{Media});
-    $Media->{width} = $Edit{W};
-    $Media->{height} = $Edit{H};
-    message(SMILE, "Changes have been made but not saved.");
+  Tkx::vwait(\$done);
+  if ($done eq "OK") {
+    changeUnits('pt');
+    $Tmp->{width} = $Edit{W};
+    $Tmp->{height} = $Edit{H};
+    copy($Tmp, $AllMedia{$Edit{Media}});
+    if ($Edit{Media} ne $Opt->{Media}) {
+      $Opt->{Media} = $Edit{Media};
+      $Media = change($Media, $Opt->{Media});
+      $Opt->saveOne('Media');
+    }
+    save();
   } else {
-    $Opt->{Media} = $orgMedia;
-    change($Media, \$Opt->{Media});
+    $Media = change($Media, $Opt->{Media});
   }
-  $pop->destroy();
-  $Done;
+  $pop->popDestroy();
+  $done;
 }
 
 sub changeMedia {
-  change($Tmp, \$TmpMedia);
-  $Edit{U} = $Edit{NewU} = 'pt';
+  copy($AllMedia{$Edit{Media}}, $Tmp);
   $Edit{W} = $Tmp->{width};
   $Edit{H} = $Tmp->{height};
-  changeUnits();
+  $Edit{U} = 'pt';
+  changeUnits('pt');
 }
 
 sub changeUnits {
-  my $newu = $Edit{NewU};
+  my($newu) = shift;
+
   my $w = $Edit{W};
   my $h = $Edit{H};
   # Convert from current units to points then to new units.
@@ -351,11 +363,13 @@ sub changeUnits {
 }
 
 sub mdelete {
-  if (CP::Cmsg::msgYesNo("Do you really want to\ndelete Media: $TmpMedia") eq "Yes") {
-    delete($medias{$TmpMedia});
-    $TmpMedia = (list())[0];
-    changeMedia($Tmp, \$TmpMedia);
-    save($Tmp, $TmpMedia);
+  if (CP::Cmsg::msgYesNo("Do you really want to\ndelete Media: $Edit{Media}") eq "Yes") {
+    delete($AllMedia{$Edit{Media}});
+    if ($Edit{Media} eq $Opt->{Media}) {
+      $Opt->{Media} = $Edit{Media} = (list())->[0];
+    }
+    changeMedia();
+    save();
   }
 }
 
@@ -364,14 +378,14 @@ sub mnew {
 
   my $nn = $Edit{NewName};
   if ($nn ne '') {
-    if (defined $medias{$nn}) {
+    if (defined $AllMedia{$nn}) {
       message(SAD, "Media type '$nn' already exists!");
     } else {
-      $medias{$nn} = {};
-      copy(\%{$medias{a4}}, \%{$medias{$nn}});
-      $TmpMedia = $nn;
-      changeMedia($Tmp, \$TmpMedia);
-      save($Tmp, $TmpMedia);
+      $AllMedia{$nn} = {};
+      copy(\%{$AllMedia{a4}}, \%{$AllMedia{$nn}});
+      $Edit{Media} = $nn;
+      changeMedia();
+      save();
     }
   }
 }
@@ -379,20 +393,21 @@ sub mnew {
 sub mrename {
   my $nn = $Edit{NewName};
   if ($nn ne '') {
-    if (defined $medias{$nn}) {
+    if (defined $AllMedia{$nn}) {
       message(SAD, "Media type '$nn' already exists!");
     } else {
-      $medias{$nn} = {};
-      copy($Tmp, \%{$medias{$nn}});
-      delete($medias{$TmpMedia});
-      my $onam = $TmpMedia;
-      $TmpMedia = $nn;
+      $AllMedia{$nn} = {};
+      copy($Tmp, \%{$AllMedia{$nn}});
+      delete($AllMedia{$Edit{Media}});
+      my $onam = $Edit{Media};
+      $Edit{Media} = $nn;
       $Edit{NewName} = '';
-      changeMedia($Tmp, \$TmpMedia);
-      save($Tmp, $TmpMedia);
+      changeMedia();
+      save();
       # Now we have to go through each Collection and change the
-      # $Opts->{Media} entry if it matches the old name.
+      # $Opt->{Media} entry if it matches the old name.
       $Opt->changeAll('Media', $onam, $nn);
+      $Opt->{Media} = $nn;
     }
   }
 }
@@ -400,8 +415,7 @@ sub mrename {
 sub pickClr {
   my($title,$fontp,$clr,$ent) = @_;
 
-  $ColourEd = CP::FgBgEd->new() if (! defined $ColourEd);
-  $ColourEd->title("$title Font");
+  CP::FgBgEd->new("$title Font");
   my($fg,$bg) = $ColourEd->Show($fontp->{color}, VLMWBG, FOREGRND);
   if ($fg ne '') {
     $fontp->{color} = $fg;

@@ -18,6 +18,8 @@ use CP::Tab;
 use CP::Cmsg;
 use CP::Lyric;
 use PDF::API2;
+use PDF::API2::Resource::CIDFont::TrueType;
+use CP::PDFfont;
 use POSIX;
 use Math::Trig;
 
@@ -28,11 +30,13 @@ sub new {
 
   my $class = ref($proto) || $proto;
   my $self = {};
+  bless $self, $class;
+
   $self->{page} = [];
   $self->{bars} = [];
   if ($Tab->{PDFname} eq '') {
     if ($Tab->{fileName} eq '') {
-      return '' if (main::checkSave() eq 'Cancel' || $Tab->{fileName} eq '');
+      return '' if ($Tab->checkSave() eq 'Cancel' || $Tab->{fileName} eq '');
     } else {
       ($Tab->{PDFname} = $Tab->{fileName}) =~ s/.tab$/.pdf/i;
     }
@@ -47,68 +51,21 @@ sub new {
 		 ['Header', HEADER],
 		 ['Notes',  NOTES],
 		 ['SNotes', SNOTES],
-		 ['Words',  WORDS],
-                 ['',       RESTS]) {
+		 ['Words',  WORDS]) {
     my($media,$idx) = @{$m};
-    my $pfp;
-    if ($idx ne RESTS) {
-      my $cap = substr($media, 0, 1);
-      my $fp = $Media->{"$media"};
-      my $fam = $fp->{family};
-      my $size = ceil($fp->{size});
-      my $wt = pdfWeight($fp->{weight}, $fp->{slant});
-      $pfp = getFont($pdf, $fam, $wt);
-      $self->{"${cap}dc"} = ceil((abs($pfp->descender) * $size) / 1000);
-      $self->{"${cap}cap"} = $size - $self->{"${cap}dc"};
-      $self->{"${cap}mid"} = $self->{"${cap}cap"} / 2;
-      $self->{"${cap}sz"} = $size;
-      $self->{"${cap}clr"} = $fp->{color};
-    } else {
-      $pfp = getFont($pdf, RESTFONT, 'Regular');
-    }
-    $self->{hscale}[$idx] = 100;
-    $self->{font}[$idx] = $pfp;
+    my $pfp = $self->{fonts}[$idx] = CP::PDFfont->new($media, $idx, $pdf);
+    my $size = $pfp->{sz};
+    $pfp->{dc} = ceil((abs($pfp->{font}->descender) * $size) / 1000);
+    $pfp->{cap} = $size - $pfp->{dc};
+    $pfp->{mid} = $pfp->{cap} / 2;
+    $pfp->{hscale} = 100;
   }
+  my $copy = $self->{fonts}[RESTS] = $self->{fonts}[NOTES]->copy();
+  $copy->{fam} = RESTFONT;
+  $copy->{wt} = $copy->{sl} = 0;
+  $self->{fonts}[RESTS]{font} = $copy->getFont($pdf, NOTES);
 
-  bless $self, $class;
   return($self);
-}
-
-sub pdfWeight {
-  my($wt,$sl) = @_;
-
-  my $nwt = ($wt eq 'bold') ? 'Bold' : '';
-  $nwt .= 'Italic' if ($sl eq 'italic');
-  $nwt = 'Regular' if ($nwt eq '');
-  $nwt;
-}
-
-# We need this sub because PDF::API2 needs a PATH to a specific
-# font file unlike Windows which handles it automagically.
-sub getFont {
-  my($pdf,$fam,$wt) = @_;
-
-  my $pfp;
-  if (! defined $FontList{"$fam"}) {
-    $fam = 'Times New Roman';
-    errorPrint("Font '$fam' not found.\nSubstituting 'Times New Roman'");
-  }
-  my $path = $FontList{"$fam"}{Path};
-  my $file = $FontList{"$fam"}{$wt};
-  if ($file eq '') {
-    my %opts = ();
-    if ($wt =~ /Bold/) {
-      $opts{'-bold'} = $Opt->{Bold};
-    }
-    if ($wt =~ /Italic/) {
-      $opts{'-oblique'} = $Opt->{Italic};
-    }
-    my $tmp = $pdf->ttfont($path."/".$FontList{"$fam"}{Regular});
-    $pfp = $pdf->synfont($tmp, %opts);
-  } else {
-    $pfp = $pdf->ttfont($path."/".$file);
-  }
-  $pfp;
 }
 
 sub newTextGfx {
@@ -129,7 +86,7 @@ sub batch {
   my $x = Tkx::winfo_pointerx($MW);
   my $y = Tkx::winfo_pointery($MW);
   my @files = CP::Browser->new($MW, FILE, $Path->{Tab}, '.tab');
-  return if (@files == 0);
+  return if ($files[0] eq '');
   my $pl = (@files > 1) ? 's' : '';
 
   my $lab = $frm->new_ttk__label(
@@ -163,6 +120,7 @@ sub batch {
     $text->insert('end', "$fn\n");
   }
   $text->configure(-state => 'disabled');
+  $con->g_focus();
   Tkx::vwait(\$done);
   if ($done eq 'Continue') {
     $text->tag_configure('red',   -foreground => RFG, -font => 'BTkDefaultFont');
@@ -174,15 +132,17 @@ sub batch {
     foreach my $fn (@files) {
       textConf($text, $idx, 'red');
       $Tab->new("$Path->{Tab}/$fn");
+      $Tab->drawPageWin();
       CP::Cmsg::position($x,$y);
       make('M');
       textConf($text, $idx++, 'green');
     }
     $Tab->new('');
+    $Tab->drawPageWin();
     CP::Cmsg::position($x,$y);
     message(SMILE, " Done ", -1);
   }
-  $pop->destroy();
+  $pop->popDestroy();
 }
 
 sub textConf {
@@ -197,6 +157,7 @@ sub textConf {
 sub make {
   my($what) = @_;
 
+  return if ($Tab->{bars} == 0);
   $Tab->{lyrics}->collect() if ($Opt->{LyricLines});
   return if ((my $pdf = CP::TabPDF->new()) eq '');
   # There doesn't seem to be an easy way round this -
@@ -211,7 +172,7 @@ sub make {
   #
   my $pageht = $Media->{height};
   my $pageNum = 0;
-  my($x,$y) = (INDENT,$pageht);
+  my($x,$y) = ($Opt->{LeftMargin},$pageht);
   my $off = $Tab->{bars}{offset};
   my $h = $off->{height};
   my $w = $off->{width};
@@ -228,15 +189,16 @@ sub make {
       last;
     }
   }
+  my $ntfp = $pdf->{fonts}[NOTES];
   for(my $bar = $Tab->{bars}; $bar != 0; $bar = $bar->{next}) {
     if ($bar->{newpage}) {
-      $x = INDENT;
+      $x = $Opt->{LeftMargin};
       $y = $pageht;
     }
-    elsif ($bar->{newline} && $x > INDENT) {
-      $x = INDENT;
+    elsif ($bar->{newline} && $x > $Opt->{LeftMargin}) {
+      $x = $Opt->{LeftMargin};
       $y -= $h;
-      $y = $pageht if (($y - $h) < 0);
+      $y = $pageht if (($y - $h) < $Opt->{BottomMargin});
     }
     if ($y == $pageht) {
       $y = $pdf->newPage();
@@ -253,7 +215,7 @@ sub make {
     $bar->{pageNum} = $pageNum;
 
     foreach my $n (@{$bar->{notes}}) {
-      my $offset = $pdf->{Nmid};
+      my $offset = $ntfp->{mid};
       $offset *= 0.8 if ($n->{fret} eq 'X');
       $n->{x} = $x + ($u * ($n->{pos} + 2));
       $n->{y} = $xy->{staff0} + ($ss * $n->{string}) - $offset if ($n->{string} ne 'r');
@@ -263,26 +225,50 @@ sub make {
 
     $x += $w;
     if (($x + $w) > $Media->{width}) {
-      $x = INDENT;
+      $x = $Opt->{LeftMargin};
       $y -= $h;
-      $y = $pageht if (($y - $h) < 0);
+      $y = $pageht if (($y - $h) < $Opt->{BottomMargin});
     }
   }
 
   # PASS 2
   #
-  my $lidx = my $pn = 0;
+  my $lidx = my $pn = my $tn = 0;
   for(my $bar = $Tab->{bars}; $bar != 0; $bar = $bar->{next}) {
     if ($bar->{pageNum} != $pn) {
       newTextGfx($pdf->{page}[$pn]);
       $lidx = $pn * $Tab->{rowsPP};
       $pdf->pageNum(++$pn);
+      $tn++ if ($pn == 1);
     }
 
     $pdf->bar($bar);
 
-    if ($bar->{xy}{x} == INDENT && $Opt->{LyricLines}) {
+    if ($bar->{xy}{x} == $Opt->{LeftMargin} && $Opt->{LyricLines}) {
       $pdf->lyrics($lidx++, $bar->{xy}{x}, $bar->{xy}{y});
+    }
+    if ($tn == 1) {
+      $h = $pdf->{headerBase} - $Opt->{TopMargin};
+      my $tifp = $pdf->{fonts}[TITLE];
+      my $th = int($tifp->{sz} * KEYMUL);
+      my $dc = int($tifp->{dc} * KEYMUL);
+      if ($Tab->{note} ne '') {
+	my $txt = " $Tab->{note} ";
+	my $tw = _measure($pdf, $txt, TITLE, $th, 100);
+	my $x = $Media->{width} - $Opt->{RightMargin} - $tw - 2;
+	my $y = $h - $th - $dc;
+	_bg('#FFFF80', $x, $y - 1, $tw, $th + 2);
+	_textAdd($pdf, $x, $y + $dc, $txt, TITLE, $th, '#000060');
+      }
+      if (defined $Tab->{tempo}) {
+	my $ht = int($Tab->{symSize} * (PAGEMUL - 0.1));
+	my $y = $h - $ht;
+	my $x = ($Media->{width} / 2) - $ht;
+	my $wid = _textAdd($pdf, $x, $y + 2, 'O', RESTS, $ht, BLACK);
+	$ht = $Tab->{titleSize} * PAGEMUL;
+	_textAdd($pdf, $x + $wid, $y + 1, " = ".$Tab->{tempo}, TITLE, $ht, BLACK);
+      }
+      $tn++;
     }
   }
   $pdf->close();
@@ -314,6 +300,9 @@ sub make {
 sub newPage {
   my($self) = shift;
 
+  my $tifp = $self->{fonts}[TITLE];
+  my $tfp = $tifp->{font};
+
   my $w = $Media->{width};
   my $h = $Media->{height};
   my $pp = $self->{pdf}->page;
@@ -322,50 +311,44 @@ sub newPage {
   $pp->cropbox(0, 0, $w, $h);
   newTextGfx($pp);
 
-  $h -= $Tab->{pageHeader};
+  $h -= ($tifp->{sz} + 3);
+  $self->{headerBase} = $h + 1;
 
   if ($Media->{titleBG} ne WHITE) {
     _bg($Media->{titleBG}, 0, $h, $w, $Tab->{pageHeader});
   }
-  _textCenter($self, $w/2, $h + $self->{Tdc} + 2, $Tab->{title}, TITLE, $self->{Tsz}, $self->{Tclr});
+  _textCenter($self, $w/2, $self->{headerBase} + $tifp->{dc},
+	      $Tab->{title}, TITLE, $tifp->{sz}, $tifp->{clr});
 
-  _hline(0, $h, $h + $w, 0.75, DBLUE);
+  $h -= 1;
+  _bg(DBLUE, 0, $h, $w, 1);
 
-  my $tht = ($Media->{height} - $h) / 2;
-  my $th = int($self->{Tsz} * KEYMUL);
-  my $dc = int($self->{Tdc} * KEYMUL);
-  if ($Tab->{key} ne '') {
-    my $tw = _textAdd($self, INDENT, $h + $self->{Tdc} + 2, "Key: ", TITLE, $th, bFG);
+  my $tbl = $self->{headerBase} + $tifp->{dc};
+  my $th = int($tifp->{sz} * KEYMUL);
+  my $dc = int($tifp->{dc} * KEYMUL);
+  if ($Tab->{key} ne '-') {
+    my $tw = _textAdd($self, $Opt->{LeftMargin}, $tbl, "Key: ", TITLE, $th, bFG);
     my $ch = [split('',$Tab->{key})];
-    chordAdd($self, INDENT + $tw, $h + $self->{Tdc} + 2, $ch, $Media->{Chord}{color}, $th);
+    chordAdd($self, $Opt->{LeftMargin} + $tw, $tbl, $ch, $Media->{Chord}{color}, $th);
   }
-  if ($Tab->{note} ne '') {
-    _textRight($self, $Media->{width} - INDENT, $h - $th, "Note: $Tab->{note}", TITLE, $th, DGREEN);
-  }
-
-  if (defined $Tab->{tempo} && @{$self->{page}} == 1) {
-    my $ht = $Tab->{symSize} * 0.6;
-    my $x = ($Media->{width} / 2) - $ht;
-    my $wid = _textAdd($self, $x, $h - $ht + 2, 'O', RESTS, $ht, BLACK);
-    _textAdd($self, $x + $wid, $h - $ht, " = ".$Tab->{tempo}, TITLE, $ht, BLACK);
-  }
-  $h -= INDENT;
+  $h -= $Opt->{TopMargin};
 }
 
 sub pageNum {
   my($self,$pn) = @_;
 
-  my $fntht = POSIX::ceil($self->{Tsz} * PAGEMUL);
-  my $y = $Media->{height} - $Tab->{pageHeader} + (($Tab->{pageHeader} - $fntht) / 2);
+  my $fp = $self->{fonts}[TITLE];
+  my $fntht = $fp->{sz} * PAGEMUL;
+  my $y = $self->{headerBase} + $fp->{dc};
   my $npg = @{$self->{page}} + 0;
-  _textRight($self, $Media->{width} - INDENT, $y, "Page $pn of $npg ", TITLE, $fntht, BROWN);
+  _textRight($self, $Media->{width} - $Opt->{RightMargin}, $y, "Page $pn of $npg ", TITLE, $fntht, BROWN);
 }
 
 sub chordAdd {
   my($self,$x,$y,$ch,$clr,$ht) = @_;
 
   my $sht = int($ht * 0.8);
-  $ht = $self->{Csz} if (!defined $ht);
+  $ht = $self->{fonts}[NOTES]{sz} if (!defined $ht);
   $x += _textAdd($self, $x, $y, $ch->[0], NOTES, $ht, $clr);
   if (defined $ch->[1]) {
     # Make the base line for superscript 1/2 the height of a capital
@@ -405,7 +388,7 @@ sub bar {
   # end marker, it would get overwritten.
   #
   $ly += (THIN / 2);
-  if ($x == INDENT || ($bar->{prev}{rep} ne 'End')) {
+  if ($x == $Opt->{LeftMargin} || ($bar->{prev}{rep} ne 'End')) {
     _vline($x, $ly, $ly + $h - THIN, THICK, BLACK);
   }
   _vline($x + $w, $ly, $ly + $h - THIN, THICK, BLACK);
@@ -413,37 +396,38 @@ sub bar {
   #
   # Handle anything that needs to go above the Bar.
   #
+  my $hdfp = $self->{fonts}[HEADER];
   $ly = $y - (FAT / 2);
   my $txt = '';
   if ($bar->{volta} ne 'None') {
-    _hline($x, $ly, $x + $off->{width}, FAT, $self->{Hclr});
+    _hline($x, $ly, $x + $off->{width}, FAT, $hdfp->{clr});
     if ($bar->{volta} ne 'Center') {
       if ($bar->{volta} =~ /Left|Both/) {
-	_vline($x, $ly, $xy->{staffY} + INDENT, FAT, $self->{Hclr});
+	_vline($x, $ly, $xy->{staffY} + INDENT, FAT, $hdfp->{clr});
       }
       if ($bar->{volta} =~ /Right|Both/) {
-	_vline($x+$w, $ly, $xy->{staffY} + INDENT, FAT, $self->{Hclr});
+	_vline($x+$w, $ly, $xy->{staffY} + INDENT, FAT, $hdfp->{clr});
       }
     }
   }
   if ($bar->{header} ne '') {
     if ($bar->{justify} eq 'Right') {
-      $lx = $x + $w - _measure($self, $bar->{header}, HEADER, $self->{Hsz},
-			       $self->{hscale}[HEADER]) - (THICK * 2);
+      $lx = $x + $w - _measure($self, $bar->{header}, HEADER, $hdfp->{sz},
+			       $hdfp->{hscale}) - (THICK * 2);
     } else {
       $lx = $x;
     }
-    _adjTextAdd($self, $lx, $ly - $self->{Hcap} - FAT,
-		$bar->{header}, $Tab->{headFont}, HEADER, $self->{Hsz}, $self->{Hclr});
+    _adjTextAdd($self, $lx, $ly - $hdfp->{cap} - FAT,
+		$bar->{header}, $Tab->{headFont}, HEADER, $hdfp->{sz}, $hdfp->{clr});
   }
   #
   # Handle start of repeat and/or repeat count.
   #
   if ($bar->{rep} eq 'Start') {
-    repStart($x, $xy->{staffY}, $off->{staffHeight}, $self->{Hclr});
+    repStart($x, $xy->{staffY}, $off->{staffHeight}, $hdfp->{clr});
   }
   if ($bar->{rep} eq 'End') {
-    repEnd($x + $w, $xy->{staffY}, $off->{staffHeight}, $self->{Hclr});
+    repEnd($x + $w, $xy->{staffY}, $off->{staffHeight}, $hdfp->{clr});
   }
   notes($self, $bar);
 }
@@ -514,32 +498,28 @@ sub notes {
       }
     } else {
       my $y = $xy->{staff0};
-      my($fidx,$fh,$offset,$clr);
-      if ($n->{font} eq 'Normal') {
-	$fidx = NOTES;
-	$fh = $self->{Nsz};
-	$offset = $self->{Ncap};
-	$clr = $self->{Nclr};
-      } else {
-	$fidx = SNOTES;
-	$fh = $self->{Ssz};
-	$offset = $self->{Scap};
-	$clr = $self->{Sclr};
-      }
+      my($fp,$fidx,$fh,$offset,$clr);
+      $fidx = ($n->{font} eq 'Normal') ? NOTES : SNOTES;
+      $fp = $self->{fonts}[$fidx];
+      $fh = $fp->{sz};
+      $offset = $fp->{cap};
+      $clr = $fp->{clr};
+
+
       $offset /= 2;
       my $adj = 1.0;
       $n->{x} = $x + ($u * $n->{pos});
       my $ht = $fh;
       $ht *= ($adj = 0.8) if ($n->{fret} eq 'X');
       $n->{y} = $y + ($ss * $n->{string}) - ($offset * $adj);
-      my $hs = $self->{hscale}[$fidx];
+      my $hs = $fp->{hscale};
       if ($n->{fret} eq 'X') {
 	$clr = BLACK;
       } elsif ($n->{fret} > 9) {
-	$self->{hscale}[$fidx] = 65;
+	$fp->{hscale} = 65;
       }
       _textCenter($self, $n->{x}, $n->{y}, $n->{fret}, $fidx, $ht, $clr);
-      $self->{hscale}[$fidx] = $hs;
+      $fp->{hscale} = $hs;
       if ($n->{shbr} =~ /^[shbrv]{1}$/) {
 	$n->{adj} = $adj;
 	if ($n->{shbr} =~ /s|h/) {
@@ -572,7 +552,7 @@ sub NoteSlideHam {
   my $topos = $nn->{pos};
 
   my $clr = $Tab->{headColor};
-  $clr = CP::FgBgEd::lighten($clr, 80) if ($bar->{pidx} == -2);
+  $clr = CP::FgBgEd::lighten($clr, PALE) if ($bar->{pidx} == -2);
 
   my $xaxis = ($nn->{bar} != $bar) ? $Tab->{BarEnd} - $pos + 3 + $topos : $topos - $pos;
   $xaxis *= $u;
@@ -588,7 +568,7 @@ sub NoteSlideHam {
     }
     if ($nn->{bar} == $bar) {
       $x1 += $xaxis;
-      $can->create_line($x, $y, $x1, $y1, -fill  => $clr, -width => $fat, -tags => $tag);
+      $can->create_line($x, $y, $x1, $y1, -fill => $clr, -width => $fat, -tags => $tag);
     }
     else {
       # Crosses a Bar boundary.
@@ -603,7 +583,7 @@ sub NoteSlideHam {
       }
       $can->create_line($x, $y, $x1, $y1, -fill  => $clr, -width => $fat, -tags => $tag);
       if ($bar != $EditBar1) {
-	$clr = CP::FgBgEd::lighten($clr, 80) if ($self->{bar} == $EditBar);
+	$clr = CP::FgBgEd::lighten($clr, PALE) if ($self->{bar} == $EditBar);
 	slideTail($nn, $self->{fret}, $ymid, $clr, $tag);
       }
     }
@@ -629,7 +609,7 @@ sub NoteSlideHam {
 		       -width => $fat,   -tags    => $tag);
       # If we've just drawn the start of an arc in EditBar1, that's it.
       if ($self->{bar} != $EditBar1) {
-	$clr = CP::FgBgEd::lighten($clr, 80) if ($bar == $EditBar);
+	$clr = CP::FgBgEd::lighten($clr, PALE) if ($bar == $EditBar);
 	hammerTail($nn, $xaxis, $mid, $clr, $tag);
       }
     }
@@ -644,16 +624,11 @@ sub slideHam {
     return;
   }
   my $bar = $note->{bar};
-  my($fidx,$fh,$clr,$hu,$npn);
-  if ($note->{font} eq 'Normal') {
-    $fidx = NOTES;
-    $fh = $self->{Nsz};
-    $clr = $self->{Nclr};
-  } else {
-    $fidx = SNOTES;
-    $fh = $self->{Ssz};
-    $clr = $self->{Sclr};
-  }
+  my($fp,$fidx,$fh,$clr,$hu,$npn);
+#  $fidx = ($note->{font} eq 'Normal') ? NOTES : SNOTES;
+#  $fp = $self->{fonts}[$fidx];
+#  $fh = $fp->{sz};
+#  $clr = $fp->{clr};
 
   my $x = $note->{x};
   my $y = $note->{y};
@@ -664,7 +639,7 @@ sub slideHam {
   $xaxis *= $u;
   $hu = $u / 2;
 
-  $GfxPtr->strokecolor($self->{Hclr});
+  $GfxPtr->strokecolor($Tab->{headColor});
 
   $y += $ss;
   if ($note->{shbr} eq 's') {
@@ -743,7 +718,7 @@ sub bendRel {
   my $pos = $note->{pos};
   my $hu = $u / 2;
   $GfxPtr->linewidth($off->{fat});
-  $GfxPtr->strokecolor($self->{Hclr});
+  $GfxPtr->strokecolor($Tab->{headColor});
   if ($note->{shbr} eq 'b') {
     $y += ($ss * 1.6);
     $GfxPtr->arc($x, $y, 2 * $u, $yr, 270, 360, 1);
@@ -813,14 +788,15 @@ sub lyrics {
   # displays differently (length-wise) on a screen and on a PDF page :-(.
   #
   $y -= ($Tab->{pOffset}{lyricY} - 3);
+  my $wdfp = $self->{fonts}[WORDS];
   foreach my $idx (0..($Opt->{LyricLines} - 1)) {
     if ($text->[$lidx] ne '') {
-      $y -= ($self->{Wsz} + 0.5);
+      $y -= ($wdfp->{sz} + 0.5);
       _adjTextAdd($self, $x, $y,
 		  $text->[$lidx],
 		  $Tab->{wordFont},
-		  WORDS, $self->{Wsz},
-		  $self->{Wclr});
+		  WORDS, $wdfp->{sz},
+		  $wdfp->{clr});
     }
     $y -= $Tab->{lyricSpace};
     $lidx++;
@@ -828,36 +804,39 @@ sub lyrics {
 }
 
 sub _adjTextAdd {
-  my($self,$x,$y,$txt,$fnt,$fidx,$sz,$bg) = @_;
+  my($self,$x,$y,$txt,$fnt,$fidx,$sz,$clr) = @_;
 
+  my $fp = $self->{fonts}[$fidx];
   my $can = $Tab->{pCan};
   my $id = $can->create_text(0,0, -text => $txt, -anchor => 'nw', -font => $fnt);
   my($x1,$y1,$len,$y2) = split(/ /, $can->bbox($id));
   $can->delete($id);
   my $plen = _measure($self, $txt, $fidx, $sz, 100);
   $len /= $plen;
-  $self->{hscale}[$fidx] = int(($len * 100) + 0.5);
-  _textAdd($self, $x, $y, $txt, $fidx, $sz, $bg);
-  $self->{hscale}[$fidx] = 100;
+  $fp->{hscale} = int(($len * 100) + 0.5);
+  _textAdd($self, $x, $y, $txt, $fidx, $sz, $clr);
+  $fp->{hscale} = 100;
 }
 
 sub _textAdd {
-  my($self,$x,$y,$txt,$fidx,$sz,$bg) = @_;
+  my($self,$x,$y,$txt,$fidx,$sz,$clr) = @_;
 
-  $TextPtr->hscale($self->{hscale}[$fidx]);
-  $TextPtr->font($self->{font}[$fidx], $sz);
-  $TextPtr->fillcolor($bg);
+  my $fp = $self->{fonts}[$fidx];
+  $TextPtr->hscale($fp->{hscale});
+  $TextPtr->font($fp->{font}, $sz);
+  $TextPtr->fillcolor($clr);
   $TextPtr->translate($x, $y);
   # Returns the width of the text added
   int($TextPtr->text($txt) + 0.5);
 }
 
 sub _textRight {
-  my($self,$x,$y,$txt,$fidx,$sz,$bg) = @_;
+  my($self,$x,$y,$txt,$fidx,$sz,$clr) = @_;
 
-  $TextPtr->hscale($self->{hscale}[$fidx]);
-  $TextPtr->font($self->{font}[$fidx], $sz);
-  $TextPtr->fillcolor($bg);
+  my $fp = $self->{fonts}[$fidx];
+  $TextPtr->hscale($fp->{hscale});
+  $TextPtr->font($fp->{font}, $sz);
+  $TextPtr->fillcolor($clr);
   $TextPtr->translate($x, $y);
   # Returns the width of the text added
   int($TextPtr->text_right($txt) + 0.5);
@@ -866,8 +845,9 @@ sub _textRight {
 sub _textCenter {
   my($self,$x,$y,$txt,$fidx,$sz,$bg) = @_;
 
-  $TextPtr->hscale($self->{hscale}[$fidx]);
-  $TextPtr->font($self->{font}[$fidx], $sz);
+  my $fp = $self->{fonts}[$fidx];
+  $TextPtr->hscale($fp->{hscale});
+  $TextPtr->font($fp->{font}, $sz);
   $TextPtr->fillcolor($bg);
 
   $TextPtr->translate($x, $y);
@@ -877,16 +857,18 @@ sub _textCenter {
 sub _measure {
   my($self,$txt,$fidx,$sz,$scale) = @_;
 
+  my $fp = $self->{fonts}[$fidx];
   $TextPtr->hscale($scale);
-  $TextPtr->font($self->{font}[$fidx], $sz);
+  $TextPtr->font($fp->{font}, $sz);
   my $tx = $TextPtr->advancewidth($txt);
   int($tx + 0.5);
 }
 
+# hlines are specified left->right
 sub _hline {
-  my($x,$y,$x1,$t,$clr) = @_;
+  my($x,$y,$x1,$ht,$clr) = @_;
 
-  $GfxPtr->linewidth($t);
+  $GfxPtr->linewidth($ht);
   $GfxPtr->strokecolor($clr);
   $GfxPtr->fillcolor($clr);
   $GfxPtr->move($x, $y);
@@ -894,10 +876,11 @@ sub _hline {
   $GfxPtr->stroke();
 }
 
+# vlines are specified from top->bottom
 sub _vline {
-  my($x,$y,$y1,$t,$clr) = @_;
+  my($x,$y,$y1,$wt,$clr) = @_;
 
-  $GfxPtr->linewidth($t);
+  $GfxPtr->linewidth($wt);
   $GfxPtr->strokecolor($clr);
   $GfxPtr->fillcolor($clr);
   $GfxPtr->move($x, $y);

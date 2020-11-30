@@ -23,6 +23,7 @@ sub new {
     ly_cnt => 0,
     ch_cnt => 0,
     type   => $type,
+    label  => 0,   # Only used before the first line of a Verse/Chorus etc.
     text   => $text,
     bg     => $bg, # this is only set if a colour is defined within a directive.
     segs   => [],
@@ -43,19 +44,21 @@ sub measure {
 }
 
 sub clone {
-  my($l,$blk) = @_;
+  my($self,$blk) = @_;
   
-  my $self = CP::Line->new($l->{type}, $l->{text}, $blk, $l->{bg});
-  $self->{ly_cnt} = $l->{ly_cnt};
-  $self->{ch_cnt} = $l->{ch_cnt};
-  $self->{segs} = $l->{segs};
-  $self->{num} = $l->{num};
-  return($self);
+  my $l = CP::Line->new($self->{type}, $self->{text}, $blk, $self->{bg});
+  $l->{ly_cnt} = $self->{ly_cnt};
+  $l->{ch_cnt} = $self->{ch_cnt};
+  $l->{segs} = $self->{segs};
+  $l->{num} = $self->{num};
+  $l->{label} = $self->{label};
+  return($l);
 }
 
 sub segment {
-  my($self,$pro,$line) = @_;
+  my($self,$pro) = @_;
 
+  my $line = $self->{text};
   my $segno = 0;
   # Look for a line starting with anything other than a '['
   # and leave the '[' plus whatever follows to be processed.
@@ -68,6 +71,7 @@ sub segment {
   return if ($line eq '');
   # What we should have left is (possibly) a chord
   # followed by a bit of lyric - repeated.
+  #                  [.....]     1+  anything other than [
   while ($line =~ /(\[([^\]]*)\])?([^\[]*)/g) {
     last if (!defined $2 && !defined $3);
     my $seg = CP::Seg->new($3);

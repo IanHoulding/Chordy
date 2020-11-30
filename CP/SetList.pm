@@ -25,6 +25,16 @@ sub new {
   my $self = {};
   bless $self, $class;
 
+  $self->load();
+  $self->{setsLB} = '';
+  $self->{browser} = '';
+  $self->select($CurSet);
+  return $self;
+}
+
+sub load {
+  my($self) = shift;
+
   my $sets = $self->{sets} = {};
   if (-e "$Home/SetList.cfg") {
     our %list;
@@ -45,32 +55,6 @@ sub new {
       }
     }
   }
-  $self->{setsLB} = '';
-  $self->{browser} = '';
-  $self->select($CurSet);
-  return $self;
-}
-
-sub conv2new {
-  my($list,$sets) = @_;
-
-  foreach my $c (sort keys %{$list}) {
-    foreach my $s (@{$list->{$c}}) {
-      push(@{$sets->{$c}{songs}}, $s);
-      foreach (@strOpt) {
-	$sets->{$c}{$_} = '';
-      }
-    }
-  }
-}
-
-sub listSets {
-  my($self) = shift;
-
-  $self->{setsLB}{array} = ($Opt->{SLrev}) ?
-      [reverse sort keys %{$self->{sets}}] :
-      [sort keys %{$self->{sets}}];
-  $self->{setsLB}->a2tcl();
 }
 
 sub save {
@@ -117,6 +101,28 @@ sub save {
   message(SMILE, $col."Setlists updated and saved.", 1);
 }
 
+sub conv2new {
+  my($list,$sets) = @_;
+
+  foreach my $c (sort keys %{$list}) {
+    foreach my $s (@{$list->{$c}}) {
+      push(@{$sets->{$c}{songs}}, $s);
+      foreach (@strOpt) {
+	$sets->{$c}{$_} = '';
+      }
+    }
+  }
+}
+
+sub listSets {
+  my($self) = shift;
+
+  $self->{setsLB}{array} = ($Opt->{SLrev}) ?
+      [reverse sort keys %{$self->{sets}}] :
+      [sort keys %{$self->{sets}}];
+  $self->{setsLB}->a2tcl();
+}
+
 sub select {
   my($self,$set) = @_;
 
@@ -149,21 +155,17 @@ sub select {
 sub change {
   my($self) = shift;
 
-  my $slb = $self->{setsLB};
-  my $br = $self->{browser};
-  $AllSets = CP::SetList->new();
-  $AllSets->{setsLB} = $slb;
-  $AllSets->{browser} = $br;
-  $AllSets->listSets();
+  $self->load();
+  $self->listSets();
   if ($CurSet ne '') {
-    if (! defined $AllSets->{sets}{$CurSet}) {
+    if (! defined $self->{sets}{$CurSet}) {
       $CurSet = '';
     } else {
-      $AllSets->{browser}{selLB}{array} = $AllSets->{sets}{$CurSet}{songs};
+      $self->{browser}{selLB}{array} = $self->{sets}{$CurSet}{songs};
     }
   }
-  $br->refresh($Path->{Pro}, '.pro');
-  $AllSets->select($CurSet);
+  $self->{browser}->refresh($Path->{Pro}, '.pro');
+  $self->select($CurSet);
 }
 
 #
@@ -267,73 +269,70 @@ sub export {
   my($self) = shift;
 
   return if ($CurSet eq '');
-  my $newC = my $orgC = $Collection->name();
-  my @lst = sort keys %{$Collection};
-  unshift(@lst, 'All');
-  push(@lst, 'SeP', 'File');
+
+  my $newC = my $orgC = $Collection->{name};
+  my @lst = ('All', @{$Collection->list()}, 'SeP', 'File');
   popMenu(
     \$newC,
     sub{
-      if ($newC ne $orgC) {
-	my $all = 0;
-	if ($newC eq 'File') {
-	  my $file = $CurSet.'.sel';
-	  $file = Tkx::tk___getSaveFile(
-	    -title => "Save As",
-	    -initialdir => "$Home",
-	    -initialfile => $file,
-	    -confirmoverwrite => 1,
-	      );
-	  return if ($file eq '');
-	  unless (open OFH, '>', $file) {
-	    errorPrint("Couldn't create SetList file:\n   '$file'\n$!");
-	    return();
-	  }
-	  my $sp = \%{$self->{sets}{$CurSet}};
-	  print OFH "#!/usr/bin/perl\n\n";
-	  print OFH "\%list = (\n";
-	  print OFH "  \"$CurSet\" => {\n";
-	  foreach my $s (@strOpt) {
-	    print OFH "    $s => '$sp->{$s}',\n";
-	  }
-	  print OFH "    songs => [\n";
-	  foreach my $s (@{$sp->{songs}}) {
-	    print OFH '      "'.$s."\",\n";
-	  }
-	  print OFH "    ],\n";
-	  print OFH "  },\n";
-	  print OFH ");\n1;\n";
-	  close(OFH);
-	  message(SMILE, " Done ", 1);
-	  return;
-	} elsif ($newC eq 'All') {
-	  shift(@lst);
-	} else {
-	  @lst = ($newC);
+      if ($newC eq 'File') {
+	my $file = $CurSet.'.sel';
+	$file = Tkx::tk___getSaveFile(
+	  -title => "Save As",
+	  -initialdir => "$Home",
+	  -initialfile => $file,
+	  -confirmoverwrite => 1,
+	    );
+	return if ($file eq '');
+	unless (open OFH, '>', $file) {
+	  errorPrint("Couldn't create SetList file:\n   '$file'\n$!");
+	  return();
 	}
-	# Remove the Seperator and File entries.
-	pop(@lst);
-	pop(@lst);
-	my $orgHome = $Home;
-	foreach my $col (@lst) {
-	  next if ($col eq $orgC);
-	  $Home = "$Collection->{$col}/$col";
-	  my $sl = CP::SetList->new();
-	  if (exists $sl->{sets}{$CurSet} && $all == 0) {
-	    my $ans = msgYesNoAll("The Setlist:    \"$CurSet\"\nalready exists in Collection:\n    \"$col\"\nDo you want to overwrite it?");
-	    if ($ans eq "No") {
-	      undef $sl;
-	      next;
-	    } elsif ($ans eq 'All') {
-	      $all++;
-	    }
-	  }
-	  $sl->{sets}{$CurSet} = $self->{sets}{$CurSet};
-	  $sl->save($col);
-	  undef $sl;
+	my $sp = \%{$self->{sets}{$CurSet}};
+	print OFH "#!/usr/bin/perl\n\n";
+	print OFH "\%list = (\n";
+	print OFH "  \"$CurSet\" => {\n";
+	foreach my $s (@strOpt) {
+	  print OFH "    $s => '$sp->{$s}',\n";
 	}
-	$Home = $orgHome;
+	print OFH "    songs => [\n";
+	foreach my $s (@{$sp->{songs}}) {
+	  print OFH '      "'.$s."\",\n";
+	}
+	print OFH "    ],\n";
+	print OFH "  },\n";
+	print OFH ");\n1;\n";
+	close(OFH);
+	message(SMILE, " Done ", 1);
+	return;
+      } elsif ($newC eq 'All') {
+	shift(@lst);
+      } else {
+	@lst = ($newC);
       }
+      # Remove the Seperator and File entries.
+      pop(@lst);
+      pop(@lst);
+      my $orgHome = $Home;
+      my $all = 0;
+      foreach my $col (@lst) {
+	next if ($col eq $orgC);
+	$Home = $Collection->path($col)."/$col";
+	my $sl = CP::SetList->new();
+	if (exists $sl->{sets}{$CurSet} && $all == 0) {
+	  my $ans = msgYesNoAll("The Setlist:    \"$CurSet\"\nalready exists in Collection:\n    \"$col\"\nDo you want to overwrite it?");
+	  if ($ans eq "No") {
+	    undef $sl;
+	    next;
+	  } elsif ($ans eq 'All') {
+	    $all++;
+	  }
+	}
+	$sl->{sets}{$CurSet} = $self->{sets}{$CurSet};
+	$sl->save($col);
+	undef $sl;
+      }
+      $Home = $orgHome;
     },
     \@lst);
 }

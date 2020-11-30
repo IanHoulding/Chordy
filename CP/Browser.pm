@@ -24,10 +24,10 @@ my $Arrows = 0;
 sub new {
   my($proto,$top,$what,$path,$ext,$list) = @_;
 
-  return if ($top eq $MW && CP::Pop::exists('.fb'));
+  return('') if ($top eq $MW && popExists('.fb'));
   my($pop,$fileBr,$frame);
   if ($top eq $MW) {
-    $pop = CP::Pop->new(0, '.fb', "File Browser  |  Collection: ".$Collection->name());
+    $pop = CP::Pop->new(0, '.fb', "File Browser  |  Collection: ".$Collection->{name});
     ($fileBr,$frame) = ($pop->{top}, $pop->{frame});
   } else {
     $frame = $top;
@@ -55,14 +55,13 @@ sub new {
     -textvariable => \$Opt->{SortBy},
     -width => 14,
     -style => 'Menu.TButton',
-    -command => sub{
-      popMenu(\$Opt->{SortBy}, undef, ["Alphabetical", "Date Modified"]);
+    -command => sub{$Opt->{SortBy} = ($Opt->{SortBy} eq "Alphabetical") ? "Date Modified" : "Alphabetical";
       $avail->h2tcl();
-      $Opt->changeOne('SortBy');
+      $Opt->saveOne('SortBy');
     } );
   my $rev = $topFrm->new_ttk__checkbutton(-variable => \$Opt->{RevSort},
 					  -style => 'NM.TCheckbutton',
-					  -command => sub{$Opt->changeOne('RevSort');
+					  -command => sub{$Opt->saveOne('RevSort');
 							  $avail->h2tcl();});
   my $revlab = $topFrm->new_ttk__label(-text => 'Reverse',
 				       -font => 'BTkDefaultFont',
@@ -92,7 +91,7 @@ sub new {
   }
 
   if (readInAvail($self, $path, $ext) == 0 && $what & (FILE | TABBR)) {
-    popDestroy($fileBr);
+    $fileBr->popDestroy();
     message(SAD, "Sorry - couldn't find any '$ext' files!");
     return('');
   }
@@ -149,11 +148,11 @@ sub new {
   $igna->g_grid(qw/-row 2 -column 0 -sticky w/, -pady => [8,2]);
 
   # Left/Right Arrows
-  $centerFrm->g_pack(qw/-side left -anchor n -expand 0 -fill x -padx 4/);
+  $centerFrm->g_pack(qw/-side left -anchor n -expand 0 -fill x/);
   $arrowFrm->g_pack(qw/-side top -expand 0 -pady 6/);
   $alphaFrm->g_pack(qw/-side top -expand 0 -fill y/);
 
-      # Selected Files
+  # Selected Files
   $rightFrm->g_pack(qw/-side left -expand 1 -fill y/, -padx => [4,4]);
 
   # columnspan is 2 so that we can put 2 buttons below the ListBox.
@@ -161,7 +160,7 @@ sub new {
 
   # Up/Down Arrows only for Setlists
   if (($what & (FILE | TABBR)) == 0) {
-    $rightFrmR->g_pack(qw/-side left -expand 0 -fill x/, -padx => [4,2]);
+    $rightFrmR->g_pack(qw/-side left -expand 0 -fill x/, -padx => [0,2]);
   }
 
   ### CENTER
@@ -223,8 +222,10 @@ sub new {
       } else {
 	@sl = @{$select->{array}};
       }
+    } else {
+      $sl[0] = '';
     }
-    $pop->destroy();
+    $pop->popDestroy();
     return(@sl);
   }
   return($self);

@@ -48,6 +48,7 @@ sub new {
 
   if (ref($Ed) eq 'CP::Editor') {
     $Ed->{TxtWin}->delete('1.0', 'end');
+    $Ed->{TxtWin}->configure(-font => "\{$EditFont{family}\} $EditFont{size} $EditFont{weight} $EditFont{slant}");
     return();
   }
   bless $Ed, $class;
@@ -72,7 +73,7 @@ sub new {
     $Path = CP::Path->new();
     $Cmnd = CP::Cmnd->new();
     $Opt = CP::Opt->new();
-    $Media = CP::Media->new(\$Opt->{Media});
+    $Media = CP::Media->new($Opt->{Media});
     $Swatches = CP::Swatch->new();
 
     fontSetup();
@@ -86,7 +87,7 @@ sub new {
   makeImage("Eicon", \%XPM);
   $Ed->{Top}->g_wm_iconphoto("Eicon");
 
-  $ColourEd = CP::FgBgEd->new() if (! defined $ColourEd);
+  CP::FgBgEd->new();
 
   CP::CHedit::readFing('Guitar');
   CP::CHedit::mkChords();
@@ -201,10 +202,6 @@ sub new {
   $tw->g_bind('<KeyRelease-]>' => \&chordend);
   $tw->g_bind('<KeyRelease-{>' => \&dirstart);
   $tw->g_bind('<KeyRelease-}>' => \&dirend);
-#  $MW->g_bind('<Control-Left>'  => sub{Tkx::after(20, [\&moveChord, '-1c'])});
-#  $MW->g_bind('<Control-Right>' => sub{Tkx::after(20, [\&moveChord, '+1c'])});
-#  $tw->g_bind('<Control-Up>'    => sub{Tkx::after(20, [\&moveChord, '-1l'])});
-#  $tw->g_bind('<Control-Down>'  => sub{Tkx::after(20, [\&moveChord, '+1l'])});
   $Ed->{chordstart} = '';
   $Ed->{dirstart} = '';
 
@@ -515,7 +512,7 @@ sub fontUpdt {
     'dirtv',
     -font => "\{$EditFont{family}\} $EditFont{bracesz} $EditFont{weight} $EditFont{slant}",
     -foreground => $EditFont{brace});
-  $Media->save($Opt->{Media});
+  $Media->save();
 }
 
 sub bgSet {
@@ -795,7 +792,7 @@ sub update_indicators {
   $Ed->{TotlLabel}->m_configure(-text => $tot);
 
   my $edit_flag = ($Ed->{TxtWin}->edit_modified()) ? 'edited' : '';
-  $Ed->{Top}->g_wm_title("Editor  |  Collection: ".$Collection->name()."  |  $edit_flag $Ed->{FileName}");
+  $Ed->{Top}->g_wm_title("Editor  |  Collection: ".$Collection->{name}."  |  $edit_flag $Ed->{FileName}");
   if ($Ed->{Tagged}) {
     $Ed->{TxtWin}->tag_remove('mysel', '1.0', 'end');
     $Ed->{Tagged} = 0;
@@ -1043,7 +1040,7 @@ EOF
   my $tl = $fr->new_ttk__label(-text => $txt, -justify => 'center');
   $tl->g_pack();
 
-  my $ok = $fr->new_ttk__button(-text=>'OK', -command => sub {$pop->destroy()});
+  my $ok = $fr->new_ttk__button(-text=>'OK', -command => sub {$pop->popDestroy()});
   $ok->g_pack();
   $top->g_wm_resizable('no','no');
 }

@@ -28,7 +28,8 @@ use CP::Global qw/:FUNC :PATH :OPT :CHORD :WIN :PRO :SETL :MEDIA :SCALE :XPM/;
 
 use CP::Win;
 use CP::Pop qw/:POP :MENU/;
-use CP::ChordyWin qw/&chordyDisplay/;
+use CP::Chordy;
+use CP::CPmenu;
 use CP::List;
 use CP::Pro qw/$LenError/;
 use CP::Collection;
@@ -83,24 +84,20 @@ if (!defined $opt_d) {
 #### Define a whole bunch of defaults ####
 
 setDefaults();
-
 fontSetup();
-
 CP::Win::init();
 
 makeImage("Cicon", \%XPM);
 $MW->g_wm_iconphoto("Cicon");
-title();
+$MW->g_wm_protocol('WM_DELETE_WINDOW' => sub{$MW->g_destroy()}); 
+CP::Win::title();
 
-CP::ChordyWin::chordyDisplay();
+CP::Chordy->new();
+CP::CPmenu->new();
 
 $MW->g_wm_deiconify();
 $MW->g_raise();
 Tkx::MainLoop();
-
-sub title {
-  CP::Win::title("Chordy | Collection: ".$Collection->name()." | Media: ".$Opt->{Media});
-}
 
 sub impProFile {
   my $types = [
@@ -120,7 +117,7 @@ sub impProFile {
 }
 
 sub expFile {
-  my($path, $ext, $just1) = @_;
+  my($path,$ext,$just1) = @_;
 
   if (@{$FileLB->{array}}) {
     my $idx = (defined $just1) ? $FileLB->curselection(0) : -1;
@@ -130,12 +127,7 @@ sub expFile {
     }
     if ($ext eq '.pro') {
       my $exp = '';
-      my $orgC = $Collection->name();
-      my @lst = ('All');
-      foreach (sort keys %{$Collection}) {
-	push(@lst, $_) if ($_ ne $orgC);
-      }
-      push(@lst, 'SeP', 'FOLDER');
+      my @lst = ('All', @{$Collection->list()}, 'SeP', 'FOLDER');
       popMenu(\$exp, sub{}, \@lst);
       return if ($exp eq '');
       if ($exp ne 'FOLDER') {
@@ -147,8 +139,8 @@ sub expFile {
 	my @toExp = ($idx >= 0) ? ($FileLB->{array}[$idx]): @{$FileLB->{array}};
 	my $all = 0;
 	foreach my $col (@lst) {
-	  next if ($col =~ /^SeP|FOLDER/);
-	  my $dest = "$Collection->{$col}/$col/Pro";
+	  last if ($col eq 'SeP');
+	  my $dest = $Collection->path($col)."/$col/Pro";
 	  foreach (@toExp) {
 	    (my $fn = $_) =~ s/.*\///;
 	    if (-e "$dest/$fn") {
@@ -213,7 +205,7 @@ sub expPP {
 }
 
 sub mailFile {
-  my($path, $ext, $just1) = @_;
+  my($path,$ext,$just1) = @_;
 
   if (@{$FileLB->{array}}) {
     my $idx = $FileLB->curselection(0);
@@ -309,28 +301,11 @@ sub editArticles {
   if ($done eq 'OK') {
     $Opt->{Articles} = $arts;
   }
-  $pop->destroy();
-}
-
-sub saveOpt {
-  message(SMILE, "Options Saved", 1) if ($Opt->save());
-}
-
-sub loadOpt {
-  message(SMILE, " Done ", 1) if ($Opt->load());
-}
-
-sub resetOpt {
-  $Opt->default();
-  message(SMILE, "Done - but not saved (yet).");
-}
-
-sub editOpt {
-  CP::Editor::Edit($Path->{Option}, 1);
+  $pop->popDestroy();
 }
 
 sub saveMed {
-  message(SMILE, "Media Config Saved", 1) if ($Media->save($Opt->{Media}));
+  message(SMILE, "Media Config Saved", 1) if ($Media->save());
 }
 
 sub loadMed {
@@ -456,7 +431,7 @@ sub transposeOne {
     message(QUIZ, "Can't do anything without a ChordPro file.");
     return;
   }
-  if ($Opt->{Transpose} eq "No") {
+  if ($Opt->{Transpose} eq "-") {
     message(QUIZ, "Hmmm ... If you want to Transpose some\nfiles you have to tell me what key!");
     $PDFtrans = 0;
     return;
@@ -470,19 +445,14 @@ sub transposeOne {
 	$KeyLB->{array}[$idx] = "$ProFiles[$idx]->{key}";
 	$KeyLB->a2tcl();
       }
-      $Opt->{Transpose} = 'No';
+      $Opt->{Transpose} = '-';
     }
   }
 }
 
-my $Pop = '';
-my $Done;
-my $FNlabel;
-
 sub Main {
-  my($oneorall) = shift;
+  my($chordy,$oneorall) = @_;
 
-  return if (CP::Pop::exists('.pr'));
   if ($#ProFiles < 0) {
     message(QUIZ, "Can't do anything without a ChordPro file.");
     return;
@@ -502,32 +472,30 @@ sub Main {
 	$Opt->{PDFview} = 1;
 	$tmpMedia = $Opt->{Media};
 	$Opt->{Media} = $Opt->{PrintMedia};
-	$Media->change(\$Opt->{Media});
+	$Media = $Media->change($Opt->{Media});
 	$Opt->{PDFprint} = 69;
       } elsif ($ans eq 'Cancel') {
 	return;
       }
     }
   }
-  popProg();
   if ($oneorall == SINGLE) {
     ### Handle one single ChordPro file
     my $idx = $FileLB->curselection(0);
     if ($idx ne '') {
-      my($pdf,$name) = makeOnePDF($ProFiles[$idx], undef, undef);
+      my($pdf,$name) = makeOnePDF($ProFiles[$idx], undef, undef, $chordy->{ProgLab});
       $pdf->close();
-      actionPDF("$Path->{Temp}/$name", $name);
+      actionPDF($chordy, "$Path->{Temp}/$name", $name);
     } else {
       message(SAD, "You don't appear to have selected a ChordPro file.");
-      $Pop->destroy();
       return;
     }
   } else {
-    my $toKey = $Opt->{Transpose};
-    my $msg = "This will Transpose ALL files to the key of $toKey.\nDo you want to continue?";
-    if ($toKey ne "No" && msgYesNo($msg) eq 'No') {
-      $Pop->destroy();
-      return;
+    if ($Opt->{Transpose} ne "-") {
+      my $msg = "This will Transpose ALL files to the key of $Opt->{Transpose}.\nDo you want to continue?";
+      if (msgYesNo($msg) eq 'No') {
+	return;
+      }
     }
 
     my $maxi = $#ProFiles;
@@ -540,42 +508,46 @@ sub Main {
       ### One monster PDF
       if (! defined $CurSet || $CurSet eq "") {
 	my $ans = msgSet("You need to provide a name for the PDF File:",\$CurSet);
-	 if ($ans eq "Cancel" || $CurSet eq "") {
-	   $Pop->destroy();
-	   return;
-	 }
+	if ($ans eq "Cancel" || $CurSet eq "") {
+	  return;
+	}
       }
+      progressEnable($chordy);
       my $PdfFileName = "$CurSet.pdf";
       my $pdf = undef;
       foreach my $idx (@pfn) {
-	($pdf,$PdfFileName) = makeOnePDF($ProFiles[$idx], $PdfFileName, $pdf);
-	if ($Done eq 'Cancel') {
+	($pdf,$PdfFileName) = makeOnePDF($ProFiles[$idx], $PdfFileName, $pdf, $chordy->{ProgLab});
+	if ($chordy->{ProgCan}) {
 	  $pdf->close();
-	   $Pop->destroy();
-	   return;
+	  progressDisable($chordy);
+	  return;
 	}
 	Tkx::after(500); # Give user a chance to hit Cancel!
       }
       $pdf->close();
-      actionPDF("$Path->{Temp}/$PdfFileName", "$PdfFileName");
+      actionPDF($chordy, "$Path->{Temp}/$PdfFileName", "$PdfFileName");
     } else {
       ### Action each PDF independantly
+      progressEnable($chordy);
       foreach my $idx (@pfn) {
-	my($pdf,$name) = makeOnePDF($ProFiles[$idx], undef, undef);
-	$pdf->close();
-	if ($Done eq 'Cancel') {
-	   $Pop->destroy();
-	   return;
+	if ($chordy->{ProgCan}) {
+	  progressDisable($chordy);
+	  return;
 	}
-	actionPDF("$Path->{Temp}/$name", $name);
+	my($pdf,$name) = makeOnePDF($ProFiles[$idx], undef, undef, $chordy->{ProgLab});
+	$pdf->close();
+	if ($chordy->{ProgCan} || actionPDF($chordy, "$Path->{Temp}/$name", $name) < 0) {
+	  progressDisable($chordy);
+	  return;
+	}
       }
     }
   }
-  $Pop->destroy();
+  progressDisable($chordy);
   if ($tmpMedia ne '') {
     $Opt->{PDFview} = $tmpView;
     $Opt->{Media} = $tmpMedia;
-    $Media->change(\$Opt->{Media});
+    $Media = $Media->change($Opt->{Media});
   }
   # $LenError is set in CP::Pro::makePDF()
   if ($LenError) {
@@ -584,15 +556,29 @@ sub Main {
     }
     $LenError = 0;
   } else {
-    message(SMILE, " Done ", 1) if ($PDFtrans || $oneorall == MULTIPLE);
+    message(SMILE, ' Done ', 1) if ($PDFtrans || $oneorall == MULTIPLE);
   }
   $PDFtrans = 0;
 }
 
-sub makeOnePDF {
-  my($pro,$name,$pdf) = @_;
+sub progressEnable {
+  my($chdy) = shift;
 
-  $FNlabel->m_configure(-text => $pro->{name});
+  $chdy->{ProgFrm}->g_grid(qw/-row 1 -columnspan 3 -sticky ew -padx 16/, -pady => [4,0]);
+  $chdy->{ProgCan} = 0;
+}
+
+sub progressDisable {
+  my($chdy) = shift;
+
+  $chdy->{ProgFrm}->g_grid_forget();
+  $chdy->{ProgCan} = 0;
+}
+
+sub makeOnePDF {
+  my($pro,$name,$pdf,$label) = @_;
+
+  $label->m_configure(-text => $pro->{name});
   Tkx::update();
   if (! defined $name) {
     ($name = $pro->{name}) =~ s/\.pro$//i;
@@ -615,11 +601,13 @@ sub makeOnePDF {
 }
 
 sub actionPDF {
-  my($tmpPDF,$PDFfileName) = @_;
+  my($chordy,$tmpPDF,$PDFfileName) = @_;
 
   my $Pact = "";
   if ($Opt->{PDFview}) {
-    return if (PDFview($tmpPDF) == 0);
+    Tkx::update();
+    my $ret = PDFview($chordy, $tmpPDF);
+    return($ret) if ($ret <= 0);
   }
   if ($Opt->{PDFprint}) {
     return if (PDFprint($tmpPDF) == 0);
@@ -631,12 +619,13 @@ sub actionPDF {
     if ($Opt->{PDFpath} ne '' && $Opt->{PDFpath} ne $Path->{PDF}) {
       write_file("$Opt->{PDFpath}/$PDFfileName", $txt);
     }
+    (my $name = $PDFfileName) =~ s/\.pdf$/.pro/;
+    $Opt->add2recent($name,'RecentPro',\&CP::CPmenu::refreshRcnt);
   }
-  1;
 }
 
 sub PDFview {
-  my($tmpPDF) = shift;
+  my($chordy, $tmpPDF) = @_;
 
   my $Pact = "";
   if ($Cmnd->{Acro} ne "") {
@@ -646,12 +635,19 @@ sub PDFview {
       $Pact = "$Cmnd->{Acro} \"$tmpPDF\"";
     }
   } else {
-    message(SAD, "You need to have a PDF viewer installed\nto be able to view (and possibly print)\nthe PDF file just created.\nSee the 'Collections and Commands' tab.");
+    message(SAD, "You need to have a PDF viewer installed\nto be able to view (and possibly print)\nthe PDF file just created.\nSee the 'Commands' entry under the 'Misc' menu.");
     return(0);
   }
   jobSpawn($Pact) if ($Pact ne "");
+  Tkx::update();
   if ($Opt->{PDFprint} == 69) {
-    return(0) if (msgYesNo("Do you want to continue and print the PDF?") eq 'No');
+    if ($chordy->{ProgCan} == 0) {
+      my $ans = msgYesNoCan("Do you want to continue and print the PDF?");
+      return(0) if ($ans eq 'No');
+      return(-1) if ($ans eq 'Cancel');
+    } else {
+      return(-1);
+    }
   }
   1;
 }
@@ -667,44 +663,9 @@ sub PDFprint {
       $Pact = "$Cmnd->{Print} \"$tmpPDF\"";
     }
   } else {
-    message(SAD, "You need to have a PDF print capable command installed\nto be able to print the PDF file just created.\nSee the 'Collections and Commands' tab.");
+    message(SAD, "You need to have a PDF print capable command installed\nto be able to print the PDF file just created.\nSee the 'Commands' entry under the 'Misc' menu.");
     return(0);
   }
   jobSpawn($Pact) if ($Pact ne "");
   1;
-}
-
-sub popProg {
-  return if (CP::Pop::exists('.pr'));
-  $Pop = CP::Pop->new(1, '.pr', 'Progress', -1, -1);
-  my($top,$pp) = ($Pop->{top},$Pop->{frame});
-  $pp->m_configure(-style => 'Pop.TFrame');
-  my $bf = $top->new_ttk__frame(-padding => [4,4,4,4]);
-  $bf->m_configure(-style => 'Pop.TFrame');
-  $bf->g_pack(qw/-side bottom -fill x/);
-
-  my $font = (exists $FontList{"Comic Sans MS"}) ? "Comic Sans MS" : "Times";
-  my $size = 14;
-
-  my $pll = $pp->new_ttk__label(
-    -text => "Please wait .... PDF-ing",
-    -font => "{$font} $size bold",
-    -style => 'Pop.TLabel',
-    -width => 25);
-  $pll->g_pack();
-  $FNlabel = $pp->new_ttk__label(
-    -text => ' ',
-    -font => "{$font} $size bold",
-    -style => 'Pop.TLabel',
-    -width => 25);
-  $FNlabel->g_pack();
-
-  $Done = '';
-  my $b = $bf->new_ttk__button(-text => 'Cancel',
-			       -command => sub{$Done = 'Cancel'; Tkx::update();} );
-  $b->g_pack();
-
-  $top->g_raise();
-  $top->g_grab();
-  Tkx::update();
 }

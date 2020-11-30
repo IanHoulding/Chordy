@@ -29,7 +29,6 @@ sub init {
   $MW = Tkx::widget->new(".");
   $MW->g_wm_withdraw();
   Tkx::update();
-  $MW->g_wm_protocol('WM_DELETE_WINDOW' => sub{$MW->g_destroy()}); 
   foreach (Tkx::SplitList(Tkx::ttk__style_theme_names())) {
     if ($_ eq 'clam') {
       Tkx::ttk__style_theme_use('clam');
@@ -39,11 +38,11 @@ sub init {
 
   MWoptions();
 
-  makeImage("blank", \%XPM); # used by Editor.pm, FgBgEd.pm and Fonts.pm
+  makeImage('blank', \%XPM); # used by Editor.pm, FgBgEd.pm and Fonts.pm
 }
 
 sub title {
-  $MW->g_wm_title(shift);
+  $MW->g_wm_title("Chordy | Collection: ".$Collection->{name}." | Media: ".$Opt->{Media});
 }
 
 sub MWoptions {
@@ -72,15 +71,18 @@ sub MWoptions {
 			    -selectborderwidth => 0);
   Tkx::ttk__style_configure('Pop.TFrame',
 			    -background => $Opt->{PopBG});
-  Tkx::ttk__style_configure('Wh.TFrame', -background => WHITE);
+  Tkx::ttk__style_configure('Wh.TFrame',
+			    -background => WHITE);
 
   Tkx::ttk__style_configure('TLabelframe',
 			    -labeloutside => 0,
 			    -labelmargins => [8,0,8,0],
 			    -relief => 'raised',
 			    -bd => 2);
-  Tkx::ttk__style_configure('TLabelframe.Label', -font => "BTkDefaultFont");
-  Tkx::ttk__style_configure('TLabelframe.Label', -foreground => MAGENT);
+  Tkx::ttk__style_configure('TLabelframe.Label',
+			    -font => "BTkDefaultFont",
+			    -justify => 'center',
+			    -foreground => MAGENT);
 
   Tkx::ttk__style_configure('Wh.TLabelframe', -background => WHITE);
   Tkx::ttk__style_configure('Wh.TLabelframe.Label', -background => WHITE);
@@ -220,6 +222,12 @@ sub MWoptions {
   Tkx::ttk__style_map('TEntry', -foreground => "disabled ".BROWN." readonly ".BROWN);
   Tkx::ttk__style_map('TEntry', -fieldbackground => "disabled ".LGREY." readonly ".LGREY);
 
+  Tkx::ttk__style_configure("TSpinbox",
+			    -foreground => $Opt->{MenuFG},
+			    -arrowcolor => BLACK,
+			    -fieldbackground => $Opt->{MenuBG},
+			    -background => $Opt->{MenuBG});
+
   Tkx::ttk__style_configure('TScrollbar',
 			    -relief => 'raised',
 			    -borderwidth => 1);
@@ -230,42 +238,72 @@ sub MWoptions {
 }
 
 sub TButtonBGset {
+  my($media) = shift;
+
+  $media = $Media if (! defined $media);
   foreach my $h (qw/comment highlight title verse chorus bridge tab/) {
-    Tkx::ttk__style_configure(ucfirst($h).".BG.TButton", -background => $Media->{$h."BG"});
+    Tkx::ttk__style_configure(ucfirst($h).".BG.TButton", -background => $media->{$h."BG"});
   }
 }
 
 sub TLabelBGset {
+  my($media) = shift;
+
+  $media = $Media if (! defined $media);
   foreach my $h (qw/comment highlight title chord lyric tab/) {
-    my $bg = ($h =~ /cho|lyr/) ? $Media->{verseBG} : $Media->{"$h.BG"};
-    Tkx::ttk__style_configure(ucfirst($h).".Font.TLabel", -background => $Media->{"$h.BG"});
+    my $bg = ($h =~ /cho|lyr/) ? $media->{verseBG} : $media->{"$h.BG"};
+    Tkx::ttk__style_configure(ucfirst($h).".Font.TLabel", -background => $media->{"$h.BG"});
   }
 }
 
 sub PBclr {
   my($fg,$bg) = FgBgClr("Push Button", 'TButton');
-  $Opt->{PushFG} = $fg if ($fg ne '');
-  $Opt->{PushBG} = $bg if ($bg ne '');
+  if ($fg ne '') {
+    $Opt->{PushFG} = $fg;
+    $Opt->save();
+  }
+  if ($bg ne '') {
+    $Opt->{PushBG} = $bg;
+    $Opt->save();
+  }
 }
 
 sub MBclr {
   my($fg,$bg) = FgBgClr("Menu Button", 'Menu.TButton');
-  $Opt->{MenuFG} = $fg if ($fg ne '');
-  $Opt->{MenuBG} = $bg if ($bg ne '');
+  if ($fg ne '') {
+    $Opt->{MenuFG} = $fg;
+    $Opt->save();
+  }
+  if ($bg ne '') {
+    $Opt->{MenuBG} = $bg;
+    $Opt->save();
+  }
 }
 
 sub ENTclr {
   my($fg,$bg) = FgBgClr("Entry Box", 'Ent.TButton');
-  $Opt->{EntryFG} = $fg if ($fg ne '');
-  $Opt->{EntryBG} = $bg if ($bg ne '');
+  if ($fg ne '') {
+    $Opt->{EntryFG} = $fg;
+    $Opt->save();
+  }
+  if ($bg ne '') {
+    $Opt->{EntryBG} = $bg;
+    $Opt->save();
+  }
   Tkx::ttk__style_configure('TEntry', -fieldforeground => $Opt->{EntryFG});
   Tkx::ttk__style_configure('TEntry', -fieldbackground => $Opt->{EntryBG});
 }
 
 sub MSGclr {
   my($fg,$bg) = FgBgClr("Message Pop-Up", 'Msg.TButton');
-  $Opt->{PopFG} = $fg if ($fg ne '');
-  $Opt->{PopBG} = $bg if ($bg ne '');
+  if ($fg ne '') {
+    $Opt->{PopFG} = $fg;
+    $Opt->save();
+  }
+  if ($bg ne '') {
+    $Opt->{PopBG} = $bg;
+    $Opt->save();
+  }
   Tkx::ttk__style_configure('Pop.TLabel', -foreground => $Opt->{PopFG});
   Tkx::ttk__style_configure('Pop.TLabel', -background => $Opt->{PopBG});
   Tkx::ttk__style_configure('Pop.TFrame', -background => $Opt->{PopBG});
@@ -276,8 +314,7 @@ sub FgBgClr {
 
   my $fg = Tkx::ttk__style_lookup($style, -foreground);
   my $bg = Tkx::ttk__style_lookup($style, -background);
-  $ColourEd = CP::FgBgEd->new() if (!defined $ColourEd);
-  $ColourEd->title("$title Colour");
+  CP::FgBgEd->new("$title Colour");
   my($nfg,$nbg) = $ColourEd->Show($fg, $bg, (FOREGRND|BACKGRND));
   if ($nfg ne '' && $nfg ne $fg) {
     Tkx::ttk__style_configure($style, -foreground => $nfg);
@@ -293,8 +330,7 @@ sub BGclr {
 
   my($fg,$bg);
   if (! defined $clr) {
-    $ColourEd = CP::FgBgEd->new() if (!defined $ColourEd);
-    $ColourEd->title("Window Background");
+    CP::FgBgEd->new("Window Background");
     $fg = Tkx::ttk__style_lookup('TLabelframe.Label', -foreground);
     $bg = Tkx::ttk__style_lookup('TFrame', -background);
     $ColourEd->{fgcolor} = $fg;
@@ -323,6 +359,7 @@ sub defLook {
   $Opt->{PushBG} = bBG;
   $Opt->{WinBG}  = MWBG;
   newLook();
+  $Opt->save();
 }
 
 sub newLook {
@@ -334,29 +371,6 @@ sub newLook {
   Tkx::ttk__style_configure("TButton", -foreground => $Opt->{PushFG});
   Tkx::ttk__style_configure("TButton", -background => $Opt->{PushBG});
   BGclr(MWBG);
-}
-
-sub defButtons {
-  my($wid,$str,$save,$load,$reset) = @_;
-
-  my $sa = $wid->new_ttk__button(
-    -text => " Save as Default $str ",
-    -style => 'Green.TButton',
-    -command => $save);
-
-  my $lo = $wid->new_ttk__button(
-    -text => " Load Default $str ",
-    -style => 'Green.TButton',
-    -command => $load);
-
-  my $re = $wid->new_ttk__button(
-    -text => " Reset $str to Default ",
-    -style => 'Red.TButton',
-    -command => $reset);
-
-  $sa->g_pack(qw/-side left -padx/ => [10,6]);
-  $lo->g_pack(qw/-side left -padx/ => [6,0]);
-  $re->g_pack(qw/-side right -padx/ => [6,10]);
 }
 
 1;

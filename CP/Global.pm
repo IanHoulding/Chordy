@@ -14,9 +14,6 @@ package CP::Global;
 use strict;
 use warnings;
 
-use Tkx;
-use File::Path qw(make_path remove_tree);
-
 BEGIN {
   our @ISA = qw(Exporter);
   our @EXPORT_OK = qw/
@@ -56,10 +53,19 @@ BEGIN {
   require Exporter;
 }
 
+use Tkx;
+use File::Path qw(make_path remove_tree);
 use CP::Cconst qw/:OS :PATH :SHFL :SMILIE :COLOUR/;
-use CP::Cmsg qw/&message &msgYesNo &msgYesNoCan &msgSet &msgYesNoAll/;
+use CP::Cmsg;
+use CP::Collection;
+use CP::Path;
+use CP::Cmnd;
+use CP::Opt;
+use CP::Media;
 
-our $Version = "3.8.5";
+#use CP::Cmsg qw/&message &msgYesNo &msgYesNoCan &msgSet &msgYesNoAll/;
+
+our $Version = "3.9";
 
 our($Parent, $Home, $Collection, $Opt, $Path, $Cmnd, $Swatches);
 our(%Fingers, $Nstring, @Tuning, $CurSet);
@@ -280,7 +286,7 @@ sub syncFiles {
       }
     }
   }
-  $pop->destroy();
+  $pop->popDestroy();
 }
 
 #
@@ -295,7 +301,7 @@ sub setDefaults {
   $Path = CP::Path->new();
   $Cmnd = CP::Cmnd->new();
   $Opt = CP::Opt->new();
-  $Media = CP::Media->new(\$Opt->{Media});
+  $Media = CP::Media->new($Opt->{Media});
   $Swatches = CP::Swatch->new();
 
   # Remove any old versions.
@@ -488,6 +494,8 @@ sub viewFile {
 
   my $txt = $tf->new_tk__text(
     -font => "\{$EditFont{family}\} $EditFont{size}",
+    -width => 90,
+    -height => 30,
     -relief => 'raised',
     -borderwidth => 2,
     -highlightthickness => 0,
@@ -509,7 +517,7 @@ sub viewFile {
 
   my $bp = $bf->new_ttk__button(-text => "Print", -command => sub{printFile($fn)} );
   $bp->g_pack(qw/-side left -padx 40 -pady 8/);
-  my $bc = $bf->new_ttk__button(-text => "Close", -command => sub{$pop->destroy()});
+  my $bc = $bf->new_ttk__button(-text => "Close", -command => sub{$pop->popDestroy()});
   $bc->g_pack(qw/-side right -padx 40 -pady 8/);
 
   open(FH, "<", "$fn");
@@ -994,6 +1002,25 @@ static char * checkbox_xpm[] = {
 "     oooooooooooooo     "};
 EOXPM
 
+$XPM{scheckbox} = <<'EOXPM';
+/* XPM */
+static char * scheckbox_xpm[] = {
+"13 9 4 1",
+"  c None",
+"o c #000000",
+". c #A0A0A0",
+", c #D0D0D0",
+" ooooooooo   ",
+" oo.,,,.oo   ",
+" o.o. .o.o   ",
+" o,.o.o.,o   ",
+" o, .o. ,o   ",
+" o,.o.o.,o   ",
+" o.o. .o.o   ",
+" oo.,,,.oo   ",
+" ooooooooo   "};
+EOXPM
+
 $XPM{'chordL'} = <<'EOXPM';
 /* XPM */
 static char *chordL_xpm[] = {
@@ -1378,19 +1405,28 @@ static char * delete_xpm[] = {
 " oo..................oo "};
 EOXPM
 
+$XPM{dot} = <<'EOXPM';
+/* XPM */
+static char *dot[] = {
+"9  5  3 1",
+"  c None",
+"x c #009000",
+"c c #80ff80",
+"    c    ",
+"  cxxxc  ",
+" cxxxxxc ",
+"  cxxxc  ",
+"    c    "};
+EOXPM
+
 $XPM{hyphen} = <<'EOXPM';
 /* XPM */
 static char *hyphen[] = {
-"10 6 3 1",
+"8 2 2 1",
 "  c None",
 "x c #000000",
-"c c #909090",
-"          ",
-"          ",
-" cxxxxxxc ",
-" cxxxxxxc ",
-"          ",
-"          ",
+"xxxxxxxx",
+"xxxxxxxx",
 EOXPM
 
 $XPM{exit} = <<'EOXPM';

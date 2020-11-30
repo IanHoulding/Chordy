@@ -44,21 +44,22 @@ use constant {
 };
 # Constants for use with fonts and decomposing the ChordPro files
 use constant {
-  TITLE  =>  0,
-  LYRIC  =>  1,
-  VERSE  =>  2,
-  CHORUS =>  3,
-  BRIDGE =>  4,
-  CMMNT  =>  5,
-  CMMNTI =>  6,
+  TITLE  =>  0, # The 1st 7 match with the user definable fonts.
+  VERSE  =>  1,
+  CHORD  =>  2,
+  TAB    =>  3,
+  LABEL  =>  4,
+  HLIGHT =>  5,
+  CMMNT  =>  6,
   CMMNTB =>  7,
-  HLIGHT =>  8,
-  CHORD  =>  9,
-  CHRD   => 10,
-  GRID   => 11,
-  TAB    => 12,
-  HLINE  => 13,
-  VSPACE => 14,
+  CMMNTI =>  8,
+  GRID   =>  9,
+  CHORUS => 10,
+  BRIDGE => 11,
+  LYRIC  => 12,
+  CHRD   => 13,
+  HLINE  => 14,
+  VSPACE => 15,
 };
   ## Add any new entries before here and then
   ## adjust the values of NL onwards if needed
@@ -90,7 +91,7 @@ use constant {
 };
 # Browser constants
 use constant {
-  SLWID => ($^O =~ /win32/i) ? 40 : 32,
+  SLWID => ($^O =~ /win32/i) ? 38 : 32,
   FILE  =>  1,
   SLNEW =>  2,
   SLREN =>  4,
@@ -161,7 +162,7 @@ use constant {
   HEADER => 3,
   WORDS  => 4,
   RESTS  => 5,
-  RESTFONT => 'Gonville-20',
+  RESTFONT => 'TabSym',
 };
 # Constants for Bar copy & insertion
 use constant {
@@ -174,12 +175,13 @@ use constant {
   UPDATE  =>  2,
 };
 # Constant for the Bar number Canvas width
-use constant BNUMW => 30;
+use constant BNUMW => 20;
 # Constants for Drawing Staves
 use constant {
   FAT   => 1.5,
   THICK => 1.0,
   THIN  => 0.5,
+  PALE  => 60,   # for the 2nd Edit Bar
 };
 # Constants for media player
 use constant {
@@ -200,7 +202,7 @@ our @EXPORT_OK = qw/
   MULTIPLE SINGLE
   PAGEMUL KEYMUL
   NL LYRIC VERSE CHORUS BRIDGE CMMNT CMMNTI CMMNTB
-    HLIGHT CHORD TITLE NP CHRD GRID TAB HLINE VSPACE
+    HLIGHT CHORD TITLE NP CHRD GRID TAB LABEL HLINE VSPACE
     CFONT CFSIZ CFCLR LFONT LFSIZ LFCLR TFONT TFSIZ TFCLR
   INDENT
   SHARP FLAT
@@ -216,7 +218,7 @@ our @EXPORT_OK = qw/
     VOLTA HEADER REPEAT NOTE
     NOTES SNOTES HEADER WORDS RESTS RESTFONT
     HONLY NONLY HANDN BEFORE REPLACE AFTER UPDATE
-    BNUMW FAT THICK THIN
+    BNUMW FAT THICK THIN PALE
   STOP PLAY PAUSE LOOP MET RATE
 /;
 
@@ -227,7 +229,7 @@ our %EXPORT_TAGS = (
   PDF     => [qw/MULTIPLE SINGLE/],
   FONT    => [qw/PAGEMUL KEYMUL RESTFONT/],
   MUSIC   => [qw/NL LYRIC VERSE CHORUS BRIDGE CMMNT CMMNTI CMMNTB
-                 HLIGHT CHORD TITLE NP CHRD GRID TAB HLINE VSPACE
+                 HLIGHT CHORD TITLE NP CHRD GRID TAB LABEL HLINE VSPACE
                  CFONT CFSIZ CFCLR LFONT LFSIZ LFCLR TFONT TFSIZ TFCLR/],
   TEXT    => [qw/INDENT/],
   SHFL    => [qw/SHARP FLAT/],
@@ -243,7 +245,7 @@ our %EXPORT_TAGS = (
 	         VOLTA HEADER REPEAT NOTE
 	         TITLE NOTES SNOTES HEADER WORDS RESTS
 	         HONLY NONLY HANDN BEFORE REPLACE AFTER UPDATE
-	         BNUMW FAT THICK THIN/],
+	         BNUMW FAT THICK THIN PALE/],
 
   PLAY    => [qw/STOP PLAY PAUSE LOOP MET RATE/],
     );

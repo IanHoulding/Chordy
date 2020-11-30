@@ -25,7 +25,13 @@ use Tkx;
 our(@LclSwtch,%Names,%Hexs,%Colour);
 
 sub new {
-  my($proto) = @_;
+  my($proto, $title) = @_;
+
+  $title = '' if (! defined $title);
+  if (defined $ColourEd) {
+    title($ColourEd, $title);
+    return;
+  }
 
   my $class = ref($proto) || $proto;
   my $self = {};
@@ -35,7 +41,7 @@ sub new {
   my($FBE,$fr) = ($pop->{top}, $pop->{frame});
 
   makeImage("colour", \%XPM);
-  $FBE->g_wm_protocol('WM_DELETE_WINDOW', sub{$pop->destroy();$self->{'done'} = 'Cancel';});
+  $FBE->g_wm_protocol('WM_DELETE_WINDOW', sub{$self->{'done'} = 'Cancel';});
   $FBE->g_wm_withdraw();
 
   foreach my $c (keys %Colour) {
@@ -246,7 +252,8 @@ sub new {
   $self->{pending} = 0;
 
   bless $self, $class;
-  return($self);
+  $ColourEd = $self;
+  title($ColourEd, $title) if (defined $title);
 }
 
 sub title {
@@ -286,8 +293,9 @@ sub lighten {
   if ($clr =~ /^#(..)(..)(..)/) {
     my @rgb = (hex($1),hex($2),hex($3),);
     $pcnt = 3 if (! defined $pcnt);
+    $pcnt = int($pcnt * 2.55);
     foreach my $c (0..2) {
-      $rgb[$c] += POSIX::ceil((256 - $rgb[$c]) * $pcnt / 100);
+      $rgb[$c] += $pcnt;
       $rgb[$c] = 255 if ($rgb[$c] > 255);
     }
     $clr = sprintf("#%02x%02x%02x", $rgb[0], $rgb[1], $rgb[2]);
@@ -301,8 +309,9 @@ sub darken {
   if ($clr =~ /^#(..)(..)(..)/) {
     my @rgb = (hex($1),hex($2),hex($3),);
     $pcnt = 3 if (! defined $pcnt);
+    $pcnt = int($pcnt * 2.55);
     foreach my $c (0..2) {
-      $rgb[$c] -= POSIX::ceil((256 - $rgb[$c]) * $pcnt / 100);
+      $rgb[$c] -= $pcnt;
       $rgb[$c] = 0 if ($rgb[$c] < 0);
     }
     $clr = sprintf("#%02x%02x%02x", $rgb[0], $rgb[1], $rgb[2]);

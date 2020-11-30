@@ -114,6 +114,14 @@ sub new {
     -command => \&showSample);
   $ch1->g_grid(qw/-row 0 -column 0 -sticky nw/, -padx => 20, -pady => "20 5");
 
+  my $ch1a = $midr->new_ttk__checkbutton(
+    -text => 'Heavy',
+    -variable => \$Fweight,
+    -onvalue => 'heavy',
+    -offvalue => 'normal',
+    -command => \&showSample);
+  $ch1a->g_grid(qw/-row 1 -column 0 -sticky nw/, -padx => 20, -pady => 5);
+
   $Fslant = 'roman';
   my $ch2 = $midr->new_ttk__checkbutton(
     -text => 'Italic',
@@ -121,7 +129,7 @@ sub new {
     -onvalue => 'italic',
     -offvalue => 'roman',
     -command => \&showSample);
-  $ch2->g_grid(qw/-row 1 -column 0 -sticky nw -padx 20 -pady 5/);
+  $ch2->g_grid(qw/-row 2 -column 0 -sticky nw -padx 20 -pady 5/);
 
   my $ch3 = $midr->new_ttk__checkbutton(
     -text => 'Fixed Width',
@@ -129,7 +137,7 @@ sub new {
     -onvalue => 1,
     -offvalue => 0,
     -command => \&listFill);
-  $ch3->g_grid(qw/-row 2 -column 0 -sticky nw -padx 20 -pady 25/);
+  $ch3->g_grid(qw/-row 3 -column 0 -sticky nw -padx 20 -pady 25/);
 
   my $b1 = $fbot->new_ttk__button(
     -text => "Cancel",
@@ -169,9 +177,10 @@ sub checkFont {
 }
 
 sub showSample {
+  my $wt = ($Fweight eq 'heavy') ? 'bold' : $Fweight;
   $FontCan->m_itemconfigure(
     $Sample,
-    -font => "{$Ffamily} $Fsize $Fweight $Fslant",
+    -font => "{$Ffamily} $Fsize $wt $Fslant",
     -fill => $Fcolor);
 }
 
@@ -210,8 +219,30 @@ sub fontPick {
     $font->{slant}  = $Fslant;
   }
 
-  $pop->destroy();
+  $pop->popDestroy();
   $Done;
+}
+
+sub getFont {
+  my($pdf,$fam,$wt) = @_;
+
+  if (! defined $FontList{"$fam"}) {
+    $fam = 'Times New Roman';
+    errorPrint("Font '$fam' not found.\nSubstituting 'Times New Roman'");
+  }
+  my $path = $FontList{"$fam"}{Path};
+  my $pfp = $pdf->ttfont($path.'/'.$FontList{"$fam"}{Regular});
+  if ($wt ne 'Regular') {
+    my %opts = ();
+    if ($wt =~ /(Bold|Heavy)/) {
+      $opts{'-bold'} = $Opt->{$1};
+    }
+    if ($wt =~ /Italic/) {
+      $opts{'-oblique'} = $Opt->{Italic};
+    }
+    $pfp = $pdf->synfont($pfp, %opts);
+  }
+  $pfp;
 }
 
 # Unfortunately we need to build a font list as the PDF
@@ -249,12 +280,12 @@ sub build {
     }
     scan($dir, 0) or die "No True Type fonts found in $dir\n";
   }
-  foreach my $k (keys %FontList) {
-    my $ref = \%{$FontList{$k}};
-    $ref->{Bold} = "" if (! exists $ref->{Bold});
-    $ref->{Italic} = "" if (! exists $ref->{Italic});
-    $ref->{BoldItalic} = "" if (! exists $ref->{BoldItalic});
-  }
+#  foreach my $k (keys %FontList) {
+#    my $ref = \%{$FontList{$k}};
+#    $ref->{Bold} = "" if (! exists $ref->{Bold});
+#    $ref->{Italic} = "" if (! exists $ref->{Italic});
+#    $ref->{BoldItalic} = "" if (! exists $ref->{BoldItalic});
+#  }
   saveFL();
 }
 
@@ -281,6 +312,36 @@ sub saveFL {
 
 # Recursive scan for TTF font files.
 sub scan {
+  my($path,$cnt) = @_;
+  opendir my $dh, "$path" or die "scan() couldn't open directory: '$path'\n";
+  foreach my $f (grep /\.ttf$/i, readdir $dh) {
+    if (-d "$path/$f") {
+      $cnt = scan("$path/$f",$cnt);
+    }
+    else {
+      if (-f "$path/$f" && $f =~ /.ttf$/i) {
+	my $fnt = Font::TTF::Font->open("$path/$f");
+	# See http://scripts.sil.org/cms/scripts/page.php?site_id=nrsi&id=iws-chapter08
+	my $ps = $fnt->{post}->read;
+	my $tab = $fnt->{name}->read;
+	my $fam = $tab->find_name(1);
+	my $stl = $tab->find_name(2);
+	if ($stl =~ /regular|book/i) {
+	  $FontList{"$fam"}{Path} = $path;
+	  my $fp = \%{$FontList{"$fam"}};
+	  $fp->{fixed} |= $ps->{isFixedPitch};
+	  $fp->{Regular} = "$f";
+	  $cnt++;
+	}
+	$fnt->release();
+      }
+    }
+  }
+  closedir($dh);
+  $cnt;
+}
+
+sub OLDscan {
   my($path,$cnt) = @_;
   opendir my $dh, "$path" or die "scan() couldn't open directory: '$path'\n";
   foreach my $f (grep /\.ttf$/i, readdir $dh) {
@@ -337,9 +398,10 @@ sub scan {
 sub fonts {
   my($frame,$list) = @_;
 
-  ($frame->new_ttk__label(qw/-text Size/))->g_grid(qw/-row 0 -column 3 -padx 4/);
+  ($frame->new_ttk__label(qw/-text Size/))->g_grid(qw/-row 0 -column 3/, -padx => 8);
   ($frame->new_ttk__label(qw/-text Bold/))->g_grid(qw/-row 0 -column 4 -padx 4/);
-  ($frame->new_ttk__label(qw/-text Italic/))->g_grid(qw/-row 0 -column 5 -padx 4/);
+  ($frame->new_ttk__label(qw/-text Heavy/))->g_grid(qw/-row 0 -column 5 -padx 0/);
+  ($frame->new_ttk__label(qw/-text Italic/))->g_grid(qw/-row 0 -column 6 -padx 4/);
 
   # There are a couple of exceptions :-(
   my $row = 1;
@@ -348,12 +410,33 @@ sub fonts {
     $f = 'Small-Notes' if ($f eq 'SNotes');
     FontS($frame, $row++, $f, $fp);
   }
+  my $attr = $frame->new_ttk__labelframe(-text => " Font Attributes ", -padding => [4,2,0,4]);
+  $attr->g_grid(-row => $row, -column => 2, -columnspan => 5, -pady => [4,0], -sticky => 'we');
+
+  my $col = 0;
+  foreach my $m (['Bold',   1, 8], #[qw/1 2 3 4 5 6 7 8/]],
+		 ['Heavy',  1, 8],  #[qw/1 2 3 4 5 6 7 8/]],
+		 ['Italic', -20, 20], ) { #[qw/20 18 16 14 12 10 8 6 4 2 0 -2 -4 -6 -8 -10 -12 -14 -16 -18 -20/]]) {
+    my($lab,$frst,$last) = @{$m};
+    $a = $attr->new_ttk__label(-text => "$lab", -anchor => 'e');
+
+    $b = $attr->new_ttk__spinbox(
+      -textvariable => \$Opt->{"$lab"},
+      -from => $frst,
+      -to => $last,
+      -wrap => 1,
+      -width => ($lab eq 'Italic') ? 3 : 2,
+      -state => 'readonly',
+      -command => sub{$Opt->saveOne("$lab");});
+    $a->g_grid(qw/-row 0 -sticky e/, -column => $col++, -padx => [4,2]);
+    $b->g_grid(qw/-row 0 -sticky w/, -column => $col++, -padx => [0,20]);
+  }
 }
 
 sub FontS {
   my($frame,$r,$title,$fp) = @_;
 
-  my $ttl = $frame->new_ttk__label(-text => "${title}:");
+  my $ttl = $frame->new_ttk__label(-text => "${title}");
 
   my $bg = bgSet($title);
 
@@ -363,10 +446,11 @@ sub FontS {
     -style => "$title.FG.TButton");
   $clr->m_configure(-command => sub{pickFG($title, $fp, bgSet($title));});
 
+  my $wt = ($fp->{weight} eq 'heavy') ? 'bold' : $fp->{weight};
   Tkx::ttk__style_configure("$title.Font.TLabel",
 			    -foreground => "$fp->{color}",
 			    -background => $bg,
-			    -font => "{$fp->{family}} $fp->{size} $fp->{weight} $fp->{slant}");
+			    -font => "{$fp->{family}} $fp->{size} $wt $fp->{slant}");
   my $lab = $frame->new_ttk__label(
     -width => 20,
     -textvariable => \$fp->{family},
@@ -381,9 +465,16 @@ sub FontS {
     -style => 'Menu.TButton',
     -command => sub{popMenu(\$fp->{size}, sub{labUpdate($lab, $fp)}, $fontsizes)});
 
-  my $bld = $frame->new_ttk__checkbutton(
+  my($wtb,$wth);
+  $wtb = $frame->new_ttk__checkbutton(
     -variable => \$fp->{weight},
     -onvalue => 'bold',
+    -offvalue => 'normal',
+    -command => sub{labUpdate($lab, $fp)});
+
+  $wth = $frame->new_ttk__checkbutton(
+    -variable => \$fp->{weight},
+    -onvalue => 'heavy',
     -offvalue => 'normal',
     -command => sub{labUpdate($lab, $fp)});
 
@@ -400,13 +491,14 @@ sub FontS {
       labUpdate($lab,$fp);
     });
   
-  $ttl->g_grid(-row => $r, qw/-column 0 -sticky e  -pady 2/, -padx => 2);
-  $clr->g_grid(-row => $r, qw/-column 1 -sticky we -pady 2/, -padx => [2,4]);
+  $ttl->g_grid(-row => $r, qw/-column 0 -sticky e  -pady 2/, -padx => [4,0]);
+  $clr->g_grid(-row => $r, qw/-column 1 -sticky we -pady 2/, -padx => 4);
   $lab->g_grid(-row => $r, qw/-column 2 -sticky we -pady 3/, -padx => [2,4]);
-  $siz->g_grid(-row => $r, qw/-column 3 -padx 2 -pady 2/);
-  $bld->g_grid(-row => $r, qw/-column 4 -padx 2 -pady 2/);
-  $ita->g_grid(-row => $r, qw/-column 5 -padx 2 -pady 2/);
-  $but->g_grid(-row => $r, qw/-column 6 -sticky w  -padx 2 -pady 2/);
+  $siz->g_grid(-row => $r, qw/-column 3 -pady 2/);
+  $wtb->g_grid(-row => $r, qw/-column 4 -pady 2/);
+  $wth->g_grid(-row => $r, qw/-column 5 -pady 2/);
+  $ita->g_grid(-row => $r, qw/-column 6 -pady 2/);
+  $but->g_grid(-row => $r, qw/-column 7 -sticky w -padx 2 -pady 2/);
 }
 
 sub bgSet {
@@ -424,8 +516,8 @@ sub bgSet {
 sub pickFG {
   my($title,$fontp,$bg) = @_;
 
-  $ColourEd = CP::FgBgEd->new() if (! defined $ColourEd);
-  $ColourEd->title("$title Font");
+  CP::FgBgEd->new("$title Font");
+  my $save = 0;
   my $op = FOREGRND;
   $op |= BACKGRND if ($title =~ /Com|Hig|Tab|Tit|Cho|Lyr/);
   (my $fg,$bg) = $ColourEd->Show($fontp->{color}, $bg, $op);
@@ -433,6 +525,7 @@ sub pickFG {
     $fontp->{color} = $fg;
     Tkx::ttk__style_configure("$title.Font.TLabel", -foreground => $fg);
     Tkx::ttk__style_configure("$title.FG.TButton", -background => $fg);
+    $save++;
   }
   if ($bg ne '' && ($op & BACKGRND)) {
     Tkx::ttk__style_configure("$title.Font.TLabel", -background => $bg);
@@ -445,13 +538,17 @@ sub pickFG {
     } else {
       $Media->{lc($title)."BG"} = $bg;
     }
+    $save++;
   }
+  $Media->save() if ($save);
 }
 
 sub labUpdate {
   my($lab,$fp) = @_;
 
-  $lab->m_configure(-font => "{$fp->{family}} $fp->{size} $fp->{weight} $fp->{slant}");
+  my $wt = ($fp->{weight} eq 'heavy') ? 'bold' : $fp->{weight};
+  $lab->m_configure(-font => "{$fp->{family}} $fp->{size} $wt $fp->{slant}");
+  $Media->save();
 }
 
 1;

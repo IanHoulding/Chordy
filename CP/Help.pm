@@ -13,7 +13,7 @@ use strict;
 use warnings;
 
 use CP::Cconst qw/:COLOUR/;
-use CP::Global qw/:FUNC :OPT :WIN :MEDIA/;
+use CP::Global qw/:FUNC :OPT :WIN :MEDIA :XPM/;
 use Tkx;
 
 sub new {
@@ -29,18 +29,20 @@ sub new {
   my($win,$tf) = ($pop->{top}, $pop->{frame});
 
   $self->{win} = $win;
-  $win->g_wm_protocol('WM_DELETE_WINDOW' => sub{$pop->destroy()} );
+  $win->g_wm_protocol('WM_DELETE_WINDOW' => sub{$pop->popDestroy()} );
 
   my $textf = $tf->new_ttk__frame();
   $textf->g_pack(qw/-side top -expand 1 -fill both/);
 
+  my $sz = 13;
   $self->{text} = $textf->new_tk__text(
-    -font => "Times 13 normal",
+    -font => "Times $sz normal",
     -bg => 'white',
     -wrap => 'word',
     -borderwidth => 2,
     -width => 80,
-    -height => 30,
+    -height => 45,
+    -padx => 4,
     -undo => 0);
   $self->{text}->g_pack(qw/-side left -expand 1 -fill both/);
 
@@ -51,20 +53,19 @@ sub new {
   my $bf = $tf->new_ttk__frame();
   $bf->g_pack(qw/-side bottom -fill x/);
 
-  my $bc = $bf->new_ttk__button(-text => "Close", -command => sub{$pop->destroy()});
+  my $bc = $bf->new_ttk__button(-text => "Close", -command => sub{$pop->popDestroy()});
   $bc->g_pack(qw/-side left -padx 30 -pady 4/);
 
   my $bt = $bf->new_ttk__button(-text => " Top ", -command => sub{$self->{text}->see("1.0")});
   $bt->g_pack(qw/-side right -padx 30 -pady 4/);
 
   my $textWin = $self->{text};
-  my $sz = 13;
   # The following 3 tags control indenting. Indents stay in effect
   # until explicitly ended with an <E> tag OR a Heading tag.
-  $textWin->tag_configure('m', -lmargin1 => 24,
-			       -lmargin2 => 0);
-  $textWin->tag_configure('M', -lmargin1 => 24,
-			       -lmargin2 => 24);
+#  $textWin->tag_configure('m', -lmargin1 => 20,
+#			       -lmargin2 => 10);
+  $textWin->tag_configure('M', -lmargin1 => 20,
+			       -lmargin2 => 10);
   $textWin->tag_configure('E', -lmargin1 => 0,
 			       -lmargin2 => 0);
 
@@ -73,12 +74,21 @@ sub new {
 			       -justify => 'center',
 			       -foreground => HFG,
 			       -background => SELECT);
+  $textWin->tag_configure('h', -font => "Times ".($sz+5)." bold",
+			       -foreground => HFG,
+			       -background => SELECT);
   # Sub Headings
   $textWin->tag_configure('S', -font => "Arial ".($sz+1)." bold",
 			       -lmargin1 => 0,
 			       -spacing3 => 4,
 			       -underline => 1,
-			       -foreground => HFG);
+			       -foreground => BLACK); #HFG);
+  $textWin->tag_configure('N', -font => "Arial ".($sz-1)." bold",
+			       -lmargin1 => 0,
+			       -spacing1 => 3,
+			       -spacing3 => 2,
+			       -underline => 0,
+			       -foreground => BLACK);
   $textWin->tag_configure('s', -font => "Arial ".($sz-1)." bold",
 			       -lmargin1 => 0,
 			       -foreground => HFG);
@@ -96,6 +106,9 @@ sub new {
   $textWin->tag_configure('c', -font => "Courier ".($sz-2)." bold");
   $textWin->tag_configure('U', -font => "Courier ".($sz-3)." bold",
 			       -offset => int($sz/3));
+  # Link
+    $textWin->tag_configure('K', -font => "Times $sz bold",
+			         -foreground => HFG);
   # Bold Italic
   $textWin->tag_configure('I', -font => "Times $sz bold italic");
   # Bold
@@ -118,10 +131,9 @@ sub new {
 			        -spacing1 => 0,
 			        -spacing3 => 0);
   # Vertical Spacing
-  $textWin->tag_configure('V1',  -font => "Times 1 normal");
-  $textWin->tag_configure('V5',  -font => "Times 4 normal");
-  $textWin->tag_configure('V10', -font => "Times 10 normal");
-
+  foreach my $sz (1..10) {
+    $textWin->tag_configure("V$sz",  -font => "Times $sz normal");
+  }
   $self->{text}->configure(-state => 'disabled');
   $self;
 }
@@ -162,6 +174,8 @@ sub add  {
 	    #    +-------tagged-------+
 	    # <O TO:H:Table Of Contents>
 	    my($tname,$htag,$hdg) = split(':', $tagged, 3);
+	    $hdg =~ s/\{\{\{/<<</g;
+	    $hdg =~ s/\}\}\}/>>>/g;
 	    my $toc = "TOC$tname";
 	    $textWin->tag_configure($toc);
 	    if ($tname ne 'TO') {
@@ -175,24 +189,28 @@ sub add  {
 	    $textWin->tag_bind($toc, "<Enter>", sub { $textWin->configure(-cursor => 'hand2') });
 	    $textWin->tag_bind($toc, "<Leave>", sub { $textWin->configure(-cursor => 'xterm') });
 	    $indent = 'E' if ($htag =~ /H|S|s|P/);
-	    #	    $textWin->insert('end', " ", '');
 	    if ($htag eq 'H') {
 	      $textWin->insert('end', "$hdg\n", [$htag, $toc]);
 	    } else {
 	      $textWin->insert('end', "$hdg", [$htag, $toc]);
-	      $textWin->insert('end', "\n", '');
+	      $textWin->insert('end', "\n", '') if ($htag =~ /h|S|s|P/);
 	    }
 	    $textWin->mark_set("TopM", $textWin->index('current')) if ($tname eq "TO");
 	  } elsif ($tag eq 'T') { # TAG
 	    my $ln = $textWin->index('current');
 	    $textWin->mark_set($tagged, $ln);
 	    $ln =~ s/\.\d+//;
-	    $self->{mark}{$tagged} = $ln;
+	    $self->{mark}{$tagged} = $ln - 2;
 	  } elsif ($tag eq 'X') { # IMAGE
 	    $textWin->insert('end', " ", '');
 	    my $pos = $textWin->index('current');
+	    makeImage($tagged, \%XPM);
 	    $textWin->image_create($pos, -image => $tagged, qw/-align center -padx 2 -pady 2/);
 	    $textWin->tag_add('Im', $pos, $textWin->index('current')) if ($tagged !~ /checkbox/);
+	  } elsif ($tag eq 'x') { # IMAGE with no decoration
+	    my $pos = $textWin->index('current');
+	    makeImage($tagged, \%XPM);
+	    $textWin->image_create($pos, -image => $tagged, qw/-align center/);
 	  } elsif ($tag eq 'V') { # Line Space
 	    if ($tagged =~ /([^#]+)(#[\dA-Fa-f]{6})?/) {
 	      $tag .= $1;

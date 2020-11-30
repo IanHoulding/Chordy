@@ -11,15 +11,16 @@ package CP::Opt;
 
 use strict;
 
-use CP::Cconst qw/:PATH :COLOUR :SHFL :SMILIE/;
+use CP::Cconst qw/:PATH :COLOUR :TEXT :SHFL :SMILIE/;
 use CP::Global qw/:FUNC :VERS :WIN :OPT/;
 use CP::Cmsg;
 
 my @strOpt = (qw/Articles Instrument Media PDFpath PrintMedia
 	         PopFG PopBG PushFG PushBG MenuFG MenuBG ListFG ListBG EntryFG EntryBG
 	         WinBG PageBG SortBy/);
-my @numOpt = (qw/AutoSave Bold Center EditScale FullLineHL FullLineCM Grid HHBL
-	         IgnArticle IgnCapo
+my @numOpt = (qw/AutoSave Bold Heavy Center EditScale FullLineHL FullLineCM Grid HHBL
+	         IgnArticle IgnCapo ShowLabels
+	         TopMargin BottomMargin LeftMargin RightMargin
 	         Italic LineSpace LyricLines LyricOnly Nbar NewLine NoWarn
 	         OnePDFfile PDFview PDFmake PDFprint
 	         Refret RevSort SLrev SharpFlat StaffSpace Together UseBold/);
@@ -38,7 +39,6 @@ sub new {
   else {
     save($self);
   }
-
   return($self);
 }
 
@@ -47,7 +47,8 @@ sub default {
 
   $self->{Articles}    = 'the|a|an';
   $self->{AutoSave}    = 0;
-  $self->{Bold}        = 2;
+  $self->{Bold}        = 2;    # This is the 'heavyness' weight for PDF bold fonts.
+  $self->{BottomMargin}= INDENT;
   $self->{Capo}        = 'No';
   $self->{Center}      = 0;
   $self->{EditScale}   = 4;
@@ -56,12 +57,14 @@ sub default {
   $self->{FullLineCM}  = 0;
   $self->{FullLineHL}  = 0;
   $self->{Grid}        = 0;
+  $self->{Heavy}       = 5;
   $self->{HHBL}        = 0;    # Half Height Blank Lines
   $self->{IgnArticle}  = 0;
   $self->{IgnCapo}     = 0;
   $self->{Instrument}  = 'Guitar';
   $self->{Instruments} = [qw/Banjo Bass4 Bass5 Guitar Mandolin Ukelele/];
-  $self->{Italic}      = 12;
+  $self->{Italic}      = 12;    # This is the slant angle for PDF italic fonts.
+  $self->{LeftMargin}  = INDENT;
   $self->{LineSpace}   = 1;
   $self->{ListFG}      = BLACK;
   $self->{ListBG}      = WHITE;
@@ -87,40 +90,64 @@ sub default {
   $self->{SLrev}       = 0;
   $self->{Refret}      = 0;
   $self->{RevSort}     = 0;
+  $self->{RightMargin} = INDENT;
   $self->{SharpFlat}   = SHARP;
   $self->{SortBy}      = 'Alphabetical';
   $self->{StaffSpace}  = 10;
+  $self->{ShowLabels}  = 0;
   $self->{Together}    = 1;
+  $self->{TopMargin}   = INDENT;
   $self->{UseBold}     = 1;
   $self->{WinBG}       = MWBG;
+  $self->{RecentPro}   = [];
+  $self->{RecentTab}   = [];
+}
+
+sub resetOpt {
+  my($self) = shift;
+
+  return if (msgYesNo("Are you sure you want to reset\nALL options to their defaults?") eq "No");
+  $self->default();
+  $self->save();
+  message(SMILE, "Done");
+}
+
+sub add2recent {
+  my($self,$name,$key,$refresh) = @_;
+
+  my $idx = 0;
+  foreach my $f (@{$self->{$key}}) {
+    if ($f eq $name) {
+      splice(@{$self->{$key}}, $idx, 1);
+      last;
+    }
+    $idx++;
+  }
+  unshift(@{$self->{$key}}, $name);
+  if (@{$self->{$key}} > 10) {
+    pop(@{$self->{$key}});
+  }
+  &$refresh();
+  $self->save();
 }
 
 sub load {
   my($self) = shift;
 
-  if (-e "$Path->{Option}") {
-    our($version,%opts);
-    do "$Path->{Option}";
-    #
-    # Now merge the file options into our hash.
-    #
-    $self->{PDFpath} = '';
-    foreach my $o (keys %opts) {
-      $self->{$o} = $opts{$o};
-    }
-    undef %opts;
-    if (defined $self->{Scale}) {
-      # Legacy change.
-      $self->{EditScale} = $self->{Scale};
-      delete($self->{Scale});
-      $version = 0;
-    }
-    if ("$version" ne "$Version") {
-      print localtime."\n  $Path->{Option} saved: version mismatch - old=$version new=$Version\n";
-      save($self);
-    }
-    CP::Win::newLook();
+  our($version,%opts);
+  do "$Path->{Option}";
+  #
+  # Now merge the file options into our hash.
+  #
+  foreach my $o (keys %opts) {
+    $self->{$o} = $opts{$o};
   }
+  undef %opts;
+  if ("$version" ne "$Version") {
+    print localtime."\n  $Path->{Option} saved: version mismatch - old=$version new=$Version\n";
+    save($self);
+  }
+  CP::Win::newLook();
 }
 
 sub save {
@@ -142,9 +169,26 @@ sub save {
     print $OFH "  $num => ".($self->{$num}+0).",\n";
   }
 
+  foreach my $t (qw/Pro Tab/) {
+    print $OFH "  Recent$t => [\n";
+    foreach my $f (@{$self->{"Recent$t"}}) {
+      print $OFH "                \"$f\",\n";
+    }
+    print $OFH "               ],\n";
+  }
+
   printf $OFH ");\n1;\n";
 
   close($OFH);  
+}
+
+sub saveOne {
+  my($self,$opt) = @_;
+
+  our($version,%opts);
+  do "$Path->{Option}";
+  $opts{$opt} = $self->{$opt};
+  save(\%opts);
 }
 
 # Save the Entry/List/Menu etc. FG and BG to all Collections.
@@ -178,8 +222,8 @@ sub changeAll {
   my($self,$opt,$old,$new) = @_;
 
   my $opath = $Path->{Option};
-  foreach my $c (keys %{$Collection}) {
-    $Path->{Option} = $Collection->{$c}."/Option.cfg";
+  foreach my $c (@{$Collection->list()}) {
+    $Path->{Option} = $Collection->path($c)."/Option.cfg";
     our($version,%opts);
     do "$Path->{Option}";
     if ($opts{$opt} eq $old) {
@@ -188,19 +232,6 @@ sub changeAll {
     }
   }
   $Path->{Option} = $opath;
-}
-
-sub changeOne {
-  my($self,$opt,$new) = @_;
-
-  our($version,%opts);
-  do "$Path->{Option}";
-  if (defined $new) {
-    return if ("$opts{$opt}" eq "$new");
-    $self->{$opt} = $new;
-  }
-  $opts{$opt} = $self->{$opt};
-  save(\%opts);
 }
 
 1;

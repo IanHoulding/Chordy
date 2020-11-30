@@ -316,8 +316,6 @@ sub _pn {
       CP::Cmsg::message(SAD, "This is the first Bar.", 1);
       return;
     }
-  } else {
-    $bar = $Tab->{lastBar};
   }
   ClearEbar();
   $bar->select() if ($bar);
@@ -338,8 +336,7 @@ sub bgGet {
   my($self) = shift;
 
   $self->{bg} = WHITE if ($self->{bg} eq '');
-  $ColourEd = CP::FgBgEd->new() if (! defined $ColourEd);
-  $ColourEd->title("Background Colour");
+  CP::FgBgEd->new("Background Colour");
   my($fg,$bg) = $ColourEd->Show($Tab->{noteColor}, $self->{bg}, BACKGRND);
   $bg;
 }
@@ -490,7 +487,9 @@ sub Update {
     $EditBar1->save_bar(UPDATE) if ($EditBar1->{pbar} && comp($EditBar1, $EditBar1->{pbar}));
     $EditBar->save_bar(UPDATE) if (comp($EditBar, $EditBar->{pbar}));
   } else {
-    message(SAD, "No Bar selected - don't know which bar to update!", 1);
+    # Editing a bar to tack on the end.
+    $EditBar->save_bar(UPDATE);
+#    message(SAD, "No Bar selected - don't know which bar to update!", 1);
   }
 }
 
@@ -500,7 +499,6 @@ sub save_bar {
   my($bar);
   if ($self->{pbar} == 0) {
     # We've edited a (new) blank Bar.
-#    return if ($insert == UPDATE);
     $bar = CP::Bar->new($Tab->{pOffset});
     if ($Tab->{bars} == 0) {
       $Tab->{bars} = $bar;
@@ -577,7 +575,7 @@ sub select {
       $can->itemconfigure("bg$Tab->{select1}{pidx}", -fill => $bg);
     }
     $can->itemconfigure($tag, -fill => SELECT);
-    $MW->g_bind('<KeyRelease>', [\&checkDel, Tkx::Ev('%K')]);
+    $MW->g_bind('<Key-Delete>', \&checkDel);
     $Tab->{select1} = $self;
   }
   $Tab->{select2} = 0;
@@ -602,7 +600,7 @@ sub deselect {
 sub checkDel {
   my($key) = shift;
 
-  if ($key eq 'Delete') {
+  if ($Tab->{select1}) {
     $Tab->DeleteBars();
   }
 }
@@ -762,7 +760,7 @@ sub repeat {
     my $y2 = $Y + $off->{staff0} + $ht;
 
     my $clr = $Tab->{headColor};
-    $clr = CP::FgBgEd::lighten($clr, 80) if ($self->{pidx} == -2);
+    $clr = CP::FgBgEd::lighten($clr, PALE) if ($self->{pidx} == -2);
 
     my $dia = $fat * 2;
     my $dy = $fat * 0.75;
@@ -810,7 +808,7 @@ sub topText {
     my $fnt = ($pidx >= 0) ? $Tab->{headFont} : $Tab->{eheadFont};
     my $x = $self->{x};
     my $clr = $Tab->{headColor};
-    $clr = CP::FgBgEd::lighten($clr, 80) if ($pidx == -2);
+    $clr = CP::FgBgEd::lighten($clr, PALE) if ($pidx == -2);
     my $wid = $can->create_text(
       0,0,
       -text => $self->{header},
@@ -840,7 +838,7 @@ sub volta {
   push(@{$tag}, 'edit') if ($pidx < 0);
   if ($self->{volta} ne 'None') {
     my $clr = $Tab->{headColor};
-    $clr = CP::FgBgEd::lighten($clr, 80) if ($pidx == -2);
+    $clr = CP::FgBgEd::lighten($clr, PALE) if ($pidx == -2);
     my $linew = $off->{fat};
     my $w = $off->{width};
     my $x = $self->{x} + $off->{staffX};

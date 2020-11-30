@@ -37,14 +37,6 @@ sub new {
   $self->{Font} = (OS eq "win32") ? "C:/Windows/Fonts" :
       (OS eq "aqua") ? "/Library/Fonts,/System/Library/Fonts/Supplemental" :
                        "/usr/share/fonts/truetype";
-  # This test is useless - the folder may be there but may be empty!!
-  # As in the Apple move from High Sierra to Mojave !!!!
-#  if (! -d $self->{Font}) {
-#    errorPrint("Don't know where your Fonts are - tried: '$self->{Font}'\n".
-#	       "  Please submit a bug detailing OS type and version\n".
-#	       "  and this Chordy version ($Version) - thanks.");
-#    exit(1);
-#  }
   bless $self, $class;
   check_dir($self);
   if (-e PROG."/Release Notes.txt") {
@@ -70,27 +62,14 @@ sub change {
 sub check_dir {
   my($self) = shift;
 
-  foreach my $col (sort keys %{$Collection}) {
-    my $home = "$Collection->{$col}/$col";
+  foreach my $col (@{$Collection->listAll()}) {
+    my $home = $Collection->path($col)."/$col";
     foreach my $dir (qw/Pro PDF Tab Temp/) {
       if (! -d "$home/$dir") {
 	make_path("$home/$dir", {chmod => 0644});
       }
     }
   }
-  ## THIS IS A BAD IDEA!!! Doing an upgrade using the non-upgrade
-  ## .pkg would overwrite all the ChordPro files!!!
-#  if (OS eq 'aqua') {
-#    my $src = "/Applications/Chordy.app/Contents/Resources/Pro";
-#    if (-d $src) {
-#      opendir DIR, "$src";
-#      foreach my $f (grep /\.pro$/, readdir DIR) {
-#	my $txt = read_file("$src/$f");
-#	write_file("$self->{Pro}/$f", $txt);
-#      }
-#      closedir(DIR);
-#    }
-#  }
 }
 
 1;
