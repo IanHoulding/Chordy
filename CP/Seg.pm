@@ -20,7 +20,7 @@ sub new {
   my $class = ref($proto) || $proto;
   my $self = {
     x     => 0,
-    chord => [],
+#    chord => {},
     lyric => '',
     bg    => '',
   };
@@ -41,7 +41,7 @@ sub _measure {
 
   my $cl = 0;
   if ($main::Opt->{LyricOnly} == 0) {
-    $cl = $mypdf->chordLen($self->{chord}->trans2obj($pro)) if (@{$self->{chord}});
+    $cl = $mypdf->chordLen($self->{chord}->trans2obj($pro)) if (defined $self->{chord});
   }
   my $ll = $mypdf->lyricLen($self->{lyric});
   ($cl,$ll);

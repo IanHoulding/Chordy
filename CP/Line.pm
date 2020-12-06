@@ -78,15 +78,15 @@ sub segment {
     $self->{ly_cnt}++ if ($3 ne "");
     $self->{segs}[$segno++] = $seg;
     if ($2 ne "") {
-      my($chord,$name) = CP::Chord->new($2);
-      if (@$chord > 1) {
-	my $ch = '';
-	for(my $i = 0; $i < @$chord; $i++) {
-	  last if ($chord->[$i] =~ /\s+/);
-	  $ch .= $chord->[$i];
-	}
-	$pro->{chords}{$ch} = 1;
-      }
+      my $chord = CP::Chord->new($2);
+#      if (@$chord > 1) {
+#      my $ch = '';
+#      for(my $i = 0; $i < @$chord; $i++) {
+#	last if ($chord->[$i] =~ /\s+/);
+#	$ch .= $chord->[$i];
+#      }
+      $pro->{chords}{$chord->{chord}} = 1;
+#      }
       $seg->{chord} = $chord;
       $self->{ch_cnt}++;
     }

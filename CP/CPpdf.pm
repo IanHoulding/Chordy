@@ -252,7 +252,7 @@ sub newPage {
 
   if ($pro->{key} ne '') {
     my $tw = _textAdd($Opt->{LeftMargin}, $tbl, "Key: ", $tfp, $th, BLACK);
-    my($ch,$cname) = CP::Chord->new($pro->{key});
+    my $ch = CP::Chord->new($pro->{key});
     $ch = $ch->trans2obj($pro) if ($Opt->{Transpose} ne '-');
     chordAdd($self, $Opt->{LeftMargin} + $tw, $tbl, $ch, $cc, $th);
   }
@@ -418,9 +418,8 @@ sub fingersWidth {
 sub drawFinger {
   my($self,$pro,$x,$y,$name) = @_;
 
-  my ($ch,$cname) = CP::Chord->new($name);
+  my $ch = CP::Chord->new($name);
   if ($KeyShift) {
-    $cname = $ch->trans2str($pro);
     $ch = $ch->trans2obj($pro);
   }
   my $dx = chordLen($self, $ch) / 2;
@@ -450,10 +449,10 @@ sub drawFinger {
   # exists - HUH??
   # And that, folks, is why we test for the {base} key!
   #
-  if (exists $pro->{finger}{"$cname"}{base}) {
-    $fptr = \%{$pro->{finger}{$cname}};
-  } elsif (exists $Fingers{"$cname"}{base}) {
-    $fptr = \%{$Fingers{$cname}};
+  if (exists $pro->{finger}{$ch->{chord}}{base}) {
+    $fptr = \%{$pro->{finger}{$ch->{chord}}};
+  } elsif (exists $Fingers{$ch->{chord}}{base}) {
+    $fptr = \%{$Fingers{$ch->{chord}}};
   }
   if (ref($fptr) ne "") {
     my $base = $fptr->{base};
@@ -511,27 +510,26 @@ sub drawFinger {
   ($mx,$y-int($lmy + 1));
 }
 
-# A 'Chord' object is an array eg: C [#b] maj7 / G [#b] maj7 text
 sub chordAdd {
   my($self,$x,$y,$ch,$clr,$ht) = @_;
 
   my $chfp = $self->{fonts}[CHORD];
   my $fp = $chfp->{font};
   $ht = $chfp->{sz} if (!defined $ht);
-  $x += _textAdd($x, $y, $ch->[0], $fp, $ht, $clr);
-  if ($#$ch > 0) {
+  if (@{$ch->{bits}}) {
+    my $bits = $ch->{bits};
+    $x += _textAdd($x, $y, $bits->[0], $fp, $ht, $clr);
     my $sht = ceil($ht * $SUPHT);
     my $sy = $y + ceil($sht * $SUPHT);
-    my $s = $ch->[1].$ch->[2];
+    my $s = $bits->[1].$bits->[2];
     $x += _textAdd($x, $sy, $s, $fp, $sht, $clr) if ($s ne "");
-    $x += _textAdd($x, $y, $ch->[3], $fp, $ht, $clr) if ($ch->[3] ne "");
-    if ($#$ch > 3) {
-      $x += _textAdd($x, $y, $ch->[4], $fp, $ht, $clr);
-      $s = $ch->[5].$ch->[6];
+    if (@{$bits} > 3) {
+      $x += _textAdd($x, $y, $bits->[4], $fp, $ht, $clr);
+      $s = $bits->[5].$bits->[6];
       $x += _textAdd($x, $sy, $s, $fp, $sht, $clr) if ($s ne "");
-      $x += _textAdd($x, $y, $ch->[7], $fp, $ht, $clr) if ($ch->[7] ne "");
     }
   }
+  _textAdd($x, $y, $ch->{text}, $fp, $ht, $clr) if ($ch->{text} ne "");
 }
 
 sub chordLen {
@@ -539,19 +537,20 @@ sub chordLen {
 
   my $chfp = $self->{fonts}[CHORD];
   my $fp = $chfp->{font};
-  my $nx = _measure($ch->[0], $fp, $chfp->{sz});
-  if ($#$ch > 0) {
+  my $nx = 0;
+  if (@{$ch->{bits}}) {
+    my $bits = $ch->{bits};
+    $nx = _measure($bits->[0], $fp, $chfp->{sz});
     my $sht = ceil($chfp->{sz} * $SUPHT);
-    my $s = $ch->[1].$ch->[2];
+    my $s = $bits->[1].$bits->[2];
     $nx += _measure($s, $fp, $sht) if ($s ne "");
-    $nx += _measure($ch->[3], $fp, $chfp->{sz}) if ($ch->[3] ne "");
-    if ($#$ch > 3) {
-      $nx += _measure($ch->[4], $fp, $chfp->{sz});
-      $s = $ch->[5].$ch->[6];
+    if (@{$bits} > 3) {
+      $nx += _measure($bits->[4], $fp, $chfp->{sz});
+      $s = $bits->[5].$bits->[6];
       $nx += _measure($s, $fp, $sht) if ($s ne "");
-      $nx += _measure($ch->[7], $fp, $chfp->{sz}) if ($ch->[7] ne "");
     }
   }
+  $nx += _measure($ch->{text}, $fp, $chfp->{sz}) if ($ch->{text} ne "");
   $nx;
 }
 

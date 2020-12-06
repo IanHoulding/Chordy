@@ -591,7 +591,8 @@ sub makePDF {
 	  foreach my $s (@{$ln->{segs}}) {
 	    $lineX = $s->{x} + $off;
 	    # Chords
-	    if (@{$s->{chord}} && $lyrOnly == 0) {
+#	    if (@{$s->{chord}} && $lyrOnly == 0) {
+	    if ($lyrOnly == 0 && defined $s->{chord}) {
 	      $myPDF->chordAdd($lineX, $chordY, $s->{chord}->trans2obj($self), $chd_clr);
 	    }
 	    # Lyrics
