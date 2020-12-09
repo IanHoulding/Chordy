@@ -600,6 +600,35 @@ sub makeOnePDF {
   ($pdf, $name);
 }
 
+sub viewOnePDF {
+  my($path,$fn) = @_;
+
+  my $pro = {};
+  bless $pro, 'CP::Pro';
+  $pro->decompose($path, $fn);
+  my $tmpPDF = "$path/$fn.pdf";
+  my $pdf = CP::CPpdf->new($pro, $tmpPDF);
+  my $tmpCapo = $pro->{capo};
+  $pro->{capo} = $Opt->{Capo} if ($Opt->{Capo} ne "No");
+  $pro->makePDF($pdf);
+  $pdf->close();
+  $pro->{capo} = $tmpCapo;
+  my $Pact = "";
+  if ($Cmnd->{Acro} ne "") {
+    if ($Cmnd->{Acro} =~ /(\%file\%)/i) {
+      ($Pact = $Cmnd->{Acro}) =~ s/$1/\"$tmpPDF\"/i;
+    } else {
+      $Pact = "$Cmnd->{Acro} \"$tmpPDF\"";
+    }
+  } else {
+    message(SAD, "You need to have a PDF viewer installed\nto be able to view (and possibly print)\nthe PDF file just created.\nSee the 'Commands' entry under the 'Misc' menu.");
+    return(0);
+  }
+  jobSpawn($Pact) if ($Pact ne "");
+  Tkx::update();
+  unlink($tmpPDF);
+}
+
 sub actionPDF {
   my($chordy,$tmpPDF,$PDFfileName) = @_;
 

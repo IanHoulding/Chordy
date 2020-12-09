@@ -31,7 +31,6 @@ sub new {
   $self->{tcl} = '';
   my $frm = $self->{frame} = $widget->new_ttk__frame(-padding => 0);
   $self->{lb} = $frm->new_tk__listbox(
-    @_,
     -relief => 'raised',
     -borderwidth => 2,
     -selectforeground => BLACK,
@@ -39,7 +38,9 @@ sub new {
     -selectborderwidth => 0,
     -activestyle => 'none',
     -highlightthickness => 0,
-    -listvariable => \$self->{tcl});
+    -listvariable => \$self->{tcl},
+    @_,
+);
   $self->{lb}->g_grid(qw/-row 1 -column 1 -sticky ns/);
   if ($sb ne '') {
     my $sbns = '';

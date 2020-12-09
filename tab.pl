@@ -138,6 +138,22 @@ sub tabTitle {
   $MW->g_wm_title("Tab Editor  |  Collection: ".$Collection->{name}."  |  Media: $Opt->{Media}  |  Tab: $fn$ed");
 }
 
+sub viewOnePDF {
+  my($path,$fn) = @_;
+
+  my $orgFN = '';
+  if (defined $Tab) {
+    $orgFN = $Tab->{fileName};
+  }
+  CP::Tab->new("$path/$fn");
+  CP::TabPDF::make('V');
+  if ($orgFN ne '') {
+    CP::Tab->new("$Path->{Tab}/$orgFN");
+  } else {
+    CP::Tab->new('');
+  }
+}
+
 # Place-holder for Collection.pm which calls this in chordy.pl
 sub selectClear {}
 

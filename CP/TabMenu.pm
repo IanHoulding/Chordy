@@ -70,6 +70,16 @@ sub new {
   }
   $file->add_command(-label => "Close",  -font => 'TkMenuFont', -command => \&closeTab);
   $file->add_command(-label => "Delete", -font => 'TkMenuFont', -command => \&delTab);
+  $file->add_command(-label => "Revert",
+		     -font => 'TkMenuFont',
+		     -command => sub{
+		       my $fn = (CP::Browser->new($MW, TABBR, $Path->{Tab}, '.tab'))[0];
+		       if ($fn eq '') {
+			 message(SAD, "You don't appear to have selected a Tab file.");
+			 return;
+		       }
+		       RevertTo($fn);
+		     });
   $file->add_separator;  #########
   $file->add_command(-label => "Save",
 		     -font => 'TkMenuFont',

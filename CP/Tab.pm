@@ -104,9 +104,11 @@ sub new {
 
   if ($fn ne '') {
     $Tab->{fileName} = fileparse($fn);
-    ($Tab->{title} = $Tab->{fileName}) =~ s/\.tab$//;
-    $Tab->{PDFname} = $Tab->{title}.'.pdf';
     load($Tab, $fn);
+    if ($Tab->{title} eq '') {
+      ($Tab->{title} = $Tab->{fileName}) =~ s/\.tab(.\d+)?$//;
+    }
+    $Tab->{PDFname} = $Tab->{title}.'.pdf';
   }
 }
 

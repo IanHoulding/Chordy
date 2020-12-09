@@ -34,7 +34,7 @@ sub new {
   my $class = ref($proto) || $proto;
   my $self = {};
   bless $self, $class;
-  decompose($self, $fn, $elem);
+  decompose($self, $Path->{Pro}, $fn, $elem);
   return($self);
 }
 
@@ -67,11 +67,10 @@ sub new {
 # },
 #
 sub decompose {
-  my($self,$fn,$elem) = @_;
+  my($self,$path,$fn,$elem) = @_;
 
-  $self->{path} = $Path->{Pro};
+  $self->{path} = $path;
   $self->{name} = $fn;
-  ($self->{title} = $fn) =~ s/\.pro$//;
   $self->{tempo} = 0;
   $self->{capo} = 0;
   $self->{key} = '-';
@@ -332,6 +331,7 @@ sub decompose {
     }
   }
   close(IFH);
+  ($self->{title} = $fn) =~ s/\.pro(\.\d+)?$// if (! defined $self->{title});
   return(1);
 }
 
@@ -978,7 +978,7 @@ sub edit {
   my $tempfn = CP::Editor::Edit($fileName);
   if ($tempfn eq $self->{name}) {
     # It's possible all sorts of "stuff" has changed so ....
-    $self->decompose($self->{name});
+    $self->decompose($Path->{Pro}, $self->{name});
     $KeyLB->{array}[$idx] = "$self->{key}";
     $KeyLB->a2tcl();
   } else {

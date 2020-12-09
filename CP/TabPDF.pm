@@ -791,7 +791,7 @@ sub lyrics {
   $y -= ($Tab->{pOffset}{lyricY} - 3);
   my $wdfp = $self->{fonts}[WORDS];
   foreach my $idx (0..($Opt->{LyricLines} - 1)) {
-    if ($text->[$lidx] ne '') {
+    if (defined $text->[$lidx] && $text->[$lidx] ne '') {
       $y -= ($wdfp->{sz} + 0.5);
       _adjTextAdd($self, $x, $y,
 		  $text->[$lidx],

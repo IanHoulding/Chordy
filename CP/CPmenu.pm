@@ -14,7 +14,7 @@ use warnings;
 
 use Tkx;
 use CP::Cconst qw/:OS :BROWSE :SMILIE/;
-use CP::Global qw/:FUNC :WIN :VERS :OPT/;
+use CP::Global qw/:FUNC :WIN :VERS :OPT :PRO/;
 use CP::CHedit qw(&CHedit);
 use CP::Cmsg;
 
@@ -63,6 +63,14 @@ sub new {
 			   });
     }
   }
+  $file->add_command(-label => "Revert", -command => sub{
+    my $idx = $FileLB->curselection(0);
+    if ($idx eq '') {
+      message(SAD, "You don't appear to have selected a ChordPro file.");
+      return;
+    }
+    RevertTo($ProFiles[$idx]->{name});
+		     });
   $file->add_separator;
   $file->add_command(-label => "Import ChordPro", -command => \&main::impProFile);
   {

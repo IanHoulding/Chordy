@@ -17,7 +17,7 @@ use warnings;
 BEGIN {
   our @ISA = qw(Exporter);
   our @EXPORT_OK = qw/
-      &read_file &write_file
+      &read_file &write_file &RevertTo
       &syncFiles &setDefaults &readChords &cleanCache &openConfig &backupFile
       &DeleteBackups
       &viewElog &clearElog &viewRelNt &errorPrint &makeImage
@@ -34,7 +34,7 @@ BEGIN {
       %XPM %Images
       /;
   our %EXPORT_TAGS = (
-    FUNC  => [qw/&read_file &write_file
+    FUNC  => [qw/&read_file &write_file &RevertTo
 	         &syncFiles &setDefaults &readChords &cleanCache &openConfig &backupFile
 	         &DeleteBackups
 	         &viewElog &clearElog &viewRelNt &errorPrint &makeImage
@@ -55,7 +55,7 @@ BEGIN {
 
 use Tkx;
 use File::Path qw(make_path remove_tree);
-use CP::Cconst qw/:OS :PATH :SHFL :SMILIE :COLOUR/;
+use CP::Cconst qw/:OS :PATH :BROWSE :SHFL :SMILIE :COLOUR/;
 use CP::Cmsg;
 use CP::Collection;
 use CP::Path;
@@ -415,6 +415,167 @@ sub backupFile {
     } else {
       message(SAD, "Failed to write new copy of $fileName\nSee: $tmpFile");
     }
+  }
+}
+
+sub RevertTo {
+  my($fn) = @_;
+
+  my $temp = $Path->{Temp};
+  my $rev = [];
+  opendir my $dh, "$temp" or return(message(SAD, "Couldn't open directory $temp\n"));
+  foreach my $f (grep /^$fn/, readdir $dh) {
+    if (-f "$temp/$f" && $f =~ /$fn\.(\d+)$/i) {
+      $rev->[$1] = "$f";
+    }
+  }
+  closedir($dh);
+  if (@{$rev} == 0) {
+    message(SAD, "Sorry - there don't appear to be any older revisions of:\n   $fn.");
+    return;
+  }    
+
+  my $pop = CP::Pop->new(0, '.rt', $fn);
+  return if ($pop eq '');
+  my($top,$frm) = ($pop->{top}, $pop->{frame});
+  $frm->m_configure( -padding => 0);
+
+  Tkx::ttk__style_configure('Rev.TFrame', -background => $Opt->{ListBG});
+  my $tlf = $frm->new_ttk__frame(-style => 'Rev.TFrame', -relief => 'raised', -borderwidth => 2);
+  $tlf->g_grid(qw/-row 0 -column 0 -padx 4 -pady 4/);
+  my $trf = $frm->new_ttk__frame();
+  $trf->g_grid(qw/-row 0 -column 1 -sticky ns -pady 4/, -padx => [4,8]);
+  my $sepf = $frm->new_ttk__separator(qw/-orient horizontal/);
+  $sepf->g_grid(qw/-row 1 -column 0 -columnspan 2 -sticky we/);
+  my $bf = $frm->new_ttk__frame(-padding => [0,4,0,4]);
+  $bf->g_grid(qw/-row 2 -column 0 -columnspan 2 -sticky nswe/);
+
+  my $revl = $tlf->new_ttk__label(-text => 'Rev', -background => $Opt->{ListBG});
+  $revl->g_grid(qw/-row 0 -column 0/);
+  my $modl = $tlf->new_ttk__label(-text => 'Last Modified', -background => $Opt->{ListBG});
+  $modl->g_grid(qw/-row 0 -column 2/);
+
+  my $seph = $tlf->new_ttk__separator(qw/-orient horizontal/);
+  $seph->g_grid(qw/-row 1 -column 0 -columnspan 3 -sticky we/);
+
+  my $revLB = CP::List->new($tlf,  '', qw/-height 12 -width 4 -selectmode browse -takefocus 1 -relief flat -borderwidth 3/ );
+  my $modLB = CP::List->new($tlf, 'e', qw/-height 12 -width 30 -relief flat -borderwidth 3/);
+  $modLB->{lb}->configure(-yscrollcommand => [sub{scroll_filelb($revLB, $modLB, @_)}]);
+  $modLB->{yscrbar}->m_configure(-command => sub {$revLB->{lb}->yview(@_);$modLB->{lb}->yview(@_);});
+  $revLB->{frame}->g_grid(qw/-row 2 -column 0/);
+  $modLB->{frame}->g_grid(qw/-row 2 -column 2/);
+
+  my $sepv = $tlf->new_ttk__separator(qw/-orient vertical/);
+  $sepv->g_grid(qw/-row 0 -column 1 -rowspan 3 -sticky ns/);
+
+  foreach my $r (0..$#{$rev}) {
+    if (defined $rev->[$r]) {
+      $revLB->add2a($r);
+      $modLB->add2a(my $x = localtime((stat("$temp/$fn.$r"))[9]));
+    }
+  }
+
+  my $bp = $trf->new_ttk__button(-text => "View PDF", -command => sub{
+    my $idx = $modLB->curselection(0);
+    if ($idx ne '') {
+      my $r = $revLB->get($idx);
+      main::viewOnePDF("$temp", "$fn.$r");
+      Tkx::update();
+      $top->g_raise();
+      $modLB->{lb}->g_focus();
+    } } );
+  $bp->g_pack(qw/-side top/, -pady => [30,4]);
+  my $bv = $trf->new_ttk__button(-text => "View File", -command => sub{
+    my $idx = $modLB->curselection(0);
+    if ($idx ne '') {
+      my $r = $revLB->get($idx);
+      viewFile("$temp/$fn.$r");
+      Tkx::update();
+      $top->g_raise();
+      $modLB->{lb}->g_focus();
+    } } );
+  $bv->g_pack(qw/-side top -pady 4/);
+  my $bd = $trf->new_ttk__button(-text => "Delete",
+				 -style => 'Red.TButton',
+				 -command => sub{buDel($revLB, $modLB, $fn)} );
+  $bd->g_pack(qw/-side top -pady 16/);
+
+  my $bc = $bf->new_ttk__button(-text => "Cancel",
+				-style => 'Red.TButton',
+				-command => sub{$pop->popDestroy();return;} );
+  $bc->g_pack(qw/-side left -padx 20/);
+  my $br = $bf->new_ttk__button(-text => "Revert", -command => sub{
+    my $idx = $modLB->curselection(0);
+    if ($idx ne '') {
+      my $rev = $revLB->get($idx);
+      rename("$temp/$fn.$rev", "$temp/$fn");
+      buReorder($fn);
+      my $path = ($fn =~ /.pro$/i) ? "Pro" : "Tab";
+      backupFile($Path->{$path}, $fn, "$temp/$fn", 1);
+      $pop->popDestroy();
+    }
+				});
+  $br->g_pack(qw/-side right -padx 20/);
+}
+
+# This method is called when one Listbox is scrolled with the keyboard
+# It makes the Scrollbar reflect the change, and scrolls the other lists
+sub scroll_filelb {
+  my($rlb,$mlb,@args) = @_;
+
+  $mlb->{yscrbar}->set(@args); # tell the Scrollbar what to display
+  my($top,$bot) = split(' ', $mlb->{lb}->yview());
+  $rlb->{lb}->yview_moveto($top);
+}
+
+sub buDel {
+  my($rlb,$mlb,$fn) = @_;
+
+  my $idx = $mlb->curselection(0);
+  if ($idx ne '') {
+    my $tmp = $Path->{Temp};
+    my $r = $rlb->get($idx);
+    if (msgYesNo("Do you really want to delete backup $fn.$r?") eq "Yes") {
+      unlink("$tmp/$fn.$r");
+      buReorder($fn);
+      my $rev = [];
+      opendir my $dh, "$tmp" or return;
+      foreach my $f (grep /^$fn/, readdir $dh) {
+	if ($f =~ /$fn\.(\d+)$/i) {
+	  $rev->[$1] = "$f";
+	}
+      }
+      closedir($dh);
+      $rlb->clear();
+      $mlb->clear();
+      foreach my $r (0..$#{$rev}) {
+	if (defined $rev->[$r]) {
+	  $rlb->add2a($r);
+	  $mlb->add2a(my $x = localtime((stat("$tmp/$fn.$r"))[9]));
+	}
+      }
+    }
+  }
+}
+
+sub buReorder {
+  my($fn) = shift;
+
+  my $tmp = $Path->{Temp};
+  opendir my $dh, "$tmp" or return;
+  my @rev = ();
+  foreach my $f (grep /^$fn/, readdir $dh) {
+    if ($f =~ /$fn\.(\d+)$/i) {
+      push(@rev, $1);
+    }
+  }
+  closedir($dh);
+  my $idx = 1;
+  foreach my $r (sort{$a <=> $b} @rev) {
+    if ($r != $idx) {
+      rename("$tmp/$fn.$r", "$tmp/$fn.$idx");
+    }
+    $idx++;
   }
 }
 
