@@ -55,8 +55,8 @@ sub new {
   {
     $Recent = $file->new_menu;
     $file->add_cascade(-menu => $Recent, -font => 'TkMenuFont', -label => 'Recent');
-    foreach (0..9) {
-      my $fn = (defined $Opt->{RecentTab}[$_]) ? $Opt->{RecentTab}[$_] : '. . .';
+    foreach my $i (0..9) {
+      my $fn = (defined $Opt->{RecentTab}[$i]) ? $Opt->{RecentTab}[$i] : '. . .';
       $Recent->add_command(-label => $fn,
 			   -font => 'TkMenuFont',
 			   -command => sub{
@@ -302,9 +302,18 @@ sub refresh {
   foreach my $ep (@{$Opts{ent}}) {
     $menu->entryconfigure($idx++, -label => "$ep->{text} - ${$ep->{var}}");
   }
-  foreach (0..9) {
-    my $fn = (defined $Opt->{RecentTab}[$_]) ? $Opt->{RecentTab}[$_] : '. . .';
-    $Recent->entryconfigure($_, -label => $fn);
+  foreach my $i (0..9) {
+    my $fn = (defined $Opt->{RecentTab}[$i]) ? $Opt->{RecentTab}[$i] : '. . .';
+    $Recent->entryconfigure($i,
+			    -label => $fn,
+			    -command => sub{
+			      if ($fn ne '. . .') {
+				CP::Tab->new("$Path->{Tab}/$fn");
+				$Tab->drawPageWin();
+				$Opt->add2recent($fn, 'RecentTab', \&refresh);
+			      }
+			    }
+	);
   }
 }
 

@@ -53,8 +53,8 @@ sub new {
   {
     $Recent = $file->new_menu;
     $file->add_cascade(-menu => $Recent, -label => 'Recent');
-    foreach (0..9) {
-      my $fn = (defined $Opt->{RecentPro}[$_]) ? $Opt->{RecentPro}[$_] : '. . .';
+    foreach my $i (0..9) {
+      my $fn = (defined $Opt->{RecentPro}[$i]) ? $Opt->{RecentPro}[$i] : '. . .';
       $Recent->add_command(-label => $fn,
 			   -command => sub{
 			     if ($fn ne '. . .') {
@@ -156,9 +156,16 @@ sub new {
 }
 
 sub refreshRcnt {
-  foreach (0..9) {
-    my $fn = (defined $Opt->{RecentPro}[$_]) ? $Opt->{RecentPro}[$_] : '. . .';
-    $Recent->entryconfigure($_, -label => $fn);
+  foreach my $i (0..9) {
+    my $fn = (defined $Opt->{RecentPro}[$i]) ? $Opt->{RecentPro}[$i] : '. . .';
+    $Recent->entryconfigure($i,
+			    -label => $fn,
+			    -command => sub{
+			      if ($fn ne '. . .') {
+				main::showSelection([$fn]);
+			      }
+			    }
+	);
   }
 }
 
