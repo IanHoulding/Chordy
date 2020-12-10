@@ -19,7 +19,7 @@ my @strOpt = (qw/Articles Instrument Media PDFpath PrintMedia
 	         PopFG PopBG PushFG PushBG MenuFG MenuBG ListFG ListBG EntryFG EntryBG
 	         WinBG PageBG SortBy/);
 my @numOpt = (qw/AutoSave Bold Heavy Center EditScale FullLineHL FullLineCM Grid HHBL
-	         IgnArticle IgnCapo ShowLabels
+	         SaveFonts IgnArticle IgnCapo ShowLabels
 	         TopMargin BottomMargin LeftMargin RightMargin
 	         Italic LineSpace LyricLines LyricOnly Nbar NewLine NoWarn
 	         OnePDFfile PDFview PDFmake PDFprint
@@ -91,6 +91,7 @@ sub default {
   $self->{Refret}      = 0;
   $self->{RevSort}     = 0;
   $self->{RightMargin} = INDENT;
+  $self->{SaveFonts}   = 0;
   $self->{SharpFlat}   = SHARP;
   $self->{SortBy}      = 'Alphabetical';
   $self->{StaffSpace}  = 10;

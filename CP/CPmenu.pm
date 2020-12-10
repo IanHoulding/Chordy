@@ -113,28 +113,50 @@ sub new {
   {
     my $op = $opt->new_menu;
     $opt->add_cascade(-menu => $op, -label => 'PDFs');
-    $op->add_checkbutton(-label => "View",   -variable => \$Opt->{PDFview});
-    $op->add_checkbutton(-label => "Create", -variable => \$Opt->{PDFmake});
-    $op->add_checkbutton(-label => "Print",  -variable => \$Opt->{PDFprint});
+    $op->add_checkbutton(-label => "View",
+			 -variable => \$Opt->{PDFview},
+			 -command => sub{$Opt->saveOne('PDFview')} );
+    $op->add_checkbutton(-label => "Create",
+			 -variable => \$Opt->{PDFmake},
+			 -command => sub{$Opt->saveOne('PDFmake')} );
+    $op->add_checkbutton(-label => "Print",
+			 -variable => \$Opt->{PDFprint},
+			 -command => sub{$Opt->saveOne('PDFprint')} );
   }
   {
     my $ol = $opt->new_menu;
     $opt->add_cascade(-menu => $ol, -label => 'Lyrics');
-    $ol->add_checkbutton(-label => "Center Lyrics",      -variable => \$Opt->{Center});
-    $ol->add_checkbutton(-label => "Lyrics Only",        -variable => \$Opt->{LyricOnly});
-    $ol->add_checkbutton(-label => "Group Lines",        -variable => \$Opt->{Together});
-    $ol->add_checkbutton(-label => "1/2 Ht Blank Lines", -variable => \$Opt->{HHBL});
+    $ol->add_checkbutton(-label => "Center Lyrics",
+			 -variable => \$Opt->{Center},
+			 -command => sub{$Opt->saveOne('Center')} );
+    $ol->add_checkbutton(-label => "Lyrics Only",
+			 -variable => \$Opt->{LyricOnly},
+			 -command => sub{$Opt->saveOne('LyricOnly')} );
+    $ol->add_checkbutton(-label => "Group Lines",
+			 -variable => \$Opt->{Together},
+			 -command => sub{$Opt->saveOne('Together')} );
+    $ol->add_checkbutton(-label => "1/2 Ht Blank Lines",
+			 -variable => \$Opt->{HHBL},
+			 -command => sub{$Opt->saveOne('HHBL')} );
     {
       my $ls = $opt->new_menu;
       $opt->add_cascade(-menu => $ls, -label => 'Line Spacing');
       foreach (qw{0 1 2 3 4 5 6 7 8 9 10 12 14 16 18 20}) {
-	$ls->add_radiobutton(-label => $_, -variable => \$Opt->{LineSpace});
+	$ls->add_radiobutton(-label => $_,
+			     -variable => \$Opt->{LineSpace},
+			     -command => sub{$Opt->saveOne('LineSpace')} );
       }
     }
   }
-  $opt->add_checkbutton(-label => "Highlight Full Line", -variable => \$Opt->{FullLineHL});
-  $opt->add_checkbutton(-label => "Comment Full Line",   -variable => \$Opt->{FullLineCM});
-  $opt->add_checkbutton(-label => "Show Labels",         -variable => \$Opt->{ShowLabels});
+  $opt->add_checkbutton(-label => "Highlight Full Line",
+			-variable => \$Opt->{FullLineHL},
+			-command => sub{$Opt->saveOne('FullLineHL')} ); 
+  $opt->add_checkbutton(-label => "Comment Full Line",
+			-variable => \$Opt->{FullLineCM},
+			-command => sub{$Opt->saveOne('FullLineCM')} );
+  $opt->add_checkbutton(-label => "Show Labels",
+			-variable => \$Opt->{ShowLabels},
+			-command => sub{$Opt->saveOne('ShowLabels')} );
 
   $opt->add_separator;
   $opt->add_command(-label => 'Defaults', -command => sub{$Opt->resetOpt()});

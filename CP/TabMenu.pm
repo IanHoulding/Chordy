@@ -208,6 +208,10 @@ sub new {
 					 config($opt, 4, 'Lyric Spacing', $Tab->{lyricSpace});
 			 });
   }
+  $opt->add_checkbutton(-label => "Save Fonts",
+			-variable => \$Opt->{SaveFonts},
+			-font => 'TkMenuFont',
+			-command => sub{$Opt->saveOne('SaveFonts')}, );
   $Opts{ent}[5] = {text => 'Set Key', var => \$Tab->{key}};
   my $key = $opt->new_menu;
   $opt->add_cascade(-menu => $key,

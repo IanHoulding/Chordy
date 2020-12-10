@@ -581,9 +581,11 @@ sub save {
       print $OFH '{stave_gap:'.$self->{staveGap}."}\n";
       print $OFH '{lyric_space:'.$self->{lyricSpace}."}\n";
       print $OFH '{lyric_lines:'.$Opt->{LyricLines}."}\n";
-      foreach my $type (qw/title head note snote word/) {
-	my $font = "${type}Font";
-	print $OFH "\{${type}_font:$self->{$font}\}\n";
+      if ($Opt->{SaveFonts}) {
+	foreach my $type (qw/title head note snote word/) {
+	  my $font = "${type}Font";
+	  print $OFH "\{${type}_font:$self->{$font}\}\n";
+	}
       }
       for(my $bar = $self->{bars}; $bar != 0; $bar = $bar->{next}) {
 	print $OFH "{newline}\n"                   if ($bar->{newline});
