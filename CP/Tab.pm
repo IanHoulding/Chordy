@@ -156,7 +156,7 @@ sub offsets {
   $off{staffSpace} = $Opt->{StaffSpace};
   $off{staffHeight} = $off{staffSpace} * ($Nstring - 1);
 
-  # Something like a "Verse" above a bar is:
+  # With something like "Verse" above a bar, the top staff line (staffY} is:
   #    Volta bar + The Text + 1/2 Note text size
   $off{staffX} = 0;
   $off{headY}  = $off{fat} + $self->{headSize} + 1;

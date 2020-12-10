@@ -628,10 +628,8 @@ sub showFret {
   my $bar = $self->{bar};
   if ($bar->{pidx} >= 0) {
     $fnt = ($self->{font} eq 'Normal' && $fr < 10) ? $Tab->{noteFont} : $Tab->{snoteFont};
-#    $fnt = $Tab->{noteFont};
   } else {
     $fnt = ($self->{font} eq 'Normal' && $fr < 10) ? $Tab->{enoteFont} : $Tab->{esnoteFont};
-#    $fnt = $Tab->{enoteFont};
   }
   if ($fr eq 'X') {
     $fnt = $Tab->newFont($fnt, 0.8);
@@ -646,13 +644,9 @@ sub showFret {
   }
   $clr = CP::FgBgEd::lighten($clr, PALE) if ($bar->{pidx} == -2);
   $tag = [$tag, 'edit'] if ($bar->{pidx} < 0);
-#  if ($fr > 9) {
-#    my $img = cNote($fr, $fnt, $clr, ($bar->{pidx} >= 0) ? 'n' : 'N');
-#    $bar->{canvas}->create_image($x, $y, -image => $img, -tags => $tag); 
-#  } else {
-    $bar->{canvas}->create_text($x,$y, -text => $fr,  -font => $fnt,
-				       -fill => $clr, -tags => $tag);
-#  }
+  $bar->{canvas}->create_text($x,$y, -text => $fr,  -font => $fnt,
+			      -justify => 'center', -fill => $clr,
+			      -tags => $tag);
 }
 
 sub noteXY {
@@ -668,6 +662,7 @@ sub noteXY {
 #
 # All this just to get a Condensed font!!!
 # The PDF code does it in a single call!!
+# And even then it doesn't work - not used - YET!
 #
 Tkx::package_require('img::window');
 our $Nmw = 0;
