@@ -63,13 +63,14 @@ sub new {
 			   });
     }
   }
-  $file->add_command(-label => "Revert", -command => sub{
-    my $idx = $FileLB->curselection(0);
-    if ($idx eq '') {
-      message(SAD, "You don't appear to have selected a ChordPro file.");
-      return;
-    }
-    RevertTo($ProFiles[$idx]->{name});
+  $file->add_command(-label => "Revert",
+		     -command => sub{
+		       my $fn = (CP::Browser->new($MW, FILE, $Path->{Pro}, '.pro'))[0];
+		       if ($fn eq '') {
+			 message(SAD, "You don't appear to have selected a ChordPro file.");
+			 return;
+		       }
+		       RevertTo($fn);
 		     });
   $file->add_separator;
   $file->add_command(-label => "Import ChordPro", -command => \&main::impProFile);
