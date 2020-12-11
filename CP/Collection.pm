@@ -127,19 +127,19 @@ sub change {
 }
 
 sub select {
-  my($self) = shift;
+  my($self,$tab) = @_;
 
   my $cc = $self->{name};
   popMenu(\$cc, undef, list());
   if ($cc ne $self->{name}) {
     change($self, $cc);
-    if (defined $Tab) {
+    if (defined $tab) {
       # Only run in the Tab Editor.
-      if ((my $fn = $Tab->{fileName}) ne '') {
+      if ((my $fn = $tab->{fileName}) ne '') {
 	$fn = (-e $fn) ? "$Path->{Tab}/$fn" : '';
-	$Tab->new($fn);
+	$tab->new($fn);
       }
-      $Tab->drawPageWin();
+      $tab->drawPageWin();
       CP::TabMenu::refresh();
     }
   }

@@ -61,7 +61,7 @@ sub pageWindow {
     my $bue = $leftFt->new_ttk__button(
       -text => 'Edit Lyrics',
       -style => "Blue.TButton",
-      -command => sub{CP::LyricEd->Edit($Tab->{lyrics});});
+      -command => sub{CP::LyricEd->Edit($Tab);});
     $bue->g_grid(qw/-row 0 -column 1/);
     my $bun = $leftFt->new_ttk__button(
       -text => ' Next Page >>>',
@@ -541,7 +541,7 @@ sub pageButtons {
   $bu2->g_grid(qw/-row 0 -column 1 -sticky we/, -padx => [4,8], -pady => [0,4]);
   my $bue = $edit->new_ttk__button(-text => 'Edit Lyrics',
 				   -style => "Green.TButton",
-				   -command => sub{CP::LyricEd->Edit($Tab->{lyrics});});
+				   -command => sub{CP::LyricEd->Edit($Tab);});
   $bue->g_grid(qw/-row 0 -column 2 -sticky we/, -padx => [4,8], -pady => [0,4]);
 ######
   makeImage('hyphen', \%XPM);
@@ -639,7 +639,7 @@ sub pageButtons {
   my $colb = $sel->new_ttk__button(
     -textvariable => \$Collection->{name},
     -style => 'Menu.TButton',
-    -command => sub{$Collection->select()}
+    -command => sub{$Collection->select($Tab)}
     );
   my $medl = $sel->new_ttk__label(-text => 'Media');
   my $medb = $sel->new_ttk__button(

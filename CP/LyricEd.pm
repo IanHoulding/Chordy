@@ -18,13 +18,14 @@ use CP::Global qw/:FUNC :OPT :WIN :MEDIA :XPM/;
 #use CP::Pop qw/:MENU :POP/;
 use CP::Win;
 use CP::Cmsg;
-use CP::Tab;
+#use CP::Tab;
 
 our $Ed = {};
 
 sub Edit {
-  my($class,$lyrics) = @_;
+  my($class,$tab) = @_;
 
+  my $lyrics = $tab->{lyrics};
   my $done = '';
   my $txtWin = '';
 
@@ -63,7 +64,7 @@ sub Edit {
     ## set up for autosizing.
 
     my $fp = $Media->{Words};
-    my $sz = int($EditFont{size} * $Tab->{scaling});
+    my $sz = int($EditFont{size} * $tab->{scaling});
     $txtWin = $Ed->{TxtWin} = $topF->new_tk__text(
       -width => 90,
       -height => 24,
@@ -112,7 +113,7 @@ sub Edit {
     my $updt = $botF->new_ttk__button(
       -text => 'Update',
       -style => "Green.TButton",
-      -command => sub{update($txtWin, $lyrics)});
+      -command => sub{update($txtWin, $tab)});
     $updt->g_grid(qw/-row 0 -column 1/);
     my $save = $botF->new_ttk__button(
       -text => 'Save',
@@ -126,7 +127,7 @@ sub Edit {
   }
   $txtWin->delete('1.0', 'end');
 
-  my $edited = $Tab->{edited};
+  my $edited = $tab->{edited};
   $lyrics->collect();
   my @org = @{$lyrics->{text}};
   return('') if (@org == 0);
@@ -142,10 +143,10 @@ sub Edit {
 
   if ($done eq 'Cancel') {
     @{$lyrics->{text}} = @org;
-    $Tab->newPage($Tab->{pageNum});
+    $tab->newPage($tab->{pageNum});
     main::setEdited($edited);
   } else {
-    update($txtWin, $lyrics);
+    update($txtWin, $tab);
   }
   $Ed->{Top}->g_wm_withdraw();
   Tkx::update_idletasks();
@@ -174,8 +175,9 @@ sub drawBlinds {
 }
 
 sub update {
-  my($txtWin, $lyrics) = @_;
+  my($txtWin, $tab) = @_;
 
+  my $lyrics = $tab->{lyrics};
   my $nlines = $txtWin->count(-lines, '1.0', 'end');
   my $text = $lyrics->{text};
   my $idx = 0;
@@ -188,7 +190,7 @@ sub update {
     }
     $idx++;
   }
-  $Tab->newPage($Tab->{pageNum});
+  $tab->newPage($tab->{pageNum});
 }
 
 1;

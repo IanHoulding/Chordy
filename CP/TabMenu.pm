@@ -132,8 +132,8 @@ sub new {
 		    -command => sub{$Tab->saveAsText()});
 
   $Opts{menu} = $opt;
-  use warnings;
-  $Opts{ent}[0] = {text => 'Bars/Stave', var => \$Opt->{Nbar}};
+  my $oidx = 0;
+  $Opts{ent}[$oidx] = {text => 'Bars/Stave', var => \$Opt->{Nbar}};
   my $bps = $opt->new_menu;
   $opt->add_cascade(-menu => $bps,
 		    -font => 'TkMenuFont',
@@ -144,11 +144,11 @@ sub new {
 			  -font => 'TkMenuFont',
 			  -command => sub{$Tab->drawPageWin();
 					  main::setEdited(1);
-					  config($opt, 0, 'Bars/Stave', $Opt->{Nbar});
+					  config($opt, $oidx, 'Bars/Stave', $Opt->{Nbar});
 					  $Opt->saveOne('Nbar');
 			  });
   }
-  $Opts{ent}[1] = {text => 'Edit Scale', var => \$Opt->{EditScale}};
+  $Opts{ent}[++$oidx] = {text => 'Edit Scale', var => \$Opt->{EditScale}};
   my $es = $opt->new_menu;
   $opt->add_cascade(-menu => $es,
 		    -font => 'TkMenuFont',
@@ -158,11 +158,11 @@ sub new {
 			 -variable => \$Opt->{EditScale},
 			 -font => 'TkMenuFont',
 			 -command => sub{CP::TabWin::editWindow();
-					 config($opt, 1, 'Edit Scale', $Opt->{EditScale});
+					 config($opt, $oidx, 'Edit Scale', $Opt->{EditScale});
 					 $Opt->saveOne('EditScale');
 			 });
   }
-  $Opts{ent}[2] = {text => 'Instrument', var => \$Opt->{Instrument}};
+  $Opts{ent}[++$oidx] = {text => 'Instrument', var => \$Opt->{Instrument}};
   my $inst = $opt->new_menu;
   $opt->add_cascade(-menu => $inst,
 		    -font => 'TkMenuFont',
@@ -174,11 +174,11 @@ sub new {
 			   -command =>
 			   sub{$Tab->drawPageWin();
 			       main::setEdited(1);
-			       config($opt, 2, 'Instrument', $Opt->{Instrument});
+			       config($opt, $oidx, 'Instrument', $Opt->{Instrument});
 			       $Opt->saveOne('Instrument');
 			   });
   }
-  $Opts{ent}[3] = {text => 'Lyric Lines', var => \$Opt->{LyricLines}};
+  $Opts{ent}[++$oidx] = {text => 'Lyric Lines', var => \$Opt->{LyricLines}};
   my $ll = $opt->new_menu;
   $opt->add_cascade(-menu => $ll,
 		    -font => 'TkMenuFont',
@@ -190,11 +190,11 @@ sub new {
 			 -command => sub{$Tab->{lyrics}->adjust($Opt->{LyricLines});
 					 $Tab->drawPageWin();
 					 main::setEdited(1);
-					 config($opt, 3, 'Lyric Lines', $Opt->{LyricLines});
+					 config($opt, $oidx, 'Lyric Lines', $Opt->{LyricLines});
 					 $Opt->saveOne('LyricLines');
 			 });
   }
-  $Opts{ent}[4] = {text => 'Lyric Spacing', var => \$Tab->{lyricSpace}};
+  $Opts{ent}[++$oidx] = {text => 'Lyric Spacing', var => \$Tab->{lyricSpace}};
   my $ls = $opt->new_menu;
   $opt->add_cascade(-menu => $ls,
 		    -font => 'TkMenuFont',
@@ -205,14 +205,14 @@ sub new {
 			 -font => 'TkMenuFont',
 			 -command => sub{$Tab->drawPageWin();
 					 main::setEdited(1);
-					 config($opt, 4, 'Lyric Spacing', $Tab->{lyricSpace});
+					 config($opt, $oidx, 'Lyric Spacing', $Tab->{lyricSpace});
 			 });
   }
+  $Opts{ent}[++$oidx] = {text => '', var => \$Opt->{SaveFonts}};
   $opt->add_checkbutton(-label => "Save Fonts",
 			-variable => \$Opt->{SaveFonts},
-			-font => 'TkMenuFont',
-			-command => sub{$Opt->saveOne('SaveFonts')}, );
-  $Opts{ent}[5] = {text => 'Set Key', var => \$Tab->{key}};
+			-font => 'TkMenuFont');
+  $Opts{ent}[++$oidx] = {text => 'Set Key', var => \$Tab->{key}};
   my $key = $opt->new_menu;
   $opt->add_cascade(-menu => $key,
 		    -font => 'TkMenuFont',
@@ -224,10 +224,11 @@ sub new {
 			  -font => 'TkMenuFont',
 			  -command => sub{$Tab->pageKey();
 					  main::setEdited(1);
-					  config($opt, 5, 'Set Key', $Tab->{key});
+					  config($opt, $oidx, 'Set Key', $Tab->{key});
 			  });
   }
-  $Opts{ent}[6] = {text => 'Stave Gap', var => \$Tab->{staveGap}};
+  use warnings;
+  $Opts{ent}[++$oidx] = {text => 'Stave Gap', var => \$Tab->{staveGap}};
   my $sg = $opt->new_menu;
   $opt->add_cascade(-menu => $sg,
 		    -font => 'TkMenuFont',
@@ -238,10 +239,10 @@ sub new {
 			 -font => 'TkMenuFont',
 			 -command => sub{$Tab->drawPageWin();
 					 main::setEdited(1);
-					 config($opt, 6, 'Stave Gap', $Tab->{staveGap});
+					 config($opt, $oidx, 'Stave Gap', $Tab->{staveGap});
 			 });
   }
-  $Opts{ent}[7] = {text => 'String Spacing', var => \$Opt->{StaffSpace}};
+  $Opts{ent}[++$oidx] = {text => 'String Spacing', var => \$Opt->{StaffSpace}};
   my $ss = $opt->new_menu;
   $opt->add_cascade(-menu => $ss,
 		    -font => 'TkMenuFont',
@@ -253,11 +254,11 @@ sub new {
 			 -command => sub{$Tab->drawPageWin();
 					 CP::TabWin::editWindow();
 					 main::setEdited(1);
-					 config($opt, 7, 'String Spacing', $Opt->{StaffSpace});
+					 config($opt, $oidx, 'String Spacing', $Opt->{StaffSpace});
 					 $Opt->saveOne('StaffSpace');
 			 });
   }
-  $Opts{ent}[8] = {text => 'Timing', var => \$Tab->{Timing}};
+  $Opts{ent}[++$oidx] = {text => 'Timing', var => \$Tab->{Timing}};
   my $tim = $opt->new_menu;
   $opt->add_cascade(-menu => $tim,
 		    -font => 'TkMenuFont',
@@ -271,7 +272,7 @@ sub new {
 					  $Tab->drawPageWin();
 					  CP::TabWin::editWindow();
 					  main::setEdited(1);
-					  config($opt, 8, 'Timing', $Tab->{Timing});
+					  config($opt, $oidx, 'Timing', $Tab->{Timing});
 			  });
   }
   
@@ -304,7 +305,10 @@ sub refresh {
   my $menu = $Opts{menu};
   my $idx = 0;
   foreach my $ep (@{$Opts{ent}}) {
-    $menu->entryconfigure($idx++, -label => "$ep->{text} - ${$ep->{var}}");
+    if ($ep->{text} ne '') {
+      $menu->entryconfigure($idx, -label => "$ep->{text} - ${$ep->{var}}");
+    }
+    $idx++;
   }
   foreach my $i (0..9) {
     my $fn = (defined $Opt->{RecentTab}[$i]) ? $Opt->{RecentTab}[$i] : '. . .';

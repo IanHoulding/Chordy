@@ -8,12 +8,14 @@ Bit late starting with 2.6.4 but about time I documented it :-)
 	   Added Edit Lyrics to the Edit button frame.
 	   Reformatted the Copy/Paste frame.
 	   Added the "Save Fonts" option for when a Tab is saved.
+	   Made a start on making the $Tab variable non-global.
 	   Bugfix - 'Recent' list now gets reformatted when it changes - the command
 	     element was not being updated.
            Bugfix - a couple of calls in TabMenu failed because the subroutines had
 	     been moved.
 	   Bugfix - small notes at end of Bend/Release not handled with the new font
 	     mechanism.
+	   Bugfix - Options menu entries out of order when an item was changed.
   Chordy - Re-engineered the Chord object to be easrier to manipulate.
            Made ChordPro chords follow the spec closer by allowing '*' as the first
 	     character followed by any text.
