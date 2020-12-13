@@ -21,6 +21,7 @@ use CP::Cmsg;
 
 my %Opts = ();
 my $Recent;
+
 #
 # Not really a module in the strictest sense
 # but a way to keep all the menu code together.
@@ -101,7 +102,7 @@ sub new {
   $file->add_command(-label => "Exit",
 		     -font => 'TkMenuFont',
 		     -command => \&exitTab);
-
+###
   $edit->add_command(-label => "Collection",
 		     -font => 'TkMenuFont',
 		     -command => sub{$Collection->edit()});
@@ -111,7 +112,7 @@ sub new {
   $edit->add_command(-label => "Fonts",
 		     -font => 'TkMenuFont',
 		     -command => [\&fontEdit, $tab]);
-  
+###  
   $PDF->add_command(-label => "View",
 		    -font => 'TkMenuFont',
 		    -command => [\&CP::TabPDF::make, $tab, 'V']);
@@ -131,43 +132,42 @@ sub new {
   $PDF->add_command(-label => 'Save As Text',
 		    -font => 'TkMenuFont',
 		    -command => sub{$tab->saveAsText()});
-
+###
   $Opts{menu} = $opt;
-  my $oidx = 0;
-  $Opts{ent}[$oidx] = {text => 'Bars/Stave', var => \$Opt->{Nbar}};
+  $Opts{ent}[0] = {text => 'Bars/Stave', var => \$Opt->{Nbar}};
   my $bps = $opt->new_menu;
   $opt->add_cascade(-menu => $bps,
 		    -font => 'TkMenuFont',
-		    -label => 'Bars/Stave'." - $Opt->{Nbar}");
+		    -label => 'Bars/Stave'."   $Opt->{Nbar}");
   foreach (qw/3 4 5 6 7 8 9 10/) {
     $bps->add_radiobutton(-label => $_,
 			  -variable => \$Opt->{Nbar},
 			  -font => 'TkMenuFont',
 			  -command => sub{$tab->drawPageWin();
 					  main::setEdited(1);
-					  config($opt, $oidx, 'Bars/Stave', $Opt->{Nbar});
+					  config(0);
 					  $Opt->saveOne('Nbar');
 			  });
   }
-  $Opts{ent}[++$oidx] = {text => 'Edit Scale', var => \$Opt->{EditScale}};
+  $Opts{ent}[1] = {text => 'Edit Scale', var => \$Opt->{EditScale}};
   my $es = $opt->new_menu;
   $opt->add_cascade(-menu => $es,
 		    -font => 'TkMenuFont',
-		    -label => 'Edit Scale'." - $Opt->{EditScale}");
+		    -label => 'Edit Scale'."   $Opt->{EditScale}");
   foreach (qw/3 3.5 4 4.5 5 5.5 6/) {
     $es->add_radiobutton(-label => $_,
 			 -variable => \$Opt->{EditScale},
 			 -font => 'TkMenuFont',
 			 -command => sub{CP::TabWin::editWindow($tab);
-					 config($opt, $oidx, 'Edit Scale', $Opt->{EditScale});
+					 config(1);
 					 $Opt->saveOne('EditScale');
 			 });
   }
-  $Opts{ent}[++$oidx] = {text => 'Instrument', var => \$Opt->{Instrument}};
+  $Opts{ent}[2] = {text => 'Instrument', var => \$Opt->{Instrument}};
   my $inst = $opt->new_menu;
   $opt->add_cascade(-menu => $inst,
 		    -font => 'TkMenuFont',
-		    -label => 'Instrument'." - $Opt->{Instrument}");
+		    -label => 'Instrument'."   $Opt->{Instrument}");
   foreach (@{$Opt->{Instruments}}) {
     $inst->add_radiobutton(-label => $_,
 			   -variable => \$Opt->{Instrument},
@@ -175,15 +175,15 @@ sub new {
 			   -command =>
 			   sub{$tab->drawPageWin();
 			       main::setEdited(1);
-			       config($opt, $oidx, 'Instrument', $Opt->{Instrument});
+			       config(2);
 			       $Opt->saveOne('Instrument');
 			   });
   }
-  $Opts{ent}[++$oidx] = {text => 'Lyric Lines', var => \$Opt->{LyricLines}};
+  $Opts{ent}[3] = {text => 'Lyric Lines', var => \$Opt->{LyricLines}};
   my $ll = $opt->new_menu;
   $opt->add_cascade(-menu => $ll,
 		    -font => 'TkMenuFont',
-		    -label => 'Lyric Lines'." - $Opt->{LyricLines}");
+		    -label => 'Lyric Lines'."   $Opt->{LyricLines}");
   foreach (qw/0 1 2 3/) {
     $ll->add_radiobutton(-label => $_,
 			 -variable => \$Opt->{LyricLines},
@@ -191,33 +191,29 @@ sub new {
 			 -command => sub{$tab->{lyrics}->adjust($Opt->{LyricLines});
 					 $tab->drawPageWin();
 					 main::setEdited(1);
-					 config($opt, $oidx, 'Lyric Lines', $Opt->{LyricLines});
+					 config(3);
 					 $Opt->saveOne('LyricLines');
 			 });
   }
-  $Opts{ent}[++$oidx] = {text => 'Lyric Spacing', var => \$tab->{lyricSpace}};
+  $Opts{ent}[4] = {text => 'Lyric Spacing', var => \$tab->{lyricSpace}};
   my $ls = $opt->new_menu;
   $opt->add_cascade(-menu => $ls,
 		    -font => 'TkMenuFont',
-		    -label => 'Lyric Spacing'." - $tab->{lyricSpace}");
+		    -label => 'Lyric Spacing'."   $tab->{lyricSpace}");
   foreach (qw/0 2 4 6 8 10 12 14 16 18 20/) {
     $ls->add_radiobutton(-label => $_,
 			 -variable => \$tab->{lyricSpace},
 			 -font => 'TkMenuFont',
 			 -command => sub{$tab->drawPageWin();
 					 main::setEdited(1);
-					 config($opt, $oidx, 'Lyric Spacing', $tab->{lyricSpace});
+					 config(4);
 			 });
   }
-  $Opts{ent}[++$oidx] = {text => '', var => \$Opt->{SaveFonts}};
-  $opt->add_checkbutton(-label => "Save Fonts",
-			-variable => \$Opt->{SaveFonts},
-			-font => 'TkMenuFont');
-  $Opts{ent}[++$oidx] = {text => 'Set Key', var => \$tab->{key}};
+  $Opts{ent}[5] = {text => 'Set Key', var => \$tab->{key}};
   my $key = $opt->new_menu;
   $opt->add_cascade(-menu => $key,
 		    -font => 'TkMenuFont',
-		    -label => 'Set Key'." - $tab->{key}");
+		    -label => 'Set Key'."   $tab->{key}");
   no warnings; # stops perl bleating about '#' in array definition.
   foreach (qw/- Ab Abm A Am A# A#m Bb Bbm B Bm C Cm C# C#m Db Dbm D Dm D# D#m Eb Ebm E Em F Fm F# F#m Gb Gbm G Gm G# G#m/) {
     $key->add_radiobutton(-label => $_,
@@ -225,29 +221,29 @@ sub new {
 			  -font => 'TkMenuFont',
 			  -command => sub{$tab->pageKey();
 					  main::setEdited(1);
-					  config($opt, $oidx, 'Set Key', $tab->{key});
+					  config(5);
 			  });
   }
   use warnings;
-  $Opts{ent}[++$oidx] = {text => 'Stave Gap', var => \$tab->{staveGap}};
+  $Opts{ent}[6] = {text => 'Stave Gap', var => \$tab->{staveGap}};
   my $sg = $opt->new_menu;
   $opt->add_cascade(-menu => $sg,
 		    -font => 'TkMenuFont',
-		    -label => 'Stave Gap'." - $tab->{staveGap}");
+		    -label => 'Stave Gap'."   $tab->{staveGap}");
   foreach (qw/0 1 2 3 4 5 6 8 9 10 11 12 13 14 16 18 20/) {
     $sg->add_radiobutton(-label => $_,
 			 -variable => \$tab->{staveGap},
 			 -font => 'TkMenuFont',
 			 -command => sub{$tab->drawPageWin();
 					 main::setEdited(1);
-					 config($opt, $oidx, 'Stave Gap', $tab->{staveGap});
+					 config(6);
 			 });
   }
-  $Opts{ent}[++$oidx] = {text => 'String Spacing', var => \$Opt->{StaffSpace}};
+  $Opts{ent}[7] = {text => 'String Spacing', var => \$Opt->{StaffSpace}};
   my $ss = $opt->new_menu;
   $opt->add_cascade(-menu => $ss,
 		    -font => 'TkMenuFont',
-		    -label => 'String Spacing'." - $Opt->{StaffSpace}");
+		    -label => 'String Spacing'."   $Opt->{StaffSpace}");
   foreach (qw/6 7 8 9 10 11 12 13 14 15 16/) {
     $ss->add_radiobutton(-label => $_,
 			 -variable => \$Opt->{StaffSpace},
@@ -255,15 +251,15 @@ sub new {
 			 -command => sub{$tab->drawPageWin();
 					 CP::TabWin::editWindow($tab);
 					 main::setEdited(1);
-					 config($opt, $oidx, 'String Spacing', $Opt->{StaffSpace});
+					 config(7);
 					 $Opt->saveOne('StaffSpace');
 			 });
   }
-  $Opts{ent}[++$oidx] = {text => 'Timing', var => \$tab->{Timing}};
+  $Opts{ent}[8] = {text => 'Timing', var => \$tab->{Timing}};
   my $tim = $opt->new_menu;
   $opt->add_cascade(-menu => $tim,
 		    -font => 'TkMenuFont',
-		    -label => 'Timing'." - $tab->{Timing}");
+		    -label => 'Timing'."   $tab->{Timing}");
   foreach (qw{2/4 3/4 4/4}) {
     $tim->add_radiobutton(-label => $_,
 			  -variable => \$tab->{Timing},
@@ -273,10 +269,14 @@ sub new {
 					  $tab->drawPageWin();
 					  CP::TabWin::editWindow($tab);
 					  main::setEdited(1);
-					  config($opt, $oidx, 'Timing', $tab->{Timing});
+					  config(8);
 			  });
   }
-  
+  $opt->add_separator();
+  $opt->add_checkbutton(-label => "Save Fonts",
+			-variable => \$Opt->{SaveFonts},
+			-font => 'TkMenuFont');
+###  
   $misc->add_command(-label => 'View Error Log',
 		     -font => 'TkMenuFont',
 		     -command => \&viewElog);
@@ -307,7 +307,7 @@ sub refresh {
   my $idx = 0;
   foreach my $ep (@{$Opts{ent}}) {
     if ($ep->{text} ne '') {
-      $menu->entryconfigure($idx, -label => "$ep->{text} - ${$ep->{var}}");
+      $menu->entryconfigure($idx, -label => "$ep->{text}   ${$ep->{var}}");
     }
     $idx++;
   }
@@ -327,9 +327,10 @@ sub refresh {
 }
 
 sub config {
-  my($menu,$idx,$opt,$val) = @_;
+  my($idx) = shift;
 
-  $menu->entryconfigure($idx, -label => "$opt - $val");
+  my $ap = $Opts{ent}[$idx];
+  $Opts{menu}->entryconfigure($idx, -label => "$ap->{text}   ${$ap->{var}}");
 }
 
 sub openTab {
@@ -450,7 +451,7 @@ sub exportTab {
 }
 
 sub exitTab {
-  my($tab) = CP::Tab::getTab();  # We need the current definition of $Tab
+  my($tab) = CP::Tab::get();  # We need the current definition of $Tab
   if ($tab->checkSave() ne 'Cancel') {
     $MW->g_destroy();
     exit(0);

@@ -116,7 +116,7 @@ sub setRate {
 sub note {
   my($tab) = shift;
 
-  $AfterID = Tkx::after(int(7500/$tab->{tempo}), \&note); # Same as: 600000/($tab->{tempo}*8)
+  $AfterID = Tkx::after(int(7500/$tab->{tempo}), [\&note, $tab]); # Same as: 600000/($tab->{tempo}*8)
   if ($tab->{play} == PLAY || $tab->{play} == LOOP || $tab->{play} == MET) {
     my $ticks = eval($tab->{Timing}) * 32;
     $Paused = 0 if ($Paused);

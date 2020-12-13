@@ -32,7 +32,7 @@ use warnings;
 
 BEGIN {
   our @ISA = qw(Exporter);
-  our @EXPORT = qw/$Tab $EditBar $EditBar1/;
+  our @EXPORT = qw/$EditBar $EditBar1/;
   require Exporter;
 }
 
@@ -113,7 +113,7 @@ sub new {
   $Tab;
 }
 
-sub getTab {
+sub get {
   $Tab;
 }
 

@@ -127,8 +127,7 @@ Tkx::MainLoop();
 ###########################################################################################
 
 sub setEdited {
-  my($tab) = shift;
-
+  my $tab = CP::Tab->get();
   $tab->{edited} = shift;
   tabTitle($tab, $tab->{fileName});
 }
