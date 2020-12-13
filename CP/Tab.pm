@@ -93,7 +93,7 @@ sub new {
   $Tab->{staveGap} = 0;
   $Tab->{lyricSpace} = 0;
   $Tab->{lyricEdit}  = 0;
-  $Tab->{lyrics}   = CP::Lyric->new(); # array containing ALL the lyrics
+  $Tab->{lyrics}   = CP::Lyric->new($Tab); # array containing ALL the lyrics
   $Tab->{rests}    = {};
   $Tab->{pstart}   = [];
   $Tab->{noteFsize} = 'Normal';
@@ -110,6 +110,11 @@ sub new {
     }
     $Tab->{PDFname} = $Tab->{title}.'.pdf';
   }
+  $Tab;
+}
+
+sub getTab {
+  $Tab;
 }
 
 sub drawPageWin {
@@ -118,9 +123,9 @@ sub drawPageWin {
   readChords();  # Need $Nstring and @Tuning
   offsets($self);
   setXY($self);
-  CP::TabWin::pageWindow();
-  CP::TabWin::editWindow();
-  main::tabTitle($self->{fileName});
+  CP::TabWin::pageWindow($self);
+  CP::TabWin::editWindow($self);
+  main::tabTitle($self, $self->{fileName});
   indexBars($self);
   $self->pageHdr();
   $self->newPage(0);
@@ -149,8 +154,8 @@ sub offsets {
   $self->{barTop} = $self->{pageHeader} + 1 + $Opt->{TopMargin};
 
   $off{width} = int(($Media->{width} - ($Opt->{LeftMargin} + $Opt->{RightMargin})) / $Opt->{Nbar});
-  my($t,$_t) = split('/', $Tab->{Timing});
-  $Tab->{BarEnd} = $t * 8;
+  my($t,$_t) = split('/', $self->{Timing});
+  $self->{BarEnd} = $t * 8;
   $off{interval} = $off{width} / (($t * 8) + 3);
   # Distance between lines of a Staff.
   $off{staffSpace} = $Opt->{StaffSpace};
@@ -403,7 +408,7 @@ sub load {
       elsif ($cmd =~ /^newpage$/i)        {$newpage = 1;}
       elsif ($cmd =~ /^instrument$/i)     {$Opt->{Instrument} = ucfirst(lc($txt)); readChords();}
       elsif ($cmd =~ /^bars_per_stave$/i) {$Opt->{Nbar} = $txt + 0;}
-      elsif ($cmd =~ /^timing$/i)         {$Tab->{Timing} = $txt}
+      elsif ($cmd =~ /^timing$/i)         {$self->{Timing} = $txt}
       elsif ($cmd =~ /^staff_space$/i)    {$Opt->{StaffSpace} = $txt + 0;}
       elsif ($cmd =~ /^stave_gap$/i)      {$self->{staveGap} = $txt + 0;}
       elsif ($cmd =~ /^lyric_space$/i)    {$self->{lyricSpace} = $txt + 0;}
@@ -456,7 +461,7 @@ sub load {
       }
     }
   }
-  $Tab->{Timing} .= '/4' if (length($Tab->{Timing}) == 1);
+  $self->{Timing} .= '/4' if (length($self->{Timing}) == 1);
   close(IFH);
   $self->guessKey() if ($self->{key} eq '-');
   $self->{loaded} = 1;
@@ -466,7 +471,7 @@ sub add1bar {
   my($self) = shift;
 
   my $last = $self->{lastBar};
-  my $bar = CP::Bar->new($self->{pOffset});
+  my $bar = CP::Bar->new($self);
   if ($last == 0) {
     $self->{bars} = $bar;
   } else {
@@ -576,7 +581,7 @@ sub save {
       print $OFH '{note:'.$self->{note}."}\n" if ($self->{note} ne '');
       print $OFH '{tempo:'.$self->{tempo}."}\n";
       print $OFH '{bars_per_stave:'.$Opt->{Nbar}."}\n";
-      print $OFH '{timing:'.$Tab->{Timing}."}\n";
+      print $OFH '{timing:'.$self->{Timing}."}\n";
       print $OFH '{staff_space:'.$Opt->{StaffSpace}."}\n";
       print $OFH '{stave_gap:'.$self->{staveGap}."}\n";
       print $OFH '{lyric_space:'.$self->{lyricSpace}."}\n";
@@ -940,7 +945,7 @@ sub Copy {
   } else {
     @Copy = ();
     do {
-      my $copy = CP::Bar->new($self->{pOffset});
+      my $copy = CP::Bar->new($self);
       $a->copy($copy, $what);
       $copy->{bidx} = $a->{bidx};
       push(@Copy, $copy);
@@ -980,7 +985,7 @@ sub PasteBefore {
   if (pasteStart($self)) {
     my $dst = $self->{select1}{prev};
     foreach my $src (@Copy) {
-      my $bar = CP::Bar->new($self->{pOffset});
+      my $bar = CP::Bar->new($self);
       $src->copy($bar, HANDN);
       if ($dst == 0) {
 	$self->{bars} = $bar;
@@ -1003,7 +1008,7 @@ sub PasteAfter {
     my $dst = $self->{select1};
     my $next = $dst->{next};
     foreach my $src (@Copy) {
-      my $bar = CP::Bar->new($self->{pOffset});
+      my $bar = CP::Bar->new($self);
       $src->copy($bar, HANDN);
       $dst->{next} = $bar;
       $bar->{prev} = $dst;
@@ -1290,7 +1295,7 @@ sub saveAsText {
     return();
   }
   my @bars = ();
-  my($t,$_t) = split('/', $Tab->{Timing});
+  my($t,$_t) = split('/', $self->{Timing});
   my $div = 8;
   for(my $b = $self->{bars}; $b != 0; $b = $b->{next}) {
     foreach my $n (@{$b->{notes}}) {

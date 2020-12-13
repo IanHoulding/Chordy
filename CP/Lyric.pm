@@ -34,11 +34,12 @@ use CP::Tab;
 my $Ignore = 1;
 
 sub new {
-  my($proto) = @_;
+  my($proto,$tab) = @_;
 
   my $class = ref($proto) || $proto;
   my $self = {};
   bless $self, $class;
+  $self->{tab} = $tab;
   $self->{text} = [];    # Contains all the lyric lines as a linear array.
   $self->{widget} = [];  # Contains enough Text widgets for a page.
   $self;
@@ -47,19 +48,20 @@ sub new {
 sub widgets {
   my($self) = shift;
 
-  if ((my $ll = $Opt->{LyricLines}) && $Tab->{rowsPP}) {
-    my $can = $Tab->{pCan};
-    my $off = $Tab->{pOffset};
+  my $tab = $self->{tab};
+  if ((my $ll = $Opt->{LyricLines}) && $tab->{rowsPP}) {
+    my $can = $tab->{pCan};
+    my $off = $tab->{pOffset};
     my $w = $Media->{width} - ($Opt->{LeftMargin} + $Opt->{RightMargin});
     my $h = $off->{lyricHeight};
     my $ht = $off->{height};
-    my $y = $Tab->{pageHeader} + $Opt->{TopMargin} + $off->{lyricY};
+    my $y = $tab->{pageHeader} + $Opt->{TopMargin} + $off->{lyricY};
 
     my $wid = $self->{widget};
-    my $font = $Tab->{wordFont};
-    my $fg = $Tab->{wordColor};
+    my $font = $tab->{wordFont};
+    my $fg = $tab->{wordColor};
     my $rc = 0;
-    foreach my $row (0..($Tab->{rowsPP} - 1)) {
+    foreach my $row (0..($tab->{rowsPP} - 1)) {
       my $frm = $can->new_ttk__frame(-width => $Media->{width},
 				     -height => $h * $ll,
 				     -padding => [0,0,0,0]);
@@ -71,8 +73,8 @@ sub widgets {
 	  -fg   => $fg);
 	$wdgt->g_pack(qw/-side top -anchor nw -fill x/);
 	my $myrc = $rc;
-	$wdgt->g_bind('<Key-Up>' => sub{moveWidget($wid, $myrc, -1)});
-	$wdgt->g_bind('<Key-Down>' => sub{moveWidget($wid, $myrc, 1)});
+	$wdgt->g_bind('<Key-Up>' => sub{moveWidget($tab,$wid, $myrc, -1)});
+	$wdgt->g_bind('<Key-Down>' => sub{moveWidget($tab,$wid, $myrc, 1)});
 	$wid->[$rc++] = $wdgt;
       }
       my $win = $can->create_window($Opt->{LeftMargin}, $y,
@@ -89,22 +91,22 @@ sub widgets {
 # $idx is a valuee from 0 to # of text widgets (minus 1) on one page.
 # $dir is either -1 or +1
 sub moveWidget {
-  my($wid,$idx,$dir) = @_;
+  my($tab,$wid,$idx,$dir) = @_;
 
   my $mark = $wid->[$idx]->index('insert');
-  my $npage = $Tab->{nPage} - 1;
+  my $npage = $tab->{nPage} - 1;
   my $pn = -1;
   if ($idx == 0 && $dir < 0) {
     $idx = $#{$wid};
-    $pn = ($Tab->{pageNum} == 0) ? $npage : $Tab->{pageNum} - 1;
+    $pn = ($tab->{pageNum} == 0) ? $npage : $tab->{pageNum} - 1;
   } elsif ($idx == $#{$wid} && $dir > 0) {
     $idx = 0;
-    $pn = ($Tab->{pageNum} == $npage) ? 0 : $Tab->{pageNum} + 1;
+    $pn = ($tab->{pageNum} == $npage) ? 0 : $tab->{pageNum} + 1;
   } else {
     $idx += $dir;
   }
   if ($pn >= 0) {
-    $Tab->newPage($pn);
+    $tab->newPage($pn);
   }
   $wid->[$idx]->g_focus();
   $wid->[$idx]->mark_set('insert', $mark);
@@ -162,13 +164,11 @@ sub show {
   my($self) = shift;
 
   if (my $ll = $Opt->{LyricLines}) {
-    my $lidx = $Tab->{pageNum} * $Tab->{rowsPP} * $ll;
+    my $lidx = $self->{tab}{pageNum} * $self->{tab}{rowsPP} * $ll;
     my $text = $self->{text};
-#    my $mod = $self->{modified};
     my $rc = 0;
     foreach my $wid (@{$self->{widget}}) {
       $wid->replace('1.0', 'end', $text->[$lidx]);
-#      $mod->[$lidx++] = 0;
       $wid->edit_reset();
       $wid->edit_modified(0);
       $lidx++;
@@ -180,7 +180,7 @@ sub show {
 sub printArray {
   my($self,$ind) = @_;
 
-  my $pidx = $Tab->{pageNum} * $Tab->{rowsPP} * $Opt->{LyricLines};
+  my $pidx = $self->{tab}{pageNum} * $self->{tab}{rowsPP} * $Opt->{LyricLines};
   my $text = $self->{text};
   my $idx = 0;
   foreach my $wid (@{$self->{widget}}) {
@@ -198,7 +198,7 @@ sub collect {
   my($self) = shift;
 
   if (my $ll = $Opt->{LyricLines}) {
-    my $lidx = $Tab->{pageNum} * $Tab->{rowsPP} * $ll;
+    my $lidx = $self->{tab}{pageNum} * $self->{tab}{rowsPP} * $ll;
     my $text = $self->{text};
     foreach my $wid (@{$self->{widget}}) {
       $text->[$lidx] = $wid->get('1.0', '1.end') if ($wid->edit_modified());
@@ -243,7 +243,7 @@ sub adjust {
   if ($new) {
     my $ll = $Opt->{LyricLines};
     if ($new == $ll) {
-      my $lidx = $Tab->{nPage} * $Tab->{rowsPP} * $ll;
+      my $lidx = $self->{tab}{nPage} * $self->{tab}{rowsPP} * $ll;
       foreach my $idx (0..($lidx - 1)) {
 	if (! defined $self->{text}[$idx]) {
 	  $self->{text}[$idx] = '';

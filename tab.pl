@@ -114,10 +114,10 @@ if ($sc != 1) {
   }
 }
 
-CP::Tab->new($FN);
-CP::TabMenu->new();
-$Tab->{scaling} = $sc;
-$Tab->drawPageWin();
+my $tab = CP::Tab->new($FN);
+CP::TabMenu->new($tab);
+$tab->{scaling} = $sc;
+$tab->drawPageWin();
 
 $MW->g_wm_deiconify();
 $MW->g_raise();
@@ -127,14 +127,16 @@ Tkx::MainLoop();
 ###########################################################################################
 
 sub setEdited {
-  $Tab->{edited} = shift;
-  tabTitle($Tab->{fileName});
+  my($tab) = shift;
+
+  $tab->{edited} = shift;
+  tabTitle($tab, $tab->{fileName});
 }
 
 sub tabTitle {
-  my($fn) = shift;
+  my($tab,$fn) = @_;
 
-  my $ed = ($Tab->{edited}) ? ' (edited)' : '';
+  my $ed = ($tab->{edited}) ? ' (edited)' : '';
   $MW->g_wm_title("Tab Editor  |  Collection: ".$Collection->{name}."  |  Media: $Opt->{Media}  |  Tab: $fn$ed");
 }
 
@@ -142,8 +144,9 @@ sub viewOnePDF {
   my($path,$fn) = @_;
 
   my $orgFN = '';
-  if (defined $Tab) {
-    $orgFN = $Tab->{fileName};
+  my $tab = CP::Tab->get();
+  if (defined $tab) {
+    $orgFN = $tab->{fileName};
   }
   CP::Tab->new("$path/$fn");
   CP::TabPDF::make('V');

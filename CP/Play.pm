@@ -68,17 +68,19 @@ my $Paused = 0;
 my $AfterID = 0;
 
 sub play {
+  my($tab) = shift;
+
   return if (OS ne 'win32');
   if (! $Paused && ! defined $WAV) {
     newWav();
-    my $fst = ($Tab->{select1}) ? $Tab->{select1} : $Tab->{bars};
-    my $lst = ($Tab->{select2}) ? $Tab->{select2} : $Tab->{lastBar};
+    my $fst = ($tab->{select1}) ? $tab->{select1} : $tab->{bars};
+    my $lst = ($tab->{select2}) ? $tab->{select2} : $tab->{lastBar};
     @Bars = ();
     %Note = ();
-    makeNotes($fst, $lst);
+    makeNotes($tab, $fst, $lst);
     $BarIdx = 0;
     $Beat = 0;
-    note();
+    note($tab);
   }
 }
 
@@ -112,20 +114,22 @@ sub setRate {
 }
 
 sub note {
-  $AfterID = Tkx::after(int(7500/$Tab->{tempo}), \&note); # Same as: 600000/($Tab->{tempo}*8)
-  if ($Tab->{play} == PLAY || $Tab->{play} == LOOP || $Tab->{play} == MET) {
-    my $ticks = eval($Tab->{Timing}) * 32;
+  my($tab) = shift;
+
+  $AfterID = Tkx::after(int(7500/$tab->{tempo}), \&note); # Same as: 600000/($tab->{tempo}*8)
+  if ($tab->{play} == PLAY || $tab->{play} == LOOP || $tab->{play} == MET) {
+    my $ticks = eval($tab->{Timing}) * 32;
     $Paused = 0 if ($Paused);
     if ($BarIdx == @Bars) {
-      if ($Tab->{play} == LOOP) {
+      if ($tab->{play} == LOOP) {
 	$BarIdx = 0;
       } else {
-	stop();
+	stop($tab);
 	return;
       }
     }
     my $iv = $Bars[$BarIdx];
-    if (defined $iv->{pos}[$Beat] && $Tab->{play} != MET) {
+    if (defined $iv->{pos}[$Beat] && $tab->{play} != MET) {
       resetWav();
       my $idx = $iv->{pos}[$Beat][0];
       if ($idx ne 'r') {
@@ -137,8 +141,8 @@ sub note {
       # Draw the vertical red "beat" bar.
       #
       my $bar = $iv->{bar};
-      if ($bar->{pnum} != $Tab->{pageNum}) {
-	$Tab->newPage($bar->{pnum});
+      if ($bar->{pnum} != $tab->{pageNum}) {
+	$tab->newPage($bar->{pnum});
       }
       my($can,$X,$Y,$off) = ($bar->{canvas},$bar->{x},$bar->{y},$bar->{offset});
       my $ly = $Y + $off->{staffY} - 4;
@@ -147,7 +151,7 @@ sub note {
       $can->delete('beat');
       $can->create_line($lx, $ly, $lx, $y2,
 			-width => 2, -fill => RED, -tags => 'beat');
-      if ($Tab->{play} == MET) {
+      if ($tab->{play} == MET) {
 	resetWav();
 	load($Tick);
       }
@@ -156,20 +160,22 @@ sub note {
       $Beat = 0;
       $BarIdx++;
     }
-  } elsif ($Tab->{play} == STOP) {
-    stop();
+  } elsif ($tab->{play} == STOP) {
+    stop($tab);
     return;
-  } elsif ($Tab->{play} == PAUSE) {
+  } elsif ($tab->{play} == PAUSE) {
     pause() if ($Paused == 0);
     $Paused++;
   }
 }
 
 sub stop {
+  my($tab) = shift;
+
   Tkx::after_cancel($AfterID) if ($AfterID);
   my $can = $Bars[0]->{bar}{canvas};
   $can->delete('beat') if (defined $can);
-  $Tab->ClearSel();
+  $tab->ClearSel();
   if (OS eq 'win32') {
     resetWav();
     unload();
@@ -181,7 +187,7 @@ sub stop {
 }
 
 sub makeNotes {
-  my($first,$last) = @_;
+  my($tab,$first,$last) = @_;
 
   my $time = setRate() * 2;  # how long we want a note to last
   #
@@ -215,7 +221,7 @@ sub makeNotes {
   # Second pass detects any multiple notes and
   # amalgamates them into a single chord
   #
-  my $ticks = (eval($Tab->{Timing}) * 32) - 1;
+  my $ticks = (eval($tab->{Timing}) * 32) - 1;
   foreach my $iv (@Bars) {
     my $pos = $iv->{pos};
     foreach my $t (0..$ticks) {
@@ -228,11 +234,11 @@ sub makeNotes {
 	    $off = $str if ($str < $off);
 	  }
 	  # Sample rate is RATE samples/second.
-	  # Each beat duration is (60 / $Tab->{tempo}) seconds.
+	  # Each beat duration is (60 / $tab->{tempo}) seconds.
 	  # Each 'tick' is 1/8 of this (there are 8 ticks per beat).
-	  # So each tick is:  60 / ($Tab->{tempo} * 8) seconds long.
+	  # So each tick is:  60 / ($tab->{tempo} * 8) seconds long.
 	  # Multiple RATE by this and we get the samples/tick.
-	  my $delay = RATE * (60 / $Tab->{tempo}) * eval($Crate);
+	  my $delay = RATE * (60 / $tab->{tempo}) * eval($Crate);
 	  foreach my $strfrt (@{$pos->[$t]}) {
 	    my($str,$frt) = split(/\./, $strfrt);
 	    $str -= $off;
@@ -438,7 +444,7 @@ static char * metronome_xpm[] = {
 EOXPM
 
 sub pagePlay {
-  my($fr) = shift;
+  my($tab,$fr) = @_;
 
   my $frt = $fr->new_ttk__frame();
   $frt->g_pack(qw/-side top/);
@@ -450,9 +456,9 @@ sub pagePlay {
   $lb->g_grid(qw/-row 0 -column 0 -sticky e/);
 
   my $sc;
-  my $trc = sprintf("#%02x0000", $Tab->{tempo} + 55);
+  my $trc = sprintf("#%02x0000", $tab->{tempo} + 55);
   $sc = $frt->new_tk__scale(
-    -variable => \$Tab->{tempo},
+    -variable => \$tab->{tempo},
     -fg => DRED,
     -from => 40,
     -to => 200,
@@ -465,40 +471,40 @@ sub pagePlay {
     -bg => MWBG,
     -troughcolor => $trc,
     -command => sub {
-      $trc = sprintf("#%02x0000", $Tab->{tempo} + 55);
+      $trc = sprintf("#%02x0000", $tab->{tempo} + 55);
       $sc->m_configure(-troughcolor => $trc);
-      $Tab->pageTempo();
-      main::setEdited(1) if ($Tab->{loaded});});
+      $tab->pageTempo();
+      main::setEdited(1) if ($tab->{loaded});});
   $sc->g_grid(qw/-row 0 -column 1/);
 
   makeImage("stop", \%CNTRL);
   my $st = $frb->new_ttk__button(
     -image => 'stop',
-    -command => sub{$Tab->{play} = STOP});
+    -command => sub{$tab->{play} = STOP});
   $st->g_grid(qw/-row 0 -column 0 -padx 4 -pady 4/);
 
   makeImage("play", \%CNTRL);
   my $pl = $frb->new_ttk__button(
     -image => 'play',
-    -command => sub{$Tab->{play} = PLAY; CP::Play::play();});
+    -command => sub{$tab->{play} = PLAY; play($tab);});
   $pl->g_grid(qw/-row 0 -column 1 -padx 4 -pady 4/);
 
   makeImage("pause", \%CNTRL);
   my $pa = $frb->new_ttk__button(
     -image => 'pause',
-    -command => sub{$Tab->{play} = PAUSE});
+    -command => sub{$tab->{play} = PAUSE});
   $pa->g_grid(qw/-row 0 -column 2 -padx 4 -pady 4/);
 
   makeImage("loop", \%CNTRL);
   my $pp = $frb->new_ttk__button(
     -image => 'loop',
-    -command => sub{$Tab->{play} = LOOP; CP::Play::play();});
+    -command => sub{$tab->{play} = LOOP; play($tab);});
   $pp->g_grid(qw/-row 0 -column 3 -padx 4 -pady 4/);
 
   makeImage("metronome", \%CNTRL);
   my $pm = $frb->new_ttk__button(
     -image => 'metronome',
-    -command => sub{$Tab->{play} = MET; CP::Play::play();});
+    -command => sub{$tab->{play} = MET; play($tab);});
   $pm->g_grid(qw/-row 0 -column 4 -padx 5 -pady 4/);
 
   my $bsl = $frb->new_ttk__label(-text => "Damping:");

@@ -78,7 +78,7 @@ sub new {
     if ($def =~ /(f)?([-]?[X\d]+),(\d+)([bhrsv])?(\d+)?,?([-]?\d+)?/) {
       $self->{font} = 'Small' if ($1 eq 'f');
       $self->{fret} = $2;
-      $self->{pos} = ($3 % $Tab->{BarEnd});
+      $self->{pos} = ($3 % $bar->{tab}{BarEnd});
       if (defined $4) {
 	$self->{shbr} = lc($4);
 	my $p5 = $5;
@@ -155,11 +155,12 @@ sub comp {
 sub select {
   my($self) = shift;
 
-  my $id = $Tab->{selected};
+  my $tab = $self->{bar}{tab};
+  my $id = $tab->{selected};
   my $can = $self->{bar}{canvas};
   if ($id == 0) {
-    if ($Tab->{shbr} =~ /b|s|h/) {
-      if ($Tab->{shbr} eq 'b') {
+    if ($tab->{shbr} =~ /b|s|h/) {
+      if ($tab->{shbr} eq 'b') {
 	$self->{shbr} = 'b';
 	$self->{bend} = 1;
 	show($self, 'F');
@@ -169,14 +170,14 @@ sub select {
 	if (defined $nx) {
 	  if ($nx->{string} != $self->{string}) {
 	    message(SAD, "Fret positions MUST be on the same string!");
-	    $can->itemconfigure($id, -fill => $Tab->{noteColor});
-	    $Tab->{selected} = 0;
-	    $Tab->{shbr} = '';
+	    $can->itemconfigure($id, -fill => $tab->{noteColor});
+	    $tab->{selected} = 0;
+	    $tab->{shbr} = '';
 	  }
 	  else {
 	    $self->unmap();
 	    # This has to be AFTER the unmap.
-	    $self->{shbr} = $Tab->{shbr};
+	    $self->{shbr} = $tab->{shbr};
 	    show($self, 'F');
 	  }
 	}
@@ -187,16 +188,16 @@ sub select {
     }
     else {
       $can->itemconfigure($self->{id}, -fill => RED);
-      $Tab->{selected} = $self->{id};
+      $tab->{selected} = $self->{id};
     }
   }
   else {
-    my $clr = ($self->{string} eq 'r') ? BLACK : $Tab->{noteColor};
+    my $clr = ($self->{string} eq 'r') ? BLACK : $tab->{noteColor};
     $can->itemconfigure($id, -fill => $clr);
-    $Tab->{selected} = 0;
+    $tab->{selected} = 0;
     if ($id != $self->{id}) {
       $can->itemconfigure($self->{id}, -fill => RED);
-      $Tab->{selected} = $self->{id};
+      $tab->{selected} = $self->{id};
     }
   }
 }
@@ -210,7 +211,7 @@ sub unmap {
   my $can = $self->{bar}{canvas};
   $can->delete("e$id");
   $self->{id} = '';
-  $Tab->{selected} = 0;
+  $self->{bar}{tab}{selected} = 0;
 }
 
 sub delFromBar {
@@ -250,6 +251,7 @@ sub move {
   my($self,$string,$pos) = @_;
 
   unmap($self);
+  my $tab = $self->{bar}{tab};
   if ($self->{shbr} =~ /s|h/) {
     my $sdiff = $string - $self->{string};
     my $pdiff = $pos - $self->{pos};
@@ -259,15 +261,15 @@ sub move {
     unmap($nn);
     $nn->{string} += $sdiff;
     $nn->{pos} += $pdiff;
-    if ($self->{bar} == $nn->{bar} && $nn->{pos} >= $Tab->{BarEnd}) {
+    if ($self->{bar} == $nn->{bar} && $nn->{pos} >= $tab->{BarEnd}) {
       # We've moved the end-point into the next Bar.
-      $nn->{pos} -= $Tab->{BarEnd};
+      $nn->{pos} -= $tab->{BarEnd};
       $nn = delFromBar($nn);
       $nn->{bar} = $EditBar1;
       $EditBar1->noteSort($nn);
     } elsif ($self->{bar} != $nn->{bar} && $nn->{pos} < 0) {
       # We've moved the end-point into our Bar
-      $nn->{pos} += $Tab->{BarEnd};
+      $nn->{pos} += $tab->{BarEnd};
       $nn = delFromBar($nn);
       $nn->{bar} = $EditBar;
       $EditBar->noteSort($nn);
@@ -276,8 +278,8 @@ sub move {
   } elsif (ref($self->{shbr}) eq 'CP::Note') {
     # This is the end note of a Slide/Hammer therefore
     # we force the move to stay on the same string.
-    if ($pos >= $Tab->{BarEnd}) {
-      $pos -= $Tab->{BarEnd};
+    if ($pos >= $tab->{BarEnd}) {
+      $pos -= $tab->{BarEnd};
       if ($self->{bar} == $EditBar) {
 	$self->{bar} = $EditBar1;
 	delFromBar($self);
@@ -304,6 +306,7 @@ sub show {
     $self->unmap();
   }
   my $bar  = $self->{bar};
+  my $tab  = $bar->{tab};
   my $can  = $bar->{canvas};
   my $pidx = $bar->{pidx};
   my $off  = $bar->{offset};
@@ -315,7 +318,7 @@ sub show {
     # Rest
     my $num = $self->{fret};
     my $yadd = ($num == 1) ? $ss : ($num == 2) ? $ss * 2 : $hh;
-    $fnt = ($pidx < 0) ? $Tab->{esymFont} : $Tab->{symFont};
+    $fnt = ($pidx < 0) ? $tab->{esymFont} : $tab->{symFont};
     $y = $bar->{y} + $off->{staffY} + $yadd;
     my $fill = ($pidx == -2) ? LGREY : BLACK;
     if ($pidx < 0) {
@@ -351,7 +354,7 @@ sub show {
       bendRel($self, $fnt, $tag);
     }
   }
-  $Tab->{shbr} = '';
+  $tab->{shbr} = '';
 }
 
 sub slideHam {
@@ -364,6 +367,7 @@ sub slideHam {
   }
   $nn->{shbr} = $self;
   my $bar = $self->{bar};
+  my $tab = $bar->{tab};
   my $can = $bar->{canvas};
   my $off = $bar->{offset};
   my $fat = $off->{fat};
@@ -373,10 +377,10 @@ sub slideHam {
   my $pos = $self->{pos};
   my $topos = $nn->{pos};
 
-  my $clr = $Tab->{headColor};
+  my $clr = $tab->{headColor};
   $clr = CP::FgBgEd::lighten($clr, PALE) if ($bar->{pidx} == -2);
 
-  my $xaxis = ($nn->{bar} != $bar) ? $Tab->{BarEnd} - $pos + 3 + $topos : $topos - $pos;
+  my $xaxis = ($nn->{bar} != $bar) ? $tab->{BarEnd} - $pos + 3 + $topos : $topos - $pos;
   $xaxis *= $u;
   if ($self->{shbr} eq 's') {
     my $slht = $ss * 0.4;
@@ -394,7 +398,7 @@ sub slideHam {
     }
     else {
       # Crosses a Bar boundary.
-      my $xlen = ($Tab->{BarEnd} + 1 - $pos) * $u;
+      my $xlen = ($tab->{BarEnd} + 1 - $pos) * $u;
       $x1 = $x + $xlen;
       my $ymid = ($xlen / $xaxis) * $slht;
       if ($nn->{fret} > $self->{fret}) {
@@ -475,13 +479,14 @@ sub bendRel {
   my($self,$fnt,$tag) = @_;
 
   my $bar = my $nb = $self->{bar};
+  my $tab = $bar->{tab};
   my $can = $bar->{canvas};
   my $off = $bar->{offset};
   my $fat = $off->{fat};
   my $u = $off->{interval};
   my $ss = $off->{staffSpace};
   my($x,$y) = $self->noteXY();
-  my $clr = $Tab->{headColor};
+  my $clr = $tab->{headColor};
   $clr = CP::FgBgEd::lighten($clr, PALE) if ($bar->{pidx} == -2);
 
   if ($self->{shbr} eq 'b') {
@@ -495,11 +500,11 @@ sub bendRel {
     # is in the same Bar as the Bend - makes the logic easier.
     my $hold = $self->{hold};
     my $arc1 = my $arc2 = ($hold > 6) ? 3 : $hold / 2;
-    if ($self->{pos} == ($Tab->{BarEnd} - 1)) {
+    if ($self->{pos} == ($tab->{BarEnd} - 1)) {
       $arc1 = 2;
     }
-    if (($self->{pos} + $hold) >= $Tab->{BarEnd}) {
-      if (($self->{pos} + $hold) == $Tab->{BarEnd}) {
+    if (($self->{pos} + $hold) >= $tab->{BarEnd}) {
+      if (($self->{pos} + $hold) == $tab->{BarEnd}) {
 	$arc2 = 2;
       }
       $hold += 4;
@@ -515,8 +520,8 @@ sub bendRel {
 		     -width => $fat,  -tags    => $tag);
     $x = $x1;
     $y -= ($ss * 0.6);
-    if (($self->{pos} + $hold) >= $Tab->{BarEnd}) {
-      $line -= ($Tab->{BarEnd} - 1 - $self->{pos});
+    if (($self->{pos} + $hold) >= $tab->{BarEnd}) {
+      $line -= ($tab->{BarEnd} - 1 - $self->{pos});
       $x1 = $bar->{x} + $off->{width};
     }
     else {
@@ -542,7 +547,8 @@ sub bendRel {
 sub bendRelTail {
   my($self,$bar,$hold,$arc,$xoff,$yoff,$tag) = @_;
 
-  my $clr = $Tab->{headColor};
+  my $tab = $bar->{tab};
+  my $clr = $tab->{headColor};
   $clr = CP::FgBgEd::lighten($clr, PALE) if ($bar->{pidx} == -2);
   my $off = $bar->{offset};
   my $fat = $off->{fat};
@@ -563,9 +569,9 @@ sub bendRelTail {
 			     -start => 0,     -extent  => 90,
 			     -style => 'arc', -outline => $clr,
 			     -width => $fat,  -tags    => $tag);
-  $clr = $Tab->{noteColor};
+  $clr = $tab->{noteColor};
   $clr = CP::FgBgEd::lighten($clr, PALE) if ($bar->{pidx} == -2);
-  my $fnt = ($bar->{pidx} >= 0) ? $Tab->{snoteFont} : $Tab->{esnoteFont};
+  my $fnt = ($bar->{pidx} >= 0) ? $tab->{snoteFont} : $tab->{esnoteFont};
   $bar->{canvas}->create_text($x1,$yoff,
 			      -text => $self->{fret},  -font => $fnt,
 			      -fill => $clr, -tags => $tag);
@@ -626,20 +632,21 @@ sub showFret {
 
   my($fnt,$clr);
   my $bar = $self->{bar};
+  my $tab = $bar->{tab};
   if ($bar->{pidx} >= 0) {
-    $fnt = ($self->{font} eq 'Normal' && $fr < 10) ? $Tab->{noteFont} : $Tab->{snoteFont};
+    $fnt = ($self->{font} eq 'Normal' && $fr < 10) ? $tab->{noteFont} : $tab->{snoteFont};
   } else {
-    $fnt = ($self->{font} eq 'Normal' && $fr < 10) ? $Tab->{enoteFont} : $Tab->{esnoteFont};
+    $fnt = ($self->{font} eq 'Normal' && $fr < 10) ? $tab->{enoteFont} : $tab->{esnoteFont};
   }
   if ($fr eq 'X') {
-    $fnt = $Tab->newFont($fnt, 0.8);
+    $fnt = $tab->newFont($fnt, 0.8);
     $clr = BLACK;
   } else {
     if ($fr < 0) {
       $clr = RED;
       $fr = abs($fr);
     } else {
-      $clr = ($self->{font} eq 'Normal') ? $Tab->{noteColor} : $Tab->{snoteColor};
+      $clr = ($self->{font} eq 'Normal') ? $tab->{noteColor} : $tab->{snoteColor};
     }
   }
   $clr = CP::FgBgEd::lighten($clr, PALE) if ($bar->{pidx} == -2);
@@ -657,71 +664,6 @@ sub noteXY {
   my $y = $bar->{y} + $off->{staff0} - ($off->{staffSpace} * $self->{string});
   my $x = $bar->{x} + $off->{pos0} + ($off->{interval} * $self->{pos});
   ($x,$y);
-}
-
-#
-# All this just to get a Condensed font!!!
-# The PDF code does it in a single call!!
-# And even then it doesn't work - not used - YET!
-#
-Tkx::package_require('img::window');
-our $Nmw = 0;
-our $Ncan;
-our %Imgs;
-
-sub cNote {
-  my($fr,$fnt,$clr,$tag) = @_;
-
-  my $nimg = "$tag$fr";
-  if (! defined $Imgs{$nimg}) {
-    my $h = ($fnt eq $Tab->{enoteFont}) ? $Tab->{enoteSize} : $Tab->{noteSize};
-    my $w = Tkx::font_measure($fnt, $fr);
-    if ($Nmw == 0) {
-      $Nmw = $MW->new_toplevel();
-      $Nmw->g_wm_overrideredirect(1);
-      $Nmw->g_wm_geometry("$w"."x$h+0+0");
-      $Ncan = $Nmw->new_tk__canvas(-height => $h, -width => $w,
-				   -background => WHITE,
-				   -highlightthickness => 0,
-				   -borderwidth => 0,
-				   -selectborderwidth => 0);
-      $Ncan->g_pack(qw/-expand 0 -fill both/);
-    } else {
-      $Nmw->g_wm_geometry("$w"."x$h+0+0");
-      $Ncan->delete('all');
-      $Ncan->itemconfigure(-height => $h, -width => $w);
-    }
-    $Nmw->g_wm_deiconify();
-    $Nmw->g_raise();
-    $Ncan->g_focus();
-    my $id = $Ncan->create_text($w / 2, $h / 2, -text => $fr,  -font => $fnt, -fill => $clr);
-    Tkx::update_idletasks();
-
-    my $img = Tkx::image_create_photo('tmp', -data => $Nmw, -format => 'WINDOW');
-    $h = Tkx::image_height($img);
-    $w = Tkx::image_width($img);
-
-    no strict 'refs';
-    my $subr = 'Tkx::'.$img.'_get';
-    my $trans = 'Tkx::'.$img.'_transparency_set';
-    for my $y (0..$h-1) {
-      for my $x (0..$w-1) {
-	my($r,$g,$b) = split(/ /, &$subr($x,$y));
-	if ($r == 255 && $g == 255 && $b == 255) {
-	  &$trans($x, $y, 1);
-	}
-      }
-    }
-    my $nimg = Tkx::image_create_photo($nimg, -height => $h, -width => $w / 2);
-    $subr = 'Tkx::'.$nimg.'_copy';
-    &$subr($img, -subsample => (2, 1));
-    $subr = 'Tkx::'.$nimg.'_redither';
-    &$subr();
-    Tkx::image_delete('tmp');
-    $Imgs{$nimg} = $nimg;
-#    $Nmw->g_wm_withdraw();
-  }
-  $nimg;
 }
 
 1;
