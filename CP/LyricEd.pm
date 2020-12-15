@@ -20,7 +20,7 @@ use CP::Win;
 use CP::Cmsg;
 #use CP::Tab;
 
-our $Ed = {};
+our $Ed;
 
 sub Edit {
   my($class,$tab) = @_;
@@ -29,7 +29,8 @@ sub Edit {
   my $done = '';
   my $txtWin = '';
 
-  if (ref($Ed) eq 'HASH') {
+  if (ref($Ed) ne 'HASH') {
+    $Ed = {};
     bless $Ed, $class;
 
     $Ed->{Top} = $MW->new_toplevel();
