@@ -48,7 +48,6 @@ use CP::TabWin;
 use CP::Lyric;
 use POSIX;
 
-our $Tab;
 our($EditBar, $EditBar1);
 our(@pageXY, $SaveID);
 our $OneOrMore = "Please select one or more bars first.";
@@ -60,11 +59,16 @@ our $OneOrMore = "Please select one or more bars first.";
 sub new {
   my($proto,$fn) = @_;
 
+  CORE::state $Tab;
   if (! defined $Tab) {
     my $class = ref($proto) || $proto;
     $Tab = {};
     $Tab->{eWin} = '';
     bless $Tab, $class;
+  }
+  if ($fn eq '_EXIT_' && $Tab->checkSave() ne 'Cancel') {
+    $MW->g_destroy();
+    exit(0);
   }
   # These keys do NOT get reset:
   #   eCan nFrm nCan pFrm pCan pOffset eOffset
@@ -77,6 +81,7 @@ sub new {
   $Tab->{rowsPP}   = 0;
   $Tab->{shbr}     = '';  # Can be one of 's', 'h', 'b' or 'r'.
   $Tab->{fret}     = '';
+  $Tab->{edited}   = 0;
   $Tab->{selected} = 0;
   $Tab->{select1}  = 0;
   $Tab->{select2}  = 0;
@@ -87,7 +92,6 @@ sub new {
   $Tab->{Timing}   = '4/4';
   $Tab->{BarEnd}   = 32;
   $Tab->{trans}    = 0;
-  $Tab->{edited}   = 0;
   $Tab->{bars}     = 0;
   $Tab->{lastBar}  = 0;
   $Tab->{staveGap} = 0;
@@ -113,8 +117,18 @@ sub new {
   $Tab;
 }
 
-sub get {
-  $Tab;
+sub setEdited {
+  my($self,$edit) = @_;
+
+  $self->{edited} = ($self->{fileName} ne '') ? shift : 0;
+  tabTitle($self, $self->{fileName});
+}
+
+sub tabTitle {
+  my($self,$fn) = @_;
+
+  my $ed = ($self->{edited}) ? ' (edited)' : '';
+  $MW->g_wm_title("Tab Editor  |  Collection: ".$Collection->{name}."  |  Media: $Opt->{Media}  |  Tab: $fn$ed");
 }
 
 sub drawPageWin {
@@ -125,7 +139,7 @@ sub drawPageWin {
   setXY($self);
   CP::TabWin::pageWindow($self);
   CP::TabWin::editWindow($self);
-  main::tabTitle($self, $self->{fileName});
+  $self->tabTitle($self->{fileName});
   indexBars($self);
   $self->pageHdr();
   $self->newPage(0);
@@ -379,9 +393,11 @@ sub indexBars {
   $self->{lyrics}->adjust($Opt->{LyricLines}) if ($Opt->{LyricLines});
 }
 
-sub startEdit {
-  main::setEdited(0);
-}
+#sub startEdit {
+#  my($self) = shift;
+#
+#  $self->setEdited(0);
+#}
 
 sub load {
   my($self,$fn) = @_;
@@ -530,7 +546,7 @@ sub checkSave {
   my($self) = shift;
 
   my $ans = '';
-  if ($self->{edited}) {
+  if ($self->{edited} && $self->{fileName} ne '') {
     $ans = msgYesNoCan("Do you want to save any changes made to:\n$self->{fileName}");
     if ($ans eq 'Yes') {
       $self->save();
@@ -625,7 +641,6 @@ sub save {
       }
       $self->{lyrics}->lprint($OFH);
       close($OFH);
-      main::setEdited(0);
     } else {
       $Sip = 0;
       message(SAD, "Tab Save could not create temporary file:\n\"$tmpTab\"");
@@ -642,7 +657,7 @@ sub save {
 #    if ($Opt->{AutoSave}) {
 #      $SaveID = Tkx::after(($Opt->{AutoSave} * 60000), \&save);
 #    }
-    main::setEdited(0);
+    $self->setEdited(0);
     $Sip = 0;
     message(SMILE, " Saved ", 1);
     return(1);
@@ -1041,7 +1056,7 @@ sub pasteStart {
 sub pasteEnd {
   my($self,$dst) = @_;
 
-  main::setEdited(1);
+  $self->setEdited(1);
   $self->ClearSel();
   indexBars($self);
   $self->newPage($dst->{pnum});
@@ -1196,7 +1211,7 @@ sub transpose {
     if ($pe == PAGE) {
       $self->setKey($self->{trans}) if ($all);
       $self->newPage($self->{pageNum});
-      main::setEdited(1);
+      $self->setEdited(1);
     } else {
       $EditBar->unMap();
       $EditBar->show();
@@ -1231,7 +1246,7 @@ sub ud1string {
   if ($pe == PAGE) {
     $self->setKey($adj) if ($all);
     $self->newPage($self->{pageNum});
-    main::setEdited(1);
+    $self->setEdited(1);
   } else {
     $EditBar->unMap();
     $EditBar->show();

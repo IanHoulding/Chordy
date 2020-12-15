@@ -80,7 +80,7 @@ sub new {
 			 message(SAD, "You don't appear to have selected a Tab file.");
 			 return;
 		       }
-		       RevertTo($fn);
+		       RevertTo($tab, $fn);
 		     });
   $file->add_separator;  #########
   $file->add_command(-label => "Save",
@@ -101,7 +101,7 @@ sub new {
   $file->add_separator;  #########
   $file->add_command(-label => "Exit",
 		     -font => 'TkMenuFont',
-		     -command => \&exitTab);
+		     -command => sub{CP::Tab->new('_EXIT_')});
 ###
   $edit->add_command(-label => "Collection",
 		     -font => 'TkMenuFont',
@@ -144,7 +144,7 @@ sub new {
 			  -variable => \$Opt->{Nbar},
 			  -font => 'TkMenuFont',
 			  -command => sub{$tab->drawPageWin();
-					  main::setEdited(1);
+					  $tab->setEdited(1);
 					  config(0);
 					  $Opt->saveOne('Nbar');
 			  });
@@ -174,7 +174,7 @@ sub new {
 			   -font => 'TkMenuFont',
 			   -command =>
 			   sub{$tab->drawPageWin();
-			       main::setEdited(1);
+			       $tab->setEdited(1);
 			       config(2);
 			       $Opt->saveOne('Instrument');
 			   });
@@ -190,7 +190,7 @@ sub new {
 			 -font => 'TkMenuFont',
 			 -command => sub{$tab->{lyrics}->adjust($Opt->{LyricLines});
 					 $tab->drawPageWin();
-					 main::setEdited(1);
+					 $tab->setEdited(1);
 					 config(3);
 					 $Opt->saveOne('LyricLines');
 			 });
@@ -205,7 +205,7 @@ sub new {
 			 -variable => \$tab->{lyricSpace},
 			 -font => 'TkMenuFont',
 			 -command => sub{$tab->drawPageWin();
-					 main::setEdited(1);
+					 $tab->setEdited(1);
 					 config(4);
 			 });
   }
@@ -220,7 +220,7 @@ sub new {
 			  -variable => \$tab->{key},
 			  -font => 'TkMenuFont',
 			  -command => sub{$tab->pageKey();
-					  main::setEdited(1);
+					  $tab->setEdited(1);
 					  config(5);
 			  });
   }
@@ -235,7 +235,7 @@ sub new {
 			 -variable => \$tab->{staveGap},
 			 -font => 'TkMenuFont',
 			 -command => sub{$tab->drawPageWin();
-					 main::setEdited(1);
+					 $tab->setEdited(1);
 					 config(6);
 			 });
   }
@@ -250,7 +250,7 @@ sub new {
 			 -font => 'TkMenuFont',
 			 -command => sub{$tab->drawPageWin();
 					 CP::TabWin::editWindow($tab);
-					 main::setEdited(1);
+					 $tab->setEdited(1);
 					 config(7);
 					 $Opt->saveOne('StaffSpace');
 			 });
@@ -268,7 +268,7 @@ sub new {
 					  $tab->{BarEnd} = $t * 8;
 					  $tab->drawPageWin();
 					  CP::TabWin::editWindow($tab);
-					  main::setEdited(1);
+					  $tab->setEdited(1);
 					  config(8);
 			  });
   }
@@ -447,14 +447,6 @@ sub exportTab {
       }
       message(SMILE, "\"$tab->{fileName}\" Exported", -1);
     }
-  }
-}
-
-sub exitTab {
-  my($tab) = CP::Tab::get();  # We need the current definition of $Tab
-  if ($tab->checkSave() ne 'Cancel') {
-    $MW->g_destroy();
-    exit(0);
   }
 }
 

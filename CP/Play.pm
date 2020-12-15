@@ -474,7 +474,7 @@ sub pagePlay {
       $trc = sprintf("#%02x0000", $tab->{tempo} + 55);
       $sc->m_configure(-troughcolor => $trc);
       $tab->pageTempo();
-      main::setEdited(1) if ($tab->{loaded});});
+      $tab->setEdited(1) if ($tab->{loaded});});
   $sc->g_grid(qw/-row 0 -column 1/);
 
   makeImage("stop", \%CNTRL);

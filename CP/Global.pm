@@ -419,7 +419,7 @@ sub backupFile {
 }
 
 sub RevertTo {
-  my($fn) = @_;
+  my($protab,$fn) = @_;
 
   my $temp = $Path->{Temp};
   my $rev = [];
@@ -479,7 +479,7 @@ sub RevertTo {
     my $idx = $modLB->curselection(0);
     if ($idx ne '') {
       my $r = $revLB->get($idx);
-      main::viewOnePDF("$temp", "$fn.$r");
+      main::viewOnePDF($protab, "$temp", "$fn.$r");
       Tkx::update();
       $top->g_raise();
       $modLB->{lb}->g_focus();

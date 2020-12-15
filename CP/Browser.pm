@@ -85,7 +85,7 @@ sub new {
     -takefocus => 1);
 
   if ($what & TABBR) {
-    $avail->bind('<Double-Button-1>' => sub{$done = 'OK'});
+    $avail->bind('<Double-Button-1>' => sub{moveOneItem($self,$avail,$select);$done = 'OK'});
   } else {
     $avail->bind('<Double-Button-1>' => sub{moveOneItem($self,$avail,$select);});
   }
@@ -214,8 +214,8 @@ sub new {
     if ($done eq 'OK') {
       if ($what == TABBR) {
 	if (@{$select->{array}} == 0) {
-	  my $idx = $avail->curselection(0);
-	  $sl[0] = $avail->get($idx);
+#	  my $idx = $avail->curselection(0);
+	  $sl[0] = ''; #$avail->get($idx);
 	} else {
 	  $sl[0] = $select->{array}[0];
 	}

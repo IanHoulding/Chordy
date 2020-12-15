@@ -144,10 +144,11 @@ sub Edit {
   if ($done eq 'Cancel') {
     @{$lyrics->{text}} = @org;
     $tab->newPage($tab->{pageNum});
-    main::setEdited($edited);
+    $tab->setEdited($edited);
   } else {
     update($txtWin, $tab);
   }
+  $txtWin->delete('1.0', 'end');
   $Ed->{Top}->g_wm_withdraw();
   Tkx::update_idletasks();
   return($done);
@@ -186,7 +187,7 @@ sub update {
     my $txt = $txtWin->get("$i.0", "$i.end");
     if ($txt ne $text->[$idx]) {
       $text->[$idx] = $txt;
-      main::setEdited(1);
+      $tab->setEdited(1);
     }
     $idx++;
   }

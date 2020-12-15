@@ -600,8 +600,9 @@ sub makeOnePDF {
   ($pdf, $name);
 }
 
+# $xxx is only used in the Tab version of this sub.
 sub viewOnePDF {
-  my($path,$fn) = @_;
+  my($xxx,$path,$fn) = @_;
 
   my $pro = {};
   bless $pro, 'CP::Pro';

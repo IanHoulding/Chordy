@@ -166,23 +166,23 @@ sub editWindow {
     my $bp = $frnp->new_ttk__button(
       -text => '<<< Prev Bar ',
       -style => "Green.TButton",
-      -command => [\&CP::Bar::EditPrev, 0]);
+      -command => [\&CP::Bar::EditPrev, $tab, 0]);
     $bp->g_grid(qw/-row 0 -column 0 -padx 10 -pady 4/);
     my $bn = $frnp->new_ttk__button(
       -text => ' Next Bar >>>',
       -style => "Green.TButton",
-      -command => [\&CP::Bar::EditNext, 0]);
+      -command => [\&CP::Bar::EditNext, $tab, 0]);
     $bn->g_grid(qw/-row 0 -column 1 -padx 10 -pady 4/);
 
     my $bp = $frnp->new_ttk__button(
       -text => '<<< Prev w/Save ',
       -style => "Green.TButton",
-      -command => [\&CP::Bar::EditPrev, 1]);
+      -command => [\&CP::Bar::EditPrev, $tab, 1]);
     $bp->g_grid(qw/-row 1 -column 0 -padx 10 -pady 4/);
     my $bn = $frnp->new_ttk__button(
       -text => ' Next w/Save >>>',
       -style => "Green.TButton",
-      -command => [\&CP::Bar::EditNext, 1]);
+      -command => [\&CP::Bar::EditNext, $tab, 1]);
     $bn->g_grid(qw/-row 1 -column 1 -padx 10 -pady 4/);
   }
   else {
@@ -518,12 +518,12 @@ sub pageButtons {
   my $en3 = $frt->new_ttk__entry(-textvariable => \$tab->{PDFname}, -width => 38);
   my $lb4 = $frt->new_ttk__label(-text => 'Title');
   my $en4 = $frt->new_ttk__entry(-textvariable => \$tab->{title}, -width => 38);
-  $en4->g_bind("<KeyRelease>" => sub{$tab->pageTitle();main::setEdited(1);});
+  $en4->g_bind("<KeyRelease>" => sub{$tab->pageTitle();$tab->setEdited(1);});
   my $lb6 = $frt->new_ttk__label(-text => 'Heading Note');
   my $en6 = $frt->new_ttk__entry(
     -textvariable => \$tab->{note},
     -width        => 30);
-  $en6->g_bind("<KeyRelease>" => sub{$tab->pageNote();main::setEdited(1);});
+  $en6->g_bind("<KeyRelease>" => sub{$tab->pageNote();$tab->setEdited(1);});
 
   $lb2->g_grid(qw/-row 0 -column 0 -sticky e/, -padx => [0,2], -pady => [4,4]);  # TFN
   $en2->g_grid(qw/-row 0 -column 1 -sticky w/, -padx => [0,4], -pady => [4,4]);

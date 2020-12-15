@@ -98,7 +98,7 @@ CP::Win::init();
 makeImage("tick", \%XPM);
 makeImage("Ticon", \%XPM);
 $MW->g_wm_iconphoto("Ticon");
-$MW->g_wm_protocol('WM_DELETE_WINDOW' => \&CP::TabMenu::exitTab);
+$MW->g_wm_protocol('WM_DELETE_WINDOW' => sub{CP::Tab->new('_EXIT_')});
 
 #
 # To be able to realisticaly manipulate Canvas fonts to look like the PDF result we
@@ -126,29 +126,15 @@ Tkx::MainLoop();
 ###########################################################################################
 ###########################################################################################
 
-sub setEdited {
-  my $tab = CP::Tab->get();
-  $tab->{edited} = shift;
-  tabTitle($tab, $tab->{fileName});
-}
-
-sub tabTitle {
-  my($tab,$fn) = @_;
-
-  my $ed = ($tab->{edited}) ? ' (edited)' : '';
-  $MW->g_wm_title("Tab Editor  |  Collection: ".$Collection->{name}."  |  Media: $Opt->{Media}  |  Tab: $fn$ed");
-}
-
 sub viewOnePDF {
-  my($path,$fn) = @_;
+  my($tab,$path,$fn) = @_;
 
   my $orgFN = '';
-  my $tab = CP::Tab->get();
   if (defined $tab) {
     $orgFN = $tab->{fileName};
   }
-  CP::Tab->new("$path/$fn");
-  CP::TabPDF::make('V');
+  $tab = CP::Tab->new("$path/$fn");
+  CP::TabPDF::make($tab, 'V');
   if ($orgFN ne '') {
     CP::Tab->new("$Path->{Tab}/$orgFN");
   } else {

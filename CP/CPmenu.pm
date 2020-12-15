@@ -26,7 +26,6 @@ our $Recent;
 #
 sub new {
   my($m,$menu,$file,$edit,$opt,$media,$setl,$misc,$help);
-
   if (OS eq 'aqua') {
     $m = $MW->new_menu();
     $menu = Tkx::widget->new(Tkx::menu($m->_mpath . ".apple"));
@@ -70,7 +69,7 @@ sub new {
 			 message(SAD, "You don't appear to have selected a ChordPro file.");
 			 return;
 		       }
-		       RevertTo($fn);
+		       RevertTo(undef, $fn);
 		     });
   $file->add_separator;
   $file->add_command(-label => "Import ChordPro", -command => \&main::impProFile);

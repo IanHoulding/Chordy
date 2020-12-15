@@ -127,7 +127,8 @@ sub Clear {
 }
   
 sub ClearEbar {
-  my $tab = CP::Tab->get();
+  my($tab) = shift;
+
   $EditBar->Clear();
   $EditBar->{pbar} = 0;
   $EditBar1->Clear();
@@ -136,21 +137,22 @@ sub ClearEbar {
 }
 
 sub ClearAndRedraw {
-  my $tab = CP::Tab->get();
+  my($tab) = shift;
+
   $tab->{eWin}->g_wm_withdraw();
-  ClearEbar();
+  ClearEbar($tab);
   $tab->indexBars();
   $tab->newPage($tab->{pageNum});
 }
 
 # Clears the Edit Bars and redraws them.
 # Usually done after a change to one of the size/distance parameters.
-sub remap {
-  my $sel = CP::Tab->get()->{select1};
-  ClearEbar();
-  $sel->select();
-  $sel->Edit();
-}
+#sub remap {
+#  my $sel = CP::Tab->get()->{select1};
+#  ClearEbar();
+#  $sel->select();
+#  $sel->Edit();
+#}
 
 sub comp {
   my($self,$b) = @_;
@@ -296,13 +298,12 @@ sub markers {
   }
 }
 
-sub EditPrev { _pn('prev', shift) }
-sub EditNext { _pn('next', shift) }
+sub EditPrev { _pn('prev', @_) }
+sub EditNext { _pn('next', @_) }
 
 sub _pn {
-  my($pn,$save) = @_;
+  my($pn,$tab,$save) = @_;
 
-  my $tab = CP::Tab->get();
   my $bar = $tab->{select1};
   if ($save) {
     Update();
@@ -322,7 +323,7 @@ sub _pn {
       return;
     }
   }
-  ClearEbar();
+  ClearEbar($tab);
   $bar->select() if ($bar);
   Edit($bar);
 }
@@ -468,17 +469,18 @@ sub Edit {
   show($EditBar1);
 }
 
-sub InsertBefore { insert(BEFORE); }
-sub InsertAfter  { insert(AFTER); }
+sub InsertBefore { insert(shift,BEFORE); }
+sub InsertAfter  { insert(shift,AFTER); }
 
+# $self is actually $EditBar
 sub insert {
-  my($where) = shift;
+  my($self,$where) = @_;
 
-  my $tab = CP::Tab->get();
+  my $tab = $self->{tab};
   if ($tab->{select1}) {
-    $EditBar->{pbar} = $tab->{select1};
-    $EditBar->save_bar($where);
-    ClearAndRedraw();
+    $self->{pbar} = $tab->{select1};
+    $self->save_bar($where);
+    ClearAndRedraw($tab);
   } else {
     message(SAD, "No Bar selected - don't know where to put this one!", 1);
   }
@@ -487,7 +489,7 @@ sub insert {
 sub Save {
   $EditBar1->save_bar(REPLACE) if ($EditBar1->{pbar} && comp($EditBar1, $EditBar1->{pbar}));
   $EditBar->save_bar(REPLACE) if (comp($EditBar, $EditBar->{pbar}));
-  ClearAndRedraw();
+  ClearAndRedraw($EditBar->{tab});
 }
 
 sub Update {
@@ -554,7 +556,7 @@ sub save_bar {
     $bar->unMap();
     $bar->show();
   }
-  main::setEdited(1);
+  $tab->setEdited(1);
 }
 
 # ONLY called on the EditBar
@@ -585,7 +587,7 @@ sub select {
       $can->itemconfigure("bg$tab->{select1}{pidx}", -fill => $bg);
     }
     $can->itemconfigure($tag, -fill => SELECT);
-    $MW->g_bind('<Key-Delete>', \&checkDel);
+    $MW->g_bind('<Key-Delete>', [\&checkDel, $tab]);
     $tab->{select1} = $self;
   }
   $tab->{select2} = 0;
@@ -609,9 +611,8 @@ sub deselect {
 }
 
 sub checkDel {
-  my($key) = shift;
+  my($tab) = shift;
 
-  my $tab = CP::Tab->get();
   if ($tab->{select1}) {
     $tab->DeleteBars();
   }
@@ -653,7 +654,7 @@ sub Cancel {
   my($self) = shift;
 
   my $tab = $self->{tab};
-  ClearEbar();
+  ClearEbar($tab);
   $tab->ClearSel();
   $tab->{eWin}->g_wm_withdraw();
 }
