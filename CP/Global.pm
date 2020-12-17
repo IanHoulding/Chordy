@@ -297,6 +297,8 @@ sub syncFiles {
 #
 sub setDefaults {
   init();                  # sets $Parent and $Home globals to USER/.. and USER
+  makeImage("tick", \%XPM);
+  makeImage("xtick", \%XPM);
   $Collection = CP::Collection->new();
   $Path = CP::Path->new();
   $Cmnd = CP::Cmnd->new();
@@ -2746,30 +2748,70 @@ static char * settags_xpm[] = {
 "                        "};
 EOXPM
 
+$XPM{'xtick'} = <<'EOXPM';
+/* XPM */
+static char *xtick[] = {
+"12 10 5 1",
+"  c None",
+". c #760101",
+"+ c #943B3A",
+"# c #B87B7A",
+"& c #EBDDDC",
+"            ", 
+" &.+    #.. ", 
+"  #.+  #..  ", 
+"   #.+#..   ", 
+"    #...    ", 
+"    #...    ", 
+"   #.+#..   ", 
+"  #.+  #..  ", 
+" &.+    #.. ", 
+"            "};
+EOXPM
+
 $XPM{'tick'} = <<'EOXPM';
 /* XPM */
 static char *tick[] = {
-"12 14 5 1",
+"12 10 6 1",
 "  c None",
-". c #8bc565",
-"# c #dfe0de",
-"a c #5bb520",
-"b c #b7d3a4",
-"          bb",
-"         .ab",
-"        ba. ",
-"       #aa  ",
-"       .ab  ",
-"       a.   ",
-"      .ab   ",
-" #.b ba.    ",
-"baa.#aa     ",
-".aaa.a.     ",
-"baaaaa      ",
-" .aaa.      ",
-" baa.       ",
-"  ..        "};
+". c #017601",
+"+ c #3B943A",
+"@ c #58A558",
+"$ c #8FC390",
+"& c #DDEBDC",
+"         .  ",
+"        .@  ",
+"       ..@  ",
+" +$   ...$  ",
+" +$  $..$   ",
+" +.$@..$    ",
+" $..@.+     ",
+" &...+      ",
+"  &.+       ",
+"  &.        "};
 EOXPM
+
+#" &.+    #.% ", 
+#" #..+  #..+ ", 
+#"  #..@#..+  ", 
+#"   #....+   ", 
+#"    @..+    ", 
+#"   #....+   ", 
+#"  #..@#..+  ", 
+#" #..+  #..+ ", 
+#" &.+    #.% ", 
+
+#"          $ ",
+#"         +$ ",
+#"        @.$ ",
+#" $     @..# ",
+#" @#   $...& ",
+#" @.$ $...%  ",
+#" @..@...%   ",
+#" $.....#    ",
+#"  @...@     ",
+#"   @.@      ",
+#"    $       "};
 
 $XPM{'Undo'} = <<'EOXPM';
 /* XPM */

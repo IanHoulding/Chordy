@@ -95,7 +95,6 @@ fontSetup();
 restXPMs();
 CP::Win::init();
 
-makeImage("tick", \%XPM);
 makeImage("Ticon", \%XPM);
 $MW->g_wm_iconphoto("Ticon");
 $MW->g_wm_protocol('WM_DELETE_WINDOW' => sub{CP::Tab->new('_EXIT_')});

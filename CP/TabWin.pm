@@ -121,10 +121,10 @@ sub editWindow {
   if ($tab->{eWin} eq '') {
     my $pop = CP::Pop->new(0, '.be', 'Bar Editor', -1, -1);
     ($tab->{eWin}, my $outer) = ($pop->{top}, $pop->{frame});
+    $pop->{top}->g_wm_withdraw();
 
     $tab->{eWin}->g_wm_protocol('WM_DELETE_WINDOW', sub{$EditBar->Cancel()});
     $outer->g_pack(qw//);
-    $tab->{eWin}->g_wm_withdraw();
 
     $EditBar = CP::Bar->new($tab);
     $EditBar->{offset} = $tab->{eOffset};
@@ -389,14 +389,18 @@ sub editBarOpts {
 	      [qw/Normal Small/]);
     });
   my $bsl = $frm->new_ttk__label(-text => "Bar Starts:");
-  my $cb1 = $frm->new_ttk__checkbutton(
-    -text => 'Line',
-    -variable => \$EditBar->{newline},
-    -command => sub{$EditBar->{newpage} = 0 if ($EditBar->{newline} == 1);});
-  my $cb2 = $frm->new_ttk__checkbutton(
-    -text => 'Page',
-    -variable => \$EditBar->{newpage},
-    -command => sub{$EditBar->{newline} = 0 if ($EditBar->{newpage} == 1);});
+  my $cb1 = $frm->new_ttk__checkbutton(-style => 'My.TCheckbutton',
+				       -compound => 'left',
+				       -image => ['xtick', 'selected', 'tick'],
+				       -text => 'Line',
+				       -variable => \$EditBar->{newline},
+				       -command => sub{$EditBar->{newpage} = 0 if ($EditBar->{newline} == 1);});
+  my $cb2 = $frm->new_ttk__checkbutton(-style => 'My.TCheckbutton',
+				       -compound => 'left',
+				       -image => ['xtick', 'selected', 'tick'],
+				       -text => 'Page',
+				       -variable => \$EditBar->{newpage},
+				       -command => sub{$EditBar->{newline} = 0 if ($EditBar->{newpage} == 1);});
 
   $vbl->g_grid(qw/-row 0 -column 0 -sticky e/, -padx => [0,2],  -pady => [0,4]);
   $vbb->g_grid(qw/-row 0 -column 1 -sticky w/, -padx => [0,16], -pady => [0,4]);
@@ -460,10 +464,13 @@ sub shiftOpt {
     -width   => 6,
     -command => sub{transCmnd($tab, 'ud1string', $pe, -5)});
 
-  my $lb4 = $frm->new_ttk__label(-text => 'Adjust Strings');
-
-  my $cb4 = $frm->new_ttk__checkbutton(-variable => \$Opt->{Refret});
-
+#  my $lb4 = $frm->new_ttk__label(-text => 'Adjust Strings');
+  my $cb4 = $frm->new_ttk__checkbutton(-style => 'My.TCheckbutton',
+				       -compound => 'left',
+				       -text => 'Adjust Strings',
+				       -variable => \$Opt->{Refret},
+				       -image => ['xtick', 'selected', 'tick']
+      );
   $lb1->g_grid(qw/-row 0 -column 0 -columnspan 2 -sticky we/, -padx => [8,4], -pady => [0,4]);
   $me1->g_grid(qw/-row 1 -column 0 /,              -padx => [8,2], -pady => [0,4]);
   $bu1->g_grid(qw/-row 1 -column 1 /,              -padx => [2,8], -pady => [0,4]);
@@ -473,10 +480,10 @@ sub shiftOpt {
   $bu3->g_grid(qw/-row 1 -column 3 /,              -padx => [2,8],  -pady => [0,4]);
 
   if ($pe == PAGE) {
-    $lb4->g_grid(qw/-row 1 -column 4 -sticky e/, -padx => [16,0], -pady => [0,4]);
-    $cb4->g_grid(qw/-row 1 -column 5 -sticky w/, -padx => [2,0], -pady => [0,4]);
+#    $lb4->g_grid(qw/-row 1 -column 4 -sticky e/, -padx => [16,0], -pady => [0,4]);
+    $cb4->g_grid(qw/-row 1 -column 4 -sticky w/, -padx => [2,0], -pady => [0,4]);
   } else {
-    $lb4->g_grid(qw/-row 2 -column 0 -columnspan 2 -sticky e/, -padx => [8,0], -pady => [0,4]);
+#    $lb4->g_grid(qw/-row 2 -column 0 -columnspan 2 -sticky e/, -padx => [8,0], -pady => [0,4]);
     $cb4->g_grid(qw/-row 2 -column 2 -sticky w/,               -padx => [4,0], -pady => [0,4]);
   }
 }

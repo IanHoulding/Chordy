@@ -291,13 +291,24 @@ sub actWin {
   my($act) = shift;
 
   ####
-  my $view = $act->new_ttk__checkbutton(-text => "View",
+  my $view = $act->new_ttk__checkbutton(-style => 'My.TCheckbutton',
+					-compound => 'left',
+					-text => "View",
+					-image => ['xtick', 'selected', 'tick'],
 					-variable => \$Opt->{PDFview},
 					-command => sub{$Opt->saveOne('PDFview')});
-  my $cret = $act->new_ttk__checkbutton(-text => "Create",
+  my $cret = $act->new_ttk__checkbutton(-style => 'My.TCheckbutton',
+					-compound => 'left',
+					-text => "View",
+					-image => ['xtick', 'selected', 'tick'],
+					-text => "Create",
 					-variable => \$Opt->{PDFmake},
 					-command => sub{$Opt->saveOne('PDFmake')});
-  my $prnt = $act->new_ttk__checkbutton(-text => "Print",
+  my $prnt = $act->new_ttk__checkbutton(-style => 'My.TCheckbutton',
+					-compound => 'left',
+					-text => "View",
+					-image => ['xtick', 'selected', 'tick'],
+					-text => "Print",
 					-variable => \$Opt->{PDFprint},
 					-command => sub{$Opt->saveOne('PDFprint')});
 
@@ -309,11 +320,13 @@ sub actWin {
     -text => "All Songs",
     -width => 8,
     -command => sub{main::Main($Chordy,MULTIPLE);});
-  my $onep = $act->new_ttk__checkbutton(
-    -text => "Single PDF",
-    -offvalue => MULTIPLE,
-    -onvalue => SINGLE,
-    -variable => \$Opt->{OnePDFfile});
+  my $onep = $act->new_ttk__checkbutton(-style => 'My.TCheckbutton',
+					-compound => 'left',
+					-image => ['xtick', 'selected', 'tick'],
+					-text => "Single PDF",
+					-offvalue => MULTIPLE,
+					-onvalue => SINGLE,
+					-variable => \$Opt->{OnePDFfile});
 
   $view->g_pack(qw/-side top -anchor w -padx 8/);
   $cret->g_pack(qw/-side top -anchor w -padx 8/);
@@ -336,33 +349,60 @@ sub optWin {
   my($a,$b,$c,$d,$e,$f,$g,$h,$i);
   #########################
 
-  $a = $wid->new_ttk__checkbutton(-text => 'Center Lyrics',
+  $a = $wid->new_ttk__checkbutton(-style => 'My.TCheckbutton',
+				  -compound => 'left',
+				  -image => ['xtick', 'selected', 'tick'],
+				  -text => 'Center Lyrics',
 				  -variable => \$Opt->{Center},
 				  -command => sub{$Opt->saveOne('Center')});
-  $b = $wid->new_ttk__checkbutton(-text => 'Lyrics Only',
+  $b = $wid->new_ttk__checkbutton(-style => 'My.TCheckbutton',
+				  -compound => 'left',
+				  -image => ['xtick', 'selected', 'tick'],
+				  -text => 'Lyrics Only',
 				  -variable => \$Opt->{LyricOnly},
 				  -command => sub{$Opt->saveOne('LyricOnly')});
-  $c = $wid->new_ttk__checkbutton(-text => 'Group Lines',
+  $c = $wid->new_ttk__checkbutton(-style => 'My.TCheckbutton',
+				  -compound => 'left',
+				  -image => ['xtick', 'selected', 'tick'],
+				  -text => 'Group Lines',
 				  -offvalue => MULTIPLE,
 				  -onvalue => SINGLE,
 				  -variable => \$Opt->{Together},
 				  -command => sub{$Opt->saveOne('Together')});
-  $d = $wid->new_ttk__checkbutton(-text => '1/2 Height Blank Lines',
+  $d = $wid->new_ttk__checkbutton(-style => 'My.TCheckbutton',
+				  -compound => 'left',
+				  -image => ['xtick', 'selected', 'tick'],
+				  -text => '1/2 Height Blank Lines',
 				  -variable => \$Opt->{HHBL},
 				  -command => sub{$Opt->saveOne('HHBL')});
-  $e = $wid->new_ttk__checkbutton(-text => 'Show Labels',
+  $e = $wid->new_ttk__checkbutton(-style => 'My.TCheckbutton',
+				  -compound => 'left',
+				  -image => ['xtick', 'selected', 'tick'],
+				  -text => 'Show Labels',
 				  -variable => \$Opt->{ShowLabels},
 				  -command => sub{$Opt->saveOne('ShowLabels')});
-  $f = $wid->new_ttk__checkbutton(-text => "Highlight full line",
+  $f = $wid->new_ttk__checkbutton(-style => 'My.TCheckbutton',
+				  -compound => 'left',
+				  -image => ['xtick', 'selected', 'tick'],
+				  -text => "Highlight full line",
 				  -variable => \$Opt->{FullLineHL},
 				  -command => sub{$Opt->saveOne('FullLineHL')});
-  $g = $wid->new_ttk__checkbutton(-text => "Comment full line",
+  $g = $wid->new_ttk__checkbutton(-style => 'My.TCheckbutton',
+				  -compound => 'left',
+				  -image => ['xtick', 'selected', 'tick'],
+				  -text => "Comment full line",
 				  -variable => \$Opt->{FullLineCM},
 				  -command => sub{$Opt->saveOne('FullLineCM')});
-  $h = $wid->new_ttk__checkbutton(-text => "Ignore Capo Directives",
+  $h = $wid->new_ttk__checkbutton(-style => 'My.TCheckbutton',
+				  -compound => 'left',
+				  -image => ['xtick', 'selected', 'tick'],
+				  -text => "Ignore Capo Directives",
 				  -variable => \$Opt->{IgnCapo},
 				  -command => sub{$Opt->saveOne('IgnCapo')});
-  $i = $wid->new_ttk__checkbutton(-text => "No Long Line warnings",
+  $i = $wid->new_ttk__checkbutton(-style => 'My.TCheckbutton',
+				  -compound => 'left',
+				  -image => ['xtick', 'selected', 'tick'],
+				  -text => "No Long Line warnings",
 				  -variable => \$Opt->{NoWarn},
 				  -command => sub{$Opt->saveOne('NoWarn')});
 
@@ -522,8 +562,10 @@ sub setLists {
   my $sltR = $slFt->new_ttk__frame(qw/-style Wh.TFrame/);
 
   my $setsLB;
-  my $sltr = $sltM->new_ttk__checkbutton(-variable => \$Opt->{SLrev},
-					 -style => 'Wh.TCheckbutton',
+  my $sltr = $sltM->new_ttk__checkbutton(-style => 'Wh.My.TCheckbutton',
+					 -variable => \$Opt->{SLrev},
+					 -compound => 'right',
+					 -image => ['xtick', 'selected', 'tick'],
 					 -command => sub{$Opt->saveOne('SLrev');
 							 $AllSets->listSets();
 					 });
@@ -540,6 +582,9 @@ sub setLists {
   my($x1,$y1,$x2,$y2) = split(/ /, $can->bbox($rtxt));
   $can->configure(-width => abs($x1) + $x2, -height => abs($y1) + $y2);
   $can->move($rtxt, abs($x1), abs($y1));
+  $can->bind($rtxt, '<Button-1>', sub{$sltr->invoke();
+			       $Opt->saveOne('SLrev');
+			       $AllSets->listSets();});
 
   $setsLB = $AllSets->{setsLB} = CP::List->new($sltL, 'e',
 					       -height => 12, -width => SLWID,
@@ -682,7 +727,7 @@ sub setLists {
 
   $sltM->g_grid(qw/-row 0 -column 1 -sticky n/, -padx => [4,0], -pady => [0,4]);
   $sltr->g_pack(qw/-side top -fill x/, -pady => [12,0]);
-  $can->g_pack(qw/-side top -fill x -pady 0/);
+  $can->g_pack(qw/-side top -fill x -pady 0/, -padx => [4,0]);
 
   $sltCS->g_grid(qw/-row 0 -column 2 -columnspan 3 -sticky n/, -padx => [12,0]);
 

@@ -106,37 +106,45 @@ sub new {
   $midr->g_grid(qw/-row 1 -column 2 -sticky ns/);
  
   $Fweight = 'normal';
-  my $ch1 = $midr->new_ttk__checkbutton(
-    -text => 'Bold',
-    -variable => \$Fweight,
-    -onvalue => 'bold',
-    -offvalue => 'normal',
-    -command => \&showSample);
+  my $ch1 = $midr->new_ttk__checkbutton(-style => 'My.TCheckbutton',
+					-compound => 'left',
+					-image => ['xtick', 'selected', 'tick'],
+					-text => 'Bold',
+					-variable => \$Fweight,
+					-onvalue => 'bold',
+					-offvalue => 'normal',
+					-command => \&showSample);
   $ch1->g_grid(qw/-row 0 -column 0 -sticky nw/, -padx => 20, -pady => "20 5");
 
-  my $ch1a = $midr->new_ttk__checkbutton(
-    -text => 'Heavy',
-    -variable => \$Fweight,
-    -onvalue => 'heavy',
-    -offvalue => 'normal',
-    -command => \&showSample);
+  my $ch1a = $midr->new_ttk__checkbutton(-style => 'My.TCheckbutton',
+					 -compound => 'left',
+					 -image => ['xtick', 'selected', 'tick'], 
+					 -text => 'Heavy',
+					 -variable => \$Fweight,
+					 -onvalue => 'heavy',
+					 -offvalue => 'normal',
+					 -command => \&showSample);
   $ch1a->g_grid(qw/-row 1 -column 0 -sticky nw/, -padx => 20, -pady => 5);
 
   $Fslant = 'roman';
-  my $ch2 = $midr->new_ttk__checkbutton(
-    -text => 'Italic',
-    -variable => \$Fslant,
-    -onvalue => 'italic',
-    -offvalue => 'roman',
-    -command => \&showSample);
+  my $ch2 = $midr->new_ttk__checkbutton(-style => 'My.TCheckbutton',
+					-compound => 'left',
+					-image => ['xtick', 'selected', 'tick'], 
+					-text => 'Italic',
+					-variable => \$Fslant,
+					-onvalue => 'italic',
+					-offvalue => 'roman',
+					-command => \&showSample);
   $ch2->g_grid(qw/-row 2 -column 0 -sticky nw -padx 20 -pady 5/);
 
-  my $ch3 = $midr->new_ttk__checkbutton(
-    -text => 'Fixed Width',
-    -variable => \$Fmono,
-    -onvalue => 1,
-    -offvalue => 0,
-    -command => \&listFill);
+  my $ch3 = $midr->new_ttk__checkbutton(-style => 'My.TCheckbutton',
+					-compound => 'left',
+					-image => ['xtick', 'selected', 'tick'], 
+					-text => 'Fixed Width',
+					-variable => \$Fmono,
+					-onvalue => 1,
+					-offvalue => 0,
+					-command => \&listFill);
   $ch3->g_grid(qw/-row 3 -column 0 -sticky nw -padx 20 -pady 25/);
 
   my $b1 = $fbot->new_ttk__button(
@@ -466,23 +474,29 @@ sub FontS {
     -command => sub{popMenu(\$fp->{size}, sub{labUpdate($lab, $fp)}, $fontsizes)});
 
   my($wtb,$wth);
-  $wtb = $frame->new_ttk__checkbutton(
-    -variable => \$fp->{weight},
-    -onvalue => 'bold',
-    -offvalue => 'normal',
-    -command => sub{labUpdate($lab, $fp)});
+  $wtb = $frame->new_ttk__checkbutton(-style => 'My.TCheckbutton',
+				      -compound => 'left',
+				      -image => ['xtick', 'selected', 'tick'], 
+				      -variable => \$fp->{weight},
+				      -onvalue => 'bold',
+				      -offvalue => 'normal',
+				      -command => sub{labUpdate($lab, $fp)});
 
-  $wth = $frame->new_ttk__checkbutton(
-    -variable => \$fp->{weight},
-    -onvalue => 'heavy',
-    -offvalue => 'normal',
-    -command => sub{labUpdate($lab, $fp)});
+  $wth = $frame->new_ttk__checkbutton(-style => 'My.TCheckbutton',
+				      -compound => 'left',
+				      -image => ['xtick', 'selected', 'tick'], 
+				      -variable => \$fp->{weight},
+				      -onvalue => 'heavy',
+				      -offvalue => 'normal',
+				      -command => sub{labUpdate($lab, $fp)});
 
-  my $ita = $frame->new_ttk__checkbutton(
-    -variable => \$fp->{slant},
-    -onvalue => 'italic',
-    -offvalue => 'roman',
-    -command => sub{labUpdate($lab, $fp)});
+  my $ita = $frame->new_ttk__checkbutton(-style => 'My.TCheckbutton',
+					 -compound => 'left',
+					 -image => ['xtick', 'selected', 'tick'],
+					 -variable => \$fp->{slant},
+					 -onvalue => 'italic',
+					 -offvalue => 'roman',
+					 -command => sub{labUpdate($lab, $fp)});
 
   my $but = $frame->new_ttk__button(
     -text => 'Choose ...',

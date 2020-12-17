@@ -428,13 +428,12 @@ sub posSelect {
 }
 
 sub Edit {
-  my($self) = shift;
+  my($tab) = shift;
 
-  my $tab = $self->{tab};
-  if ($self) {
+  my $bar = $tab->{select1};
+  if ($bar) {
     if ($tab->{eWin}->g_wm_state() eq 'normal') {
       # We have a Bar being Edited and someone's selected a new Bar for editing.
-      my $bar = $tab->{select1};
       my $pbar = $EditBar->{pbar};
       if (($pbar && comp($EditBar, $pbar)) || ($pbar == 0 && ! isblank($EditBar))) {
 	my $ans = CP::Cmsg::msgYesNoCan("Save current Bar?");
@@ -449,17 +448,17 @@ sub Edit {
       $EditBar->Clear();
       $EditBar1->Clear();
     }
-    copy($self, $EditBar, HANDN);
-    $EditBar->{pbar} = $self;
-    $EditBar->{prev} = $self->{prev};
-    if ($self->{next} != 0) {
-      $EditBar1->{pbar} = $self->{next};
-      copy($self->{next}, $EditBar1, HANDN);
-      $EditBar1->{next} = $self->{next}{next};
+    copy($bar, $EditBar, HANDN);
+    $EditBar->{pbar} = $bar;
+    $EditBar->{prev} = $bar->{prev};
+    if ($bar->{next} != 0) {
+      $EditBar1->{pbar} = $bar->{next};
+      copy($bar->{next}, $EditBar1, HANDN);
+      $EditBar1->{next} = $bar->{next}{next};
     } else {
       $EditBar1->{next} = $EditBar1->{pbar} = 0;
     }
-    $EditBar->{bidx} = $self->{bidx};
+    $EditBar->{bidx} = $bar->{bidx};
   } else {
     $EditBar->{bidx} = ($tab->{bars}) ? $tab->{lastBar}{bidx} + 1 : 1;
   }
@@ -724,7 +723,7 @@ sub show {
   } else {
     my $tag = "det$pidx";
     if ($can->bind($tag) eq '') {
-      my $sub = sub{$tab->ClearSel();$self->select();$self->Edit();};
+      my $sub = sub{$tab->ClearSel();$self->select();Edit($tab);};
       $can->itemconfigure("b$pidx", -fill => BLACK);
       $can->bind($tag, '<Button-1>', sub{$self->select()});
       $can->bind($tag, '<Shift-Button-1>', sub{$self->rangeSelect()});

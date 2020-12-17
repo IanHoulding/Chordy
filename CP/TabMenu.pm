@@ -14,7 +14,7 @@ use warnings;
 
 use Tkx;
 use CP::Cconst qw/:OS :BROWSE :SMILIE/;
-use CP::Global qw/:FUNC :WIN :VERS :PATH :OPT/;
+use CP::Global qw/:FUNC :WIN :VERS :PATH :OPT :XPM/;
 use CP::Tab;
 use CP::TabPDF;
 use CP::Cmsg;
@@ -273,8 +273,12 @@ sub new {
 			  });
   }
   $opt->add_separator();
-  $opt->add_checkbutton(-label => "Save Fonts",
+  $opt->add_checkbutton(-label => "Save Fonts      ",
 			-variable => \$Opt->{SaveFonts},
+			-compound => 'right',
+			-indicatoron => 0,
+			-image => 'xtick',
+			-selectimage => 'tick',
 			-font => 'TkMenuFont');
 ###  
   $misc->add_command(-label => 'View Error Log',

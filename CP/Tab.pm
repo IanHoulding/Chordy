@@ -71,7 +71,7 @@ sub new {
     exit(0);
   }
   # These keys do NOT get reset:
-  #   eCan nFrm nCan pFrm pCan pOffset eOffset
+  #   eWin eCan nFrm nCan pFrm pCan pOffset eOffset
   #
   $Tab->{fileName} = '';
   $Tab->{PDFname}  = '';
@@ -911,7 +911,7 @@ sub editBar {
 
   my($a,$b) = $self->diff();
   if ($a == 0) {
-    CP::Bar::Edit();
+    CP::Bar::Edit($self);
   } else {
     if ($a != $b) {
       if (msgYesNo("Only the first Bar will be edited.\nContinue?") eq "No") {

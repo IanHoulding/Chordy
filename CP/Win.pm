@@ -145,15 +145,16 @@ sub MWoptions {
 
   TButtonBGset();
 
-  Tkx::ttk__style_configure('TCheckbutton',
+  Tkx::ttk__style_configure('My.TCheckbutton',
+			    -indicatorsize => 0,
+			    -indicatormargin => [0,0,0,0],
+			    -relief => 'flat',
+			    -borderwidth => 0,
 			    -highlightthickness => 0,
+			    -padding => 0,
 			    -foreground => bFG);
-  Tkx::ttk__style_configure('Pop.TCheckbutton', -background => POPBG);
-  Tkx::ttk__style_configure('NM.TCheckbutton',
-			    -indicatormargin => [0,0,0,0]);
-  Tkx::ttk__style_configure('Wh.TCheckbutton',
-			    -background => WHITE,
-			    -indicatormargin => [0,0,0,0]);
+  Tkx::ttk__style_configure('Wh.My.TCheckbutton', -background => WHITE);
+  Tkx::ttk__style_configure('Pop.My.TCheckbutton',   -background => POPBG);
 
   Tkx::ttk__style_configure('TRadiobutton',
 			    -activeforeground => BLACK,

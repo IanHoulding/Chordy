@@ -110,34 +110,47 @@ sub new {
   $edit->add_command(-label => 'Sort Articles', -command => \&main::editArticles);
   $edit->add_command(-label => 'Options File',  -command => [\&CP::Editor::Edit, $Path->{Option}, 1]);
 
+  my @cbopts = (
+    -compound => 'left',
+    -indicatoron => 0,
+    -image => 'xtick',
+    -selectimage => 'tick'
+  );
   {
     my $op = $opt->new_menu;
     $opt->add_cascade(-menu => $op, -label => 'PDFs');
-    $op->add_checkbutton(-label => "View",
+    $op->add_checkbutton(-label => " View",
 			 -variable => \$Opt->{PDFview},
-			 -command => sub{$Opt->saveOne('PDFview')} );
-    $op->add_checkbutton(-label => "Create",
+			 -command => sub{$Opt->saveOne('PDFview')},
+			 @cbopts );
+    $op->add_checkbutton(-label => " Create",
 			 -variable => \$Opt->{PDFmake},
-			 -command => sub{$Opt->saveOne('PDFmake')} );
-    $op->add_checkbutton(-label => "Print",
+			 -command => sub{$Opt->saveOne('PDFmake')},
+			 @cbopts );
+    $op->add_checkbutton(-label => " Print",
 			 -variable => \$Opt->{PDFprint},
-			 -command => sub{$Opt->saveOne('PDFprint')} );
+			 -command => sub{$Opt->saveOne('PDFprint')},
+			 @cbopts );
   }
   {
     my $ol = $opt->new_menu;
     $opt->add_cascade(-menu => $ol, -label => 'Lyrics');
-    $ol->add_checkbutton(-label => "Center Lyrics",
+    $ol->add_checkbutton(-label => " Center Lyrics",
 			 -variable => \$Opt->{Center},
-			 -command => sub{$Opt->saveOne('Center')} );
-    $ol->add_checkbutton(-label => "Lyrics Only",
+			 -command => sub{$Opt->saveOne('Center')},
+			 @cbopts);
+    $ol->add_checkbutton(-label => " Lyrics Only",
 			 -variable => \$Opt->{LyricOnly},
-			 -command => sub{$Opt->saveOne('LyricOnly')} );
-    $ol->add_checkbutton(-label => "Group Lines",
+			 -command => sub{$Opt->saveOne('LyricOnly')},
+			 @cbopts );
+    $ol->add_checkbutton(-label => " Group Lines",
 			 -variable => \$Opt->{Together},
-			 -command => sub{$Opt->saveOne('Together')} );
-    $ol->add_checkbutton(-label => "1/2 Ht Blank Lines",
+			 -command => sub{$Opt->saveOne('Together')},
+			 @cbopts );
+    $ol->add_checkbutton(-label => " 1/2 Ht Blank Lines",
 			 -variable => \$Opt->{HHBL},
-			 -command => sub{$Opt->saveOne('HHBL')} );
+			 -command => sub{$Opt->saveOne('HHBL')},
+			 @cbopts );
     {
       my $ls = $opt->new_menu;
       $opt->add_cascade(-menu => $ls, -label => 'Line Spacing');
@@ -148,15 +161,18 @@ sub new {
       }
     }
   }
-  $opt->add_checkbutton(-label => "Highlight Full Line",
+  $opt->add_checkbutton(-label => " Highlight Full Line",
 			-variable => \$Opt->{FullLineHL},
-			-command => sub{$Opt->saveOne('FullLineHL')} ); 
-  $opt->add_checkbutton(-label => "Comment Full Line",
+			-command => sub{$Opt->saveOne('FullLineHL')},
+			 @cbopts ); 
+  $opt->add_checkbutton(-label => " Comment Full Line",
 			-variable => \$Opt->{FullLineCM},
-			-command => sub{$Opt->saveOne('FullLineCM')} );
-  $opt->add_checkbutton(-label => "Show Labels",
+			-command => sub{$Opt->saveOne('FullLineCM')},
+			 @cbopts );
+  $opt->add_checkbutton(-label => " Show Labels",
 			-variable => \$Opt->{ShowLabels},
-			-command => sub{$Opt->saveOne('ShowLabels')} );
+			-command => sub{$Opt->saveOne('ShowLabels')},
+			 @cbopts );
 
   $opt->add_separator;
   $opt->add_command(-label => 'Defaults', -command => sub{$Opt->resetOpt()});

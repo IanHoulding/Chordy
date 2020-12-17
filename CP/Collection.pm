@@ -411,10 +411,11 @@ sub edit {
       );
   $ca = $tf->new_ttk__button(qw/-text Move -command/ =>
 			     sub{_move($self,$delorg);$top->g_raise();});
-  $cb = $tf->new_ttk__checkbutton(
-    -text => 'Delete original',
-    -variable => \$delorg,
-      );
+  $cb = $tf->new_ttk__checkbutton(-style => 'My.TCheckbutton',
+				  -compound => 'left',
+				  -image => ['xtick', 'selected', 'tick'],
+				  -text => 'Delete original',
+				  -variable => \$delorg);
   $d = $tf->new_ttk__label(-text => "Path");
   $e = $tf->new_ttk__label(-textvariable => \$self->{path}, -width => 50);
 

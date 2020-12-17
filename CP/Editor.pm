@@ -416,7 +416,11 @@ sub quickButtons {
   my $rfrm = $frame->new_ttk__frame(-padding => [4,0,4,0]);
   $rfrm->g_grid(qw/-row 0 -column 2/);
 
-  my $ignc = $frame->new_ttk__checkbutton(-text => " Ignore\n Case", -variable => \$Ed->{IgnCase});
+  my $ignc = $frame->new_ttk__checkbutton(-style => 'My.TCheckbutton',
+					  -compound => 'left',
+					  -image => ['xtick', 'selected', 'tick'],
+					  -text => "Ignore\n Case",
+					  -variable => \$Ed->{IgnCase});
 
   $Ed->{FindV} = '';
   my $findl = $frame->new_ttk__label(-text => 'Find:');
