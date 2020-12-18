@@ -216,6 +216,24 @@ sub showSet {
     $self->select($sl);
     $self->{browser}{selLB}{array} = $self->{sets}{$sl}{songs};
     $self->{browser}->refresh($Path->{Pro}, '.pro');
+    if (@{$self->{browser}{selLB}{array}} == 0) {
+      message(SAD, "None of the Setlist files are in this Collection.");
+    }
+    elsif (@{$self->{browser}{selLB}{array}} ne @{$self->{sets}{$sl}{songs}}) {
+      my @notin = ();
+      foreach my $slf (@{$self->{sets}{$sl}{songs}}) {
+	my $i = 0;
+	foreach my $brf (@{$self->{browser}{selLB}{array}}) {
+	  if ($slf eq $brf) {
+	    $i++;
+	    last;
+	  }
+	}
+	push(@notin, $slf) if ($i == 0);
+      }
+      message(SAD, "The following ChordPro files\nare not in this Collection:\n   ".
+	      join("\n   ", @notin));
+    }
   }
 }
 
@@ -307,16 +325,15 @@ sub export {
 	return;
       } elsif ($newC eq 'All') {
 	shift(@lst);
+	# Remove the Seperator and File entries.
+	pop(@lst);
+	pop(@lst);
       } else {
 	@lst = ($newC);
       }
-      # Remove the Seperator and File entries.
-      pop(@lst);
-      pop(@lst);
       my $orgHome = $Home;
       my $all = 0;
       foreach my $col (@lst) {
-	next if ($col eq $orgC);
 	$Home = $Collection->path($col)."/$col";
 	my $sl = CP::SetList->new();
 	if (exists $sl->{sets}{$CurSet} && $all == 0) {
@@ -330,7 +347,6 @@ sub export {
 	}
 	$sl->{sets}{$CurSet} = $self->{sets}{$CurSet};
 	$sl->save($col);
-	undef $sl;
       }
       $Home = $orgHome;
     },

@@ -864,7 +864,7 @@ sub collItems {
     if (! -e "$Path->{Pro}/$ProFiles[$idx]->{name}") {
       push(@del, $idx);
     } else {
-      # Becuase this Collections version of the file may be different.
+      # Because this Collections version of the file may be different.
       $ProFiles[$idx] = CP::Pro->new($ProFiles[$idx]->{name});
     }
   }
