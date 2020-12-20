@@ -448,12 +448,12 @@ sub Edit {
       $EditBar->Clear();
       $EditBar1->Clear();
     }
-    copy($bar, $EditBar, HANDN);
+    copy($bar, $EditBar, ALLB);
     $EditBar->{pbar} = $bar;
     $EditBar->{prev} = $bar->{prev};
     if ($bar->{next} != 0) {
       $EditBar1->{pbar} = $bar->{next};
-      copy($bar->{next}, $EditBar1, HANDN);
+      copy($bar->{next}, $EditBar1, ALLB);
       $EditBar1->{next} = $bar->{next}{next};
     } else {
       $EditBar1->{next} = $EditBar1->{pbar} = 0;
@@ -636,15 +636,25 @@ sub rangeSelect {
 sub copy {
   my($self,$dst,$what) = @_;
 
-  if ($what & HONLY) {
-    foreach (qw/bg header justify lyric newline newpage rep volta/) {
-      $dst->{$_} = $self->{$_};
+  # VOLTA REPEAT HEAD JUST BBG NEWLP NOTE ALLB
+  my @content = (qw/volta rep header justify bg newlp/);
+  my $idx = 0;
+  for(my $i = VOLTA; $i <= NEWLP; $i <<= 1) {
+    if ($what & $i) {
+      if ($i == NEWLP) {
+	$dst->{newline} = $self->{newline};
+	$dst->{newpage} = $self->{newpage};
+      } else {
+	my $c = $content[$idx];
+	$dst->{$c} = $self->{$c};
+      }
     }
+    $idx++;
   }
-  if ($what & NONLY) {
+  if ($what & NOTE) {
     $dst->{notes} = [];
     foreach my $n (noteSort($self)) {
-      push(@{$dst->{notes}}, $n->copy($dst, HANDN));
+      push(@{$dst->{notes}}, $n->copy($dst));
     }
   }
 }

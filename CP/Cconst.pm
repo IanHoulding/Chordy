@@ -148,11 +148,16 @@ use constant {
   PAGE => 0,
   EDIT => 1,
 };
+# Constants for Bar copy
 use constant {
-  VOLTA  => 1,
-  HEAD   => 2,
-  REPEAT => 4,
-  NOTE   => 8,
+  VOLTA  =>   1,
+  REPEAT =>   2,
+  HEAD   =>   4,
+  JUST   =>   8,
+  BBG    =>  16,
+  NEWLP  =>  32,
+  NOTE   =>  64,
+  ALLB   => 127,
 };
 # Constants for use with fonts
 # use constant TITLE  => 0, --- see above
@@ -164,11 +169,8 @@ use constant {
   RESTS  => 5,
   RESTFONT => 'TabSym',
 };
-# Constants for Bar copy & insertion
+# Constants for Bar insertion
 use constant {
-  HONLY   =>  1,
-  NONLY   =>  2,
-  HANDN   =>  3,
   BEFORE  => -1,
   REPLACE =>  0,
   AFTER   =>  1,
@@ -215,9 +217,9 @@ our @EXPORT_OK = qw/
   OWHITE LGREY DGREY MAGENT
 
   PAGE EDIT
-    VOLTA HEADER REPEAT NOTE
+    VOLTA REPEAT HEAD JUST BBG NEWLP NOTE ALLB
     NOTES SNOTES HEADER WORDS RESTS RESTFONT
-    HONLY NONLY HANDN BEFORE REPLACE AFTER UPDATE
+    BEFORE REPLACE AFTER UPDATE
     BNUMW FAT THICK THIN PALE
   STOP PLAY PAUSE LOOP MET RATE
 /;
@@ -242,9 +244,9 @@ our %EXPORT_TAGS = (
 	         HFG RFG OWHITE LGREY DGREY MAGENT/],
 
   TAB     => [qw/PAGE EDIT
-	         VOLTA HEADER REPEAT NOTE
+	         VOLTA REPEAT HEAD JUST BBG NEWLP NOTE ALLB
 	         TITLE NOTES SNOTES HEADER WORDS RESTS
-	         HONLY NONLY HANDN BEFORE REPLACE AFTER UPDATE
+	         BEFORE REPLACE AFTER UPDATE
 	         BNUMW FAT THICK THIN PALE/],
 
   PLAY    => [qw/STOP PLAY PAUSE LOOP MET RATE/],

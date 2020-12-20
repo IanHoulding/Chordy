@@ -9,7 +9,8 @@ Bit late starting with 2.6.4 but about time I documented it :-)
 	   Added Edit Lyrics to the Edit button frame.
 	   Reformatted the Copy/Paste frame.
 	   Added the "Save Fonts" option for when a Tab is saved.
-	   Made a start on making the $Tab variable non-global.
+	   $Tab variable now not global.
+	   When copying a Bar you can now specify which elements you want to copy.
 	   Bugfix's:
 	    - 'Recent' list now gets reformatted when it changes - the command
 	      element was not being updated.

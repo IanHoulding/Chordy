@@ -120,7 +120,7 @@ sub new {
 sub setEdited {
   my($self,$edit) = @_;
 
-  $self->{edited} = ($self->{fileName} ne '') ? shift : 0;
+  $self->{edited} = ($self->{fileName} ne '') ? $edit : 0;
   tabTitle($self, $self->{fileName});
 }
 
@@ -941,7 +941,7 @@ sub Clone {
     if ($bp && ! $bp->isblank()) {
       do {
 	$bp = $self->add1bar();
-	$a->copy($bp, HANDN);
+	$a->copy($bp, ALLB);
 	$a = $a->{next};
       } while ($a && $a->{prev} != $b);
       pasteEnd($self, $bp);
@@ -979,14 +979,32 @@ sub Copy {
 }
 
 sub PasteOver {
-  my($self) = shift;
+  my($self,$replace) = @_;
 
   if (pasteStart($self)) {
     my $dst = $self->{select1};
     my $lastdst;
     foreach my $src (@Copy) {
       $dst = $self->add1bar() if ($dst == 0); # $dst is pointing at {lastBar}
-      $src->copy($dst, HANDN);
+      if ($replace) {
+	$src->copy($dst, ALLB);
+      } else {
+	# /volta rep header justify bg newline newpage/
+	$dst->{volta}   = $src->{volta}   if ($src->{volta} ne 'None');
+	$dst->{rep}     = $src->{rep}     if ($src->{rep} ne 'None');
+	$dst->{header}  = $src->{header}  if ($src->{header} ne '');
+	$dst->{justify} = $src->{justify} if ($dst->{justify} ne $src->{justify});
+	$dst->{bg}      = $src->{bg}      if ($src->{bg} ne '');
+	$dst->{newline} = $src->{newline} if ($src->{newline} != 0);
+	$dst->{newpage} = $src->{newpage} if ($src->{newpage} != 0);
+	foreach my $s (@{$src->{notes}}) {
+	  my $eq = 0;
+	  foreach my $d (@{$dst->{notes}}) {
+	    $eq++, last if ($s->comp($d) == 0);
+	  }
+	  push(@{$dst->{notes}}, $s->copy($dst)) if ($eq == 0);
+	}
+      }
       $lastdst = $dst;
       $dst = $dst->{next};
     }
@@ -1001,7 +1019,7 @@ sub PasteBefore {
     my $dst = $self->{select1}{prev};
     foreach my $src (@Copy) {
       my $bar = CP::Bar->new($self);
-      $src->copy($bar, HANDN);
+      $src->copy($bar, ALLB);
       if ($dst == 0) {
 	$self->{bars} = $bar;
       } else {
@@ -1024,7 +1042,7 @@ sub PasteAfter {
     my $next = $dst->{next};
     foreach my $src (@Copy) {
       my $bar = CP::Bar->new($self);
-      $src->copy($bar, HANDN);
+      $src->copy($bar, ALLB);
       $dst->{next} = $bar;
       $bar->{prev} = $dst;
       $dst = $bar;

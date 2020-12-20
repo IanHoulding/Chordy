@@ -418,9 +418,9 @@ sub editBarOpts {
   $jul->g_grid(qw/-row 1 -column 5 -rowspan 2 -sticky e/, -padx => [12,0], -pady => [0,0]);
   $jub->g_grid(qw/-row 1 -column 6 -rowspan 2 -sticky w/, -padx => [0,0],  -pady => [0,0]);
 
-  $bsl->g_grid(qw/-row 1 -column 2 -rowspan 2 -sticky e/); # Bar Starts
-  $cb1->g_grid(qw/-row 1 -column 3 -rowspan 2/);
-  $cb2->g_grid(qw/-row 1 -column 4 -rowspan 2 -sticky w/);
+  $bsl->g_grid(qw/-row 1 -column 2 -rowspan 2 -sticky e/, -pady => [0,4]); # Bar Starts
+  $cb1->g_grid(qw/-row 1 -column 3 -sticky sw -padx 2/);
+  $cb2->g_grid(qw/-row 2 -column 3 -sticky nw -padx 2/);
 }
 
 sub topVal {
@@ -464,7 +464,6 @@ sub shiftOpt {
     -width   => 6,
     -command => sub{transCmnd($tab, 'ud1string', $pe, -5)});
 
-#  my $lb4 = $frm->new_ttk__label(-text => 'Adjust Strings');
   my $cb4 = $frm->new_ttk__checkbutton(-style => 'My.TCheckbutton',
 				       -compound => 'left',
 				       -text => 'Adjust Strings',
@@ -480,11 +479,9 @@ sub shiftOpt {
   $bu3->g_grid(qw/-row 1 -column 3 /,              -padx => [2,8],  -pady => [0,4]);
 
   if ($pe == PAGE) {
-#    $lb4->g_grid(qw/-row 1 -column 4 -sticky e/, -padx => [16,0], -pady => [0,4]);
-    $cb4->g_grid(qw/-row 1 -column 4 -sticky w/, -padx => [2,0], -pady => [0,4]);
+    $cb4->g_grid(qw/-row 1 -column 4 -sticky w/, -padx => [4,0], -pady => [0,4]);
   } else {
-#    $lb4->g_grid(qw/-row 2 -column 0 -columnspan 2 -sticky e/, -padx => [8,0], -pady => [0,4]);
-    $cb4->g_grid(qw/-row 2 -column 2 -sticky w/,               -padx => [4,0], -pady => [0,4]);
+    $cb4->g_grid(qw/-row 2 -column 1 -columnspan 2/, -pady => [2,0]);
   }
 }
 
@@ -543,8 +540,13 @@ sub pageButtons {
 
 ##########
 
-  my $edit = $frm->new_ttk__labelframe(-text => ' Edit ');
-  $edit->g_pack(qw/-side top -expand 1 -fill both/, -padx => [4,8], -pady => [4,4]);
+  my $ebg = $frm->new_ttk__frame();
+  $ebg->g_pack(qw/-side top -expand 1 -fill both/);
+
+##########
+
+  my $edit = $ebg->new_ttk__labelframe(-text => ' Edit ');
+  $edit->g_pack(qw/-side left -expand 1 -fill both/, -padx => [4,8], -pady => [4,4]);
   my $bu1 = $edit->new_ttk__button(-text => 'Edit Bar',
 				   -style => "Green.TButton",
 				   -command => sub{$tab->editBar});
@@ -553,40 +555,76 @@ sub pageButtons {
 				   -style => "Green.TButton",
 				   -command => sub{$tab->Clone});
   $bu2->g_grid(qw/-row 0 -column 1 -sticky we/, -padx => [4,8], -pady => [0,4]);
-  my $bue = $edit->new_ttk__button(-text => 'Edit Lyrics',
-				   -style => "Green.TButton",
-				   -command => sub{CP::LyricEd->Edit($tab);});
-  $bue->g_grid(qw/-row 0 -column 2 -sticky we/, -padx => [4,8], -pady => [0,4]);
+#  my $bue = $edit->new_ttk__button(-text => 'Edit Lyrics',
+#				   -style => "Green.TButton",
+#				   -command => sub{CP::LyricEd->Edit($tab);});
+#  $bue->g_grid(qw/-row 0 -column 2 -sticky we/, -padx => [4,8], -pady => [0,4]);
+######
+  my $bg = $ebg->new_ttk__labelframe(-text => ' Background ');
+  $bg->g_pack(qw/-side right -expand 1 -fill both -padx 4 -pady 4/);
+  my $bu12 = $bg->new_ttk__button(-text => 'Set',
+				  -style => "Green.TButton",
+				  -command => sub{$tab->setBG});
+  $bu12->g_grid(qw/-row 0 -column 0 -sticky we/, -padx => [4,8], -pady => [0,4]);
+  my $bu13 = $bg->new_ttk__button(-text => 'Clear',
+				  -style => "Red.TButton",
+				  -command => sub{$tab->clearBG});
+  $bu13->g_grid(qw/-row 0 -column 1 -sticky we/, -padx => [4,8], -pady => [0,4]);
+
 ######
   makeImage('hyphen', \%XPM);
   my $cp = $frm->new_ttk__labelframe(-text => ' Copy/Paste ');
   $cp->g_pack(qw/-side top -expand 1 -fill both -padx 4 -pady 4/);
 
   my $cb = $cp->new_ttk__label(-text => 'Copy Buffer:', -font => "BTkDefaultFont");
-  $cb->g_grid(qw/-row 0 -column 0 -columnspan 3 -sticky e/);
+  $cb->g_grid(qw/-row 0 -column 1 -columnspan 2 -sticky e/, -pady => [0,4]);
   my $cbs = $cp->new_ttk__label(-textvariable => \$CP::Tab::CopyIdx);
-  $cbs->g_grid(qw/-row 0 -column 3 -columnspan 4 -sticky w -padx 2/);
+  $cbs->g_grid(qw/-row 0 -column 3 -columnspan 4 -sticky w -padx 2/, -pady => [0,4]);
 
-  my $copy = $cp->new_ttk__label(-text => 'Copy', -font => "BTkDefaultFont");
-  $copy->g_grid(qw/-row 1 -column 0 -sticky e -padx/ => [4,0]);
+  my($volt,$rep,$hdg,$just,$bg,$newlp,$note) = (1,2,4,8,16,32,64);
+  my $bu5 = $cp->new_ttk__button(-text => 'Copy',
+				 -style => "Green.TButton",
+				 -command => sub{$tab->Copy($volt|$rep|$hdg|$just|$bg|$newlp|$note)});
+  $bu5->g_grid(qw/-row 1 -column 0 -sticky e/, -padx => [4,0]);
+
   my $ch1 = $cp->new_ttk__label(-image => 'hyphen', -font => "BTkDefaultFont");
   $ch1->g_grid(qw/-row 1 -column 1 -padx 2/);
-  my $bu3 = $cp->new_ttk__button(-text => 'Header',
-				 -style => "Green.TButton",
-				 -command => sub{$tab->Copy(HONLY)});
-  $bu3->g_grid(qw/-row 1 -column 2 -sticky we/, -pady => [2,4]);
-  my $ch2 = $cp->new_ttk__label(-image => 'hyphen', -font => "BTkDefaultFont");
-  $ch2->g_grid(qw/-row 1 -column 3 -padx 2/);
-  my $bu4 = $cp->new_ttk__button(-text => 'Notes',
-				 -style => "Green.TButton",
-				 -command => sub{$tab->Copy(NONLY)});
-  $bu4->g_grid(qw/-row 1 -column 4 -sticky we/, -pady => [2,4]);
-  my $ch3 = $cp->new_ttk__label(-image => 'hyphen', -font => "BTkDefaultFont");
-  $ch3->g_grid(qw/-row 1 -column 5 -padx 2/);
-  my $bu5 = $cp->new_ttk__button(-text => 'All',
-				 -style => "Green.TButton",
-				 -command => sub{$tab->Copy(HANDN)});
-  $bu5->g_grid(qw/-row 1 -column 6 -sticky we/, -pady => [2,4]);
+
+  my $cpf = $cp->new_ttk__frame();
+  $cpf->g_grid(qw/-row 1 -column 2 -columnspan 6/);
+  my @cmn = (-style => 'My.TCheckbutton',
+	     -compound => 'left',
+	     -image => ['xtick', 'selected', 'tick']);
+  my $cpv = $cpf->new_ttk__checkbutton(@cmn,
+				       -text => 'Volta',
+				       -variable => \$volt, -onvalue => VOLTA);
+  my $cpr = $cpf->new_ttk__checkbutton(@cmn,
+				       -text => 'Repeat',
+				       -variable => \$rep,  -onvalue => REPEAT);
+  my $cph = $cpf->new_ttk__checkbutton(@cmn,
+				       -text => 'Heading',
+				       -variable => \$hdg,  -onvalue => HEAD);
+  my $cpj = $cpf->new_ttk__checkbutton(@cmn,
+				       -text => 'Justify',
+				       -variable => \$just, -onvalue => JUST);
+  my $cpb = $cpf->new_ttk__checkbutton(@cmn,
+				       -text => 'BackGround',
+				       -variable => \$bg,   -onvalue => BBG);
+  my $cpp = $cpf->new_ttk__checkbutton(@cmn,
+				       -text => 'New Line/Page',
+				       -variable => \$newlp,-onvalue => NEWLP);
+  my $cpn = $cpf->new_ttk__checkbutton(@cmn,
+				       -text => 'Notes',
+				       -variable => \$note, -onvalue => NOTE);
+
+  $cpv->g_grid(qw/-row 0 -column 0 -sticky w/, -padx => [0,8]);
+  $cpr->g_grid(qw/-row 1 -column 0 -sticky w/, -padx => [0,8]);
+  $cph->g_grid(qw/-row 0 -column 1 -sticky w/, -padx => [0,8]);
+  $cpj->g_grid(qw/-row 1 -column 1 -sticky w/, -padx => [0,8]);
+  $cpb->g_grid(qw/-row 0 -column 2 -sticky w/, -padx => [0,8]);
+  $cpp->g_grid(qw/-row 1 -column 2 -sticky w/, -padx => [0,8]);
+  $cpn->g_grid(qw/-row 0 -column 3 -rowspan 2 -sticky w/, -padx => [0,8]);
+
 
   my $paste = $cp->new_ttk__label(-text => 'Paste', -font => "BTkDefaultFont");
   $paste->g_grid(qw/-row 2 -column 0 -sticky e -padx/ => [4,0]);
@@ -595,19 +633,26 @@ sub pageButtons {
   my $bu6 = $cp->new_ttk__button(-text => 'Before',
 				 -style => "Green.TButton",
 				 -command => sub{$tab->PasteBefore});
-  $bu6->g_grid(qw/-row 2 -column 2 -sticky we/, -pady => [4,4]);
+  $bu6->g_grid(qw/-row 2 -column 2 -sticky we/, -pady => [4,0]);
   my $ph2 = $cp->new_ttk__label(-image => 'hyphen', -font => "BTkDefaultFont");
   $ph2->g_grid(qw/-row 2 -column 3 -padx 2/);
+  my $povar = 1;
   my $bu7 = $cp->new_ttk__button(-text => 'Over',
 				 -style => "Green.TButton",
-				 -command => sub{$tab->PasteOver});
-  $bu7->g_grid(qw/-row 2 -column 4 -sticky we/, -pady => [4,4]);
+				 -command => sub{$tab->PasteOver($povar)});
+  $bu7->g_grid(qw/-row 2 -column 4 -sticky we/, -pady => [4,0]);
   my $ph3 = $cp->new_ttk__label(-image => 'hyphen', -font => "BTkDefaultFont");
   $ph3->g_grid(qw/-row 2 -column 5 -padx 2/);
   my $bu8 = $cp->new_ttk__button(-text => 'After',
 				 -style => "Green.TButton",
 				 -command => sub{$tab->PasteAfter});
-  $bu8->g_grid(qw/-row 2 -column 6 -sticky we/, -pady => [4,4]);
+  $bu8->g_grid(qw/-row 2 -column 6 -sticky we/, -pady => [4,0]);
+
+  my $por = $cp->new_ttk__checkbutton(@cmn,
+				      -text => 'Replace',
+				      -variable => \$povar, -onvalue => 1);
+  $por->g_grid(qw/-row 3 -column 4 -sticky we/, -pady => [0,4]);
+
 ######
   my $sel = $frm->new_ttk__labelframe(-text => ' Selection ');
   $sel->g_pack(qw/-side top -expand 1 -fill both -padx 4 -pady 4/);
@@ -623,17 +668,6 @@ sub pageButtons {
 				   -style => "Green.TButton",
 				   -command => sub{$tab->DeleteBars});
   $bu11->g_grid(qw/-row 0 -column 2 -sticky we/, -padx => [4,8], -pady => [0,4]);
-######
-  my $bg = $frm->new_ttk__labelframe(-text => ' Background ');
-  $bg->g_pack(qw/-side top -expand 1 -fill both -padx 4 -pady 4/);
-  my $bu12 = $bg->new_ttk__button(-text => 'Set',
-				  -style => "Green.TButton",
-				  -command => sub{$tab->setBG});
-  $bu12->g_grid(qw/-row 0 -column 0 -sticky we/, -padx => [4,8], -pady => [0,4]);
-  my $bu13 = $bg->new_ttk__button(-text => 'Clear',
-				  -style => "Red.TButton",
-				  -command => sub{$tab->clearBG});
-  $bu13->g_grid(qw/-row 0 -column 1 -sticky we/, -padx => [4,8], -pady => [0,4]);
 ######
   my $lyr = $frm->new_ttk__labelframe(-text => ' Lyrics ');
   $lyr->g_pack(qw/-side top -expand 1 -fill both -padx 4 -pady 4/);
