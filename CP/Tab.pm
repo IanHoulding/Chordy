@@ -393,12 +393,6 @@ sub indexBars {
   $self->{lyrics}->adjust($Opt->{LyricLines}) if ($Opt->{LyricLines});
 }
 
-#sub startEdit {
-#  my($self) = shift;
-#
-#  $self->setEdited(0);
-#}
-
 sub load {
   my($self,$fn) = @_;
 
@@ -461,10 +455,11 @@ sub load {
 	$bar->{justify} = $just;
 	$bar->{rep} = $rep;
 	$bar->{bg} = $bg;
-	while ($notes =~ /([r\d])\(([^\)]*)\)/g) {
+	while ($notes =~ /(r|\d+)\(([^\)]*)\)/g) {
 	  my $n = $2;
-	  my $string = $1;
-	  $string -= 1 if ($string ne 'r');
+	  my $string = ($1 eq 'r') ? REST : $1;
+	  print "string=$string  note=$n\n";
+	  $string -= 1 if ($string != REST);
 	  foreach my $s (split(' ', $n)) {
 	    my $nt = CP::Note->new($bar, $string, $s);
 	    push(@{$bar->{notes}}, $nt);
@@ -502,7 +497,7 @@ sub guessKey {
 
   for(my $bar = $self->{bars}; $bar != 0; $bar = $bar->{next}) {
     foreach my $n (@{$bar->{notes}}) {
-      if ($n->{string} ne 'r' && $n->{fret} ne 'X') {
+      if ($n->{string} != REST && $n->{fret} ne 'X') {
 	my $idx = (idx($Tuning[$n->{string}]) + $n->{fret}) % 12;
 	my $c = $Scale->[$idx];
 	if ($c =~ /[a-g]/) {
@@ -619,8 +614,8 @@ sub save {
 	print $OFH "[";
 	foreach my $n ($bar->noteSort()) {
 	  my $fs = '';
-	  if ($n->{string} eq 'r') {
-	    $fs = "r($n->{fret},$n->{pos})";
+	  if ($n->{string} == REST) {
+	    $fs = REST."($n->{fret},$n->{pos})";
 	  } else {
 	    my $fnt = ($n->{font} eq 'Small') ? 'f' : '';
 	    $fs = ($n->{string}+1).'('.$fnt.$n->{fret};
@@ -1098,6 +1093,25 @@ sub ClearBars {
   }
 }
 
+sub ClearAndRedraw {
+  my($self) = shift;
+
+  $self->{eWin}->g_wm_withdraw();
+  $self->ClearEbars();
+  $self->indexBars();
+  $self->newPage($self->{pageNum});
+}
+
+sub ClearEbars {
+  my($self) = shift;
+
+  $EditBar->Clear();
+  $EditBar->{pbar} = 0;
+  $EditBar1->Clear();
+  $EditBar1->{pbar} = 0;
+  $self->ClearSel();
+}
+
 sub ClearSel {
   my($self) = shift;
 
@@ -1202,7 +1216,7 @@ sub transpose {
     while ($bar && $bar->{prev} != $last) {
       my $tr = $self->{trans} + 0;
       foreach my $n (@{$bar->{notes}}) {
-	if ($n->{string} ne 'r' && $n->{fret} ne 'X') {
+	if ($n->{string} != REST && $n->{fret} ne 'X') {
 	  $n->{fret} += $tr;
 	  if ($Opt->{Refret}) {
 	    foreach my $ups (5, 10) {
@@ -1247,7 +1261,7 @@ sub ud1string {
   while ($bar && $bar->{prev} != $last) {
     foreach my $n (@{$bar->{notes}}) {
       my $str = $n->{string};
-      if ($str ne 'r') {
+      if ($str != REST) {
 	if (($adj > 0 && ($str + 1) == $Nstring) || ($adj < 0 && ($str - 1) < 0)) {
 	  $n->{fret} += $adj if ($n->{fret} ne 'X');
 	} else {
@@ -1371,7 +1385,7 @@ sub saveAsText {
     $bar->{newline} = $b->{newline} | $b->{newpage};
     $bar->{header} = $b->{header};
     foreach my $n (@{$b->{notes}}) {
-      if ($n->{string} ne 'r') {
+      if ($n->{string} != REST) {
 	my $s = abs($n->{string} - $Nstring);
 	my $p = (($n->{pos} / $div) * 2) + 2;
 	substr($bar->{asc}[$s], $p, length($n->{fret}), $n->{fret});

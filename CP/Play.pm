@@ -132,7 +132,7 @@ sub note {
     if (defined $iv->{pos}[$Beat] && $tab->{play} != MET) {
       resetWav();
       my $idx = $iv->{pos}[$Beat][0];
-      if ($idx ne 'r') {
+      if ($idx != REST) {
 	load($idx);
       }
     }
@@ -194,19 +194,19 @@ sub makeNotes {
   # First pass creates all the individual notes
   #
   for(my $bar = $first; $bar != 0; $bar = $bar->{next}) {
-    my $IV = {};
-    $IV->{pos} = [];
-    $IV->{bar} = $bar;
+    my $iv = {};
+    $iv->{pos} = [];
+    $iv->{bar} = $bar;
     foreach my $nt (@{$bar->{notes}}) {
       my $str = $nt->{string};
       my $pos = $nt->{pos};
       my $frt = $nt->{fret};
       next if ($frt eq 'X');
-      if ($str eq 'r') {
-	$IV->{pos}[$pos][0] = 'r';
+      if ($str == REST) {
+	$iv->{pos}[$pos][0] = REST;
       } else {
 	my $n = "$str.$frt";
-	push(@{$IV->{pos}[$pos]}, "$n");
+	push(@{$iv->{pos}[$pos]}, "$n");
 	if (!defined $Note{$n}) {
 	  my $note = oneNote($str, $frt, $time);
 	  $PrePack{$n} = $note;
@@ -214,7 +214,7 @@ sub makeNotes {
 	}
       }
     }
-    push(@Bars, $IV);
+    push(@Bars, $iv);
     last if ($bar == $last);
   }
   #

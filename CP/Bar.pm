@@ -126,25 +126,6 @@ sub Clear {
   $self->blank();
 }
   
-sub ClearEbar {
-  my($tab) = shift;
-
-  $EditBar->Clear();
-  $EditBar->{pbar} = 0;
-  $EditBar1->Clear();
-  $EditBar1->{pbar} = 0;
-  $tab->ClearSel();
-}
-
-sub ClearAndRedraw {
-  my($tab) = shift;
-
-  $tab->{eWin}->g_wm_withdraw();
-  ClearEbar($tab);
-  $tab->indexBars();
-  $tab->newPage($tab->{pageNum});
-}
-
 # Clears the Edit Bars and redraws them.
 # Usually done after a change to one of the size/distance parameters.
 #sub remap {
@@ -179,23 +160,31 @@ sub comp {
 #    In this case we pass in the tab object, page index and x/y values.
 #    Currently ONLY for Page bar outlines.
 #
-sub outline {
+sub editBarOutline {
   my($self) = shift;
 
-  my($tab,$pidx,$X,$Y,$off,$tt,$thick,$thin,$can);
-  if (ref($self) eq 'CP::Bar') {
-    $tab = $self->{tab};
-    ($pidx,$X,$Y,$off) = ($self->{pidx},$self->{x},$self->{y},$self->{offset});
+  outline($self, $self->{tab}, $self->{pidx}, $self->{x}, $self->{y});
+}
+
+# $self is undefined for Page Bars.
+sub pageBarOutline {
+  my($self,$tab,$pidx,$X,$Y) = @_;
+
+  outline($self, $tab, $pidx, $X, $Y);
+}
+
+sub outline {
+  my($self,$tab,$pidx,$X,$Y) = @_;
+
+  my($off,$can);
+  if (defined $self) {
+    $off = $self->{offset};
     $can = $self->{canvas};
   } else {
-    $tab = $self;
-    $pidx = shift;
-    $X = shift;
-    $Y = shift;
     $off = $tab->{pOffset};
     $can = $tab->{pCan};
   }
-  ($thick,$thin) = ($off->{thick},$off->{thin});
+  my($thick,$thin) = ($off->{thick},$off->{thin});
   my $w = $off->{width};
   my $ht = $thin / 2;
   my $x1 = my $x2 = $X;
@@ -243,7 +232,7 @@ sub outline {
   # Thick line at the end of a bar
   vline($can, $x1, $y1-$ht, $y2+$ht, $thick, $fill, $tag);
 
-  if ($pidx < 0) {
+  if (defined $self) {
     markers($self);
   } else {
     # Detection rectangle to edit a Bar
@@ -323,7 +312,7 @@ sub _pn {
       return;
     }
   }
-  ClearEbar($tab);
+  $tab->ClearEbars();
   $bar->select() if ($bar);
   Edit($bar);
 }
@@ -367,7 +356,7 @@ sub posSelect {
   my $can = $self->{canvas};
   if ($id != 0) {
     my $n = getNote($self, $id);
-    if ($n->{string} eq 'r') {
+    if ($n->{string} == REST) {
       $can->itemconfigure($id, -fill => BLACK);
       $n->move($string, $pos);
     }
@@ -403,7 +392,7 @@ sub posSelect {
     # Place a fret number or rest on a string.
     my $n = CP::Note->new($EditBar, 1, '');
     if ($tab->{fret} =~ /r(\d+)/) {
-      $n->{string} = 'r';
+      $n->{string} = REST;
       $n->{fret} = $1;
       # Remove all frets from this position.
       my $idx = 0;
@@ -479,7 +468,7 @@ sub insert {
   if ($tab->{select1}) {
     $self->{pbar} = $tab->{select1};
     $self->save_bar($where);
-    ClearAndRedraw($tab);
+    $tab->ClearAndRedraw();
   } else {
     message(SAD, "No Bar selected - don't know where to put this one!", 1);
   }
@@ -488,7 +477,7 @@ sub insert {
 sub Save {
   $EditBar1->save_bar(REPLACE) if ($EditBar1->{pbar} && comp($EditBar1, $EditBar1->{pbar}));
   $EditBar->save_bar(REPLACE) if (comp($EditBar, $EditBar->{pbar}));
-  ClearAndRedraw($EditBar->{tab});
+  $EditBar->{tab}->ClearAndRedraw();
 }
 
 sub Update {
@@ -600,7 +589,7 @@ sub deselect {
   if ($id != 0) {
     my $t = $tab->{eCan}->type($id);
     if ($t eq 'image') {
-      my $rst = "r".getNote($self, $id)->{fret};
+      my $rst = 'r'.getNote($self, $id)->{fret};
       $tab->{eCan}->itemconfigure($id, -image => "edit$rst");
     } else {
       $tab->{eCan}->itemconfigure($id, -fill => $tab->{noteColor});
@@ -663,7 +652,7 @@ sub Cancel {
   my($self) = shift;
 
   my $tab = $self->{tab};
-  ClearEbar($tab);
+  $tab->ClearEbars();
   $tab->ClearSel();
   $tab->{eWin}->g_wm_withdraw();
 }

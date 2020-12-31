@@ -251,11 +251,11 @@ sub editCanvas {
 
   $EditBar->{x} = INDENT * 2;
   $EditBar->{y} = $tab->{editY} + INDENT;
-  $EditBar->outline();
+  $EditBar->editBarOutline();
 
   $EditBar1->{x} = (INDENT * 2) + $off->{width};
   $EditBar1->{y} = $EditBar->{y};
-  $EditBar1->outline();
+  $EditBar1->editBarOutline();
 }
 
 sub editBarFret {
@@ -756,7 +756,7 @@ sub pageCanvas {
   foreach my $r (0..($tab->{rowsPP} - 1)) {
     my $x = $Opt->{LeftMargin};
     foreach (1..$Opt->{Nbar}) {
-      CP::Bar::outline($tab, $pidx++, $x, $y);
+      CP::Bar::pageBarOutline(undef, $tab, $pidx++, $x, $y);
       $x += $w;
     }
     $y += $h;

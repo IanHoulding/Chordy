@@ -25,6 +25,8 @@ Bit late starting with 2.6.4 but about time I documented it :-)
            Made ChordPro chords follow the spec closer by allowing '*' as the first
 	     character followed by any text.
 	   Options are now saved as/when they are changed.
+	   Added 'Ignore Capo Directives' and 'No Long Line warnings' to the Options
+	     Menu.
 	   TODO - allow chord specs in comments/highlights etc.
 	   Bugfix's:
 	    - Export Setlist to a single Collection failed.

@@ -140,9 +140,10 @@ use constant {
   DGREY  => '#808080',
   MAGENT => '#700070',
 };
-#
-# Constants for the Tab Editor
-#
+##################################
+## Constants for the Tab Editor ##
+##################################
+
 # Constants for changes to a Bar
 use constant {
   PAGE => 0,
@@ -194,6 +195,11 @@ use constant {
   MET   => 4,
   RATE  => 8000,
 };
+# Constants to define Rest/Stopped as opposed a Note
+use constant {
+  REST  => 60,
+  GHOST => 67,
+};
 
 our @ISA = qw/Exporter/;
 
@@ -221,6 +227,7 @@ our @EXPORT_OK = qw/
     NOTES SNOTES HEADER WORDS RESTS RESTFONT
     BEFORE REPLACE AFTER UPDATE
     BNUMW FAT THICK THIN PALE
+    REST GHOST
   STOP PLAY PAUSE LOOP MET RATE
 /;
 
@@ -247,7 +254,8 @@ our %EXPORT_TAGS = (
 	         VOLTA REPEAT HEAD JUST BBG NEWLP NOTE ALLB
 	         TITLE NOTES SNOTES HEADER WORDS RESTS
 	         BEFORE REPLACE AFTER UPDATE
-	         BNUMW FAT THICK THIN PALE/],
+	         BNUMW FAT THICK THIN PALE
+	         REST GHOST/],
 
   PLAY    => [qw/STOP PLAY PAUSE LOOP MET RATE/],
     );

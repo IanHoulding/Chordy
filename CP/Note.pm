@@ -38,7 +38,7 @@ use Math::Trig;
 # The fret number may be preceeded with an 'f' in which
 # case it will be displayed in a smaller font.
 #
-# A note can also be a Rest in which case the "string" will be the letter 'r'.
+# A note can also be a Rest in which case the "string" will be the value REST.
 # The values inside () become (duration,interval) where duration is one of:
 # 1 1/2 1/4 1/8 1/16 or 1/32
 #
@@ -65,16 +65,15 @@ sub new {
   $self->{fret} = $self->{pos} = $self->{to} = 0;
   $self->{shbr} = '';
   $self->{id} = '';           # Only used in the EditBars.
-  if ($string =~ /r/i) {
+  $self->{string} = $string;
+  if ($string == REST) {
     # Got a rest.
-    $self->{string} = 'r';
     if ($def =~ /([\d\/]+),(\d+)/) {
       $self->{pos} = $2;
       ($self->{fret} = $1) =~ s/1\///;
     }
   } else {
     # This only happens where we are reading in a Tab file.
-    $self->{string} = $string;
     if ($def =~ /(f)?([-]?[X\d]+),(\d+)([bhrsv])?(\d+)?,?([-]?\d+)?/) {
       $self->{font} = 'Small' if ($1 eq 'f');
       $self->{fret} = $2;
@@ -192,7 +191,7 @@ sub select {
     }
   }
   else {
-    my $clr = ($self->{string} eq 'r') ? BLACK : $tab->{noteColor};
+    my $clr = ($self->{string} = REST) ? BLACK : $tab->{noteColor};
     $can->itemconfigure($id, -fill => $clr);
     $tab->{selected} = 0;
     if ($id != $self->{id}) {
@@ -290,7 +289,7 @@ sub move {
     unmap($pn);
     show($pn);
   } else {
-    $self->{string} = $string if ($self->{string} ne 'r');
+    $self->{string} = $string if ($self->{string} != REST);
     $self->{pos} = $pos;
   }
   show($self, 'F');
@@ -314,7 +313,7 @@ sub show {
   my($id,$fnt,$clr);
   my $hh = $off->{staffHeight} / 2;
   my $ss = $off->{staffSpace};
-  if ($self->{string} eq 'r') {
+  if ($self->{string} == REST) {
     # Rest
     my $num = $self->{fret};
     my $yadd = ($num == 1) ? $ss : ($num == 2) ? $ss * 2 : $hh;

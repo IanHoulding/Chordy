@@ -220,7 +220,7 @@ sub make {
       my $offset = $ntfp->{mid};
       $offset *= 0.8 if ($n->{fret} eq 'X');
       $n->{x} = $x + ($u * ($n->{pos} + 2));
-      $n->{y} = $xy->{staff0} + ($ss * $n->{string}) - $offset if ($n->{string} ne 'r');
+      $n->{y} = $xy->{staff0} + ($ss * $n->{string}) - $offset if ($n->{string} != REST);
     }
 
     _bg($bar->{bg}, $x-2, $y - $off->{height}, $w+4, $off->{height});
@@ -484,7 +484,7 @@ sub notes {
   my $u = $off->{interval};
 
   foreach my $n (@{$bar->{notes}}) {
-    if ($n->{string} eq 'r') {
+    if ($n->{string} == REST) {
       my $y = $xy->{staff0} + $off->{staffHeight};
       my $num = $n->{fret};
       if ($num <= 2) {

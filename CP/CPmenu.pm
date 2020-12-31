@@ -161,13 +161,21 @@ sub new {
       }
     }
   }
-  $opt->add_checkbutton(-label => " Highlight Full Line",
+  $opt->add_checkbutton(-label => " Highlight full line",
 			-variable => \$Opt->{FullLineHL},
 			-command => sub{$Opt->saveOne('FullLineHL')},
 			 @cbopts ); 
-  $opt->add_checkbutton(-label => " Comment Full Line",
+  $opt->add_checkbutton(-label => " Comment full line",
 			-variable => \$Opt->{FullLineCM},
 			-command => sub{$Opt->saveOne('FullLineCM')},
+			 @cbopts );
+  $opt->add_checkbutton(-label => " Ignore Capo Directives",
+			-variable => \$Opt->{IgnCapo},
+			-command => sub{$Opt->saveOne('IgnCapo')},
+			 @cbopts ); 
+  $opt->add_checkbutton(-label => " No Long Line warnings",
+			-variable => \$Opt->{NoWarn},
+			-command => sub{$Opt->saveOne('NoWarn')},
 			 @cbopts );
   $opt->add_checkbutton(-label => " Show Labels",
 			-variable => \$Opt->{ShowLabels},
