@@ -12,7 +12,7 @@ package CP::Pro;
 use strict;
 use warnings;
 
-use CP::Cconst qw/:OS :PDF :MUSIC :TEXT :SHFL :INDEX :SMILIE/;
+use CP::Cconst qw/:OS :PDF :FONT :MUSIC :TEXT :SHFL :INDEX :SMILIE/;
 use CP::Global qw/:FUNC :OPT :WIN :PRO :SCALE :MEDIA/;
 use CP::PDFfont;
 use CP::CPpdf;
@@ -20,13 +20,12 @@ use CP::Cmsg;
 use CP::Line;
 use CP::Chord;
 use CP::Editor;
+use POSIX qw/ceil/;
 use Exporter;
 
 our @ISA = qw/Exporter/;
 
-our @EXPORT = qw/$LenError/;
-
-our($MyPDF, $PdfFileName, $LenError);
+our($MyPDF, $PdfFileName);
 
 sub new {
   my($proto,$fn,$elem) = @_;
@@ -172,15 +171,19 @@ sub decompose {
 	}
 	elsif ($cmd =~ /^c$|^comment$/i) {
 	  $lref = CP::Line->new(CMMNT, $txt, $blk_no, $bg);  $bg = '';
+	  $lref->segment($self);
 	}
 	elsif ($cmd =~ /^ci$|^comment_italic$/i) {
 	  $lref = CP::Line->new(CMMNTI, $txt, $blk_no, $bg); $bg = '';
+	  $lref->segment($self);
 	}
 	elsif ($cmd =~ /^cb$|^comment_box$/i) {
 	  $lref = CP::Line->new(CMMNTB, $txt, $blk_no, $bg); $bg = '';
+	  $lref->segment($self);
 	}
 	elsif ($cmd =~ /^h$|^highlight$/i) {
 	  $lref = CP::Line->new(HLIGHT, $txt, $blk_no, $bg); $bg = '';
+	  $lref->segment($self);
 	}
 	elsif ($cmd =~ /^(sov|start_of_verse)$/i) {
 	  $lvcb = VERSE;
@@ -309,8 +312,6 @@ sub decompose {
 	  $tablref->{ch_cnt}++;
 	  $lineNum++;
 	} else {
-#	  $lref = CP::Line->new($lvcb, "", $blk_no, $bg);
-#	  $lref->segment($self, $_);
 	  $lref = CP::Line->new($lvcb, $_, $blk_no, $bg);
 	  $lref->segment($self);
 	}
@@ -350,13 +351,7 @@ sub makePDF {
     }
   }
 
-  my $grid = {
-    lmargw => 1,
-    rmargw => 1,
-    measures => 4,
-    beats => 4,
-    label => '',
-      };
+  my $lengthErr = 0;
 
   my $linespc = $Opt->{LineSpace};
   my $halfspc = int($linespc / 2);
@@ -369,7 +364,6 @@ sub makePDF {
   my $chfp    = $myPDF->{fonts}[CHORD];
   my $chorddc = $chfp->{dc} / 2;
   my $chordht = $chfp->{as} + $chorddc;
-  my $superht = $chfp->{ssz};
   my $chd_clr = $chfp->{clr};
 
   my $cmfp    = $myPDF->{fonts}[CMMNT];
@@ -382,8 +376,6 @@ sub makePDF {
   my $labeldc = $lbfp->{dc};
   my $labelht = $lbfp->{as} + $labeldc;
   my $lab_clr = $lbfp->{clr};
-
-  my $grfp    = $myPDF->{fonts}[GRID];
 
   my $tbfp    = $myPDF->{fonts}[TAB];
   my $tabdc   = $tbfp->{dc};
@@ -418,7 +410,6 @@ sub makePDF {
   for(my $lnidx = 0; $lnidx < @{$self->{lines}}; $lnidx++) {
     my $ln = $lref->[$lnidx];
     my $type = $ln->{type};
-    my $lerr = 0;
     if ($type == NP || $lineY < $Opt->{BottomMargin}) {
       $lineY = $myPDF->newPage($self, $pageno++);
     }
@@ -444,31 +435,35 @@ sub makePDF {
       # Start of a new Block. Work out it's height and see if it'll fit on this Page.
       my $ht = $Opt->{BottomMargin};
       for(my $i = $lnidx; $i <= $#{$lref} && $lref->[$i]->{blk_no} == $blk; $i++) {
-	my $sp = $lref->[$i];
-	my $ty = $sp->{type};
+	my $lrp = $lref->[$i];
+	my $ty = $lrp->{type};
 	if ($ty == HLINE || $ty == VSPACE) {
-	  $ht += ($sp->{text} =~ /([\.\d]+)\s?([\.\d]+)?/) ? $1 : 5;
+	  $ht += ($lrp->{text} =~ /([\.\d]+)\s?([\.\d]+)?/) ? $1 : 5;
 	} elsif ($ty == GRID) {
-	  $ht += ($chordht * $sp->{ch_cnt}) if ($lyrOnly == 0);
+	  $ht += ($chordht * $lrp->{ch_cnt}) if ($lyrOnly == 0);
 	} elsif ($ty == LYRIC || $ty == VERSE || $ty == CHORUS || $ty == BRIDGE) {
 	  if ($ln->{label}) {
 	    $ht += ($linespc + $labelht) if ($ln->{text} ne '' && $Opt->{ShowLabels});
 	  } else {
-	    my $h = ($sp->{ly_cnt}) ? $lyricht: 0;
-	    $h += $chordht if ($sp->{ch_cnt} && $lyrOnly == 0);
+	    my $h = ($lrp->{ly_cnt}) ? $lyricht: 0;
+	    $h += $chordht if ($lrp->{ch_cnt} && $lyrOnly == 0);
 	    $ht += ($linespc + $h) if ($h);
 	  }
 	} elsif ($ty == CHRD) {
-	  my @chords = split(' ', $sp->{text});
+	  my @chords = split(' ', $lrp->{text});
 	  while ($lref->[++$i]->{type} == CHRD) {
 	    push(@chords, split(' ', $lref->[$i]->{text}));
 	  }
 	  $i--;
 	  $ht += $myPDF->fingersHeight(@chords);
-	} elsif ($ty == HLIGHT) {
-	  $ht += $highlht;
-	} elsif ($ty == CMMNT || $ty == CMMNTI || $ty == CMMNTB) {
-	  $ht += $cmmntht;
+	} elsif ($ty == HLIGHT || $ty == CMMNT || $ty == CMMNTI || $ty == CMMNTB) {
+	  my $dy = ($ty == HLIGHT) ? $highlht : $cmmntht;
+	  if ($lrp->{ch_cnt}) {
+	    my $cht = ceil($chfp->{sz} * SUPHT) + $chfp->{dc};
+	    $cht += ceil($cht * SUPHT);
+	    $dy = $cht if ($cht > $dy);
+	  }
+	  $ht += $dy;
 	}
       }
       if ($ht > $lineY) {
@@ -494,18 +489,17 @@ sub makePDF {
 	# Side effect of measure() sets the x offset for each segment.
 	# As a side note - Tcl/Tk doesn't handle half point sizes for
 	#   fonts but PDF::API2 can - so we do.
+	my $wid = 0;
+	my $max = $Media->{width} - $Opt->{LeftMargin};
 	while (1) {
-	  $lineX = $Opt->{LeftMargin} + $ln->measure($self,$myPDF);
-	  last if ($lineX < $Media->{width});
-	  $lerr = $lineX if ($lerr == 0);
+	  $wid = $ln->measure($self,$myPDF);
+	  last if ($wid < $max || $lyfp->{sz} < 5); # Sanity check!
 	  $lyfp->{sz} -= 0.5;
 	  $chfp->{sz} -= 0.5;
-	  $chfp->{ssz} -= 0.5;
 	  $heightAdj += 0.5;
-	  $LenError++;
-	  last if ($lyfp->{sz} < 6); # Sanity check!
+	  $lengthErr++;
 	}
-	if ($lerr) {
+	if ($heightAdj != 0) {
 	  my $str = "";
 	  if ($ln->{ly_cnt}) {
 	    foreach my $s (@{$ln->{segs}}) {
@@ -513,12 +507,14 @@ sub makePDF {
 	    }
 	  } else {
 	    foreach my $s (@{$ln->{segs}}) {
-	      $str .= join("", @{$s->{chord}});
+	      if (@{$s->{chord}}) {
+		$str .= join("", @{$s->{chord}});
+	      }
 	    }
 	  }
 	  print localtime."\n";
 	  printf "  LINE $ln->{num} TOO LONG by %.1fmm: %s/%s\n  -->%s\n\n",
-	      ($lerr - $Media->{width}) * (25.4 / 72), $self->{path}, $self->{name}, $str;
+	      ($wid - $max) * (25.4 / 72), $self->{path}, $self->{name}, $str;
 	}
       }
       my $off = 0;
@@ -591,7 +587,6 @@ sub makePDF {
 	  foreach my $s (@{$ln->{segs}}) {
 	    $lineX = $s->{x} + $off;
 	    # Chords
-#	    if (@{$s->{chord}} && $lyrOnly == 0) {
 	    if ($lyrOnly == 0 && defined $s->{chord}) {
 	      $myPDF->chordAdd($lineX, $chordY, $s->{chord}->trans2obj($self), $chd_clr);
 	    }
@@ -602,12 +597,11 @@ sub makePDF {
 	  }
 	}
       }
-      #
-      # Reset the Chord/Lyric font heights
-      #
-      $lyfp->{sz} += $heightAdj;
-      $chfp->{sz} += $heightAdj;
-      $chfp->{ssz} += $heightAdj;
+      if ($heightAdj) {
+	# Reset the Chord/Lyric font heights
+	$lyfp->{sz} += $heightAdj;
+	$chfp->{sz} += $heightAdj;
+      }
     }
     elsif ($type == TAB) {
       # Tabs are always left justified so no need to do the centering garbage.
@@ -625,77 +619,7 @@ sub makePDF {
       $lineY -= $tabdc;
     }
     elsif ($type == GRID) {
-      my @gr = split(/\n/, $ln->{text});
-      gridDef($grid, shift(@gr));
-      my $idx = my $maxl = my $maxr = 0;
-      foreach my $line (@gr) {
-	# Looking for (in order)   :|:  ||  :|  |:  |. |
-	my @c = split(/(:\|:|\|\||:\||\|:|\|\.|\|)/, $line);
-	if ($c[0] !~ /\|/) {
-	  my $len = CP::CPpdf::_measure($c[0], $lyfp->{font}, $lyfp->{sz});
-	  $maxl = $len if ($len > $maxl);
-	}
-	if ($c[-1] !~ /\|/) {
-	  my $len = CP::CPpdf::_measure($c[-1], $lyfp->{font}, $lyfp->{sz});
-	  $maxr = $len if ($len > $maxr);
-	}
-	$grid->{lines}[$idx++] = \@c;
-      }
-      if ($grid->{label} ne '') {
-	$lineY -= $cmmntht;
-	$myPDF->commentAdd(CMMNT, $lineY, $grid->{label}, $cmfp->{clr}, $ln->{bg});
-      }
-      my $div = CP::CPpdf::_measure('4', $grfp->{font}, $grfp->{sz});
-      my $cells = $grid->{measures} * $grid->{beats};
-      $cells += $grid->{lmargw} if ($maxl == 0);
-      $cells += $grid->{rmargw} if ($maxr == 0);
-      my $cellw = $Media->{width} - $Opt->{LeftMargin} - ($maxl + $maxr) - ($div * ($grid->{measures} + 1)) - $Opt->{RightMargin};
-      $cellw /= $cells;
-      $maxl = $cellw * $grid->{lmargw} if ($maxl == 0);
-      foreach my $gl (@{$grid->{lines}}) {
-	my $x = $Opt->{LeftMargin};
-	$lineY -= $chordht;
-	my $idx = 0;
-	while (scalar @$gl) {
-	  my $meas = shift(@{$gl});
-	  if ($meas =~ /\|/) {
-	    my $d = ($meas eq '|') ? '0' : ($meas eq '||') ? '1' : ($meas eq '|:') ? '2' : ($meas eq ':|') ? '3' : ($meas eq ':|:') ? '4' : '5';
-	    CP::CPpdf::_textAdd($x, $lineY, $d, $grfp->{font}, $grfp->{sz}, $chd_clr);
-	    $x += $div;
-	  } else {
-	    if ($idx == 0 || (scalar @$gl) == 0) {
-	      $myPDF->lyricAdd($x, $lineY, $meas, $lyr_clr);
-	      $x += $maxl;
-	    } else {
-	      my $mw = $cellw * $grid->{beats};
-	      if ($meas =~ /%%/) {
-		$x += $mw;
-		CP::CPpdf::_textAdd($x, $lineY,
-				    '6', $myPDF->{fonts}[GRID], $Media->{Chord}{size}, $chd_clr);
-		$x += $div;
-		# This takes the liberty that the following Measure MUST be empty!
-		shift(@{$gl});shift(@{$gl});
-	      } elsif ($meas =~ /%/) {
-		CP::CPpdf::_textAdd($x + ($mw / 2), $lineY,
-				    '6', $grfp->{font}, $grfp->{sz}, $chd_clr);
-	      } else {
-		my $mx = $x;
-		foreach my $cell (split(' ', $meas)) {
-		  if ($cell eq '.' || $cell eq '/') {
-		    CP::CPpdf::_textAdd($mx, $lineY, $cell, $grfp->{font}, $grfp->{sz}, $chd_clr);
-		  } else {
-		    my($ch,$cn) = CP::Chord->new($cell);
-		    $myPDF->chordAdd($mx, $lineY, $ch, $chd_clr);
-		  }
-		  $mx += $cellw;
-		}
-	      }
-	      $x += $mw;
-	    }
-	  }
-	  $idx++;
-	}
-      }
+      $lineY = drawGrid($myPDF,$ln,$lineY,$lyfp,$chordht,$chd_clr);
     }
     elsif ($type == CHRD) {
       #
@@ -767,12 +691,16 @@ sub makePDF {
       # A Comment or Highlight directive
       #
       my $dy = ($type == HLIGHT) ? $highlht : $cmmntht;
-      my $clr = ($type == HLIGHT) ? $Media->{Highlight}{color} : $Media->{Comment}{color};
-      if (($lineY - $dy) < 0) {
-	$lineY = $myPDF->newPage($self, $pageno++);
+      if ($ln->{ch_cnt}) {
+	my $cht = ceil($chfp->{sz} * SUPHT) + $chfp->{dc};
+	$cht += ceil($cht * SUPHT);
+	$dy = $cht if ($cht > $dy);
       }
       $lineY -= $dy;
-      $myPDF->commentAdd($type, $lineY, $ln->{text}, $clr, $ln->{bg});
+      if ($lineY < 0) {
+	$lineY = $myPDF->newPage($self, $pageno++);
+      }
+      $myPDF->commentAdd($self, $ln, $type, $lineY, $dy);
     }
   }
   #
@@ -788,6 +716,93 @@ sub makePDF {
   # Just need to go back and add in the Page numbers
   #
   $myPDF->pageNum(--$pageno);
+  $lengthErr;
+}
+
+sub drawGrid {
+  my($myPDF,$ln,$lineY,$lyfp,$chordht,$chd_clr) = @_;
+
+  my $grid = {
+    lmargw => 1,
+    rmargw => 1,
+    measures => 4,
+    beats => 4,
+    label => '',
+      };
+  my @gr = split(/\n/, $ln->{text});
+  gridDef($grid, shift(@gr));
+  my $idx = my $maxl = my $maxr = 0;
+  foreach my $line (@gr) {
+    # Looking for (in order)   :|:  ||  :|  |:  |. |
+    my @c = split(/(:\|:|\|\||:\||\|:|\|\.|\|)/, $line);
+    if ($c[0] !~ /\|/) {
+      my $len = CP::CPpdf::_measure($c[0], $lyfp->{font}, $lyfp->{sz});
+      $maxl = $len if ($len > $maxl);
+    }
+    if ($c[-1] !~ /\|/) {
+      my $len = CP::CPpdf::_measure($c[-1], $lyfp->{font}, $lyfp->{sz});
+      $maxr = $len if ($len > $maxr);
+    }
+    $grid->{lines}[$idx++] = \@c;
+  }
+  if ($grid->{label} ne '') {
+    my $cmfp = $myPDF->{fonts}[LABEL];
+    $lineY -= ($cmfp->{dc} + $cmfp->{as});
+    $myPDF->labelAdd($Opt->{LeftMargin}, $lineY, $grid->{label}, $cmfp->{clr});
+  }
+  my $grfp = $myPDF->{fonts}[GRID];
+  my $div = CP::CPpdf::_measure('4', $grfp->{font}, $grfp->{sz});
+  my $cells = $grid->{measures} * $grid->{beats};
+  $cells += $grid->{lmargw} if ($maxl == 0);
+  $cells += $grid->{rmargw} if ($maxr == 0);
+  my $cellw = $Media->{width} - $Opt->{LeftMargin} - ($maxl + $maxr) - ($div * ($grid->{measures} + 1)) - $Opt->{RightMargin};
+  $cellw /= $cells;
+  $maxl = $cellw * $grid->{lmargw} if ($maxl == 0);
+  foreach my $gl (@{$grid->{lines}}) {
+    my $x = $Opt->{LeftMargin};
+    $lineY -= $chordht;
+    my $idx = 0;
+    while (scalar @$gl) {
+      my $meas = shift(@{$gl});
+      if ($meas =~ /\|/) {
+	my $d = ($meas eq '|') ? '0' : ($meas eq '||') ? '1' : ($meas eq '|:') ? '2' : ($meas eq ':|') ? '3' : ($meas eq ':|:') ? '4' : '5';
+	CP::CPpdf::_textAdd($x, $lineY, $d, $grfp->{font}, $grfp->{sz}, $chd_clr);
+	$x += $div;
+      } else {
+	if ($idx == 0 || (scalar @$gl) == 0) {
+	  $myPDF->lyricAdd($x, $lineY, $meas, $lyfp->{clr});
+	  $x += $maxl;
+	} else {
+	  my $mw = $cellw * $grid->{beats};
+	  if ($meas =~ /%%/) {
+	    $x += $mw;
+	    CP::CPpdf::_textAdd($x, $lineY,
+				'6', $grfp->{font}, $Media->{Chord}{size}, $chd_clr);
+	    $x += $div;
+	    # This takes the liberty that the following Measure MUST be empty!
+	    shift(@{$gl});shift(@{$gl});
+	  } elsif ($meas =~ /%/) {
+	    CP::CPpdf::_textAdd($x + ($mw / 2), $lineY,
+				'6', $grfp->{font}, $grfp->{sz}, $chd_clr);
+	  } else {
+	    my $mx = $x;
+	    foreach my $cell (split(' ', $meas)) {
+	      if ($cell eq '.' || $cell eq '/') {
+		CP::CPpdf::_textAdd($mx, $lineY, $cell, $grfp->{font}, $grfp->{sz}, $chd_clr);
+	      } else {
+		my($ch,$cn) = CP::Chord->new($cell);
+		$myPDF->chordAdd($mx, $lineY, $ch, $chd_clr);
+	      }
+	      $mx += $cellw;
+	    }
+	  }
+	  $x += $mw;
+	}
+      }
+      $idx++;
+    }
+  }
+  $lineY;
 }
 
 sub gridDef {

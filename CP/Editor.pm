@@ -508,14 +508,14 @@ sub fontUpdt {
   $Ed->{TxtWin}->m_configure(
     -font => "\{$EditFont{family}\} $EditFont{size} $EditFont{weight} $EditFont{slant}");
   $Ed->{TxtWin}->tag_configure(
+    'dirtv',
+    -font => "\{$EditFont{family}\} $EditFont{bracesz} $EditFont{weight} $EditFont{slant}",
+    -foreground => $EditFont{brace});
+  $Ed->{TxtWin}->tag_configure(
     'chord',
     -offset => $EditFont{bracketoff},
     -font => "\{$EditFont{family}\} $EditFont{bracketsz} $EditFont{weight} $EditFont{slant}",
     -foreground => $EditFont{bracket});
-  $Ed->{TxtWin}->tag_configure(
-    'dirtv',
-    -font => "\{$EditFont{family}\} $EditFont{bracesz} $EditFont{weight} $EditFont{slant}",
-    -foreground => $EditFont{brace});
   $Media->save();
 }
 
@@ -1104,11 +1104,14 @@ sub moveChord {
       }
       $tw->mark_set('insert', "$line.$column");
       $lc = my $pc = $tw->index('insert');
-      $dir = '-1c' if ($dir ne '+1c');
-      while ($tw->tag_names($lc) ne '' && $lc ne '1.0') {
-	$pc = $lc;
-	$tw->mark_set('insert', "$lc $dir");
-	$lc = $tw->index('insert');
+      if ($tw->tag_names($lc) =~ /(CH_\d+)/) {
+	$dir = '-1c' if ($dir ne '+1c');
+	my $t = $1;
+	while ($tw->tag_names($lc) =~ /$t/ && $lc ne '1.0') {
+	  $pc = $lc;
+	  $tw->mark_set('insert', "$lc $dir");
+	  $lc = $tw->index('insert');
+	}
       }
       $pc = $lc if ($dir =~ /^\+/);
       $tw->mark_set('insert', $pc);
@@ -1276,14 +1279,15 @@ sub setTags {
 	my $chdend = "$lnum.".($col+1);
 	$Ed->{TxtWin}->tag_add('chord', $chdstart, $chdend);
 	$Ed->{TxtWin}->tag_add("CH_".$ChordTag++, $chdstart, $chdend);
+	if ($dirstart ne '') {
+	  $Ed->{TxtWin}->tag_lower('dirtv', 'chord');
+	}
 	$chdstart = '';
       } elsif ($c eq '{' && $dirstart eq '') {
 	$dirstart = "$lnum.$col";
+	$Ed->{TxtWin}->tag_add('dirtv', $dirstart, "$lnum.end");
       }
       $col++;
-    }
-    if ($dirstart ne '') {
-      $Ed->{TxtWin}->tag_add('dirtv', $dirstart, "$lnum.$col");
     }
   }
 }

@@ -27,7 +27,8 @@ Bit late starting with 2.6.4 but about time I documented it :-)
 	   Options are now saved as/when they are changed.
 	   Added 'Ignore Capo Directives' and 'No Long Line warnings' to the Options
 	     Menu.
-	   TODO - allow chord specs in comments/highlights etc.
+	   As per the ChordPro spec, chords are now allowed in comments or highlights
+	     and are shown correctly in the Editor.
 	   Bugfix's:
 	    - Export Setlist to a single Collection failed.
 	    - Changing Collection gave no indication as to why a Setlist might have

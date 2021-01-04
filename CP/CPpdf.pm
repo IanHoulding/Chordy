@@ -25,8 +25,6 @@ my $XSIZE = 8;
 my $YSIZE = 10;
 my $SPACE = 15;
 
-my $SUPHT = 0.6;
-
 sub new {
   my($proto,$pro,$fn) = @_;
 
@@ -309,7 +307,7 @@ sub newPage {
   my $chfp = $chFontP->{font};
   if ($Opt->{Grid} != NONE && ($pn == 1 || $Opt->{Grid} == ALLP)) {
     $h -= INDENT;
-    $self->{ffSize} = _measure("10", $chfp, $chFontP->{sz} * $SUPHT) if ($self->{ffSize} == 0);
+    $self->{ffSize} = _measure("10", $chfp, $chFontP->{sz} * SUPHT) if ($self->{ffSize} == 0);
     my($cnt,$xinc) = fingersWidth($self);
     my $margin = $Opt->{LeftMargin} * 2;
     $w -= $margin;
@@ -369,8 +367,8 @@ sub fingerHeight {
   my($self,$name) = @_;
 
   my $chfp = $self->{fonts}[CHORD];
-  my $tht = $chfp->{sz} * $SUPHT;
-  my $tdc = $chfp->{dc} * $SUPHT;
+  my $tht = $chfp->{sz} * SUPHT;
+  my $tdc = $chfp->{dc} * SUPHT;
   my $ly = $chfp->{sz} + $tht + $tdc;
   my $max = 0;
   foreach my $fr (@{$Fingers{$name}{fret}}) {
@@ -431,8 +429,8 @@ sub drawFinger {
   my $chFontP = $self->{fonts}[CHORD];
   my $chfp = $chFontP->{font};
   my $fc = $chFontP->{clr};
-  my $tht = $chFontP->{sz} * $SUPHT;
-  my $tdc = $chFontP->{dc} * $SUPHT;
+  my $tht = $chFontP->{sz} * SUPHT;
+  my $tdc = $chFontP->{dc} * SUPHT;
   my $vsz = $YSIZE/2;
   $ly -= $chFontP->{sz};  # minus Cdc?
   chordAdd($self, $x+(($XSIZE*$ns/2)-$dx), $ly, $ch, $fc);
@@ -519,17 +517,18 @@ sub chordAdd {
   if (@{$ch->{bits}}) {
     my $bits = $ch->{bits};
     $x += _textAdd($x, $y, $bits->[0], $fp, $ht, $clr);
-    my $sht = ceil($ht * $SUPHT);
-    my $sy = $y + ceil($sht * $SUPHT);
+    my $sht = ceil($ht * SUPHT);
+    my $sy = $y + ceil($sht * SUPHT);
     my $s = $bits->[1].$bits->[2];
     $x += _textAdd($x, $sy, $s, $fp, $sht, $clr) if ($s ne "");
     if (@{$bits} > 3) {
-      $x += _textAdd($x, $y, $bits->[4], $fp, $ht, $clr);
+      $x += _textAdd($x, $y, '/'.$bits->[4], $fp, $ht, $clr);
       $s = $bits->[5].$bits->[6];
       $x += _textAdd($x, $sy, $s, $fp, $sht, $clr) if ($s ne "");
     }
   }
-  _textAdd($x, $y, $ch->{text}, $fp, $ht, $clr) if ($ch->{text} ne "");
+  $x += _textAdd($x, $y, $ch->{text}, $fp, $ht, $clr) if ($ch->{text} ne "");
+  $x;
 }
 
 sub chordLen {
@@ -541,7 +540,7 @@ sub chordLen {
   if (@{$ch->{bits}}) {
     my $bits = $ch->{bits};
     $nx = _measure($bits->[0], $fp, $chfp->{sz});
-    my $sht = ceil($chfp->{sz} * $SUPHT);
+    my $sht = ceil($chfp->{sz} * SUPHT);
     my $s = $bits->[1].$bits->[2];
     $nx += _measure($s, $fp, $sht) if ($s ne "");
     if (@{$bits} > 3) {
@@ -558,14 +557,14 @@ sub labelAdd {
   my($self,$x,$y,$txt,$clr) = @_;
 
   my $fp = $self->{fonts}[LABEL];
-  _textAdd($x, $y, $txt, $fp->{font}, $fp->{sz}, $clr);
+  $x += _textAdd($x, $y, $txt, $fp->{font}, $fp->{sz}, $clr);
 }
 
 sub lyricAdd {
   my($self,$x,$y,$txt,$clr) = @_;
 
   my $fp = $self->{fonts}[VERSE];
-  _textAdd($x, $y, $txt, $fp->{font}, $fp->{sz}, $clr);
+  $x += _textAdd($x, $y, $txt, $fp->{font}, $fp->{sz}, $clr);
 }
 
 sub lyricLen {
@@ -573,6 +572,23 @@ sub lyricLen {
 
   my $fp = $self->{fonts}[VERSE];
   _measure($txt, $fp->{font}, $fp->{sz});
+}
+
+sub commentLen {
+  my($self,$ln,$fp) = @_;
+
+  my $x = 0;
+  foreach my $s (@{$ln->{segs}}) {
+    # Chords
+    if ($Opt->{LyricOnly} == 0 && defined $s->{chord}) {
+      $x += chordLen($self, $s->{chord});
+    }
+    # Lyrics
+    if ($s->{lyric} ne "") {
+      $x += _measure($s->{lyric}, $fp->{font}, $fp->{sz});
+    }
+  }
+  $x;
 }
 
 sub hline {
@@ -597,6 +613,52 @@ sub hline {
 #__________________________#______|__|__
 #
 sub commentAdd {
+  my($self,$pro,$ln,$type,$y,$ht) = @_;
+
+  my $chfp = $self->{fonts}[CHORD];
+  my $cfp;
+  my($bw,$x) = (0,0);
+  if ($type == HLIGHT) {
+    $cfp = $self->{fonts}[HLIGHT];
+    $bw = $Media->{width} if ($Opt->{FullLineHL});
+  } else {
+    $cfp = $self->{fonts}[CMMNT];
+    $bw = $Media->{width} if ($Opt->{FullLineCM});
+  }
+  my $dc = $cfp->{dc};
+  my $sz = $cfp->{sz};
+  if ($bw == 0) {
+    # Not a full width background
+    $bw = $self->commentLen($ln, $cfp) + 2;
+  }
+  my $bg = $ln->{bg};
+  if ($bg eq "") {
+    # These can be changed dynamically in "Background Colours".
+    $bg = ($type == HLIGHT) ? $Media->{highlightBG} : $Media->{commentBG};
+  }
+  _bg($bg, $x, $y, $bw, $ht);
+  if ($type == CMMNTB) {
+    $GfxPtr->linewidth(1);
+    $GfxPtr->strokecolor(BLACK);
+    $GfxPtr->rect($x + 0.5, $y, $bw - 1, $ht);
+    $GfxPtr->stroke();
+  }
+  $y += ($dc + 1);
+  $x = $Opt->{LeftMargin} + 1;
+  my $clr = ($type == HLIGHT) ? $Media->{Highlight}{color} : $Media->{Comment}{color};
+  foreach my $s (@{$ln->{segs}}) {
+    # Chords
+    if ($Opt->{LyricOnly} == 0 && defined $s->{chord}) {
+      $x = $self->chordAdd($x, $y, $s->{chord}->trans2obj($pro), $chfp->{clr});
+    }
+    # Lyrics
+    if ($s->{lyric} ne "") {
+      $x += _textAdd($x, $y, $s->{lyric}, $cfp->{font}, $sz, $clr);
+    }
+  }
+}
+
+sub OldcommentAdd {
   my($self,$type,$y,$txt,$fg,$bg) = @_;
 
   my $cfp = ($type == HLIGHT) ? $self->{fonts}[HLIGHT] : $self->{fonts}[CMMNT];
@@ -617,27 +679,20 @@ sub commentAdd {
     $x = $Opt->{LeftMargin};
     $x += int(($taw - $bw) / 2) if ($Opt->{Center});
   }
-  $self->commentBG($x, $y, $type, $bg, $bw);
-  $x += $Opt->{LeftMargin} if ($bw == $Media->{width});
-  _textAdd($x, $y + $dc, $txt, $fp, $sz, $fg);
-}
-
-sub commentBG {
-  my($self,$x,$y,$type,$bg,$w) = @_;
-
   if ($bg eq "") {
     # These can be changed dynamically in "Background Colours".
     $bg = ($type == HLIGHT) ? $Media->{highlightBG} : $Media->{commentBG};
   }
-  my $fp = ($type == HLIGHT) ? $self->{fonts}[HLIGHT] : $self->{fonts}[CMMNT];
-  my $ht = $fp->{dc} + $fp->{as};
-  _bg($bg, $x, $y, $w, $ht);
+  my $ht = $dc + $cfp->{as};
+  _bg($bg, $x, $y, $bw, $ht);
   if ($type == CMMNTB) {
     $GfxPtr->linewidth(1);
     $GfxPtr->strokecolor(BLACK);
-    $GfxPtr->rect($x + 0.5, $y, $w - 1, $ht);
+    $GfxPtr->rect($x + 0.5, $y, $bw - 1, $ht);
     $GfxPtr->stroke();
   }
+  $x += $Opt->{LeftMargin} if ($bw == $Media->{width});
+  _textAdd($x, $y + $dc + 1, $txt, $fp, $sz, $fg);
 }
 
 sub _hline {

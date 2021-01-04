@@ -18,8 +18,6 @@ use CP::Global qw/:FUNC :OPT :WIN :CHORD :SCALE :SETL/;
 use PDF::API2;
 use CP::Chord;
 
-my $SUPHT = 0.6;
-
 sub new {
   my($proto,$media,$idx,$pdf) = @_;
 
@@ -72,7 +70,6 @@ sub getFont {
   $self->{dc} = abs(ceil(($pfp->descender * $size) / 1000)) + 1;
   if ($idx == CHORD) {
     $self->{as} = $size;
-    $self->{ssz} = ceil($size * $SUPHT * 2) / 2;
   } else {
     if ($idx == CMMNT || $idx == HLIGHT) {
       $self->{as} = ceil(($pfp->ascender * $size) / 1000);
@@ -112,8 +109,7 @@ sub chordSize {
   }
   $self->{as} = $self->{sz} = $size;
   $self->{dc} = abs(ceil(($self->{font}->descender * $size) / 1000)) + 2;
-  $self->{ssz} = ceil($size * $SUPHT * 2) / 2;
-  $mypdf->{ffSize} = CP::CPpdf::_measure("10", $self->{font}, $self->{sz} * $SUPHT); # if (defined $TextPtr);
+  $mypdf->{ffSize} = CP::CPpdf::_measure("10", $self->{font}, $self->{sz} * SUPHT); # if (defined $TextPtr);
 }
 
 # Called in response to a {chordfont} directive.
@@ -125,7 +121,7 @@ sub chordFont {
   } else {
     fontAttr($self, $font);
     getFont($self, $mypdf->{pdf}, CHORD);
-    $mypdf->{ffSize} = CP::CPpdf::_measure("10", $self->{font}, $self->{sz} * $SUPHT); # if (defined $TextPtr);
+    $mypdf->{ffSize} = CP::CPpdf::_measure("10", $self->{font}, $self->{sz} * SUPHT); # if (defined $TextPtr);
   }
 }
 

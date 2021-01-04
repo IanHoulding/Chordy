@@ -31,7 +31,7 @@ use CP::Pop qw/:POP :MENU/;
 use CP::Chordy;
 use CP::CPmenu;
 use CP::List;
-use CP::Pro qw/$LenError/;
+use CP::Pro;
 use CP::Collection;
 use CP::Path;
 use CP::Cmnd;
@@ -343,9 +343,11 @@ sub selectFiles {
 }
 
 sub showSelection {
+  my($files) = shift;
+
   selectClear();
   my $idx = 0;
-  foreach my $x (@{$_[0]}) {
+  foreach my $x (@{$files}) {
     if ($x =~ /\.pro$/i) {
       my $ref = CP::Pro->new($x);
       $ProFiles[$idx++] = $ref;
@@ -457,7 +459,7 @@ sub Main {
     message(QUIZ, "Can't do anything without a ChordPro file.");
     return;
   }
-  $LenError = 0;
+  my $lengthErr = 0;
   if (($Opt->{PDFview} | $Opt->{PDFmake} | $Opt->{PDFprint}) == 0) {
     message(QUIZ, "Hmmm ... Might help if you gave me something to do!");
     return;
@@ -483,7 +485,8 @@ sub Main {
     ### Handle one single ChordPro file
     my $idx = $FileLB->curselection(0);
     if ($idx ne '') {
-      my($pdf,$name) = makeOnePDF($ProFiles[$idx], undef, undef, $chordy->{ProgLab});
+      my($pdf,$name,$err) = makeOnePDF($ProFiles[$idx], $chordy, undef, undef);
+      $lengthErr |= $err;
       $pdf->close();
       actionPDF($chordy, "$Path->{Temp}/$name", $name);
     } else {
@@ -515,8 +518,10 @@ sub Main {
       progressEnable($chordy);
       my $PdfFileName = "$CurSet.pdf";
       my $pdf = undef;
+      my $err;
       foreach my $idx (@pfn) {
-	($pdf,$PdfFileName) = makeOnePDF($ProFiles[$idx], $PdfFileName, $pdf, $chordy->{ProgLab});
+	($pdf,$PdfFileName,$err) = makeOnePDF($ProFiles[$idx], $chordy, $PdfFileName, $pdf);
+	$lengthErr |= $err;
 	if ($chordy->{ProgCan}) {
 	  $pdf->close();
 	  progressDisable($chordy);
@@ -534,7 +539,8 @@ sub Main {
 	  progressDisable($chordy);
 	  return;
 	}
-	my($pdf,$name) = makeOnePDF($ProFiles[$idx], undef, undef, $chordy->{ProgLab});
+	my($pdf,$name,$err) = makeOnePDF($ProFiles[$idx], $chordy, undef, undef);
+	$lengthErr |= $err;
 	$pdf->close();
 	if ($chordy->{ProgCan} || actionPDF($chordy, "$Path->{Temp}/$name", $name) < 0) {
 	  progressDisable($chordy);
@@ -549,12 +555,10 @@ sub Main {
     $Opt->{Media} = $tmpMedia;
     $Media = $Media->change($Opt->{Media});
   }
-  # $LenError is set in CP::Pro::makePDF()
-  if ($LenError) {
+  if ($lengthErr) {
     if ($Opt->{NoWarn} == 0) {
       message(SAD, "One or more lines were reduced in size to fit on their page.\nSee the error log for specific details.");
     }
-    $LenError = 0;
   } else {
     message(SMILE, ' Done ', 1) if ($PDFtrans || $oneorall == MULTIPLE);
   }
@@ -576,9 +580,9 @@ sub progressDisable {
 }
 
 sub makeOnePDF {
-  my($pro,$name,$pdf,$label) = @_;
+  my($pro,$chordy,$name,$pdf) = @_;
 
-  $label->m_configure(-text => $pro->{name});
+  $chordy->{ProgLab}->m_configure(-text => $pro->{name});
   Tkx::update();
   if (! defined $name) {
     ($name = $pro->{name}) =~ s/\.pro$//i;
@@ -594,10 +598,10 @@ sub makeOnePDF {
   my $tmpCapo = $pro->{capo};
   $pro->{capo} = $Opt->{Capo} if ($Opt->{Capo} ne "No");
 
-  $pro->makePDF($pdf);
+  my $err = $pro->makePDF($pdf);
 
   $pro->{capo} = $tmpCapo;
-  ($pdf, $name);
+  ($pdf, $name, $err);
 }
 
 # $xxx is only used in the Tab version of this sub.
