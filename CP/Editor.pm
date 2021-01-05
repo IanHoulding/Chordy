@@ -80,6 +80,9 @@ sub new {
 
     CP::Win::init();
     $Ed->{Top} = $MW;
+
+    makeImage("tick", \%XPM);
+    makeImage("xtick", \%XPM);
   }
   $Ed->{Top}->g_wm_withdraw();
   $Ed->{Top}->g_wm_protocol('WM_DELETE_WINDOW' => \&ExitCheck);
