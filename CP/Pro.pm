@@ -459,11 +459,11 @@ sub makePDF {
 	} elsif ($ty == HLIGHT || $ty == CMMNT || $ty == CMMNTI || $ty == CMMNTB) {
 	  my $dy = ($ty == HLIGHT) ? $highlht : $cmmntht;
 	  if ($lrp->{ch_cnt} && $lyrOnly == 0) {
-	    my $cht = ceil($chfp->{sz} * SUPHT) + $chfp->{dc};
+	    my $cht = ceil(($chfp->{as} + $chfp->{dc}) * SUPHT);
 	    $cht += ceil($cht * SUPHT);
 	    $dy = $cht if ($cht > $dy);
 	  }
-	  $ht += $dy;
+	  $ht += ($dy + 1);
 	}
       }
       if ($ht > $lineY) {
@@ -680,11 +680,11 @@ sub makePDF {
       #
       my $dy = ($type == HLIGHT) ? $highlht : $cmmntht;
       if ($ln->{ch_cnt} && $lyrOnly == 0) {
-	my $cht = ceil($chfp->{sz} * SUPHT) + $chfp->{dc};
+	my $cht = ceil(($chfp->{as} + $chfp->{dc}) * SUPHT);
 	$cht += ceil($cht * SUPHT);
 	$dy = $cht if ($cht > $dy);
       }
-      $lineY -= $dy;
+      $lineY -= ($dy + 1);
       if ($lineY < 0) {
 	$lineY = $myPDF->newPage($self, $pageno++);
       }

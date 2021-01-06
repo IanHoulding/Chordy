@@ -407,7 +407,7 @@ sub fingersWidth {
   my($self) = shift;
 
   my $w = $Media->{width} - ($Opt->{LeftMargin} + $Opt->{RightMargin});
-  my $cw = (($Nstring - 1) * $XSIZE) + $self->{ffSize} + $SPACE; # min size of a chord diagram + spacer
+  my $cw = (($Nstring - 1) * $XSIZE) + 2 + $self->{ffSize} + $SPACE; # min size of a chord diagram + spacer
   my $nc = int($w / $cw);                                # number of chords we can draw
   $cw += int(($w - ($nc * $cw) + $SPACE) / ($nc - 1));   # even out any leftover space
   ($nc,$cw);
@@ -466,13 +466,14 @@ sub drawFinger {
     }
     $ly -= $tdc;
     # Draw Frets
+    $GfxPtr->strokecolor(BLACK);
     $GfxPtr->linewidth(1);
     $GfxPtr->linecap(0);
     $lmy = $ly;
     $mx = $ns * $XSIZE;
-    for (0..$max) {
+    for my $f (0..$max) {
       my $dx = $x + $mx;
-      $dx += 2 if ($_ == 1);
+      $dx += 2 if ($f == 1);
       $GfxPtr->move($x, $lmy);
       $GfxPtr->hline($dx);
       $GfxPtr->stroke();
@@ -480,7 +481,7 @@ sub drawFinger {
     }
     # Draw the base fret number to the right of the first fret
     # NOTE: the nut is NOT considered to be a fret.
-    _textAdd($x + $mx + 3, $ly - $YSIZE - $tdc, "$base", $chfp, $tht, $fc);
+    _textAdd($x + $mx + 3, $ly - $YSIZE - $tdc, $base, $chfp, $tht, $fc);
     my $bfw = $mx + 3 + $self->{ffSize};
     # Strings and finger positions
     $GfxPtr->linewidth(1);
@@ -632,11 +633,9 @@ sub commentAdd {
     $cfp = $self->{fonts}[CMMNT];
     $bw = $Media->{width} if ($Opt->{FullLineCM});
   }
-  my $dc = $cfp->{dc};
-  my $sz = $cfp->{sz};
-  if ($bw == 0) {
-    # Not a full width background
+  if ($bw == 0) {  # Not a full width background
     $bw = $self->commentLen($ln, $cfp) + 2;
+    $x = $Opt->{LeftMargin};
   }
   my $bg = $ln->{bg};
   if ($bg eq "") {
@@ -644,15 +643,15 @@ sub commentAdd {
     $bg = ($type == HLIGHT) ? $Media->{highlightBG} : $Media->{commentBG};
   }
   _bg($bg, $x, $y, $bw, $ht);
-  if ($type == CMMNTB) {
-    $GfxPtr->linewidth(1);
-    $GfxPtr->strokecolor(BLACK);
-    $GfxPtr->rect($x + 0.5, $y, $bw - 1, $ht);
-    $GfxPtr->stroke();
-  }
-  $y += ($dc + 1);
+  $GfxPtr->linewidth(1);
+  $bg = ($type == CMMNTB) ? BLACK : CP::FgBgEd::darken($bg, 10);
+  $GfxPtr->strokecolor($bg);
+  $GfxPtr->rect($x + 0.5, $y, $bw - 1, $ht);
+  $GfxPtr->stroke();
+  $y += ($cfp->{dc} + 1);
   $x = $Opt->{LeftMargin} + 1;
   my $clr = ($type == HLIGHT) ? $Media->{Highlight}{color} : $Media->{Comment}{color};
+  my $sz = $cfp->{sz};
   foreach my $s (@{$ln->{segs}}) {
     # Chords
     if ($Opt->{LyricOnly} == 0 && defined $s->{chord}) {
@@ -663,43 +662,6 @@ sub commentAdd {
       $x += _textAdd($x, $y, $s->{lyric}, $cfp->{font}, $sz, $clr);
     }
   }
-}
-
-sub OldcommentAdd {
-  my($self,$type,$y,$txt,$fg,$bg) = @_;
-
-  my $cfp = ($type == HLIGHT) ? $self->{fonts}[HLIGHT] : $self->{fonts}[CMMNT];
-  my $fp = $cfp->{font};
-
-  my $dc = $cfp->{dc};
-  my $sz = $cfp->{sz};
-  my($bw,$x) = (0,0);
-  if ($type == HLIGHT) {
-    $bw = $Media->{width} if ($Opt->{FullLineHL});
-  } else {
-    $bw = $Media->{width} if ($Opt->{FullLineCM});
-  }
-  if ($bw == 0) {
-    # Not a full width background
-    $bw = _measure($txt, $fp, $sz);
-    my $taw = $Media->{width} - ($Opt->{LeftMargin} + $Opt->{RightMargin});
-    $x = $Opt->{LeftMargin};
-    $x += int(($taw - $bw) / 2) if ($Opt->{Center});
-  }
-  if ($bg eq "") {
-    # These can be changed dynamically in "Background Colours".
-    $bg = ($type == HLIGHT) ? $Media->{highlightBG} : $Media->{commentBG};
-  }
-  my $ht = $dc + $cfp->{as};
-  _bg($bg, $x, $y, $bw, $ht);
-  if ($type == CMMNTB) {
-    $GfxPtr->linewidth(1);
-    $GfxPtr->strokecolor(BLACK);
-    $GfxPtr->rect($x + 0.5, $y, $bw - 1, $ht);
-    $GfxPtr->stroke();
-  }
-  $x += $Opt->{LeftMargin} if ($bw == $Media->{width});
-  _textAdd($x, $y + $dc + 1, $txt, $fp, $sz, $fg);
 }
 
 sub _hline {

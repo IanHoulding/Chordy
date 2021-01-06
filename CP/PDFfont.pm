@@ -30,7 +30,7 @@ sub new {
   $self->{sz} = my $size = ceil($fp->{size});
   $self->{wt} = ($fp->{weight} eq 'bold') ? $Opt->{Bold} : ($fp->{weight} eq 'heavy') ? $Opt->{Heavy} : 0;
   $self->{sl} = ($fp->{slant} eq 'roman') ? 0 : $Opt->{Italic};
-  my $pfp = getFont($self, $pdf, $idx);
+  getFont($self, $pdf, $idx);
   $self->{clr} = $fp->{color};
   $self->{hscale} = 100;
 
