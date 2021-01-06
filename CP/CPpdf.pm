@@ -560,6 +560,13 @@ sub labelAdd {
   $x += _textAdd($x, $y, $txt, $fp->{font}, $fp->{sz}, $clr);
 }
 
+sub labelLen {
+  my($self,$txt) = @_;
+
+  my $fp = $self->{fonts}[LABEL];
+  _measure($txt, $fp->{font}, $fp->{sz});
+}
+
 sub lyricAdd {
   my($self,$x,$y,$txt,$clr) = @_;
 

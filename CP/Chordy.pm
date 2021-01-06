@@ -590,7 +590,12 @@ sub setLists {
 					       -height => 12, -width => SLWID,
 					       -selectmode => '');
   $setsLB->{frame}->g_grid(qw/-row 0 -column 0 -sticky nsew/);
-  $setsLB->bind('<ButtonRelease-1>' => sub{$AllSets->showSet()});
+  $setsLB->bind('<Button-1>' => sub{$AllSets->showSet()});
+  $setsLB->bind('<Double-Button-1>' => sub{
+    $AllSets->showSet();
+    $Chordy->{nb}->select(0);
+    main::showSelection($browser->{selLB}{array});}
+      );
   $AllSets->listSets();
 
   CORE::state $DT;

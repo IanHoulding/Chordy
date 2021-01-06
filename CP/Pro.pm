@@ -458,7 +458,7 @@ sub makePDF {
 	  $ht += $myPDF->fingersHeight(@chords);
 	} elsif ($ty == HLIGHT || $ty == CMMNT || $ty == CMMNTI || $ty == CMMNTB) {
 	  my $dy = ($ty == HLIGHT) ? $highlht : $cmmntht;
-	  if ($lrp->{ch_cnt}) {
+	  if ($lrp->{ch_cnt} && $lyrOnly == 0) {
 	    my $cht = ceil($chfp->{sz} * SUPHT) + $chfp->{dc};
 	    $cht += ceil($cht * SUPHT);
 	    $dy = $cht if ($cht > $dy);
@@ -482,6 +482,7 @@ sub makePDF {
       #
       my $heightAdj = 0;
       my $label = 0;
+      my $wid = 0;
       if ($ln->{label}) {
 	$label++ if ($ln->{text} ne '' && $Opt->{ShowLabels});
       } else {
@@ -489,7 +490,6 @@ sub makePDF {
 	# Side effect of measure() sets the x offset for each segment.
 	# As a side note - Tcl/Tk doesn't handle half point sizes for
 	#   fonts but PDF::API2 can - so we do.
-	my $wid = 0;
 	my $max = $Media->{width} - $Opt->{LeftMargin};
 	while (1) {
 	  $wid = $ln->measure($self,$myPDF);
@@ -518,20 +518,8 @@ sub makePDF {
 	}
       }
       my $off = 0;
-      if ($Opt->{Center}) {
-	if ($ln->{label}) {
-	  if ($label) {
-	    $off = $Media->{width} - ($Opt->{LeftMargin} + $Opt->{RightMargin}) - $myPDF->lyricLen($ln->{text});
-	    $off /= 2;
-	  }
-	} else {
-	  if ($ln->{ly_cnt} > 0) {
-	    # Find the X offset to the first Lyric.
-	    while ($ln->{segs}[$off]{lyric} eq "") { $off++; }
-	  }
-	  # Finally we can get the Line offset to Center the text.
-	  $off = int(($Media->{width} - $lineX - $ln->{segs}[$off]{x}) / 2);
-	}
+      if ($Opt->{Center} && $ln->{label} == 0) {
+	$off = int(($Media->{width} - $wid) / 2) - $Opt->{LeftMargin};
       }
       $off += $Opt->{LeftMargin};
       #
@@ -691,7 +679,7 @@ sub makePDF {
       # A Comment or Highlight directive
       #
       my $dy = ($type == HLIGHT) ? $highlht : $cmmntht;
-      if ($ln->{ch_cnt}) {
+      if ($ln->{ch_cnt} && $lyrOnly == 0) {
 	my $cht = ceil($chfp->{sz} * SUPHT) + $chfp->{dc};
 	$cht += ceil($cht * SUPHT);
 	$dy = $cht if ($cht > $dy);
