@@ -58,7 +58,7 @@ sub CHedit {
   my $standAlone = 0;
   my $done = '';
   if (defined $MW && Tkx::winfo_exists($MW)) {
-    $Top = $MW->new_toplevel();
+    $Top = $MW->new_toplevel(-name => '.ct');
   } else {
     use CP::Win;
     CP::Global::init();
@@ -215,6 +215,7 @@ sub init {
 sub chordButtons {
   my($frame,$func) = @_;
 
+  %Chord = ();
   my $row = 0;
   foreach my $p (['b','A','#'],
 		 ['b','B',''],
@@ -815,9 +816,9 @@ static char *brace[] = {
 "k c #83c0c0",
 "                                  ",
 "                                  ",
+"                                  ",
 "  hkkkk                    #bbbi  ",
 "  i.fgg                    ega.b  ",
-"  i.b                        i.b  ",
 "  i.b                        i.b  ",
 "  i.b                        i.b  ",
 "  i.b                        i.b  ",

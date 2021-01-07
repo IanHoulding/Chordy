@@ -65,7 +65,7 @@ sub new {
 
   # Create MainWindow first to handle X11 options.
   if (defined $MW && Tkx::winfo_exists($MW)) {
-    $Ed->{Top} = $MW->new_toplevel();
+    $Ed->{Top} = $MW->new_toplevel(-name => '.ed');
   } else {
     # Running stand-alone.
     CP::Global::init();
