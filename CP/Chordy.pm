@@ -16,7 +16,7 @@ use Tkx;
 use CP::Cconst qw/:OS :LENGTH :TEXT :SHFL :INDEX :PDF :BROWSE :SMILIE :COLOUR/;
 use CP::Global qw(:FUNC :VERS :PATH :OPT :PRO :SETL :XPM :WIN :MEDIA);
 use CP::Pop qw /:MENU/;
-use CP::CHedit;
+use CP::CHedit qw(&CHedit);
 use CP::FgBgEd;
 use CP::List;
 use CP::Opt;
@@ -582,9 +582,7 @@ sub setLists {
   my($x1,$y1,$x2,$y2) = split(/ /, $can->bbox($rtxt));
   $can->configure(-width => abs($x1) + $x2, -height => abs($y1) + $y2);
   $can->move($rtxt, abs($x1), abs($y1));
-  $can->bind($rtxt, '<Button-1>', sub{$sltr->invoke();
-			       $Opt->saveOne('SLrev');
-			       $AllSets->listSets();});
+  $can->bind($rtxt, '<Button-1>', sub{$sltr->invoke()});
 
   $setsLB = $AllSets->{setsLB} = CP::List->new($sltL, 'e',
 					       -height => 12, -width => SLWID,

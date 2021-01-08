@@ -13,7 +13,7 @@ use strict;
 use warnings;
 
 use Tkx;
-use CP::Global qw(:WIN :XPM);
+use CP::Global qw(:WIN :FUNC :XPM);
 
 BEGIN {
   our @ISA = qw(Exporter);
@@ -28,7 +28,7 @@ our %Pops;  # Keeps track of all active/available pop-ups
             # via their toplevel path names.
 
 sub new {
-  my($proto,$ov,$path,$title,$x,$y) = @_;
+  my($proto,$ov,$path,$title,$x,$y,$icon) = @_;
   my $class = ref($proto) || $proto;
 
   my $self = {};
@@ -45,7 +45,11 @@ sub new {
   if ($ov) {
     $top->g_wm_overrideredirect(1);
   } else {
-    my $icon = (defined $Images{Ticon}) ? 'Ticon' : (defined $Images{Cicon}) ? 'Cicon' : 'Eicon';
+    if (defined $icon) {
+      makeImage($icon, \%XPM);
+    } else {
+      $icon = (defined $Images{Ticon}) ? 'Ticon' : (defined $Images{Cicon}) ? 'Cicon' : 'Eicon';
+    }
     $top->g_wm_iconphoto($icon);
     $top->g_wm_title($title) if ($title ne '');
     $top->g_wm_protocol('WM_DELETE_WINDOW' => sub{$self->popDestroy()});

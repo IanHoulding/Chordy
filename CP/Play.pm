@@ -132,7 +132,7 @@ sub note {
     if (defined $iv->{pos}[$Beat] && $tab->{play} != MET) {
       resetWav();
       my $idx = $iv->{pos}[$Beat][0];
-      if ($idx != REST) {
+      if (defined $idx && $idx ne 'REST') {
 	load($idx);
       }
     }
@@ -203,7 +203,7 @@ sub makeNotes {
       my $frt = $nt->{fret};
       next if ($frt eq 'X');
       if ($str == REST) {
-	$iv->{pos}[$pos][0] = REST;
+	$iv->{pos}[$pos][0] = 'REST';
       } else {
 	my $n = "$str.$frt";
 	push(@{$iv->{pos}[$pos]}, "$n");

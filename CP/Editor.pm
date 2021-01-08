@@ -52,6 +52,7 @@ sub new {
     return();
   }
   bless $Ed, $class;
+  my($pop,$mainFrame);
   $Ed->{Top} = '';
   $Ed->{FileName} = '';
   $Ed->{IgnCase} = 0;
@@ -65,7 +66,10 @@ sub new {
 
   # Create MainWindow first to handle X11 options.
   if (defined $MW && Tkx::winfo_exists($MW)) {
-    $Ed->{Top} = $MW->new_toplevel(-name => '.ed');
+    $pop = CP::Pop->new(0, '.ed', 'ChordPro Editor', undef, undef, 'Eicon');
+    $Ed->{Top} = $pop->{top};
+    $mainFrame = $pop->{frame};
+    $Ed->{standAlone} = 0;
   } else {
     # Running stand-alone.
     CP::Global::init();
@@ -80,9 +84,12 @@ sub new {
 
     CP::Win::init();
     $Ed->{Top} = $MW;
+    $mainFrame = $MW->new_ttk__frame(qw/-relief raised -borderwidth 2/);
+    $mainFrame->g_pack(qw/-expand 1 -fill both/);
 
     makeImage("tick", \%XPM);
     makeImage("xtick", \%XPM);
+    $Ed->{standAlone} = 1;
   }
   $Ed->{Top}->g_wm_withdraw();
   $Ed->{Top}->g_wm_protocol('WM_DELETE_WINDOW' => \&ExitCheck);
@@ -103,9 +110,6 @@ sub new {
   ##   Left: chordpro_frame, chord_frame, dirtv_frame and counter_frame
   ##  Right: menu_frame and text_frame
   ##############################################
-
-  my $mainFrame = $Ed->{Top}->new_ttk__frame(qw/-relief raised -borderwidth 2/);
-  $mainFrame->g_pack(qw/-expand 1 -fill both/);
 
   my $leftF = $Ed->{leftFrame} = $mainFrame->new_ttk__frame(-padding => [4,4,2,4]);
   $leftF->g_pack(qw/-side left -expand 0 -fill y/);
@@ -322,8 +326,7 @@ sub Edit {
     $Done = '';
     goto WAIT;
   }
-  if ($Ed->{Top} eq $MW) {
-    # Running stand-alone
+  if ($Ed->{standAlone}) {
     $Ed->{Top}->g_destroy();
     exit(0);
   }
@@ -705,7 +708,7 @@ sub directives {
 	balloon($but, 'Directive '.(($name eq 'bz') ? 'Size' : 'Colour'));
 	$but->g_grid(-row => $row, -column => $col,
 		     -rowspan => $rspn, -columnspan => $cspn,
-		     -padx => 4, -pady => 4);
+		     -padx => 2, -pady => 2);
       }
     }
   }
@@ -769,7 +772,7 @@ sub txtButton {
   my $but = $frm->new_ttk__button(-text => $txt, -style => "$clr.TButton", -command => $func);
   $but->g_grid(-row => $row, -column => $col,
 	       -rowspan => $rspn, -columnspan => $cspn,
-	       -padx => 4, -pady => 4);
+	       -padx => 2, -pady => 2);
 }
 
 sub press {

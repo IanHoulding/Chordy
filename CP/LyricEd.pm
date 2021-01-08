@@ -28,18 +28,15 @@ sub Edit {
   my $lyrics = $tab->{lyrics};
   my $done = '';
   my $txtWin = '';
+  my $pop;
 
   if (ref($Ed) ne 'HASH') {
     $Ed = {};
     bless $Ed, $class;
 
-    $Ed->{Top} = $MW->new_toplevel();
-    $Ed->{Top}->g_wm_withdraw();
+    $pop = CP::Pop->new(0, '.le', 'Lyric Editor', undef, undef, 'Eicon');
+    $Ed->{Top} = $pop->{top};
     $Ed->{Top}->g_wm_protocol('WM_DELETE_WINDOW' => sub{$Ed->{Top}->g_wm_withdraw()});
-    $Ed->{Top}->g_wm_title("Lyric Editor");
-
-    makeImage("Eicon", \%XPM);
-    $Ed->{Top}->g_wm_iconphoto("Eicon");
 
     ##############################################
     ## set up 2 frames to put everything into.
@@ -47,8 +44,7 @@ sub Edit {
     ## Bottom: Buttons
     ##############################################
 
-    my $mainFrame = $Ed->{Top}->new_ttk__frame(qw/-relief raised -borderwidth 2/);
-    $mainFrame->g_pack(qw/-expand 1 -fill both/);
+    my $mainFrame = $pop->{frame};
 
     my $topF = $Ed->{leftFrame} = $mainFrame->new_ttk__frame();
     $topF->g_pack(qw/-side top -expand 1 -fill both/);

@@ -458,7 +458,6 @@ sub load {
 	while ($notes =~ /(r|\d+)\(([^\)]*)\)/g) {
 	  my $n = $2;
 	  my $string = ($1 eq 'r') ? REST : $1;
-	  print "string=$string  note=$n\n";
 	  $string -= 1 if ($string != REST);
 	  foreach my $s (split(' ', $n)) {
 	    my $nt = CP::Note->new($bar, $string, $s);
