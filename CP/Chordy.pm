@@ -561,7 +561,6 @@ sub setLists {
     -padding => [4,0,4,4]);
   my $sltR = $slFt->new_ttk__frame(qw/-style Wh.TFrame/);
 
-  my $setsLB;
   my $sltr = $sltM->new_ttk__checkbutton(-style => 'Wh.My.TCheckbutton',
 					 -variable => \$Opt->{SLrev},
 					 -compound => 'right',
@@ -584,16 +583,20 @@ sub setLists {
   $can->move($rtxt, abs($x1), abs($y1));
   $can->bind($rtxt, '<Button-1>', sub{$sltr->invoke()});
 
-  $setsLB = $AllSets->{setsLB} = CP::List->new($sltL, 'e',
-					       -height => 12, -width => SLWID,
-					       -selectmode => '');
+  my $setsLB = $AllSets->{setsLB} = CP::List->new($sltL, 'e',
+						  -height => 12, -width => SLWID,
+						  -selectmode => 'single');
   $setsLB->{frame}->g_grid(qw/-row 0 -column 0 -sticky nsew/);
-  $setsLB->bind('<Button-1>' => sub{$AllSets->showSet()});
+  # It would appear that if both <Button-1> and <Double-Button-1>
+  # are bound then both subs are called in sequence.
+  $setsLB->bind('<Button-1>' => sub{Tkx::after_idle(sub{$AllSets->showSet()})} );
   $setsLB->bind('<Double-Button-1>' => sub{
-    $AllSets->showSet();
-    $Chordy->{nb}->select(0);
-    main::showSelection($browser->{selLB}{array});}
-      );
+    Tkx::after_idle(sub{
+      my $idx = $setsLB->curselection(0);
+      $Chordy->{nb}->select(0);
+      main::showSelection($browser->{selLB}{array});
+      $setsLB->selection_set($idx);}
+      )});
   $AllSets->listSets();
 
   CORE::state $DT;

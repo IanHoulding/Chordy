@@ -64,13 +64,8 @@ sub new {
 					  -compound => 'right',
 					  -image => ['xtick', 'selected', 'tick'],
 					  -text => 'Reverse',
-#					  -font => 'BTkDefaultFont',
-#					  -style => 'NM.TCheckbutton',
 					  -command => sub{$Opt->saveOne('RevSort');
 							  $avail->h2tcl();});
-#  my $revlab = $topFrm->new_ttk__label(-text => 'Reverse',
-#				       -font => 'BTkDefaultFont',
-#				       -padding => [0,0,0,0]);
 
   my $mfs = $topFrm->new_ttk__label(-text => 'Search: ');
   my $entry = $topFrm->new_ttk__entry(-width => 20, -validate => 'key');

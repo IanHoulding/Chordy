@@ -33,6 +33,7 @@ sub new {
   $self->{lb} = $frm->new_tk__listbox(
     -relief => 'raised',
     -borderwidth => 2,
+    -selectmode => 'single',
     -selectforeground => BLACK,
     -selectbackground => DBLBG,
     -selectborderwidth => 0,
