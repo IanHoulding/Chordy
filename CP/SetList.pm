@@ -213,7 +213,6 @@ sub showSet {
   Tkx::update();
   my $idx = $self->{setsLB}->curselection(0);
   my $sl = $self->{setsLB}{array}[$idx];
-  print "idx=$idx  sl='$sl'\n";
   if ($sl ne '') {
     $self->select($sl);
     $self->{browser}{selLB}{array} = $self->{sets}{$sl}{songs};

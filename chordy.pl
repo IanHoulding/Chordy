@@ -484,9 +484,11 @@ sub Main {
   if ($oneorall == SINGLE) {
     ### Handle one single ChordPro file
     my $idx = $FileLB->curselection(0);
-    if ($idx eq '' && @ProFiles) {
-      $idx = 0;
-      $FileLB->set(0);
+    if (@ProFiles) {
+      if ($idx eq '') {
+	$idx = 0;
+	$FileLB->set(0);
+      }
       my($pdf,$name,$err) = makeOnePDF($ProFiles[$idx], $chordy, undef, undef);
       $lengthErr |= $err;
       $pdf->close();
