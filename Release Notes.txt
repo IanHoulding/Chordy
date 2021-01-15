@@ -21,6 +21,7 @@ Bit late starting with 2.6.4 but about time I documented it :-)
 	    - Options menu entries out of order when an item was changed.
 	    - Lyric Editor would not 'Save' on second use.
 	    - Editing a new Bar on a blank Tab failed.
+	    - adjusted the screen position for Notes - they were showing too low.
   Chordy - Re-engineered the Chord object to be easier to manipulate.
            Made ChordPro chords follow the spec closer by allowing '*' as the first
 	     character followed by any text.
