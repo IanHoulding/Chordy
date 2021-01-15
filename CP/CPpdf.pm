@@ -623,14 +623,12 @@ sub hline {
 sub commentAdd {
   my($self,$pro,$ln,$type,$y,$ht) = @_;
 
-  my $chfp = $self->{fonts}[CHORD];
-  my $cfp;
   my($bw,$x) = (0,0);
+  my $chfp = $self->{fonts}[CHORD];
+  my $cfp = $self->{fonts}[$type];
   if ($type == HLIGHT) {
-    $cfp = $self->{fonts}[HLIGHT];
     $bw = $Media->{width} if ($Opt->{FullLineHL});
   } else {
-    $cfp = $self->{fonts}[CMMNT];
     $bw = $Media->{width} if ($Opt->{FullLineCM});
   }
   if ($bw == 0) {  # Not a full width background
@@ -643,12 +641,20 @@ sub commentAdd {
     $bg = ($type == HLIGHT) ? $Media->{highlightBG} : $Media->{commentBG};
   }
   _bg($bg, $x, $y, $bw, $ht);
+  if ($type == HLIGHT) {
+    $bg = $Media->{highlightBD} if ($Opt->{BorderHL});
+  } else {
+    if ($type == CMMNTB) {
+      $bg = BLACK;
+    } else {
+      $bg = $Media->{commentBD} if ($Opt->{BorderCM});
+    }
+  }
   $GfxPtr->linewidth(1);
-  $bg = ($type == CMMNTB) ? BLACK : CP::FgBgEd::darken($bg, 10);
   $GfxPtr->strokecolor($bg);
   $GfxPtr->rect($x + 0.5, $y, $bw - 1, $ht);
   $GfxPtr->stroke();
-  $y += ($cfp->{dc} + 1);
+  $y += ($cfp->{dc} + 2);
   $x = $Opt->{LeftMargin} + 1;
   my $clr = ($type == HLIGHT) ? $Media->{Highlight}{color} : $Media->{Comment}{color};
   my $sz = $cfp->{sz};

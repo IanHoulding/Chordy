@@ -161,14 +161,24 @@ sub new {
       }
     }
   }
+  $opt->add_separator;
   $opt->add_checkbutton(-label => " Highlight full line",
 			-variable => \$Opt->{FullLineHL},
 			-command => sub{$Opt->saveOne('FullLineHL')},
+			 @cbopts ); 
+  $opt->add_checkbutton(-label => " Highlight Border",
+			-variable => \$Opt->{BorderHL},
+			-command => sub{$Opt->saveOne('BorderHL')},
 			 @cbopts ); 
   $opt->add_checkbutton(-label => " Comment full line",
 			-variable => \$Opt->{FullLineCM},
 			-command => sub{$Opt->saveOne('FullLineCM')},
 			 @cbopts );
+  $opt->add_checkbutton(-label => " Comment Border",
+			-variable => \$Opt->{BorderCM},
+			-command => sub{$Opt->saveOne('BorderCM')},
+			 @cbopts );
+  $opt->add_separator;
   $opt->add_checkbutton(-label => " Ignore Capo Directives",
 			-variable => \$Opt->{IgnCapo},
 			-command => sub{$Opt->saveOne('IgnCapo')},

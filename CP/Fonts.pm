@@ -534,7 +534,7 @@ sub pickFG {
   my $save = 0;
   my $op = FOREGRND;
   $op |= BACKGRND if ($title =~ /Com|Hig|Tab|Tit|Cho|Lyr/);
-  (my $fg,$bg) = $ColourEd->Show($fontp->{color}, $bg, $op);
+  (my $fg,$bg) = $ColourEd->Show($fontp->{color}, $bg, '', $op);
   if ($fg ne '') {
     $fontp->{color} = $fg;
     Tkx::ttk__style_configure("$title.Font.TLabel", -foreground => $fg);

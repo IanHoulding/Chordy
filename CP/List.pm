@@ -42,7 +42,7 @@ sub new {
     -listvariable => \$self->{tcl},
     @_,
 );
-  $self->{lb}->g_grid(qw/-row 1 -column 1 -sticky ns/);
+  $self->{lb}->g_grid(qw/-row 1 -column 1 -sticky ns -ipadx 4/);
   if ($sb ne '') {
     my $sbns = '';
     my $sbwe = '';
@@ -81,7 +81,7 @@ sub background {
   my($nfg,$nbg) = ('','');
   if (defined $set) {
     CP::FgBgEd->new("List Colours");
-    ($nfg,$nbg) = $ColourEd->Show($fg, $bg, (FOREGRND|BACKGRND));
+    ($nfg,$nbg) = $ColourEd->Show($fg, $bg, '', (FOREGRND|BACKGRND));
     $fg = $nfg if ($nfg ne '');
     $bg = $nbg if ($nbg ne '');
   }

@@ -18,7 +18,8 @@ use CP::Cmsg;
 my @strOpt = (qw/Articles Instrument Media PDFpath PrintMedia
 	         PopFG PopBG PushFG PushBG MenuFG MenuBG ListFG ListBG EntryFG EntryBG
 	         WinBG PageBG SortBy/);
-my @numOpt = (qw/AutoSave Bold Heavy Center EditScale FullLineHL FullLineCM Grid HHBL
+my @numOpt = (qw/AutoSave Bold Heavy Center EditScale
+	         BorderCM BorderCMC BorderHL BorderHLC FullLineHL FullLineCM Grid HHBL
 	         SaveFonts IgnArticle IgnCapo ShowLabels
 	         TopMargin BottomMargin LeftMargin RightMargin
 	         Italic LineSpace LyricLines LyricOnly Nbar NewLine NoWarn
@@ -48,6 +49,10 @@ sub default {
   $self->{Articles}    = 'the|a|an';
   $self->{AutoSave}    = 0;
   $self->{Bold}        = 2;    # This is the 'heavyness' weight for PDF bold fonts.
+  $self->{BorderCM}    = 1;
+  $self->{BorderCMC}   = '';
+  $self->{BorderHL}    = 1;
+  $self->{BorderHLC}   = '';
   $self->{BottomMargin}= INDENT;
   $self->{Capo}        = 'No';
   $self->{Center}      = 0;

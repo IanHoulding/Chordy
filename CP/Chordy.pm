@@ -167,11 +167,9 @@ sub filesWin {
 						      -borderwidth => 2,
 						      -padding => [4,0,4,4]);
 
-#  $Fff->g_grid_columnconfigure(0, -weight => 1);
-#  $Fff->g_grid_columnconfigure(2, -weight => 1);
-  $tFsf->g_grid( qw/-row 0 -column 0 -sticky nsw -padx 16/, -pady => [0,8]);
-  $tFlst->g_grid(qw/-row 0 -column 1 -sticky nsw -padx 16/);
-  $tFact->g_grid(qw/-row 0 -column 2 -sticky nsw -padx 16/);
+  $tFsf->g_grid( qw/-row 0 -column 2 -sticky nsw -padx 16/, -pady => [0,8]);
+  $tFlst->g_grid(qw/-row 0 -column 0 -sticky nsw -padx 16/);
+  $tFact->g_grid(qw/-row 0 -column 1 -sticky nsw -padx 16/);
   $tFbot->g_grid(qw/-row 1 -column 0 -columnspan 3 -sticky ew -padx 16/, -pady => [4,0]);
 
 ###
@@ -255,7 +253,7 @@ sub filesWin {
   $brw->g_pack(qw/-side top -pady 4/);
   $fsl->g_pack(qw/-side top -pady 4/);
   $act->g_pack(qw/-side top -pady 8/);  # LabelFrame
-  $cob->g_pack(qw/-side top -pady 8/);
+  $cob->g_pack(qw/-side bottom -pady 8/);
 
   my $progl = $tFbot->new_ttk__label(-text => "Please Wait .... PDF'ing: ", -style => 'Pop.TLabel');
   Tkx::ttk__style_configure('Prog.Pop.TLabel', -font => "BTkDefaultFont");
@@ -524,7 +522,7 @@ sub optWin {
     -style => 'PDF.TButton',
     -command => sub{
       CP::FgBgEd->new('PDF Background');
-      my($fg,$bg) = $ColourEd->Show(BLACK, $Opt->{PageBG}, BACKGRND);
+      my($fg,$bg) = $ColourEd->Show(BLACK, $Opt->{PageBG}, '', BACKGRND);
       if ($bg ne '') {
 	$Opt->{PageBG} = $bg;
 	$Opt->saveOne('PageBG');
@@ -904,7 +902,8 @@ sub mediaWin {
     -width => 15,
     -style => 'Menu.TButton',
     -command => sub{
-      my($pop,$fr) = popMenu(\$Opt->{Media}, \&newMedia, $Media->list());
+      popMenu(\$Opt->{Media}, undef, $Media->list());
+      Tkx::after_idle(\&newMedia);
     });
 
   my $st = 'Media.TLabel';
@@ -930,7 +929,7 @@ sub mediaWin {
     -command => sub{
       popMenu(\$Opt->{PrintMedia}, undef, $Media->list());
       # Need to delay the save otherwise Opt->{PrintMedia} = 0
-      Tkx::after_idle(sub{$Opt->save()});
+      Tkx::after_idle(sub{$Opt->saveOne('PrintMedia')});
     });
 
   Tkx::ttk__style_configure('Menu.TFrame',
@@ -968,7 +967,6 @@ sub mediaWin {
 }
 
 sub newMedia {
-#  $Opt->changeOne('Media');
   $Media = $Media->change($Opt->{Media});
   showSize();
   fontWin();
@@ -995,36 +993,44 @@ sub fontWin {
 sub bgWin {
   my($bgf) = shift;
 
-  BGcS($bgf, 0, 'Comment',   \%{$Media->{Comment}},   \$Media->{commentBG});
-  BGcS($bgf, 1, 'Highlight', \%{$Media->{Highlight}}, \$Media->{highlightBG});
-  BGcS($bgf, 2, 'Title',     \%{$Media->{Title}},     \$Media->{titleBG});
-  BGcS($bgf, 3, 'Verse',     \%{$Media->{Lyric}},     \$Media->{verseBG});
-  BGcS($bgf, 4, 'Chorus',    \%{$Media->{Chord}},     \$Media->{chorusBG});
-  BGcS($bgf, 5, 'Bridge',    \%{$Media->{Lyric}},     \$Media->{bridgeBG});
-  BGcS($bgf, 6, 'Tab',       \%{$Media->{Tab}},       \$Media->{tabBG});
+  BGcS($bgf, 0, 'Comment',   $Media->{Comment}{color});
+  BGcS($bgf, 1, 'Highlight', $Media->{Highlight}{color});
+  BGcS($bgf, 2, 'Title',     $Media->{Title}{color});
+  BGcS($bgf, 3, 'Verse',     $Media->{Lyric}{color});
+  BGcS($bgf, 4, 'Chorus',    $Media->{Chord}{color});
+  BGcS($bgf, 5, 'Bridge',    $Media->{Lyric}{color});
+  BGcS($bgf, 6, 'Tab',       $Media->{Tab}{color});
 }
 
-# $fntp is used to get the Foreground Colour.
 sub BGcS {
-  my($bgf,$col,$title,$fntp,$var) = @_;
+  my($bgf,$col,$title,$fg) = @_;
 
-  my $but;
+  my $elem = lcfirst($title);
+  my $bgptr = \$Media->{$elem.'BG'};
+  my $bdptr = ($title =~ /Comment|Highlight/) ? \$Media->{$elem.'BD'} : undef;
   my $w = length($title) + 2;
-  $but = $bgf->new_ttk__button(
-    -text => $title,
-    -width => $w,
-    -style => "$title.BG.TButton",
-    -command => sub{pickBG($title, $fntp, $but, $var)});
+  my $but = $bgf->new_ttk__button(
+    -text    => $title,
+    -width   => $w,
+    -style   => "$title.BG.TButton",
+    -command => sub{pickBG($title, $fg, $bgptr, $bdptr)});
   $but->g_grid(-row => 0, -padx => 4, -pady => 4, -column => $col);
 }
 
 sub pickBG {
-  my($title,$fntp,$but,$var) = @_;
+  my($title,$fg,$bgptr,$bdptr) = @_;
 
+  my($bg,$bd) = ($$bgptr,'');
   CP::FgBgEd->new("$title Background Colour");
-  my($fg,$bg) = $ColourEd->Show($fntp->{color}, $$var, BACKGRND);
+  my $op = BACKGRND;
+  if (defined $bdptr) {
+    $bd = $$bdptr;
+    $op |= BORDER;
+  }
+  ($fg,$bg,$bd) = $ColourEd->Show($fg, $bg, $bd, $op);
   if ($bg ne '') {
-    $$var = $bg;
+    $$bgptr = $bg;
+    $$bdptr = $bd if (defined $bdptr);
     Tkx::ttk__style_configure("$title.BG.TButton", -background => $bg);
     # Note: if $title is Bridge this has no effect - it just
     #       creates a new style which isn't used anywhere.

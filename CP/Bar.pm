@@ -332,7 +332,7 @@ sub bgGet {
 
   $self->{bg} = WHITE if ($self->{bg} eq '');
   CP::FgBgEd->new("Background Colour");
-  my($fg,$bg) = $ColourEd->Show($self->{tab}{noteColor}, $self->{bg}, BACKGRND);
+  my($fg,$bg) = $ColourEd->Show($self->{tab}{noteColor}, $self->{bg}, '', BACKGRND);
   $bg;
 }
 

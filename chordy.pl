@@ -89,7 +89,7 @@ CP::Win::init();
 
 makeImage("Cicon", \%XPM);
 $MW->g_wm_iconphoto("Cicon");
-$MW->g_wm_protocol('WM_DELETE_WINDOW' => sub{$MW->g_destroy()}); 
+$MW->g_wm_protocol('WM_DELETE_WINDOW' => sub{$MW->g_destroy(); exit(0);}); 
 CP::Win::title();
 
 CP::Chordy->new();

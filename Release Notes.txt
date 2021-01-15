@@ -29,6 +29,9 @@ Bit late starting with 2.6.4 but about time I documented it :-)
 	     Menu.
 	   As per the ChordPro spec, chords are now allowed in comments or highlights
 	     and are shown correctly in the Editor.
+	   Double-Click on a Setlist now selects the contents for editing.
+	   Swapped the 'Single File' frame to be on the far right.
+	   Highlights and Comments can now optionally have a coloured border.
 	   Bugfix's:
 	    - Export Setlist to a single Collection failed.
 	    - Changing Collection gave no indication as to why a Setlist might have

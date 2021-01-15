@@ -526,7 +526,7 @@ sub fontUpdt {
 }
 
 sub bgSet {
-  my($fg,$bg) = $ColourEd->Show($EditFont{color}, $EditFont{background}, BACKGRND);
+  my($fg,$bg) = $ColourEd->Show($EditFont{color}, $EditFont{background}, '', BACKGRND);
   if ($bg ne '') {
     $Ed->{TxtWin}->m_configure(-background => $bg);
     $EditFont{background} = $bg;
@@ -534,7 +534,7 @@ sub bgSet {
 }
 
 sub fgSet {
-  my($fg,$bg) = $ColourEd->Show($EditFont{color}, $EditFont{background}, FOREGRND);
+  my($fg,$bg) = $ColourEd->Show($EditFont{color}, $EditFont{background}, '', FOREGRND);
   if ($fg ne '') {
     $Ed->{TxtWin}->m_configure(-foreground => $fg);
     $EditFont{color} = $fg;
@@ -544,7 +544,7 @@ sub fgSet {
 sub braceColour {
   my($what) = shift;
 
-  my($fg,$bg) = $ColourEd->Show($EditFont{$what}, $EditFont{background}, FOREGRND);
+  my($fg,$bg) = $ColourEd->Show($EditFont{$what}, $EditFont{background}, '', FOREGRND);
   if ($fg ne '') {
     $EditFont{$what} = $fg;
     fontUpdt();
@@ -758,7 +758,7 @@ sub colourEd {
       $bg = sprintf "#%02x%02x%02x", $r, $g, $b;
     }
   }
-  ($fg,$bg) = $ColourEd->Show(BLACK, $bg, BACKGRND);
+  ($fg,$bg) = $ColourEd->Show(BLACK, $bg, '', BACKGRND);
   $Ed->{TxtWin}->insert('insert', $bg) if ($bg ne '');
   $Ed->{TxtWin}->g_focus();
 }

@@ -245,6 +245,11 @@ sub TButtonBGset {
   foreach my $h (qw/comment highlight title verse chorus bridge tab/) {
     Tkx::ttk__style_configure(ucfirst($h).".BG.TButton", -background => $media->{$h."BG"});
   }
+  foreach my $h (qw/comment highlight/) {
+    Tkx::ttk__style_configure(ucfirst($h).".BD.TButton",
+			      -background => $media->{$h."BG"},
+			      -bordercolor => $media->{$h."BD"},);
+  }
 }
 
 sub TLabelBGset {
@@ -316,7 +321,7 @@ sub FgBgClr {
   my $fg = Tkx::ttk__style_lookup($style, -foreground);
   my $bg = Tkx::ttk__style_lookup($style, -background);
   CP::FgBgEd->new("$title Colour");
-  my($nfg,$nbg) = $ColourEd->Show($fg, $bg, (FOREGRND|BACKGRND));
+  my($nfg,$nbg) = $ColourEd->Show($fg, $bg, '', (FOREGRND|BACKGRND));
   if ($nfg ne '' && $nfg ne $fg) {
     Tkx::ttk__style_configure($style, -foreground => $nfg);
   }
@@ -334,10 +339,7 @@ sub BGclr {
     CP::FgBgEd->new("Window Background");
     $fg = Tkx::ttk__style_lookup('TLabelframe.Label', -foreground);
     $bg = Tkx::ttk__style_lookup('TFrame', -background);
-    $ColourEd->{fgcolor} = $fg;
-    $ColourEd->{bgcolor} = $bg;
-    $ColourEd->{colorop} = BACKGRND;
-    (my $x,$clr) = $ColourEd->Show($fg, $bg, BACKGRND);
+    (my $x,$clr) = $ColourEd->Show($fg, $bg, '', BACKGRND);
   } else {
     $bg = 'x';
   }

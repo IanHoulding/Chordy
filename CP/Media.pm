@@ -36,7 +36,9 @@ our %Fonts = (
 );
 
 our %BGs = (qw/commentBG   #E0E0E0
+	       commentBD   #C8C8C8
 	       highlightBG #FFFF80
+	       highlightBD #FFFF74
 	       verseBG     #FFFFFF
 	       chorusBG    #CDFFCD
 	       bridgeBG    #FFFFFF
@@ -85,9 +87,10 @@ sub new {
     save();
   }
   if ($type eq '' || ! defined $AllMedia{$type}) {
-    $Opt->{Media} = $type = 'a4';
-    $Opt->saveOne('Media');
+    $type = 'a4';
   }
+  $Opt->{Media} = $type;
+  $Opt->saveOne('Media');
   $self = $AllMedia{$type};
 }
 
@@ -126,11 +129,9 @@ sub change {
 
   if (! defined $AllMedia{$new}) {
     message(SAD, "Media definiton for $new does not exist.\nMedia type changed to: a4");
-    $Opt->{Media} = $new = 'a4';
-    $Opt->saveOne('Media');
+    $new = 'a4';
   }
-  #  copy(\%{$AllMedia{$$newref}}, $self);
-  $self = $AllMedia{$new};
+  $self = new('CP::Media', $new);
   CP::Win::TButtonBGset($self);
   $self;
 }
@@ -416,7 +417,7 @@ sub pickClr {
   my($title,$fontp,$clr,$ent) = @_;
 
   CP::FgBgEd->new("$title Font");
-  my($fg,$bg) = $ColourEd->Show($fontp->{color}, VLMWBG, FOREGRND);
+  my($fg,$bg) = $ColourEd->Show($fontp->{color}, VLMWBG, '', FOREGRND);
   if ($fg ne '') {
     $fontp->{color} = $fg;
     $ent->m_configure(-fg => $fg);

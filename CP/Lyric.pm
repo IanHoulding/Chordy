@@ -112,25 +112,6 @@ sub moveWidget {
   $wid->[$idx]->mark_set('insert', $mark);
 }
 
-sub linechk {
-  my($self,$wid,$rc) = @_;
-
-  return if ($Ignore);
-  my ($package, $filename, $line) = caller;
-  print "$filename  $line";
-  my $w = $Media->{width} - ($Opt->{LeftMargin} + $Opt->{RightMargin});
-  my $ln = $wid->get('1.0', 'end');
-  if ($ln =~ /\n/) {
-    $ln =~ s/\n.*//;
-    $wid->replace('1.0', 'end', $ln);
-  }
-  my($x,$y,$lw,$lh,$bl) = Tkx::SplitList($wid->dlineinfo('1.0'));
-  print "  rc=$rc  w=$w  lw=$lw\n";
-  my $bg = ($lw > $w) ? '#FFD0D0' : MWBG;
-  $wid->configure(-background => $bg);
-#  $self->{modified}[$rc] = 1;
-}
-
 sub set {
   my($self,$stave,$line,$text) = @_;
 
@@ -175,20 +156,6 @@ sub show {
     }
     $Ignore = 0;
   }
-}
-
-sub printArray {
-  my($self,$ind) = @_;
-
-  my $pidx = $self->{tab}{pageNum} * $self->{tab}{rowsPP} * $Opt->{LyricLines};
-  my $text = $self->{text};
-  my $idx = 0;
-  foreach my $wid (@{$self->{widget}}) {
-    print "$ind$idx - L$pidx - '".substr($text->[$pidx],0,40)."'\n";
-    $idx++;
-    $pidx++;
-  }
-  print "\n";
 }
 
 #

@@ -367,10 +367,10 @@ sub makePDF {
   my $chd_clr = $chfp->{clr};
 
   my $cmfp    = $myPDF->{fonts}[CMMNT];
-  my $cmmntht = $cmfp->{dc} + $cmfp->{as};
+  my $cmmntht = $cmfp->{dc} + $cmfp->{as} + 2;
 
   my $hlfp    = $myPDF->{fonts}[HLIGHT];
-  my $highlht = $hlfp->{dc} + $hlfp->{as};
+  my $highlht = $hlfp->{dc} + $hlfp->{as} + 2;
 
   my $lbfp    = $myPDF->{fonts}[LABEL];
   my $labeldc = $lbfp->{dc};
