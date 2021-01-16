@@ -654,7 +654,7 @@ sub commentAdd {
   $GfxPtr->strokecolor($bg);
   $GfxPtr->rect($x + 0.5, $y, $bw - 1, $ht);
   $GfxPtr->stroke();
-  $y += ($cfp->{dc} + 2);
+  $y += ($cfp->{dc} + 1);
   $x = $Opt->{LeftMargin} + 1;
   my $clr = ($type == HLIGHT) ? $Media->{Highlight}{color} : $Media->{Comment}{color};
   my $sz = $cfp->{sz};
