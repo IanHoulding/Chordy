@@ -465,12 +465,11 @@ sub Main {
     return;
   }
   my $tmpMedia = '';
-  my $tmpView = 0;
+  my $tmpView = $Opt->{PDFview};
   if ($Opt->{PDFprint}) {
     if ($Opt->{PrintMedia} ne $Opt->{Media}) {
       my $ans = msgYesNoCan("Your Printer page size is different to your Media page size.\nDo you want to see a preview of the Printer page?");
       if ($ans eq 'Yes') {
-	$tmpView = $Opt->{PDFview};
 	$Opt->{PDFview} = 1;
 	$tmpMedia = $Opt->{Media};
 	$Opt->{Media} = $Opt->{PrintMedia};
@@ -495,12 +494,14 @@ sub Main {
       actionPDF($chordy, "$Path->{Temp}/$name", $name);
     } else {
       message(SAD, "You don't appear to have selected a ChordPro file.");
+      $Opt->{PDFview} = $tmpView;
       return;
     }
   } else {
     if ($Opt->{Transpose} ne "-") {
       my $msg = "This will Transpose ALL files to the key of $Opt->{Transpose}.\nDo you want to continue?";
       if (msgYesNo($msg) eq 'No') {
+	$Opt->{PDFview} = $tmpView;
 	return;
       }
     }
@@ -516,6 +517,7 @@ sub Main {
       if (! defined $CurSet || $CurSet eq "") {
 	my $ans = msgSet("You need to provide a name for the PDF File:",\$CurSet);
 	if ($ans eq "Cancel" || $CurSet eq "") {
+	  $Opt->{PDFview} = $tmpView;
 	  return;
 	}
       }
@@ -529,6 +531,7 @@ sub Main {
 	if ($chordy->{ProgCan}) {
 	  $pdf->close();
 	  progressDisable($chordy);
+	  $Opt->{PDFview} = $tmpView;
 	  return;
 	}
 	Tkx::after(500); # Give user a chance to hit Cancel!
@@ -541,6 +544,7 @@ sub Main {
       foreach my $idx (@pfn) {
 	if ($chordy->{ProgCan}) {
 	  progressDisable($chordy);
+	  $Opt->{PDFview} = $tmpView;
 	  return;
 	}
 	my($pdf,$name,$err) = makeOnePDF($ProFiles[$idx], $chordy, undef, undef);
@@ -554,8 +558,8 @@ sub Main {
     }
   }
   progressDisable($chordy);
+  $Opt->{PDFview} = $tmpView;
   if ($tmpMedia ne '') {
-    $Opt->{PDFview} = $tmpView;
     $Opt->{Media} = $tmpMedia;
     $Media = $Media->change($Opt->{Media});
   }

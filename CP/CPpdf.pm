@@ -51,6 +51,7 @@ sub new {
       $self->{fonts}[CMMNTB] = $pfp;
       $copy = $self->{fonts}[CMMNTI] = $pfp->copy();
       $copy->{sl} = $Opt->{Italic};
+      $copy->getFont($pdf, CMMNTI);
     }
   }
   $copy = $self->{fonts}[GRID] = $self->{fonts}[CHORD]->copy();
@@ -654,7 +655,7 @@ sub commentAdd {
   $GfxPtr->strokecolor($bg);
   $GfxPtr->rect($x + 0.5, $y, $bw - 1, $ht);
   $GfxPtr->stroke();
-  $y += ($cfp->{dc} + 1);
+  $y += ($cfp->{dc} + 2);
   $x = $Opt->{LeftMargin} + 1;
   my $clr = ($type == HLIGHT) ? $Media->{Highlight}{color} : $Media->{Comment}{color};
   my $sz = $cfp->{sz};

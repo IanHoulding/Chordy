@@ -71,7 +71,7 @@ sub getFont {
   if ($idx == CHORD) {
     $self->{as} = $size;
   } else {
-    if ($idx == CMMNT || $idx == HLIGHT) {
+    if ($idx == CMMNT || $idx == CMMNTI || $idx == CMMNTB || $idx == HLIGHT) {
       $self->{as} = ceil(($pfp->ascender * $size) / 1000);
     } else {
       # This is essentially the height of a Capital + a little bit.
