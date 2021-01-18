@@ -204,7 +204,8 @@ sub new {
   $can->configure(-width => $wid, -height => $ht);
   $can->delete($id);
   @{$self->{swrect}} = (5, 5, $wid+1, $ht+1, '-width', 4);
-  $can->create_rectangle(@{$self->{swrect}}, -outline => '#E0E070');
+  $self->{bdid} = '';
+#  $can->create_rectangle(@{$self->{swrect}}, -outline => '#E0E070');
   $self->{swid} = $can->create_text($wid / 2, ($ht + $dsc) / 2,
 				    -text => BLACK, -justify => 'center',
 				    -fill => '#000000', -font => $font);
@@ -347,17 +348,6 @@ sub Hex
   sprintf('#%02x%02x%02x',@rgb)
 }
 
-sub setColor {
-  my ($self,$what,$clr) = @_;
-
-  if (defined $clr && $clr ne '') {
-    my $tmp = $self->{fgbgbd};
-    $self->{fgbgbd} = $what;
-    color($self, $clr);
-    $self->{fgbgbd} = $tmp;
-  }
-}
-
 sub lbcolor {
   my($self,$names) = @_;
   if (scalar keys(%Names) > 0) {
@@ -395,14 +385,11 @@ sub color {
 	Tkx::after_idle(sub{set_scales($self)}) unless ($self->{pending}++);
 	my $can = $self->{swcan};
 	if ($self->{fgbgbd} == FOREGRND) {
-	  $can->itemconfigure($self->{swid}, -fill => $hex);
-	  $self->{fg} = $hex;
+	  setFG($self, $hex);
 	} elsif ($self->{fgbgbd} == BACKGRND) {
-	  $can->configure(-background => $hex);
-	  $self->{bg} = $hex;
+	  setBG($self, $hex);
 	} elsif ($self->{fgbgbd} == BORDER) {
-	  $can->create_rectangle(@{$self->{swrect}}, -outline => $hex);
-	  $self->{bd} = $hex;
+	  setBD($self, $hex);
 	}
 	$can->dchars($self->{swid}, '0', 'end');
 	$can->insert($self->{swid}, '0', uc($hex));
@@ -411,6 +398,28 @@ sub color {
       }
     }
   }
+}
+
+sub setFG {
+  my($self,$hex) = @_;
+
+  $self->{swcan}->itemconfigure($self->{swid}, -fill => $hex);
+  $self->{fg} = $hex;
+}
+
+sub setBG {
+  my($self,$hex) = @_;
+
+  $self->{swcan}->configure(-background => $hex);
+  $self->{bg} = $hex;
+}
+
+sub setBD {
+  my($self,$hex) = @_;
+
+  $self->{swcan}->delete($self->{bdid}) if ($self->{bdid} ne '');
+  $self->{bdid} = $self->{swcan}->create_rectangle(@{$self->{swrect}}, -outline => $hex);
+  $self->{bd} = $hex;
 }
 
 # The procedure below is invoked when one of the scales is adjusted.
@@ -494,9 +503,8 @@ sub Show {
   }
   $self->{'SwIdx'} = -1;
   $self->{op} = $op;
-  setColor($self, BACKGRND, (($bg eq '') ? WHITE : $bg));
-  setColor($self, FOREGRND, (($fg eq '') ? BLACK : $fg));
-  setColor($self, BORDER,   (($bd eq '') ? $bg   : $bd));
+  setBG($self, (($bg eq '') ? WHITE : $bg));
+  setFG($self, (($fg eq '') ? BLACK : $fg));
   my($label,$txt);
   if ($op & BORDER) {
     $op |= BACKGRND;
@@ -504,9 +512,11 @@ sub Show {
     $txt = sprintf("$nofgbghelp", "foreground", "background & border");
     $self->{fgbgbd} = BORDER;
     $self->{bdrb}->g_pack(-after => $self->{bgrb}) if (Tkx::winfo_manager($self->{bdrb}) eq '');
+    color($self, (($bd eq '') ? $self->{bg} : $bd));
     Tkx::update();
   } else {
-    $self->{bdrb}->g_pack_forget() if (Tkx::winfo_manager($self->{bdrb}) ne '');
+    $self->{swcan}->delete($self->{bdid}) if ($self->{bdid} ne '');
+    $self->{bdrb}->g_pack_forget(); # if (Tkx::winfo_manager($self->{bdrb}) ne '');
     if ($op & FOREGRND) {
       if ($op & BACKGRND) {
 	$label = "ForeGround & BackGround mode.";
@@ -516,10 +526,12 @@ sub Show {
 	$txt = sprintf("$nofgbghelp", "background", "foreground");
       }
       $self->{fgbgbd} = FOREGRND;
+      color($self, $self->{fg});
     } elsif ($op & BACKGRND) {
       $label = 'BackGround only mode.';
       $txt = sprintf("$nofgbghelp", "foreground", "background");
       $self->{fgbgbd} = BACKGRND;
+      color($self, $self->{bg});
     } else {
       $label = "Something appears to be wrong!";
       $txt = "Neither the ForeGround nor the BackGround have been selected.";
