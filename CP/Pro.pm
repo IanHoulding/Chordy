@@ -106,8 +106,9 @@ sub decompose {
       if (/^{(.*)\}\s*$/) {
 	# Handle any directives.
 	my ($cmd, $txt) = split(/[:\s]/, $1, 2);
+	$txt = '' if (! defined $txt);
 	$cmd =~ s/^x_//;
-	if (defined $txt) {
+	if ($txt ne '') {
 	  my $pat = "";
 	  if ($txt =~ /(\d+),(\d+),(\d+)$/) {
 	    $pat = $1.",".$2.",".$3;
@@ -116,8 +117,6 @@ sub decompose {
 	    $bg = $pat = $1;
 	  }
 	  $txt =~ s/$pat$//;
-	} else {
-	  $txt = '';
 	}
 	if    ($cmd =~ /^key$/i)        {($self->{key} = $txt) =~ s/\s//g; $bg = '';}
 	elsif ($cmd =~ /^t$|^title$/i)  {$self->{title} = $txt; $bg = '';}
@@ -260,19 +259,21 @@ sub decompose {
 	  } else {
 	    $lp = \@{$lp->{$txt}};
 	  }
-	  foreach my $cl (0..$#{$lp}) {
-	    my $cln = $lp->[$cl]->clone($blk_no);
-	    if ($cl == 0 && $txt ne 'dflt') {
+	  my $idx = 0;
+	  foreach my $cl (@{$lp}) {
+	    my $cln = $cl->clone($blk_no);
+	    if ($idx == 0 && $txt ne 'dflt') {
 	      if ($cln->{label} == 0) {
 		my $ref = CP::Line->new($cln->{type}, $txt, $blk_no, $bg);
 		$ref->{label} = 1;
-		$ref->{bg} = ($bg ne '') ? $bg : $lp->[$cl]->{bg};
+		$ref->{bg} = ($bg ne '') ? $bg : $cl->{bg};
 		push(@{$self->{lines}}, $ref);
 	      } else {
 		$cln->{text} = $txt;
 	      }
+	      $idx++;
 	    }
-	    $cln->{bg} = ($bg ne '') ? $bg : $lp->[$cl]->{bg};
+	    $cln->{bg} = ($bg ne '') ? $bg : $cl->{bg};
 	    push(@{$self->{lines}}, $cln);
 	  }
 	  $blk_no++;
@@ -563,7 +564,7 @@ sub makePDF {
 	  $bg = $ln->{bg};
 	}
 	if ($bg ne '') {
-	  $bg = CP::FgBgEd::darken($bg, 10) if ($label);
+	  $bg = CP::FgBgEd::darken($bg, 7) if ($label);
 	  CP::CPpdf::_bg($bg, 0, $lineY, $Media->{width}, $lineht + $linespc);
 	}
 	#
