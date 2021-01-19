@@ -321,7 +321,7 @@ sub editBarFret {
       -value => $b->[1],
       -style => 'Toolbutton',
       -command => sub{$EditBar->deselect()});
-    $rb->g_grid(-row => $b->[2], -column => $b->[3], -sticky => 'ew', -padx => 8, -pady => 4);
+    $rb->g_grid(-row => $b->[2], -column => $b->[3], -padx => 8, -pady => 4);
   }
   my $c = $fr3->new_ttk__radiobutton(
 	-text => '  Off  ',
@@ -470,16 +470,16 @@ sub shiftOpt {
 				       -variable => \$Opt->{Refret},
 				       -image => ['xtick', 'selected', 'tick']
       );
-  $lb1->g_grid(qw/-row 0 -column 0 -columnspan 2 -sticky we/, -padx => [8,4], -pady => [0,4]);
-  $me1->g_grid(qw/-row 1 -column 0 /,              -padx => [8,2], -pady => [0,4]);
-  $bu1->g_grid(qw/-row 1 -column 1 /,              -padx => [2,8], -pady => [0,4]);
+  $lb1->g_grid(qw/-row 0 -column 0 -columnspan 2/, -pady => [0,4]);
+  $me1->g_grid(qw/-row 1 -column 0 /,              -padx => [8,4], -pady => [0,4]);
+  $bu1->g_grid(qw/-row 1 -column 1 /,              -padx => [4,8], -pady => [0,4]);
 
-  $lb2->g_grid(qw/-row 0 -column 2 -columnspan 2 -sticky we/, -padx => [16,4], -pady => [0,4]);
-  $bu2->g_grid(qw/-row 1 -column 2 /,              -padx => [16,2], -pady => [0,4]);
-  $bu3->g_grid(qw/-row 1 -column 3 /,              -padx => [2,8],  -pady => [0,4]);
+  $lb2->g_grid(qw/-row 0 -column 2 -columnspan 2/, -pady => [0,4]);
+  $bu2->g_grid(qw/-row 1 -column 2 /,              -padx => [16,4], -pady => [0,4]);
+  $bu3->g_grid(qw/-row 1 -column 3 /,              -padx => [4,8],  -pady => [0,4]);
 
   if ($pe == PAGE) {
-    $cb4->g_grid(qw/-row 1 -column 4 -sticky w/, -padx => [4,0], -pady => [0,4]);
+    $cb4->g_grid(qw/-row 1 -column 4 -sticky w/, -padx => [16,0], -pady => [0,4]);
   } else {
     $cb4->g_grid(qw/-row 2 -column 1 -columnspan 2/, -pady => [2,0]);
   }
@@ -555,10 +555,6 @@ sub pageButtons {
 				   -style => "Green.TButton",
 				   -command => sub{$tab->Clone});
   $bu2->g_grid(qw/-row 0 -column 1 -sticky we/, -padx => [4,8], -pady => [0,4]);
-#  my $bue = $edit->new_ttk__button(-text => 'Edit Lyrics',
-#				   -style => "Green.TButton",
-#				   -command => sub{CP::LyricEd->Edit($tab);});
-#  $bue->g_grid(qw/-row 0 -column 2 -sticky we/, -padx => [4,8], -pady => [0,4]);
 ######
   my $bg = $ebg->new_ttk__labelframe(-text => ' Background ');
   $bg->g_pack(qw/-side right -expand 1 -fill both -padx 4 -pady 4/);
@@ -651,7 +647,7 @@ sub pageButtons {
   my $por = $cp->new_ttk__checkbutton(@cmn,
 				      -text => 'Replace',
 				      -variable => \$povar, -onvalue => 1);
-  $por->g_grid(qw/-row 3 -column 4 -sticky we/, -pady => [0,4]);
+  $por->g_grid(qw/-row 3 -column 4/, -pady => [0,4]);
 
 ######
   my $sel = $frm->new_ttk__labelframe(-text => ' Selection ');
