@@ -191,6 +191,15 @@ sub new {
 			-variable => \$Opt->{ShowLabels},
 			-command => sub{$Opt->saveOne('ShowLabels')},
 			 @cbopts );
+    {
+      my $ls = $opt->new_menu;
+      $opt->add_cascade(-menu => $ls, -label => 'Label Background %');
+      foreach (-15..15) {
+	$ls->add_radiobutton(-label => $_,
+			     -variable => \$Opt->{LabelPC},
+			     -command => sub{$Opt->saveOne('LabelPC')} );
+      }
+    }
 
   $opt->add_separator;
   $opt->add_command(-label => 'Defaults', -command => sub{$Opt->resetOpt()});

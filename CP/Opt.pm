@@ -20,7 +20,7 @@ my @strOpt = (qw/Articles Instrument Media PDFpath PrintMedia
 	         WinBG PageBG SortBy/);
 my @numOpt = (qw/AutoSave Bold Heavy Center EditScale
 	         BorderCM BorderCMC BorderHL BorderHLC FullLineHL FullLineCM Grid HHBL
-	         SaveFonts IgnArticle IgnCapo ShowLabels
+	         SaveFonts IgnArticle IgnCapo ShowLabels LabelPC
 	         TopMargin BottomMargin LeftMargin RightMargin
 	         Italic LineSpace LyricLines LyricOnly Nbar NewLine NoWarn
 	         OnePDFfile PDFview PDFmake PDFprint
@@ -69,6 +69,7 @@ sub default {
   $self->{Instrument}  = 'Guitar';
   $self->{Instruments} = [qw/Banjo Bass4 Bass5 Guitar Mandolin Ukelele/];
   $self->{Italic}      = 12;    # This is the slant angle for PDF italic fonts.
+  $self->{LabelPC}     = 6;
   $self->{LeftMargin}  = INDENT;
   $self->{LineSpace}   = 1;
   $self->{ListFG}      = BLACK;
