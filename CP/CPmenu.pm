@@ -161,23 +161,31 @@ sub new {
       }
     }
   }
-  $opt->add_separator;
-  $opt->add_checkbutton(-label => " Highlight full line",
-			-variable => \$Opt->{FullLineHL},
-			-command => sub{$Opt->saveOne('FullLineHL')},
-			 @cbopts ); 
-  $opt->add_checkbutton(-label => " Highlight Border",
-			-variable => \$Opt->{BorderHL},
-			-command => sub{$Opt->saveOne('BorderHL')},
-			 @cbopts ); 
-  $opt->add_checkbutton(-label => " Comment full line",
-			-variable => \$Opt->{FullLineCM},
-			-command => sub{$Opt->saveOne('FullLineCM')},
+#  $opt->add_separator;
+  {
+    my $hl = $opt->new_menu;
+    $opt->add_cascade(-menu => $hl, -label => 'Highlight');
+    $hl->add_checkbutton(-label => " Full line",
+			  -variable => \$Opt->{FullLineHL},
+			  -command => sub{$Opt->saveOne('FullLineHL')},
+			  @cbopts ); 
+    $hl->add_checkbutton(-label => " Border",
+			  -variable => \$Opt->{BorderHL},
+			  -command => sub{$Opt->saveOne('BorderHL')},
 			 @cbopts );
-  $opt->add_checkbutton(-label => " Comment Border",
-			-variable => \$Opt->{BorderCM},
-			-command => sub{$Opt->saveOne('BorderCM')},
+  }
+  {
+    my $cm = $opt->new_menu;
+    $opt->add_cascade(-menu => $cm, -label => 'Comment');
+    $cm->add_checkbutton(-label => " Full line",
+			 -variable => \$Opt->{FullLineCM},
+			 -command => sub{$Opt->saveOne('FullLineCM')},
 			 @cbopts );
+    $cm->add_checkbutton(-label => " Border",
+			 -variable => \$Opt->{BorderCM},
+			 -command => sub{$Opt->saveOne('BorderCM')},
+			 @cbopts );
+  }
   $opt->add_separator;
   $opt->add_checkbutton(-label => " Ignore Capo Directives",
 			-variable => \$Opt->{IgnCapo},
