@@ -35,6 +35,8 @@ Bit late starting with 2.6.4 but about time I documented it :-)
 	   Highlights and Comments can now optionally have a coloured border.
 	   Section Labels can now have their background changed lighter or darker
 	     by a user selectable percentage.
+	   Highlights, Comments and Labels are now centered if "Center Lyrics" is
+	     selected.
 	   Bugfix's:
 	    - Export Setlist to a single Collection failed.
 	    - Changing Collection gave no indication as to why a Setlist might have

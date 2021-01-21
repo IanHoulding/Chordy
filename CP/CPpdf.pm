@@ -559,7 +559,12 @@ sub labelAdd {
   my($self,$x,$y,$txt,$clr) = @_;
 
   my $fp = $self->{fonts}[LABEL];
-  $x += _textAdd($x, $y, $txt, $fp->{font}, $fp->{sz}, $clr);
+  if ($Opt->{Center}) {
+    $x = ($Media->{width} - ($Opt->{RightMargin} + $Opt->{LeftMargin})) / 2;
+    $x = _textCenter($x, $y, $txt, $fp->{font}, $fp->{sz}, $clr);
+  } else {
+    $x += _textAdd($x, $y, $txt, $fp->{font}, $fp->{sz}, $clr);
+  }
 }
 
 sub labelLen {
@@ -624,7 +629,7 @@ sub hline {
 sub commentAdd {
   my($self,$pro,$ln,$type,$y,$ht) = @_;
 
-  my($bw,$x) = (0,0);
+  my($bw,$x,$txtx) = (0,0,$Opt->{LeftMargin});
   my $chfp = $self->{fonts}[CHORD];
   my $cfp = $self->{fonts}[$type];
   if ($type == HLIGHT) {
@@ -632,9 +637,16 @@ sub commentAdd {
   } else {
     $bw = $Media->{width} if ($Opt->{FullLineCM});
   }
+  my $commlen = $self->commentLen($ln, $cfp);
+  if ($Opt->{Center}) {
+    $txtx += (($Media->{width} - ($Opt->{LeftMargin} + $Opt->{RightMargin})) / 2);
+    $txtx -= ($commlen / 2);
+  }
+  $txtx++;
   if ($bw == 0) {  # Not a full width background
-    $bw = $self->commentLen($ln, $cfp) + 2;
-    $x = $Opt->{LeftMargin};
+    $bw = $commlen + 6;
+    $txtx += 2;
+    $x = ($Opt->{Center}) ? $txtx - 3 : $Opt->{LeftMargin};
   }
   my $bg = $ln->{bg};
   if ($bg eq "") {
@@ -656,17 +668,16 @@ sub commentAdd {
   $GfxPtr->rect($x + 0.5, $y, $bw - 1, $ht);
   $GfxPtr->stroke();
   $y += ($cfp->{dc} + 2);
-  $x = $Opt->{LeftMargin} + 1;
   my $clr = ($type == HLIGHT) ? $Media->{Highlight}{color} : $Media->{Comment}{color};
   my $sz = $cfp->{sz};
   foreach my $s (@{$ln->{segs}}) {
     # Chords
     if ($Opt->{LyricOnly} == 0 && defined $s->{chord}) {
-      $x = $self->chordAdd($x, $y, $s->{chord}->trans2obj($pro), $chfp->{clr});
+      $txtx = $self->chordAdd($txtx, $y, $s->{chord}->trans2obj($pro), $chfp->{clr});
     }
     # Lyrics
     if ($s->{lyric} ne "") {
-      $x += _textAdd($x, $y, $s->{lyric}, $cfp->{font}, $sz, $clr);
+      $txtx += _textAdd($txtx, $y, $s->{lyric}, $cfp->{font}, $sz, $clr);
     }
   }
 }
@@ -709,6 +720,8 @@ sub _textCenter {
 
   $TextPtr->translate($x, $y);
   $TextPtr->text_center($txt);
+  # Returns where the end of the text is
+  int($x + ($TextPtr->advancewidth($txt) / 2) + 0.5);
 }
 
 sub _measure {
