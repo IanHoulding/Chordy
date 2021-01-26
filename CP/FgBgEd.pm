@@ -12,6 +12,12 @@ package CP::FgBgEd;
 use strict;
 use warnings;
 
+BEGIN {
+  our @ISA = qw(Exporter);
+  our @EXPORT = qw(&lighten &darken);
+  require Exporter;
+}
+
 use POSIX;
 
 use CP::Global qw/:FUNC :OPT :WIN :XPM/;

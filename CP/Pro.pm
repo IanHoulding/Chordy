@@ -20,6 +20,7 @@ use CP::Cmsg;
 use CP::Line;
 use CP::Chord;
 use CP::Editor;
+use CP::FgBgEd qw(&lighten &darken);
 use POSIX qw/ceil/;
 use Exporter;
 
@@ -363,8 +364,9 @@ sub makePDF {
   my $lyr_clr = $lyfp->{clr};
 
   my $chfp    = $myPDF->{fonts}[CHORD];
-  my $chorddc = $chfp->{dc} / 2;
-  my $chordht = $chfp->{as} + $chorddc;
+  my $chordas = $chfp->{as};
+  my $chorddc = $chfp->{dc};        # We let chords descend into the upper area of lyrics.
+  my $chordht = $chordas + ($chorddc / 2);
   my $chd_clr = $chfp->{clr};
 
   my $cmfp    = $myPDF->{fonts}[CMMNT];
@@ -460,11 +462,15 @@ sub makePDF {
 	} elsif ($ty == HLIGHT || $ty == CMMNT || $ty == CMMNTI || $ty == CMMNTB) {
 	  my $dy = ($ty == HLIGHT) ? $highlht : $cmmntht;
 	  if ($lrp->{ch_cnt} && $lyrOnly == 0) {
-	    my $cht = ceil(($chfp->{as} + $chfp->{dc}) * SUPHT);
-	    $cht += ceil($cht * SUPHT);
+	    my $cht = $chorddc + ($chordas * SUPOFF) + ($chordas * SUPHT);
 	    $dy = $cht if ($cht > $dy);
+	    if ($ty == HLIGHT && $Opt->{HborderWidth}) {
+	      $dy += $Opt->{HborderWidth};
+	    } elsif ($ty != HLIGHT && $Opt->{CborderWidth}) {
+	      $dy += ($ty == CMMNTB) ? 1 : $Opt->{CborderWidth};
+	    }
 	  }
-	  $ht += ($dy + 1);
+	  $ht += $dy;
 	}
       }
       if ($ht > $lineY) {
@@ -535,7 +541,7 @@ sub makePDF {
       } else {
 	if ($ln->{ch_cnt} && $lyrOnly == 0) {
 	  $lineht = $chordht;
-	  $chordY = $lineY - $halfspc - $lineht + $chorddc;
+	  $chordY = $lineY - $halfspc - $lineht + ($chorddc / 2);
 	}
 	if ($ln->{ly_cnt}) {
 	  $lineht += $lyricht;
@@ -566,9 +572,9 @@ sub makePDF {
 	if ($bg ne '') {
 	  if ($label) {
 	    if ($Opt->{LabelPC} < 0) {
-	      $bg = CP::FgBgEd::lighten($bg, abs($Opt->{LabelPC}));
+	      $bg = lighten($bg, abs($Opt->{LabelPC}));
 	    } else {
-	      $bg = CP::FgBgEd::darken($bg, $Opt->{LabelPC});
+	      $bg = darken($bg, $Opt->{LabelPC});
 	    }
 	  }
 	  CP::CPpdf::_bg($bg, 0, $lineY, $Media->{width}, $lineht + $linespc);
@@ -687,15 +693,18 @@ sub makePDF {
       #
       my $dy = ($type == HLIGHT) ? $highlht : $cmmntht;
       if ($ln->{ch_cnt} && $lyrOnly == 0) {
-	my $cht = ceil(($chfp->{as} + $chfp->{dc}) * SUPHT);
-	$cht += ceil($cht * SUPHT);
+	my $cht = $chorddc + ($chordas * SUPOFF) + ($chordas * SUPHT);
 	$dy = $cht if ($cht > $dy);
       }
-      $lineY -= ($dy + 1);
-      if ($lineY < 0) {
-	$lineY = $myPDF->newPage($self, $pageno++);
+      my $bw = 0;
+      if ($type == HLIGHT && $Opt->{HborderWidth}) {
+	$bw = $Opt->{HborderWidth};
+      } elsif ($type != HLIGHT && $Opt->{CborderWidth}) {
+	$bw = ($type == CMMNTB) ? 1 : $Opt->{CborderWidth};
       }
+      $lineY -= ($dy + $bw);
       $myPDF->commentAdd($self, $ln, $type, $lineY, $dy);
+      $lineY -= $bw;
     }
   }
   #

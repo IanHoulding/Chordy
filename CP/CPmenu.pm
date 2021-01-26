@@ -165,14 +165,24 @@ sub new {
   {
     my $hl = $opt->new_menu;
     $opt->add_cascade(-menu => $hl, -label => 'Highlight');
-    $hl->add_checkbutton(-label => " Full line",
-			  -variable => \$Opt->{FullLineHL},
-			  -command => sub{$Opt->saveOne('FullLineHL')},
-			  @cbopts ); 
-    $hl->add_checkbutton(-label => " Border",
-			  -variable => \$Opt->{BorderHL},
-			  -command => sub{$Opt->saveOne('BorderHL')},
+    $hl->add_checkbutton(-label => ' Full line',
+			 -variable => \$Opt->{FullLineHL},
+			 -command => sub{$Opt->saveOne('FullLineHL')},
 			 @cbopts );
+    my $br = $hl->new_menu;
+    $hl->add_cascade(-menu => $br, -label => ' Border Relief');
+    foreach (qw{raised sunken flat}) {
+      $br->add_radiobutton(-label => $_,
+			   -variable => \$Opt->{HborderRelief},
+			   -command => sub{$Opt->saveOne('HborderRelief')} );
+    }
+    my $bw = $hl->new_menu;
+    $hl->add_cascade(-menu => $bw, -label => ' Border Width');
+    foreach (qw{0 1 2 3 4 5}) {
+      $bw->add_radiobutton(-label => $_,
+			   -variable => \$Opt->{HborderWidth},
+			   -command => sub{$Opt->saveOne('HborderWidth')} );
+    }
   }
   {
     my $cm = $opt->new_menu;
@@ -181,10 +191,20 @@ sub new {
 			 -variable => \$Opt->{FullLineCM},
 			 -command => sub{$Opt->saveOne('FullLineCM')},
 			 @cbopts );
-    $cm->add_checkbutton(-label => " Border",
-			 -variable => \$Opt->{BorderCM},
-			 -command => sub{$Opt->saveOne('BorderCM')},
-			 @cbopts );
+    my $br = $cm->new_menu;
+    $cm->add_cascade(-menu => $br, -label => ' Border Relief');
+    foreach (qw{raised sunken flat}) {
+      $br->add_radiobutton(-label => $_,
+			   -variable => \$Opt->{CborderRelief},
+			   -command => sub{$Opt->saveOne('CborderRelief')} );
+    }
+    my $bw = $cm->new_menu;
+    $cm->add_cascade(-menu => $bw, -label => ' Border Width');
+    foreach (qw{0 1 2 3 4 5}) {
+      $bw->add_radiobutton(-label => $_,
+			   -variable => \$Opt->{CborderWidth},
+			   -command => sub{$Opt->saveOne('CborderWidth')} );
+    }
   }
   $opt->add_separator;
   $opt->add_checkbutton(-label => " Ignore Capo Directives",

@@ -18,6 +18,7 @@ use CP::Global qw/:FUNC :OPT :WIN :MEDIA :XPM/;
 #use CP::Pop qw/:MENU :POP/;
 use CP::Win;
 use CP::Cmsg;
+use CP::FgBgEd qw(&lighten &darken);
 #use CP::Tab;
 
 our $Ed;
@@ -168,7 +169,7 @@ sub drawBlinds {
   for(my $i = 1; $i <= $nlines; $i += $ll) {
     $txtWin->tag_add('B', "$i.0", ($i+$Opt->{LyricLines}).".0");
   }
-  my $selbg = CP::FgBgEd::darken(SELECT, 10);
+  my $selbg = darken(SELECT, 10);
   $txtWin->tag_configure('B', -background => "#F0F0F0", -selectbackground => $selbg);
 }
 

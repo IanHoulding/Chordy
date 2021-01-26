@@ -46,7 +46,7 @@ use Math::Trig;
 use CP::Cconst qw/:TEXT :SMILIE :COLOUR :TAB/;
 use CP::Global qw/:OPT :WIN :CHORD/;
 use CP::Cmsg;
-use CP::FgBgEd;
+use CP::FgBgEd qw(&lighten &darken);
 use CP::Tab;
 use CP::Note;
 
@@ -774,7 +774,7 @@ sub repeat {
     my $y2 = $Y + $off->{staff0} + $ht;
 
     my $clr = $self->{tab}{headColor};
-    $clr = CP::FgBgEd::lighten($clr, PALE) if ($self->{pidx} == -2);
+    $clr = lighten($clr, PALE) if ($self->{pidx} == -2);
 
     my $dia = $fat * 2;
     my $dy = $fat * 0.75;
@@ -823,7 +823,7 @@ sub topText {
     my $fnt = ($pidx >= 0) ? $tab->{headFont} : $tab->{eheadFont};
     my $x = $self->{x};
     my $clr = $tab->{headColor};
-    $clr = CP::FgBgEd::lighten($clr, PALE) if ($pidx == -2);
+    $clr = lighten($clr, PALE) if ($pidx == -2);
     my $wid = $can->create_text(
       0,0,
       -text => $self->{header},
@@ -853,7 +853,7 @@ sub volta {
   push(@{$tag}, 'edit') if ($pidx < 0);
   if ($self->{volta} ne 'None') {
     my $clr = $self->{tab}{headColor};
-    $clr = CP::FgBgEd::lighten($clr, PALE) if ($pidx == -2);
+    $clr = lighten($clr, PALE) if ($pidx == -2);
     my $linew = $off->{fat};
     my $w = $off->{width};
     my $x = $self->{x} + $off->{staffX};

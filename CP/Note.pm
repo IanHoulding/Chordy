@@ -15,6 +15,7 @@ use CP::Cconst qw/:COLOUR :TAB :SMILIE/;
 use CP::Global qw/:WIN :OPT :CHORD/;
 use CP::Tab;
 use CP::Cmsg;
+use CP::FgBgEd qw(&lighten &darken);
 use Math::Trig;
 
 ##  s = Slide (up or down)   1(5,8s7,12)  fret at which interval to slide to
@@ -377,7 +378,7 @@ sub slideHam {
   my $topos = $nn->{pos};
 
   my $clr = $tab->{headColor};
-  $clr = CP::FgBgEd::lighten($clr, PALE) if ($bar->{pidx} == -2);
+  $clr = lighten($clr, PALE) if ($bar->{pidx} == -2);
 
   my $xaxis = ($nn->{bar} != $bar) ? $tab->{BarEnd} - $pos + 3 + $topos : $topos - $pos;
   $xaxis *= $u;
@@ -408,7 +409,7 @@ sub slideHam {
       }
       $can->create_line($x, $y, $x1, $y1, -fill  => $clr, -width => $fat, -tags => $tag);
       if ($bar != $EditBar1) {
-	$clr = CP::FgBgEd::lighten($clr, PALE) if ($self->{bar} == $EditBar);
+	$clr = lighten($clr, PALE) if ($self->{bar} == $EditBar);
 	slideTail($nn, $self->{fret}, $ymid, $clr, $tag);
       }
     }
@@ -434,7 +435,7 @@ sub slideHam {
 		       -width => $fat,   -tags    => $tag);
       # If we've just drawn the start of an arc in EditBar1, that's it.
       if ($self->{bar} != $EditBar1) {
-	$clr = CP::FgBgEd::lighten($clr, PALE) if ($bar == $EditBar);
+	$clr = lighten($clr, PALE) if ($bar == $EditBar);
 	hammerTail($nn, $xaxis, $mid, $clr, $tag);
       }
     }
@@ -486,7 +487,7 @@ sub bendRel {
   my $ss = $off->{staffSpace};
   my($x,$y) = $self->noteXY();
   my $clr = $tab->{headColor};
-  $clr = CP::FgBgEd::lighten($clr, PALE) if ($bar->{pidx} == -2);
+  $clr = lighten($clr, PALE) if ($bar->{pidx} == -2);
 
   if ($self->{shbr} eq 'b') {
     $can->create_arc($x - ($u * 2.5), $y - ($ss * 0.6), $x + ($u * 2), $y - ($ss * 1.8),
@@ -548,7 +549,7 @@ sub bendRelTail {
 
   my $tab = $bar->{tab};
   my $clr = $tab->{headColor};
-  $clr = CP::FgBgEd::lighten($clr, PALE) if ($bar->{pidx} == -2);
+  $clr = lighten($clr, PALE) if ($bar->{pidx} == -2);
   my $off = $bar->{offset};
   my $fat = $off->{fat};
   $arc  *= $off->{interval};
@@ -569,7 +570,7 @@ sub bendRelTail {
 			     -style => 'arc', -outline => $clr,
 			     -width => $fat,  -tags    => $tag);
   $clr = $tab->{noteColor};
-  $clr = CP::FgBgEd::lighten($clr, PALE) if ($bar->{pidx} == -2);
+  $clr = lighten($clr, PALE) if ($bar->{pidx} == -2);
   my $fnt = ($bar->{pidx} >= 0) ? $tab->{snoteFont} : $tab->{esnoteFont};
   $bar->{canvas}->create_text($x1,$yoff,
 			      -text => $self->{fret},  -font => $fnt,
@@ -648,7 +649,7 @@ sub showFret {
       $clr = ($self->{font} eq 'Normal') ? $tab->{noteColor} : $tab->{snoteColor};
     }
   }
-  $clr = CP::FgBgEd::lighten($clr, PALE) if ($bar->{pidx} == -2);
+  $clr = lighten($clr, PALE) if ($bar->{pidx} == -2);
   $tag = [$tag, 'edit'] if ($bar->{pidx} < 0);
   my $dsc = Tkx::font_metrics($fnt, '-descent') / 2;
   $bar->{canvas}->create_text($x,$y - $dsc, -text => $fr,  -font => $fnt,

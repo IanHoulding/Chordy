@@ -63,8 +63,6 @@ use CP::Cmnd;
 use CP::Opt;
 use CP::Media;
 
-#use CP::Cmsg qw/&message &msgYesNo &msgYesNoCan &msgSet &msgYesNoAll/;
-
 our $Version = "3.9.1";
 
 our($Parent, $Home, $Collection, $Opt, $Path, $Cmnd, $Swatches);

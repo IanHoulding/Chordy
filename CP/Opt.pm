@@ -16,10 +16,13 @@ use CP::Global qw/:FUNC :VERS :WIN :OPT/;
 use CP::Cmsg;
 
 my @strOpt = (qw/Articles Instrument Media PDFpath PrintMedia
+	         HborderRelief CborderRelief
 	         PopFG PopBG PushFG PushBG MenuFG MenuBG ListFG ListBG EntryFG EntryBG
 	         WinBG PageBG SortBy/);
 my @numOpt = (qw/AutoSave Bold Heavy Center EditScale
-	         BorderCM BorderCMC BorderHL BorderHLC FullLineHL FullLineCM Grid HHBL
+	         FullLineCM CborderWidth
+	         FullLineHL HborderWidth
+	         Grid HHBL
 	         SaveFonts IgnArticle IgnCapo ShowLabels LabelPC
 	         TopMargin BottomMargin LeftMargin RightMargin
 	         Italic LineSpace LyricLines LyricOnly Nbar NewLine NoWarn
@@ -49,12 +52,10 @@ sub default {
   $self->{Articles}    = 'the|a|an';
   $self->{AutoSave}    = 0;
   $self->{Bold}        = 2;    # This is the 'heavyness' weight for PDF bold fonts.
-  $self->{BorderCM}    = 1;
-  $self->{BorderCMC}   = '';
-  $self->{BorderHL}    = 1;
-  $self->{BorderHLC}   = '';
   $self->{BottomMargin}= INDENT;
   $self->{Capo}        = 'No';
+  $self->{CborderRelief} = 'raised';
+  $self->{CborderWidth}  = 2;
   $self->{Center}      = 0;
   $self->{EditScale}   = 4;
   $self->{EntryFG}     = BLACK;
@@ -63,6 +64,8 @@ sub default {
   $self->{FullLineHL}  = 0;
   $self->{Grid}        = 0;
   $self->{Heavy}       = 5;
+  $self->{HborderRelief} = 'raised';
+  $self->{HborderWidth}  = 2;
   $self->{HHBL}        = 0;    # Half Height Blank Lines
   $self->{IgnArticle}  = 0;
   $self->{IgnCapo}     = 0;

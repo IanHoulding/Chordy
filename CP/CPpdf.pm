@@ -18,6 +18,7 @@ use CP::Global qw/:FUNC :OPT :WIN :CHORD :SCALE :SETL/;
 use PDF::API2;
 use CP::PDFfont;
 use CP::Chord;
+use CP::FgBgEd qw(&lighten &darken);
 
 my($TextPtr,$GfxPtr);
 
@@ -614,7 +615,7 @@ sub hline {
   }
 }
 
-#______________________________________
+#____|__________________________________
 #____|_______________________________|_
 #    |          #                    |
 #    |         # #                   |
@@ -629,44 +630,91 @@ sub hline {
 sub commentAdd {
   my($self,$pro,$ln,$type,$y,$ht) = @_;
 
-  my($bw,$x,$txtx) = (0,0,$Opt->{LeftMargin});
+  my($bgwid,$x,$txtx) = (0,0,$Opt->{LeftMargin});
   my $chfp = $self->{fonts}[CHORD];
   my $cfp = $self->{fonts}[$type];
-  if ($type == HLIGHT) {
-    $bw = $Media->{width} if ($Opt->{FullLineHL});
-  } else {
-    $bw = $Media->{width} if ($Opt->{FullLineCM});
+  if (($type == HLIGHT && $Opt->{FullLineHL}) || ($type != HLIGHT && $Opt->{FullLineCM})) {
+    $bgwid = $Media->{width};
   }
   my $commlen = $self->commentLen($ln, $cfp);
   if ($Opt->{Center}) {
     $txtx += (($Media->{width} - ($Opt->{LeftMargin} + $Opt->{RightMargin})) / 2);
     $txtx -= ($commlen / 2);
   }
-  $txtx++;
-  if ($bw == 0) {  # Not a full width background
-    $bw = $commlen + 6;
+  if ($bgwid == 0) {  # Not a full width background
+    $bgwid = $commlen + 4;
     $txtx += 2;
-    $x = ($Opt->{Center}) ? $txtx - 3 : $Opt->{LeftMargin};
+    $x = ($Opt->{Center}) ? $txtx - 2 : $Opt->{LeftMargin};
   }
   my $bg = $ln->{bg};
   if ($bg eq "") {
     # These can be changed dynamically in "Background Colours".
     $bg = ($type == HLIGHT) ? $Media->{highlightBG} : $Media->{commentBG};
   }
-  _bg($bg, $x, $y, $bw, $ht);
-  if ($type == HLIGHT) {
-    $bg = $Media->{highlightBD} if ($Opt->{BorderHL});
-  } else {
-    if ($type == CMMNTB) {
-      $bg = BLACK;
-    } else {
-      $bg = $Media->{commentBD} if ($Opt->{BorderCM});
-    }
+  _bg($bg, $x, $y, $bgwid, $ht);
+  my $relief = $bg = '';
+  my $bdwid = 0;
+  if ($type == HLIGHT && $Opt->{HborderWidth}) {
+    $bg = $Media->{highlightBD};
+    $relief = $Opt->{HborderRelief};
+    $bdwid = $Opt->{HborderWidth};
+  } elsif ($type == CMMNTB) {
+    $bg = BLACK;
+    $relief = 'flat';
+    $bdwid = 1;
+  } elsif(($type == CMMNT || $type == CMMNTI) && $Opt->{CborderWidth}) {
+    $bg = $Media->{commentBD};
+    $relief = $Opt->{CborderRelief};
+    $bdwid = $Opt->{CborderWidth};
   }
-  $GfxPtr->linewidth(1);
-  $GfxPtr->strokecolor($bg);
-  $GfxPtr->rect($x + 0.5, $y, $bw - 1, $ht);
-  $GfxPtr->stroke();
+  if ($bdwid) {
+    if ($x == 0) {
+      $x += $bdwid;
+      $bgwid -= ($bdwid * 2);
+    }
+    $GfxPtr->linewidth(0);
+
+    my($top,$bot,$rht,$lft);
+    if ($relief eq 'raised') {
+      $top = lighten($bg,10);
+      $rht = darken($bg,5);
+      $bot = darken($bg,10);
+      $lft = lighten($bg,5);
+    } elsif ($relief eq 'sunken') {
+      $top = darken($bg,10);
+      $rht = lighten($bg,5);
+      $bot = lighten($bg,10);
+      $lft = darken($bg,5);
+    } else { # flat
+      $top = $bot = $rht = $lft = $bg;
+    }
+
+    my $x1 = $x - $bdwid;   my $y1 = $y - $bdwid;
+    my $x2 = $x;            my $y2 = $y;
+    my $x3 = $x + $bgwid;      my $y3 = $y + $ht;
+    my $x4 = $x3 + $bdwid;  my $y4 = $y3 + $bdwid;
+
+    my @pbot = ($x1,$y1, $x4,$y1, $x3,$y2, $x2,$y2, $x1,$y1);
+    my @prht = ($x4,$y1, $x4,$y4, $x3,$y3, $x3,$y2, $x4,$y1);
+    my @ptop = ($x1,$y4, $x4,$y4, $x3,$y3, $x2,$y3, $x1,$y4);
+    my @plft = ($x1,$y1, $x1,$y4, $x2,$y3, $x2,$y2, $x1,$y1);
+
+    $GfxPtr->fillcolor($bot);
+    $GfxPtr->poly(@pbot);
+    $GfxPtr->fill();
+
+    $GfxPtr->fillcolor($rht);
+    $GfxPtr->poly(@prht);
+    $GfxPtr->fill();
+
+    $GfxPtr->fillcolor($top);
+    $GfxPtr->poly(@ptop);
+    $GfxPtr->fill();
+
+    $GfxPtr->fillcolor($lft);
+    $GfxPtr->poly(@plft);
+    $GfxPtr->fill();
+  }
   $y += ($cfp->{dc} + 2);
   my $clr = ($type == HLIGHT) ? $Media->{Highlight}{color} : $Media->{Comment}{color};
   my $sz = $cfp->{sz};

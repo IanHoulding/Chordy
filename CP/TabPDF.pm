@@ -17,6 +17,7 @@ use CP::Global qw/:FUNC :WIN :OPT :XPM :CHORD/;
 use CP::Tab;
 use CP::Cmsg;
 use CP::Lyric;
+use CP::FgBgEd qw(&lighten &darken);
 use PDF::API2;
 use PDF::API2::Resource::CIDFont::TrueType;
 use CP::PDFfont;
@@ -555,7 +556,7 @@ sub NoteSlideHam {
   my $topos = $nn->{pos};
 
   my $clr = $tab->{headColor};
-  $clr = CP::FgBgEd::lighten($clr, PALE) if ($bar->{pidx} == -2);
+  $clr = lighten($clr, PALE) if ($bar->{pidx} == -2);
 
   my $xaxis = ($nn->{bar} != $bar) ? $tab->{BarEnd} - $pos + 3 + $topos : $topos - $pos;
   $xaxis *= $u;
@@ -586,7 +587,7 @@ sub NoteSlideHam {
       }
       $can->create_line($x, $y, $x1, $y1, -fill  => $clr, -width => $fat, -tags => $tag);
       if ($bar != $EditBar1) {
-	$clr = CP::FgBgEd::lighten($clr, PALE) if ($self->{bar} == $EditBar);
+	$clr = lighten($clr, PALE) if ($self->{bar} == $EditBar);
 	slideTail($nn, $self->{fret}, $ymid, $clr, $tag);
       }
     }
@@ -612,7 +613,7 @@ sub NoteSlideHam {
 		       -width => $fat,   -tags    => $tag);
       # If we've just drawn the start of an arc in EditBar1, that's it.
       if ($self->{bar} != $EditBar1) {
-	$clr = CP::FgBgEd::lighten($clr, PALE) if ($bar == $EditBar);
+	$clr = lighten($clr, PALE) if ($bar == $EditBar);
 	hammerTail($nn, $xaxis, $mid, $clr, $tag);
       }
     }

@@ -32,7 +32,8 @@ Bit late starting with 2.6.4 but about time I documented it :-)
 	     and are shown correctly in the Editor.
 	   Double-Click on a Setlist now selects the contents for editing.
 	   Swapped the 'Single File' frame to be on the far right.
-	   Highlights and Comments can now optionally have a coloured border.
+	   Highlights and Comments can now optionally have a coloured border with
+	     variable width and relief.
 	   Section Labels can now have their background changed lighter or darker
 	     by a user selectable percentage.
 	   Highlights, Comments and Labels are now centered if "Center Lyrics" is
