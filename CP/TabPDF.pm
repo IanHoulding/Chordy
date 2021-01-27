@@ -317,8 +317,8 @@ sub newPage {
   $h -= ($tifp->{sz} + 3);
   $self->{headerBase} = $h + 1;
 
-  if ($Media->{titleBG} ne WHITE) {
-    _bg($Media->{titleBG}, 0, $h, $w, $tab->{pageHeader});
+  if ($Opt->{BGTitle} ne WHITE) {
+    _bg($Opt->{BGTitle}, 0, $h, $w, $tab->{pageHeader});
   }
   _textCenter($self, $w/2, $self->{headerBase} + $tifp->{dc},
 	      $tab->{title}, TITLE, $tifp->{sz}, $tifp->{clr});
@@ -332,7 +332,7 @@ sub newPage {
   if ($tab->{key} ne '-') {
     my $tw = _textAdd($self, $Opt->{LeftMargin}, $tbl, "Key: ", TITLE, $th, bFG);
     my $ch = [split('',$tab->{key})];
-    chordAdd($self, $Opt->{LeftMargin} + $tw, $tbl, $ch, $Media->{Chord}{color}, $th);
+    chordAdd($self, $Opt->{LeftMargin} + $tw, $tbl, $ch, $Opt->{FGChord}, $th);
   }
   $h -= $Opt->{TopMargin};
 }

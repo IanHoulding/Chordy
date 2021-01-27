@@ -16,7 +16,10 @@ use CP::Global qw/:FUNC :VERS :WIN :OPT/;
 use CP::Cmsg;
 
 my @strOpt = (qw/Articles Instrument Media PDFpath PrintMedia
-	         HborderRelief CborderRelief
+	         BGBridge BGChorus BGComment BGEditor BGHighlight BGTab BGTitle BGVerse
+	         FGChord FGComment FGEditor FGHeader FGHighlight FGLabel FGLyric
+	         FGNotes FGSNotes FGTab FGTitle FGWords
+	         HborderRelief HborderColour CborderRelief CborderColour
 	         PopFG PopBG PushFG PushBG MenuFG MenuBG ListFG ListBG EntryFG EntryBG
 	         WinBG PageBG SortBy/);
 my @numOpt = (qw/AutoSave Bold Heavy Center EditScale
@@ -53,6 +56,14 @@ sub default {
   $self->{AutoSave}    = 0;
   $self->{Bold}        = 2;    # This is the 'heavyness' weight for PDF bold fonts.
   $self->{BottomMargin}= INDENT;
+  $self->{BGBridge}    = '#FFF8C8';
+  $self->{BGChorus}    = '#CDFFCD';
+  $self->{BGComment}   = '#D8E8FF';
+  $self->{BGEditor}    = '#FFF8E0';
+  $self->{BGHighlight} = '#FFFF80';
+  $self->{BGTab}       = '#FFFFFF';
+  $self->{BGTitle}     = '#FFF0D0';
+  $self->{BGVerse}     = '#FFFFFF';
   $self->{Capo}        = 'No';
   $self->{CborderRelief} = 'raised';
   $self->{CborderWidth}  = 2;
@@ -60,6 +71,18 @@ sub default {
   $self->{EditScale}   = 4;
   $self->{EntryFG}     = BLACK;
   $self->{EntryBG}     = WHITE;
+  $self->{FGChord}     = '#700070';
+  $self->{FGComment}   = '#000060';
+  $self->{FGEditor}    = '#000000';
+  $self->{FGHeader}    = '#D00000';
+  $self->{FGHighlight} = '#800000';
+  $self->{FGLabel}     = '#900000';
+  $self->{FGLyric}     = '#000000';
+  $self->{FGNotes}     = '#540054';
+  $self->{FGSNotes}    = '#540054';
+  $self->{FGTab}       = '#000000';
+  $self->{FGTitle}     = '#700070';
+  $self->{FGWords}     = '#084040';
   $self->{FullLineCM}  = 0;
   $self->{FullLineHL}  = 0;
   $self->{Grid}        = 0;
@@ -152,6 +175,9 @@ sub load {
   foreach my $o (keys %opts) {
     $self->{$o} = $opts{$o};
   }
+  if (! defined $opts{FGChord}) {
+    save($self);
+  }
   undef %opts;
   if ("$version" ne "$Version") {
     print localtime."\n  $Path->{Option} saved: version mismatch - old=$version new=$Version\n";
@@ -163,6 +189,8 @@ sub load {
 sub save {
   my($self) = shift;
 
+#  my ($package, $filename, $line) = caller;
+#  print "Opts save() from $filename, $line\n";
   Tkx::update();  # Make sure any variables dependant on buttons/menus get updated.
   my $OFH = openConfig("$Path->{Option}");
   return(0) if ($OFH == 0);
@@ -195,6 +223,8 @@ sub save {
 sub saveOne {
   my($self,$opt) = @_;
 
+#  my ($package, $filename, $line) = caller;
+#  print "Opts saveOne() from $filename, $line\n";
   our($version,%opts);
   do "$Path->{Option}";
   $opts{$opt} = $self->{$opt};

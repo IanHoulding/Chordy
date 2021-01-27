@@ -77,7 +77,7 @@ sub new {
     $Path = CP::Path->new();
     $Cmnd = CP::Cmnd->new();
     $Opt = CP::Opt->new();
-    $Media = CP::Media->new($Opt->{Media});
+    $Media = CP::Media->new();
     $Swatches = CP::Swatch->new();
 
     fontSetup();
@@ -167,8 +167,8 @@ sub new {
     -insertwidth => 2,
     -font => "\{$EditFont{family}\} $EditFont{size} $EditFont{weight} $EditFont{slant}",
     -relief => 'raised',
-    -foreground => $EditFont{color},
-    -background => $EditFont{background},
+    -foreground => $Opt->{FGEditor},
+    -background => $Opt->{BGEditor},
     -borderwidth => 2,
     -highlightthickness => 0,
     -selectborderwidth => 0,
@@ -496,7 +496,7 @@ sub text2cp {
 }
 
 sub editFont {
-  CP::Fonts::fontPick(\%EditFont, VLMWBG, 'Editor Font');
+  CP::Fonts::fontPick(\%EditFont, $Opt->{FGEditor}, $Opt->{BGEditor}, 'Editor Font');
   fontUpdt();
 }
 
@@ -526,25 +526,25 @@ sub fontUpdt {
 }
 
 sub bgSet {
-  my($fg,$bg) = $ColourEd->Show($EditFont{color}, $EditFont{background}, '', BACKGRND);
+  my($fg,$bg) = $ColourEd->Show($Opt->{FGEditor}, $Opt->{BGEditor}, '', BACKGRND);
   if ($bg ne '') {
     $Ed->{TxtWin}->m_configure(-background => $bg);
-    $EditFont{background} = $bg;
+    $Opt->{BGEditor} = $bg;
   }
 }
 
 sub fgSet {
-  my($fg,$bg) = $ColourEd->Show($EditFont{color}, $EditFont{background}, '', FOREGRND);
+  my($fg,$bg) = $ColourEd->Show($Opt->{FGEditor}, $Opt->{BGEditor}, '', FOREGRND);
   if ($fg ne '') {
     $Ed->{TxtWin}->m_configure(-foreground => $fg);
-    $EditFont{color} = $fg;
+    $Opt->{FGEditor} = $fg;
   }
 }
 
 sub braceColour {
   my($what) = shift;
 
-  my($fg,$bg) = $ColourEd->Show($EditFont{$what}, $EditFont{background}, '', FOREGRND);
+  my($fg,$bg) = $ColourEd->Show($EditFont{$what}, $Opt->{BGEditor}, '', FOREGRND);
   if ($fg ne '') {
     $EditFont{$what} = $fg;
     fontUpdt();
@@ -626,9 +626,8 @@ sub setFont {
   my %font = (family => $fp->{family},
 	      size   => $fp->{size},
 	      weight => $fp->{weight},
-	      slant  => $fp->{slant},
-	      color  => $fp->{color});
-  if (fontPick(\%font, WHITE, 'Font') eq 'OK') {
+	      slant  => $fp->{slant});
+  if (fontPick(\%font, $Opt->{FGEditor}, $Opt->{BGEditor}, 'Font') eq 'OK') {
     idef($name, \%font);
   }
 }
@@ -672,27 +671,27 @@ sub directives {
     [['sg', '#D0EFA0',  [\&idef, 'sg'], 8,0,1,2],
      ['eg', '#D0EFA0',  [\&idef, 'eg'], 8,1,1,2]],
 
-    [['sv', $Media->{verseBG},     [\&idef, 'sv'], 9,0,1,1],
-     ['ev', $Media->{verseBG},     [\&idef, 'ev'], 9,1,1,1],
-     ['ve', $Media->{verseBG},     [\&idef, 've'], 9,2,1,1]],
+    [['sv', $Opt->{BGVerse},     [\&idef, 'sv'], 9,0,1,1],
+     ['ev', $Opt->{BGVerse},     [\&idef, 'ev'], 9,1,1,1],
+     ['ve', $Opt->{BGVerse},     [\&idef, 've'], 9,2,1,1]],
 
-    [['sc', $Media->{chorusBG},    [\&idef, 'sc'], 10,0,1,1],
-     ['ec', $Media->{chorusBG},    [\&idef, 'ec'], 10,1,1,1],
-     ['ch', $Media->{chorusBG},    [\&idef, 'ch'], 10,2,1,1]],
+    [['sc', $Opt->{BGChorus},    [\&idef, 'sc'], 10,0,1,1],
+     ['ec', $Opt->{BGChorus},    [\&idef, 'ec'], 10,1,1,1],
+     ['ch', $Opt->{BGChorus},    [\&idef, 'ch'], 10,2,1,1]],
 
-    [['bs', $Media->{bridgeBG},    [\&idef, 'bs'], 11,0,1,1],
-     ['be', $Media->{bridgeBG},    [\&idef, 'be'], 11,1,1,1],
-     ['br', $Media->{bridgeBG},    [\&idef, 'br'], 11,2,1,1]],
+    [['bs', $Opt->{BGBridge},    [\&idef, 'bs'], 11,0,1,1],
+     ['be', $Opt->{BGBridge},    [\&idef, 'be'], 11,1,1,1],
+     ['br', $Opt->{BGBridge},    [\&idef, 'br'], 11,2,1,1]],
 
-    [['st', $Media->{tabBG},       [\&idef, 'st'], 12,0,1,1],
-     ['et', $Media->{tabBG},       [\&idef, 'et'], 12,1,1,1],
-     ['Tb', $Media->{tabBG},       [\&idef, 'tb'], 12,2,1,1]],
+    [['st', $Opt->{BGTab},       [\&idef, 'st'], 12,0,1,1],
+     ['et', $Opt->{BGTab},       [\&idef, 'et'], 12,1,1,1],
+     ['Tb', $Opt->{BGTab},       [\&idef, 'tb'], 12,2,1,1]],
 
-    [['hl', $Media->{highlightBG}, [\&idef, 'hl'], 13,1,1,1]],
+    [['hl', $Opt->{BGHighlight}, [\&idef, 'hl'], 13,1,1,1]],
 
-    [['co', $Media->{commentBG},   [\&idef, 'co'], 14,0,1,1],
-     ['ci', $Media->{commentBG},   [\&idef, 'ci'], 14,1,1,1],
-     ['cb', $Media->{commentBG},   [\&idef, 'cb'], 14,2,1,1]],
+    [['co', $Opt->{BGComment},   [\&idef, 'co'], 14,0,1,1],
+     ['ci', $Opt->{BGComment},   [\&idef, 'ci'], 14,1,1,1],
+     ['cb', $Opt->{BGComment},   [\&idef, 'cb'], 14,2,1,1]],
       ];
   foreach my $r (@{$items}) {
     foreach my $c (@{$r}) {
@@ -727,20 +726,20 @@ sub directives {
   balloon($clrb, "Colour Selector");
 
   foreach my $btn (
-    [0,1, 'HighLight', 'highlightBG'],
-    [0,2, 'Comment',   'commentBG'],
-    [0,3, 'Verse',     'verseBG'],
-    [0,4, 'Chorus',    'chorusBG'],
-    [0,5, 'Bridge',    'bridgeBG'],
-    [0,6, 'Tab',       'tabBG'],
+    [0,1, 'HighLight', 'BGHighlight'],
+    [0,2, 'Comment',   'BGComment'],
+    [0,3, 'Verse',     'BGVerse'],
+    [0,4, 'Chorus',    'BGChorus'],
+    [0,5, 'Bridge',    'BGBridge'],
+    [0,6, 'Tab',       'BGTab'],
       ) {
     my($r,$c,$stl,$med) = @{$btn};
-    Tkx::ttk__style_configure("$stl.TButton", -background => $Media->{$med});
-    Tkx::ttk__style_map("$stl.TButton", -background => "active $Media->{$med}");
+    Tkx::ttk__style_configure("$stl.TButton", -background => $Opt->{$med});
+    Tkx::ttk__style_map("$stl.TButton", -background => "active $Opt->{$med}");
     my $but = $cfrm->new_ttk__button(
       -image => 'blank',
       -style => "$stl.TButton",
-      -command => sub {$Ed->{TxtWin}->insert('insert', $Media->{$med});$Ed->{TxtWin}->g_focus();}
+      -command => sub {$Ed->{TxtWin}->insert('insert', $Opt->{$med});$Ed->{TxtWin}->g_focus();}
 	);
     $but->g_grid(-row => $r, -column => $c, -padx => 8, -pady => [0,4]);
     balloon($but, "$stl Background");
@@ -1142,7 +1141,7 @@ sub chordSel {
 sub chordDesel {
   $Ed->{TxtWin}->tag_configure("$Ed->{TaggedChord}",
 			       -foreground => $EditFont{bracket},
-			       -background => $EditFont{background});
+			       -background => $Opt->{BGEditor});
   $Ed->{TaggedChord} = '';
 }
 

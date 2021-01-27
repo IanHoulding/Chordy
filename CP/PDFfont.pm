@@ -31,7 +31,7 @@ sub new {
   $self->{wt} = ($fp->{weight} eq 'bold') ? $Opt->{Bold} : ($fp->{weight} eq 'heavy') ? $Opt->{Heavy} : 0;
   $self->{sl} = ($fp->{slant} eq 'roman') ? 0 : $Opt->{Italic};
   getFont($self, $pdf, $idx);
-  $self->{clr} = $fp->{color};
+  $self->{clr} = $Opt->{'FG'.$media};
   $self->{hscale} = 100;
 
   return($self);

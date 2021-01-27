@@ -193,7 +193,7 @@ sub showSample {
 }
 
 sub fontPick {
-  my($font,$bg,$title) = @_;
+  my($font,$fg,$bg,$title) = @_;
 
   return if ((my $pop = new($title)) eq '');
 
@@ -201,7 +201,7 @@ sub fontPick {
   $Fsize   = $font->{size};
   $Fweight = $font->{weight};
   $Fslant  = $font->{slant};
-  $Fcolor  = $font->{color};
+  $Fcolor  = $fg;
   $FontCan->m_configure(-background => $bg);
   my $i = 0;
   foreach my $f (@{$Fontlb->{array}}) {
@@ -406,10 +406,10 @@ sub OLDscan {
 sub fonts {
   my($frame,$list) = @_;
 
-  ($frame->new_ttk__label(qw/-text Size/))->g_grid(qw/-row 0 -column 3/, -padx => 8);
-  ($frame->new_ttk__label(qw/-text Bold/))->g_grid(qw/-row 0 -column 4 -padx 4/);
-  ($frame->new_ttk__label(qw/-text Heavy/))->g_grid(qw/-row 0 -column 5 -padx 0/);
-  ($frame->new_ttk__label(qw/-text Italic/))->g_grid(qw/-row 0 -column 6 -padx 4/);
+  ($frame->new_ttk__label(qw/-text Size/))->g_grid(qw/-row 0 -column 3 -padx 8 -pady 0/);
+  ($frame->new_ttk__label(qw/-text Bold/))->g_grid(qw/-row 0 -column 4 -padx 4 -pady 0/);
+  ($frame->new_ttk__label(qw/-text Heavy/))->g_grid(qw/-row 0 -column 5 -padx 0 -pady 0/);
+  ($frame->new_ttk__label(qw/-text Italic/))->g_grid(qw/-row 0 -column 6 -padx 4 -pady 0/);
 
   # There are a couple of exceptions :-(
   my $row = 1;
@@ -444,19 +444,20 @@ sub fonts {
 sub FontS {
   my($frame,$r,$title,$fp) = @_;
 
-  my $ttl = $frame->new_ttk__label(-text => "${title}");
+  my $ttl = $frame->new_ttk__label(-text => "$title");
 
+  my $fg = $Opt->{"FG$title"};
   my $bg = bgSet($title);
 
-  Tkx::ttk__style_configure("$title.FG.TButton", -background => $fp->{color});
+  Tkx::ttk__style_configure("$title.FG.TButton", -background => $fg);
   my $clr = $frame->new_ttk__button(
     -image => 'blank',
     -style => "$title.FG.TButton");
-  $clr->m_configure(-command => sub{pickFG($title, $fp, bgSet($title));});
+  $clr->m_configure(-command => sub{pickFG($title, $fp, $Opt->{"FG$title"}, bgSet($title));});
 
   my $wt = ($fp->{weight} eq 'heavy') ? 'bold' : $fp->{weight};
   Tkx::ttk__style_configure("$title.Font.TLabel",
-			    -foreground => "$fp->{color}",
+			    -foreground => $fg,
 			    -background => $bg,
 			    -font => "{$fp->{family}} $fp->{size} $wt $fp->{slant}");
   my $lab = $frame->new_ttk__label(
@@ -507,7 +508,7 @@ sub FontS {
   
   $ttl->g_grid(-row => $r, qw/-column 0 -sticky e  -pady 2/, -padx => [4,0]);
   $clr->g_grid(-row => $r, qw/-column 1 -sticky we -pady 2/, -padx => 4);
-  $lab->g_grid(-row => $r, qw/-column 2 -sticky we -pady 3/, -padx => [2,4]);
+  $lab->g_grid(-row => $r, qw/-column 2 -sticky we -pady 2/, -padx => [2,4]);
   $siz->g_grid(-row => $r, qw/-column 3 -pady 2/);
   $wtb->g_grid(-row => $r, qw/-column 4 -pady 2/);
   $wth->g_grid(-row => $r, qw/-column 5 -pady 2/);
@@ -520,23 +521,23 @@ sub bgSet {
 
   my $bg = WHITE;
   if ($title =~ /Chord|Lyric/) {
-    $bg = $Media->{verseBG};
-  } elsif ($title =~ /Comment|Highlight|Tab|Title/) {
-    $bg = $Media->{lc($title)."BG"};
+    $bg = $Opt->{BGVerse};
+  } elsif ($title =~ /Comment|Editor|Highlight|Tab|Title/) {
+    $bg = $Opt->{"BG$title"};
   }
   $bg;
 }
 
 sub pickFG {
-  my($title,$fontp,$bg) = @_;
+  my($title,$fontp,$fg,$bg) = @_;
 
   CP::FgBgEd->new("$title Font");
   my $save = 0;
   my $op = FOREGRND;
   $op |= BACKGRND if ($title =~ /Com|Hig|Tab|Tit|Cho|Lyr/);
-  (my $fg,$bg) = $ColourEd->Show($fontp->{color}, $bg, '', $op);
+  ($fg,$bg) = $ColourEd->Show($fg, $bg, '', $op);
   if ($fg ne '') {
-    $fontp->{color} = $fg;
+    $Opt->{'FG'.$title} = $fg;
     Tkx::ttk__style_configure("$title.Font.TLabel", -foreground => $fg);
     Tkx::ttk__style_configure("$title.FG.TButton", -background => $fg);
     $save++;
@@ -548,9 +549,9 @@ sub pickFG {
       my $t = ($title =~ /Cho/) ? 'Lyric' : 'Chord';
       Tkx::ttk__style_configure("$t.Font.TLabel", -background => $bg);
       Tkx::ttk__style_configure("Verse.BG.TButton", -background => $bg);
-      $Media->{verseBG} = $bg;
+      $Opt->{BGVerse} = $bg;
     } else {
-      $Media->{lc($title)."BG"} = $bg;
+      $Opt->{'BG'.$title} = $bg;
     }
     $save++;
   }

@@ -560,11 +560,11 @@ sub makePDF {
 	my $bg = '';
 	if ($type != LYRIC && $ln->{bg} eq '') {
 	  if ($type == VERSE) {
-	    $bg = $Media->{verseBG};
+	    $bg = $Opt->{BGVerse};
 	  } elsif ($type == CHORUS) {
-	    $bg = $Media->{chorusBG};
+	    $bg = $Opt->{BGChorus};
 	  } elsif ($type == BRIDGE) {
-	    $bg = $Media->{bridgeBG};
+	    $bg = $Opt->{BGBridge};
 	  }
 	} else {
 	  $bg = $ln->{bg};
@@ -606,9 +606,9 @@ sub makePDF {
     }
     elsif ($type == TAB) {
       # Tabs are always left justified so no need to do the centering garbage.
-      if ($Media->{tabBG} !~ /\#FFFFFF/i) {
+      if ($Opt->{BGTab} !~ /\#FFFFFF/i) {
 	my $bght = ($tabht * $ln->{ch_cnt}) + $tabdc;
-	CP::CPpdf::_bg($Media->{tabBG}, 0, $lineY - $bght, $Media->{width}, $bght);
+	CP::CPpdf::_bg($Opt->{BGTab}, 0, $lineY - $bght, $Media->{width}, $bght);
       }
       foreach my $line (split(/\n/, $ln->{text})) {
 	$lineY -= $tabht;
@@ -674,19 +674,19 @@ sub makePDF {
     } elsif ($type == CFSIZ) {
       $chfp->chordSize($myPDF, $ln->{text});
     } elsif ($type == CFCLR) {
-      $chd_clr = ($ln->{text} eq '') ? $Media->{Chord}{color} : $ln->{text};
+      $chd_clr = ($ln->{text} eq '') ? $Opt->{FGChord} : $ln->{text};
     } elsif ($type == LFONT) {
       $lyfp->lyricFont($myPDF, $ln->{text});
     } elsif ($type == LFSIZ) {
       $lyfp->lyricSize($ln->{text});
     } elsif ($type == LFCLR) {
-      $lyr_clr = ($ln->{text} eq '') ? $Media->{Lyric}{color} : $ln->{text};
+      $lyr_clr = ($ln->{text} eq '') ? $Opt->{FGLyric} : $ln->{text};
     } elsif ($type == TFONT) {
       $tbfp->tabFont($myPDF, $ln->{text});
     } elsif ($type == TFSIZ) {
       $tbfp->tabSize($ln->{text});
     } elsif ($type == TFCLR) {
-      $tab_clr = ($ln->{text} eq '') ? $Media->{Tab}{color} : $ln->{text};
+      $tab_clr = ($ln->{text} eq '') ? $Opt->{FGTab} : $ln->{text};
     } elsif ($type == HLIGHT || $type == CMMNT || $type == CMMNTI || $type == CMMNTB) {
       #
       # A Comment or Highlight directive

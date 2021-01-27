@@ -821,14 +821,12 @@ sub collectionWin {
   my($wid) = @_;
 
   $Chordy->{currentColl} = $Collection->{name};
-  my $collectionPath = $Collection->{path}.'/'.$Collection->{name};
   my $ccsub = sub{
     popMenu(\$Collection->{name},
 	    sub{$Collection->change($Collection->{name});
 		collItems($Chordy);
 		showSize();
 		fontWin();
-		$collectionPath = $Collection->{path}.'/'.$Collection->{name};
 	    }, $Collection->list() );
   };
   my($a,$b,$c,$d,$e);
@@ -838,7 +836,7 @@ sub collectionWin {
 			     -style => 'Menu.TButton',
 			     -command => $ccsub);
   $b = $wid->new_ttk__label(-text => "Path: ");
-  $c = $wid->new_ttk__label(-textvariable => \$collectionPath);
+  $c = $wid->new_ttk__label(-textvariable => \$Collection->{fullPath});
 
   $d = $wid->new_ttk__label(-text => "Common PDF Path: ");
   $e = $wid->new_ttk__label(-textvariable => \$Opt->{PDFpath});
@@ -993,21 +991,21 @@ sub fontWin {
 sub bgWin {
   my($bgf) = shift;
 
-  BGcS($bgf, 0, 'Comment',   $Media->{Comment}{color});
-  BGcS($bgf, 1, 'Highlight', $Media->{Highlight}{color});
-  BGcS($bgf, 2, 'Title',     $Media->{Title}{color});
-  BGcS($bgf, 3, 'Verse',     $Media->{Lyric}{color});
-  BGcS($bgf, 4, 'Chorus',    $Media->{Chord}{color});
-  BGcS($bgf, 5, 'Bridge',    $Media->{Lyric}{color});
-  BGcS($bgf, 6, 'Tab',       $Media->{Tab}{color});
+  BGcS($bgf, 0, 'Comment',   'C');
+  BGcS($bgf, 1, 'Highlight', 'H');
+  BGcS($bgf, 2, 'Title');
+  BGcS($bgf, 3, 'Verse');
+  BGcS($bgf, 4, 'Chorus');
+  BGcS($bgf, 5, 'Bridge');
+  BGcS($bgf, 6, 'Tab');
 }
 
 sub BGcS {
-  my($bgf,$col,$title,$fg) = @_;
+  my($bgf,$col,$title,$tf) = @_;
 
-  my $elem = lcfirst($title);
-  my $bgptr = \$Media->{$elem.'BG'};
-  my $bdptr = ($title =~ /Comment|Highlight/) ? \$Media->{$elem.'BD'} : undef;
+  my $fg = ($title =~ /Ver|Cho|Bri/) ? $Opt->{FGLyric} : $Opt->{"FG$title"};
+  my $bgptr = \$Opt->{"BG$title"};
+  my $bdptr = (defined $tf) ? \$Opt->{$tf.'borderColour'} : undef;
   my $w = length($title) + 2;
   my $but = $bgf->new_ttk__button(
     -text    => $title,
@@ -1041,7 +1039,7 @@ sub pickBG {
     } else {
       Tkx::ttk__style_configure("$title.Font.TLabel", -background => $bg);
     }
-    $Media->save();
+    $Opt->save();
   }
 }
 

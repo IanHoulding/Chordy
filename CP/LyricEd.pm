@@ -69,7 +69,7 @@ sub Edit {
       -insertwidth => 2,
       -font => "\{$fp->{family}\} $sz $fp->{weight} $fp->{slant}",
       -relief => 'raised',
-      -foreground => $fp->{color},
+      -foreground => $Opt->{FGWords},
       -background => WHITE,
       -borderwidth => 2,
       -highlightthickness => 0,

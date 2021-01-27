@@ -118,9 +118,9 @@ sub new {
 			       -foreground => RFG);
   # Coloured Backgrounds
   $textWin->tag_configure('Y', -font => "Times $sz bold italic",
-			       -background => "$Media->{highlightBG}");
+			       -background => "$Opt->{BGHighlight}");
   $textWin->tag_configure('L', -font => "Times $sz normal",
-			       -background => "$Media->{commentBG}");
+			       -background => "$Opt->{BGComment}");
   $textWin->tag_configure('F', -font => "Times $sz normal",
 			       -background => "#FF00FF");
 

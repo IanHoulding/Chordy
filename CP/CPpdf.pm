@@ -89,7 +89,7 @@ sub printSL {
   my $Tclr = $fp->{clr};
 
   my $Lsz = $Media->{Lyric}{size} + 1;
-  my $Lclr = $Media->{Lyric}{color};
+  my $Lclr = $Opt->{FGLyric};
 
   my $w = $Media->{width};
   my $h = $Media->{height};
@@ -107,8 +107,8 @@ sub printSL {
     $GfxPtr->fill();
   }
   $h -= ($Tsz + 3);
-  if ($Media->{titleBG} ne WHITE) {
-    _bg($Media->{titleBG}, 0, $h, $w, $Tsz + 3);
+  if ($Opt->{BGTitle} ne WHITE) {
+    _bg($Opt->{BGTitle}, 0, $h, $w, $Tsz + 3);
   }
   _textCenter($w/2, $h + $Tdc + 2, $CurSet, $pfp, $Tsz, $Tclr);
   if ($AllSets->{meta}{date} ne '') {
@@ -235,8 +235,8 @@ sub newPage {
   }
   $h -= ($tFontP->{sz} + 3);
   $self->{headerBase} = $h + 1;
-  if ($Media->{titleBG} ne WHITE) {
-    _bg($Media->{titleBG}, 0, $h, $w, $tFontP->{sz} + 3);
+  if ($Opt->{BGTitle} ne WHITE) {
+    _bg($Opt->{BGTitle}, 0, $h, $w, $tFontP->{sz} + 3);
   }
   _textCenter($w/2, $self->{headerBase} + $tFontP->{dc},
 	      $pro->{title}, $tfp, $tFontP->{sz}, $tFontP->{clr});
@@ -649,13 +649,13 @@ sub commentAdd {
   my $bg = $ln->{bg};
   if ($bg eq "") {
     # These can be changed dynamically in "Background Colours".
-    $bg = ($type == HLIGHT) ? $Media->{highlightBG} : $Media->{commentBG};
+    $bg = ($type == HLIGHT) ? $Opt->{BGHighlight} : $Opt->{BGComment};
   }
   _bg($bg, $x, $y, $bgwid, $ht);
   my $relief = $bg = '';
   my $bdwid = 0;
   if ($type == HLIGHT && $Opt->{HborderWidth}) {
-    $bg = $Media->{highlightBD};
+    $bg = $Opt->{HborderColour};
     $relief = $Opt->{HborderRelief};
     $bdwid = $Opt->{HborderWidth};
   } elsif ($type == CMMNTB) {
@@ -663,7 +663,7 @@ sub commentAdd {
     $relief = 'flat';
     $bdwid = 1;
   } elsif(($type == CMMNT || $type == CMMNTI) && $Opt->{CborderWidth}) {
-    $bg = $Media->{commentBD};
+    $bg = $Opt->{CborderColour};
     $relief = $Opt->{CborderRelief};
     $bdwid = $Opt->{CborderWidth};
   }
@@ -716,7 +716,7 @@ sub commentAdd {
     $GfxPtr->fill();
   }
   $y += ($cfp->{dc} + 2);
-  my $clr = ($type == HLIGHT) ? $Media->{Highlight}{color} : $Media->{Comment}{color};
+  my $clr = ($type == HLIGHT) ? $Opt->{FGHighlight} : $Opt->{FGComment};
   my $sz = $cfp->{sz};
   foreach my $s (@{$ln->{segs}}) {
     # Chords

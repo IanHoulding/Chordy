@@ -52,6 +52,7 @@ sub new {
   }
   $self->{name} = $CurrentCollection;
   $self->{path} = $All{$CurrentCollection};
+  $self->{fullPath} = $self->{path}.'/'.$CurrentCollection;
   return($self);
 }
 
@@ -113,6 +114,7 @@ sub change {
     $CurrentCollection = $name;
     $self->{name} = $name;
     $self->{path} = $All{$name};
+    $self->{fullPath} = $self->{path}.'/'.$name;
     $Parent = $self->{path};
     $Home = "$Parent/$name";
     $Path->change($Home);

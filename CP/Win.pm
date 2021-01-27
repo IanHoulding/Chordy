@@ -239,26 +239,21 @@ sub MWoptions {
 }
 
 sub TButtonBGset {
-  my($media) = shift;
-
-  $media = $Media if (! defined $media);
-  foreach my $h (qw/comment highlight title verse chorus bridge tab/) {
-    Tkx::ttk__style_configure(ucfirst($h).".BG.TButton", -background => $media->{$h."BG"});
+  foreach my $h (qw/Comment Highlight Title Verse Chorus Bridge Tab/) {
+    Tkx::ttk__style_configure($h.".BG.TButton", -background => $Opt->{"BG$h"});
   }
-  foreach my $h (qw/comment highlight/) {
-    Tkx::ttk__style_configure(ucfirst($h).".BD.TButton",
-			      -background => $media->{$h."BG"},
-			      -bordercolor => $media->{$h."BD"},);
+  foreach my $h (qw/Comment Highlight/) {
+    my $frst = substr($h, 0, 1);
+    Tkx::ttk__style_configure($h.".BD.TButton",
+			      -background => $Opt->{"BG".$h},
+			      -bordercolor => $Opt->{$frst."borderColour"},);
   }
 }
 
 sub TLabelBGset {
-  my($media) = shift;
-
-  $media = $Media if (! defined $media);
-  foreach my $h (qw/comment highlight title chord lyric tab/) {
-    my $bg = ($h =~ /cho|lyr/) ? $media->{verseBG} : $media->{"$h.BG"};
-    Tkx::ttk__style_configure(ucfirst($h).".Font.TLabel", -background => $media->{"$h.BG"});
+  foreach my $h (qw/Comment Highlight Title Chord Lyric Tab/) {
+    my $bg = ($h =~ /Cho|Lyr/) ? $Opt->{BGVerse} : $Opt->{"BG$h"};
+    Tkx::ttk__style_configure($h.".Font.TLabel", -background => $bg);
   }
 }
 

@@ -265,7 +265,7 @@ sub makeFonts {
       $size = $fp->{size};
       $wt = $fp->{weight};
       $sl = $fp->{slant};
-      $clr = $fp->{color};
+      $clr = $Opt->{'FG'.$med};
     }
     $esize = int($size * $es);
     # PDF 'heavy' fonts show as bold on the screen.
@@ -437,8 +437,10 @@ sub load {
 	}
       }
       elsif ($cmd =~ /^([^_]*)_font/i) {
-	my $font = $1."Font";
-	$self->{$font} = $txt;
+	if ($Opt->{SaveFonts}) {
+	  my $font = $1."Font";
+	  $self->{$font} = $txt;
+	}
       }
       elsif ($cmd =~ /^lyric$/i) {
 	my($stave,$line,$lyr) = split(':', $txt, 3);
@@ -663,8 +665,8 @@ sub pageHdr {
   my($self) = shift;
 
   $self->{pCan}->delete(qw/hdrk hdrn hdrt hdrp hdrb/);
-  if ($Media->{titleBG} ne WHITE) {
-    my @ft = ('-width', 0, '-fill', $Media->{titleBG});
+  if ($Opt->{BGTitle} ne WHITE) {
+    my @ft = ('-width', 0, '-fill', $Opt->{BGTitle});
     $self->{pCan}->create_rectangle(0, 0, $Media->{width}, $self->{pageHeader}, @ft);
   }
   $self->pageKey();
