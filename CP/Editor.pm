@@ -438,16 +438,16 @@ sub quickButtons {
     $repl = $frame->new_ttk__label(-text => 'Replace with:');
     $repe = $frame->new_ttk__entry(-width => 10, -textvariable => \$Ed->{RepV});
   }
-  $but{exit}->g_grid(      -in => $rfrm, qw/-row 0 -column 0 -padx 12 -pady 2/);
-  $findl->g_grid(          -in => $rfrm, qw/-row 0 -column 1 -pady 2 -sticky e/, -padx => [0,2]);
-  $finde->g_grid(          -in => $rfrm, qw/-row 0 -column 2 -pady 2 -sticky w/, -padx => [0,4]);
-  $but{Find}->g_grid(      -in => $rfrm, qw/-row 0 -column 3 -padx 4 -pady 2/);
-  $but{FindNext}->g_grid(  -in => $rfrm, qw/-row 0 -column 4 -padx 4 -pady 2/);
-  $but{FindPrev}->g_grid(  -in => $rfrm, qw/-row 0 -column 5 -padx 4 -pady 2/);
-  $ignc->g_grid(           -in => $rfrm, qw/-row 0 -column 6 -columnspan 2 -sticky w/, -padx => [8,0]);
+  $but{exit}->g_grid(    -in => $rfrm, qw/-row 0 -column 0 -padx 12 -pady 2/);
+  $findl->g_grid(        -in => $rfrm, qw/-row 0 -column 1 -pady 2 -sticky e/, -padx => [0,2]);
+  $finde->g_grid(        -in => $rfrm, qw/-row 0 -column 2 -pady 2 -sticky w/, -padx => [0,4]);
+  $but{Find}->g_grid(    -in => $rfrm, qw/-row 0 -column 3 -padx 4 -pady 2/);
+  $but{FindNext}->g_grid(-in => $rfrm, qw/-row 0 -column 4 -padx 4 -pady 2/);
+  $but{FindPrev}->g_grid(-in => $rfrm, qw/-row 0 -column 5 -padx 4 -pady 2/);
+  $ignc->g_grid(         -in => $rfrm, qw/-row 0 -column 6 -columnspan 2 -sticky w/, -padx => [8,0]);
   if (OS ne 'aqua') {
-    $repl->g_grid(           -in => $rfrm, qw/-row 1 -column 1 -pady 2 -sticky e/, -padx => [0,2]);
-    $repe->g_grid(           -in => $rfrm, qw/-row 1 -column 2 -pady 2 -sticky w/, -padx => [0,4]);
+    $repl->g_grid(         -in => $rfrm, qw/-row 1 -column 0 -columnspan 2 -pady 2 -sticky e/, -padx => [0,2]);
+    $repe->g_grid(         -in => $rfrm, qw/-row 1 -column 2 -pady 2 -sticky w/, -padx => [0,4]);
     $but{Replace}->g_grid(   -in => $rfrm, qw/-row 1 -column 3 -padx 4 -pady 2/);
     $but{ReplaceAll}->g_grid(-in => $rfrm, qw/-row 1 -column 4 -padx 4 -pady 2/);
   }
@@ -468,7 +468,6 @@ sub quickButtons {
   $but{textbg}->g_grid(   -in => $mfrm, qw/-row 0 -column 1         -pady 2 -padx/ => [2,8]);
   $but{chordL}->g_grid(   -in => $mfrm, qw/-row 0 -column 2 -padx 2 -pady 2/);
   $but{chordR}->g_grid(   -in => $mfrm, qw/-row 0 -column 3 -padx 2 -pady 2/);
-#  $but{exit}->g_grid(     -in => $lfrm, qw/-row 0 -column 14 -padx 12 -pady 2/);
 
   $but{cut}->g_grid(      -in => $lfrm, qw/-row 1 -column 2 -padx 2 -pady 2/);
   $but{copy}->g_grid(     -in => $lfrm, qw/-row 1 -column 3 -padx 2 -pady 2/);
@@ -655,8 +654,8 @@ sub directives {
      ['vs', '#E0E0F8',  [\&idef, 'vs'], 3,1,1,1],
      ['np', '#E0E0F8',  [\&idef, 'np'], 3,2,1,1]],
 
-    [['md', '#F0D050',  [\&idef, 'md'], 4,0,1,2],
-     ['me', '#F0D050',  [\&idef, 'me'], 4,1,1,2]],
+    [['md', '#FFF090',  [\&idef, 'md'], 4,0,1,2],
+     ['me', '#FFF090',  [\&idef, 'me'], 4,1,1,2]],
     
     [['cd', '#FFE8B8',  [\&idef, 'cd'], 5,0,1,2],
      ['de', '#FFE8B8',  sub{my $s=CHedit('Define'); idef('de', $s) if ($s ne ''); }, 5,1,1,2]],
@@ -717,13 +716,13 @@ sub directives {
     }
   }
   my $sbfrm = $frame->new_ttk__frame();
-  $sbfrm->g_grid(-row => 15, -column => 0, -columnspan => 3);
+  $sbfrm->g_grid(-row => 16, -column => 0, -columnspan => 3);
   foreach my $c (['sb', '#D0E0B0',  [\&idef, 'sb'], 0,0,1,1],
 		 ['eb', '#D0E0B0',  [\&idef, 'eb'], 0,1,1,1] ) {
     txtButton($sbfrm, @{$c});
   }
   my $cfrm = $frame->new_ttk__frame();
-  $cfrm->g_grid(-row => 16, -column => 0, -columnspan => 3);
+  $cfrm->g_grid(-row => 17, -column => 0, -columnspan => 3);
   my $clrb = $cfrm->new_ttk__button(
     -image => 'colour',
     -command => \&colourEd);

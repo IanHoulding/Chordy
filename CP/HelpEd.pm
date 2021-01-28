@@ -306,7 +306,8 @@ sub help {
 
  "<T ME><s %{name}> ",
  "<M>This is how you access data defined by a <R {meta:...}> directive and is the <B ONLY> directive that can be placed in-line in the ChordPro file.\nCurrently this can only be used within any Lyrics but this may change in the near future.\nWhen this directive is encountered, Chordy will look for a <R meta> definition with the same <B name> and will substitute the directives <B value> component. If you follow <B name> with <B :#xxyyzz> (where #xxyyzz is a standard colour definition) then the substitute text will be displayed in that colour.\nIt is legal to define multiple <R {meta:...}> entries with the same <B name>. The entries will be numbered (from 1 upwards) in the order they are defined. To access (for example) the second definition, use the form <R %{name.2}>.\n",
-
+ "<M><R NOTE:-> A slight twist in Chordy is that you can use this directive <I without> having an associated <R {meta:...}> directive in which case whatever text is used in <B name> will be displayed verbatim. This is usefull if you just want to highlight one or more words using a different colour. The only restriction is that you can't use a period (dot) character and you can't embed chords in <B name>.\n",
+ 
  "<T CD><s {chord:xx...}> ",
  "<M>Will display a chord fingering layout and within Chordy is independent of the \"Chord Index\" selection.\nYou can specify as many chords as you like within the same directive, just separate each one with a space.\nA number indicating the first fret is displayed alongside the layout - NOTE: the fingerboard nut is NOT considered to be a fret. Above each string, an 'o' indicates an open string and an 'x' indicates an unplayed string.\nIf this directive is immediately followed by another <B {chord}> the next image will be displayed alongside the previous one. Seperating {chord} directives with a blank line will cause the chord after the blank line to be placed at the start of the next line.\n",
 

@@ -597,7 +597,7 @@ sub lyricAdd {
 	$idx = $2 - 1;
 	$idx = 0 if ($idx < 0);
       }
-      $m = $mp->{$name}[$idx];
+      $m = (defined $mp->{$name}[$idx]) ? $mp->{$name}[$idx] : $name;
       $x += _textAdd($x, $y, $m, $fp, $sz, $mclr) if (defined $m);
     }
   }
@@ -626,7 +626,7 @@ sub lyricLen {
 	$idx = $2 - 1;
 	$idx = 0 if ($idx < 0);
       }
-      $m = $mp->{$name}[$idx];
+      $m = (defined $mp->{$name}[$idx]) ? $mp->{$name}[$idx] : $name;
       $len += _measure($m, $fp, $sz) if (defined $m);
     }
   }
