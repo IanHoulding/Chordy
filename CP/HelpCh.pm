@@ -215,7 +215,7 @@ sub help {
  "<M>Any of the Verse, Chord, Bridge or Tab sections can have a <R Label> associated with it. This option allows you to turn the Labels on or off.",
  "<V2>",
  "<T Mol><s Label Background %\n>",
- "<M>If Labels are displayed they will have a background which is a shade of the sections background. This shade will be a percentage shift lighter or darker by this ammount.",
+ "<M>If Labels are displayed they will have a background which is a shade of the sections background. This shade will be a percentage shift lighter (negative values) or darker (positive values) by this ammount.",
  "<V5>",
  "<T Mod><s Defaults\n>",
  "<M>Resets <B ALL> options to their default settings.",
@@ -416,7 +416,7 @@ sub help {
  "The <R Choose> button gives you access to all the available fonts.\n",
 
  "<T BC><S Background Colours>\n",
- "A Comment, Highlight, Title, Verse, Chorus, Bridge or Tab section can all have their background colour defined using these buttons.\n",
+ "A Comment, Highlight, Title, Verse, Chorus, Bridge or Tab section can all have their background colour defined using these buttons. With Comment and Higlight you can also specify the Border colour.\n",
 
  "<T AP><S Appearance>\n",
  "<s Colours> ",

@@ -87,6 +87,8 @@ sub help {
  "<O HL:s: horizontal line>","<V1>",
  "<O VS:s: vertical space>","<V1>",
  "<O NP:s: new page>","<V1>",
+ "<O MD:s: meta>","<V1>",
+ "<O ME:s: meta entry>","<V1>",
  "<O CD:s: chord>","<V1>",
  "<O DF:s: define>","<V1>",
  "<O FT:s: chord/tab/text font>","<V1>",
@@ -261,7 +263,7 @@ sub help {
  "<M>Because of the way text baselines are handled, Chords can appear below or above the lyric text baseline. This allows you to adjust the Chord baseline",
  "<V5>",
 
- "<T DV><H Directives\n>",
+ "<T DT><H Directives\n>",
  "<V10>",
  "A ChordPro formatted file consists of lyrics and chords but can also include <I directives> that tell a formatting program how to display the information. <R Chordy> has most (but not all) of the ChordPro directives inplemented plus some variations - mainly to control colours.",
  "Each directive <B MUST> be the first and <B ONLY> item on any given line and is a directive (optionally with arguments) enclosed in <B {> <B }> braces.\n",
@@ -298,6 +300,12 @@ sub help {
  "<T NP><s {np|new_page}> ",
        "<s {npp|new_physical_page}> ",
  "<M>Forces a page break. (Chordy will always keep a pair of cord/lyric lines on one page.)\n",
+
+ "<T MD><s {meta: name value}> ",
+ "<M>Sets meta-data item <B name> to <B value>. name must be a single word but may include underscores.\nMeta-data names can be chosen freely although single lowercase words like artist or composer are advised.\n",
+
+ "<T ME><s %{name}> ",
+ "<M>This is how you access data defined by a <R {meta:...}> directive and is the <B ONLY> directive that can be placed in-line in the ChordPro file.\nCurrently this can only be used within any Lyrics but this may change in the near future.\nWhen this directive is encountered, Chordy will look for a <R meta> definition with the same <B name> and will substitute the directives <B value> component. If you follow <B name> with <B :#xxyyzz> (where #xxyyzz is a standard colour definition) then the substitute text will be displayed in that colour.\nIt is legal to define multiple <R {meta:...}> entries with the same <B name>. The entries will be numbered (from 1 upwards) in the order they are defined. To access (for example) the second definition, use the form <R %{name.2}>.\n",
 
  "<T CD><s {chord:xx...}> ",
  "<M>Will display a chord fingering layout and within Chordy is independent of the \"Chord Index\" selection.\nYou can specify as many chords as you like within the same directive, just separate each one with a space.\nA number indicating the first fret is displayed alongside the layout - NOTE: the fingerboard nut is NOT considered to be a fret. Above each string, an 'o' indicates an open string and an 'x' indicates an unplayed string.\nIf this directive is immediately followed by another <B {chord}> the next image will be displayed alongside the previous one. Seperating {chord} directives with a blank line will cause the chord after the blank line to be placed at the start of the next line.\n",

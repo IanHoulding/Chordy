@@ -601,6 +601,8 @@ sub chords {
     hz => 'x_horizontal_line',
     vs => 'x_vspace',
     ky => 'key',
+    md => 'meta',
+    me => '',
     np => 'new_page',
     nt => 'x_note',
     sb => 'x_start_background',
@@ -653,45 +655,48 @@ sub directives {
      ['vs', '#E0E0F8',  [\&idef, 'vs'], 3,1,1,1],
      ['np', '#E0E0F8',  [\&idef, 'np'], 3,2,1,1]],
 
-    [['cd', '#FFE8B8',  [\&idef, 'cd'], 4,0,1,2],
-     ['de', '#FFE8B8',  sub{my $s=CHedit('Define'); idef('de', $s) if ($s ne ''); }, 4,1,1,2]],
+    [['md', '#F0D050',  [\&idef, 'md'], 4,0,1,2],
+     ['me', '#F0D050',  [\&idef, 'me'], 4,1,1,2]],
+    
+    [['cd', '#FFE8B8',  [\&idef, 'cd'], 5,0,1,2],
+     ['de', '#FFE8B8',  sub{my $s=CHedit('Define'); idef('de', $s) if ($s ne ''); }, 5,1,1,2]],
 
-    [['cf', '#FFE8B8',  [\&setFont, 'cf', \%{$Media->{Chord}}], 5,0,1,1],
-     ['cs', '#FFE8B8',  [\&idef, 'cs'], 5,1,1,1],
-     ['cc', '#FFE8B8',  [\&idef, 'cc'], 5,2,1,1]],
+    [['cf', '#FFE8B8',  [\&setFont, 'cf', \%{$Media->{Chord}}], 6,0,1,1],
+     ['cs', '#FFE8B8',  [\&idef, 'cs'], 6,1,1,1],
+     ['cc', '#FFE8B8',  [\&idef, 'cc'], 6,2,1,1]],
 
-    [['tf', '#F0D8A8',  [\&setFont, 'tf', \%{$Media->{Lyric}}], 6,0,1,1],
-     ['ts', '#F0D8A8',  [\&idef, 'ts'], 6,1,1,1],
-     ['tc', '#F0D8A8',  [\&idef, 'tc'], 6,2,1,1]],
+    [['tf', '#F0D8A8',  [\&setFont, 'tf', \%{$Media->{Lyric}}], 7,0,1,1],
+     ['ts', '#F0D8A8',  [\&idef, 'ts'], 7,1,1,1],
+     ['tc', '#F0D8A8',  [\&idef, 'tc'], 7,2,1,1]],
 
-    [['Tf', '#E0C898',  [\&setFont, 'Tf', \%{$Media->{Tab}}], 7,0,1,1],
-     ['Ts', '#E0C898',  [\&idef, 'Ts'], 7,1,1,1],
-     ['Tc', '#E0C898',  [\&idef, 'Tc'], 7,2,1,1]],
+    [['Tf', '#E0C898',  [\&setFont, 'Tf', \%{$Media->{Tab}}], 8,0,1,1],
+     ['Ts', '#E0C898',  [\&idef, 'Ts'], 8,1,1,1],
+     ['Tc', '#E0C898',  [\&idef, 'Tc'], 8,2,1,1]],
 
-    [['sg', '#D0EFA0',  [\&idef, 'sg'], 8,0,1,2],
-     ['eg', '#D0EFA0',  [\&idef, 'eg'], 8,1,1,2]],
+    [['sg', '#D0EFA0',  [\&idef, 'sg'], 9,0,1,2],
+     ['eg', '#D0EFA0',  [\&idef, 'eg'], 9,1,1,2]],
 
-    [['sv', $Opt->{BGVerse},     [\&idef, 'sv'], 9,0,1,1],
-     ['ev', $Opt->{BGVerse},     [\&idef, 'ev'], 9,1,1,1],
-     ['ve', $Opt->{BGVerse},     [\&idef, 've'], 9,2,1,1]],
+    [['sv', $Opt->{BGVerse},     [\&idef, 'sv'], 10,0,1,1],
+     ['ev', $Opt->{BGVerse},     [\&idef, 'ev'], 10,1,1,1],
+     ['ve', $Opt->{BGVerse},     [\&idef, 've'], 10,2,1,1]],
 
-    [['sc', $Opt->{BGChorus},    [\&idef, 'sc'], 10,0,1,1],
-     ['ec', $Opt->{BGChorus},    [\&idef, 'ec'], 10,1,1,1],
-     ['ch', $Opt->{BGChorus},    [\&idef, 'ch'], 10,2,1,1]],
+    [['sc', $Opt->{BGChorus},    [\&idef, 'sc'], 11,0,1,1],
+     ['ec', $Opt->{BGChorus},    [\&idef, 'ec'], 11,1,1,1],
+     ['ch', $Opt->{BGChorus},    [\&idef, 'ch'], 11,2,1,1]],
 
-    [['bs', $Opt->{BGBridge},    [\&idef, 'bs'], 11,0,1,1],
-     ['be', $Opt->{BGBridge},    [\&idef, 'be'], 11,1,1,1],
-     ['br', $Opt->{BGBridge},    [\&idef, 'br'], 11,2,1,1]],
+    [['bs', $Opt->{BGBridge},    [\&idef, 'bs'], 12,0,1,1],
+     ['be', $Opt->{BGBridge},    [\&idef, 'be'], 12,1,1,1],
+     ['br', $Opt->{BGBridge},    [\&idef, 'br'], 12,2,1,1]],
 
-    [['st', $Opt->{BGTab},       [\&idef, 'st'], 12,0,1,1],
-     ['et', $Opt->{BGTab},       [\&idef, 'et'], 12,1,1,1],
-     ['Tb', $Opt->{BGTab},       [\&idef, 'tb'], 12,2,1,1]],
+    [['st', $Opt->{BGTab},       [\&idef, 'st'], 13,0,1,1],
+     ['et', $Opt->{BGTab},       [\&idef, 'et'], 13,1,1,1],
+     ['Tb', $Opt->{BGTab},       [\&idef, 'tb'], 13,2,1,1]],
 
-    [['hl', $Opt->{BGHighlight}, [\&idef, 'hl'], 13,1,1,1]],
+    [['hl', $Opt->{BGHighlight}, [\&idef, 'hl'], 14,1,1,1]],
 
-    [['co', $Opt->{BGComment},   [\&idef, 'co'], 14,0,1,1],
-     ['ci', $Opt->{BGComment},   [\&idef, 'ci'], 14,1,1,1],
-     ['cb', $Opt->{BGComment},   [\&idef, 'cb'], 14,2,1,1]],
+    [['co', $Opt->{BGComment},   [\&idef, 'co'], 15,0,1,1],
+     ['ci', $Opt->{BGComment},   [\&idef, 'ci'], 15,1,1,1],
+     ['cb', $Opt->{BGComment},   [\&idef, 'cb'], 15,2,1,1]],
       ];
   foreach my $r (@{$items}) {
     foreach my $c (@{$r}) {
@@ -768,6 +773,7 @@ sub txtButton {
   Tkx::ttk__style_configure("$clr.TButton", -background => $clr);
   (my $txt = $LongName{$name}) =~ s/x_//;
   $txt =~ s/_/ /g;
+  $txt = 'meta entry' if ($name eq 'me');
   my $but = $frm->new_ttk__button(-text => $txt, -style => "$clr.TButton", -command => $func);
   $but->g_grid(-row => $row, -column => $col,
 	       -rowspan => $rspn, -columnspan => $cspn,
@@ -1150,7 +1156,8 @@ sub chordDesel {
 #  np = 'new_page',	      ci = 'comment_italic',
 #  ca = 'capo',	              cb = 'comment_box',
 #  ky = 'key',	              sb = 'x_start_background',
-#  te = 'tempo'
+#  te = 'tempo',
+#  me = 'meta',
 #  nt = 'x_note',	      eb = 'x_end_background',
 #  sv = 'start_of_verse',     cd = 'chord',
 #  ev = 'end_of_verse',       de = 'define',
@@ -1175,11 +1182,14 @@ sub idef {
   # Find the current insertion point.
   #
   my($l,$c) = split(/\./, $Ed->{TxtWin}->index("insert"));
-  my $s = '{';
+  my $s = ($k eq 'me') ? '%{' : '{';
   if ($k =~ /eb|sv|ev|ve|sc|ec|ch|bs|be|br|st|et|tb|np|eg/) {
     $s .= $long."\}\n";
     $l = 2 if ($k eq 'gr');
     $Ed->{TxtWin}->mark_set('insert', "$l.0");
+  } elsif ($k eq 'me') {
+    $adj = 1;
+    $s .= "}";
   } else {
     $s .= $long.":";
     if ($k eq 'ti') {

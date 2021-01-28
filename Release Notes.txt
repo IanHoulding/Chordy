@@ -38,6 +38,8 @@ Bit late starting with 2.6.4 but about time I documented it :-)
 	     by a user selectable percentage.
 	   Highlights, Comments and Labels are now centered if "Center Lyrics" is
 	     selected.
+	   Added the ChordPro 'meta' directive with the usual colour enhancement. Can
+	     be used to change the colour of in-line text.
 	   Bugfix's:
 	    - Export Setlist to a single Collection failed.
 	    - Changing Collection gave no indication as to why a Setlist might have

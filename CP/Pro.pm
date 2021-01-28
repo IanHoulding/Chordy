@@ -78,6 +78,7 @@ sub decompose {
   $self->{instrument} = $Opt->{Instrument};
   $self->{chords} = {}; # a hash of all chords used in this .pro
   $self->{finger} = {}; # local (to this .pro) chord fingering from a {define: }
+  $self->{meta} = {};
   unless (open IFH, "$self->{path}/$self->{name}") {
     message(SAD, "Could not access\n   \"$self->{path}/$self->{name}\"");
     return(0);
@@ -125,7 +126,14 @@ sub decompose {
 	elsif ($cmd =~ /^capo$/i)       {$self->{capo} = $txt; $bg = '';}
 	elsif ($cmd =~ /^tempo$/i)      {$self->{tempo} = $txt; $bg = '';}
 	elsif ($cmd =~ /^instrument$/i) {($self->{instrument} = $txt) =~ s/\s//g; $bg = '';}
-	elsif ($cmd =~ /^chord/i)  {
+	elsif ($cmd =~ /^meta$/i) {
+	  if ($txt =~ /\s*([a-zA-Z_]*)\s(.*)$/) {
+	    my $name = $1;
+	    my $data = $2;
+	    my $idx = (defined $self->{meta}{$name}) ? @{$self->{meta}{$name}} : 0;
+	    $self->{meta}{$name}[$idx] = $data;
+	  }
+	} elsif ($cmd =~ /^chord/i)  {
 	  if ($cmd =~ /font/i)  {
 	    $lref = CP::Line->new(CFONT, $txt, $blk_no, $bg); $bg = '';
 	  }
@@ -341,6 +349,7 @@ sub decompose {
 sub makePDF {
   my($self,$myPDF) = @_;
 
+  $myPDF->{pro} = $self;
   # We can't transpose if there is no 'key' directive.
   $KeyShift = 0;
   if ($self->{key} ne '') {
@@ -496,7 +505,7 @@ sub makePDF {
 	# Adjust the font size until the lyrics fit on the page.
 	# Side effect of measure() sets the x offset for each segment.
 	# As a side note - Tcl/Tk doesn't handle half point sizes for
-	#   fonts but PDF::API2 can - so we do.
+	# fonts but PDF::API2 can - so we do.
 	my $max = $Media->{width} - $Opt->{LeftMargin};
 	while (1) {
 	  $wid = $ln->measure($self,$myPDF);

@@ -39,11 +39,13 @@ sub maxlen {
 sub _measure {
   my($self,$pro,$mypdf) = @_;
 
-  my $cl = 0;
+  my $cl =  my $ll = 0;
   if ($Opt->{LyricOnly} == 0) {
     $cl = $mypdf->chordLen($self->{chord}->trans2obj($pro)) if (defined $self->{chord});
   }
-  my $ll = $mypdf->lyricLen($self->{lyric});
+  if ($self->{lyric} ne '') {
+    $ll = $mypdf->lyricLen($self->{lyric});
+  }
   ($cl,$ll);
 }
 

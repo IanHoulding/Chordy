@@ -578,15 +578,59 @@ sub labelLen {
 sub lyricAdd {
   my($self,$x,$y,$txt,$clr) = @_;
 
-  my $fp = $self->{fonts}[VERSE];
-  $x += _textAdd($x, $y, $txt, $fp->{font}, $fp->{sz}, $clr);
+  my $f = $self->{fonts}[VERSE];
+  my $fp = $f->{font};
+  my $sz = $f->{sz};
+  my $mp = $self->{pro}{meta};
+  while ($txt =~ /([^\%]*)(\%\{([^\}]*)\})*?/g) {
+    my $t = $1;
+    my $m = $2;
+    my $meta = $3;
+    $x += _textAdd($x, $y, $t, $fp, $sz, $clr) if ($t ne '');
+    my $mclr = $clr;
+    if (defined $m) {
+      my($name,$mc) = split(':', $meta, 2);
+      $mclr = $mc if (defined $mc);
+      my $idx = 0;
+      if ($name =~ /([^\.]*)\.(\d+)$/) {
+	$name = $1;
+	$idx = $2 - 1;
+	$idx = 0 if ($idx < 0);
+      }
+      $m = $mp->{$name}[$idx];
+      $x += _textAdd($x, $y, $m, $fp, $sz, $mclr) if (defined $m);
+    }
+  }
+#  $x += _textAdd($x, $y, $txt, $fp->{font}, $fp->{sz}, $clr);
+  $x;
 }
 
 sub lyricLen {
   my($self,$txt) = @_;
 
-  my $fp = $self->{fonts}[VERSE];
-  _measure($txt, $fp->{font}, $fp->{sz});
+  my $f = $self->{fonts}[VERSE];
+  my $fp = $f->{font};
+  my $sz = $f->{sz};
+  my $mp = $self->{pro}{meta};
+  my $len = 0;
+  while ($txt =~ /([^\%]*)(\%\{([^\}]*)\})*?/g) {
+    my $t = $1;
+    my $m = $2;
+    my $meta = $3;
+    $len += _measure($t, $fp, $sz) if ($t ne '');
+    if (defined $m) {
+      my($name,$mc) = split(':', $meta, 2);
+      my $idx = 0;
+      if ($name =~ /([^\.]*)\.(\d+)$/) {
+	$name = $1;
+	$idx = $2 - 1;
+	$idx = 0 if ($idx < 0);
+      }
+      $m = $mp->{$name}[$idx];
+      $len += _measure($m, $fp, $sz) if (defined $m);
+    }
+  }
+  $len;
 }
 
 sub commentLen {
