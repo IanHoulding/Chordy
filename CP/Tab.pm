@@ -270,7 +270,6 @@ sub makeFonts {
     $esize = int($size * $es);
     # PDF 'heavy' fonts show as bold on the screen.
     $wt = 'bold' if ($wt eq 'heavy');
-    # Remove the colour element to form a pure font spec.
     $self->{"$font"} = "{$fam} $size $wt $sl";
     my $dsc = Tkx::font_metrics($self->{"$font"}, '-descent');
     $self->{"${type}Cap"} = $size - $dsc;

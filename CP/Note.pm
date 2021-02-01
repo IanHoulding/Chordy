@@ -651,10 +651,10 @@ sub showFret {
   }
   $clr = lighten($clr, PALE) if ($bar->{pidx} == -2);
   $tag = [$tag, 'edit'] if ($bar->{pidx} < 0);
-  my $dsc = Tkx::font_metrics($fnt, '-descent') / 2;
-  $bar->{canvas}->create_text($x,$y - $dsc, -text => $fr,  -font => $fnt,
-			      -justify => 'center', -fill => $clr,
-			      -tags => $tag);
+  $bar->{canvas}->create_text($x,$y,
+			      -text => $fr, -font => $fnt,
+			      -justify => 'center', -anchor => 'center',
+			      -fill => $clr, -tags => $tag);
 }
 
 sub noteXY {

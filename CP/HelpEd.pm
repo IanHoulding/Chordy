@@ -7,19 +7,6 @@ sub help {
   my $win = CP::Help->new("Editor Help");
   return if ($win eq '');
   makeImage("checkbox", \%XPM);
-  foreach my $i (qw/bracket bracketsz braceclr bracesz/) {
-    my $ht = Tkx::image_height($i) + 8;
-    my $wd = Tkx::image_width($i) + 6;
-    my $name = "H$i";
-    my $subr = 'Tkx::'.$i.'_data';
-    no strict 'refs';
-    my $data = &$subr(-background => $Opt->{PushBG});
-    Tkx::image_create_photo($name, -height => $ht, -width => $wd);
-    $subr = 'Tkx::'.$name.'_put';
-    &$subr(BLACK, -to => (0,0,$wd,$ht));
-    &$subr($Opt->{PushBG}, -to => (1,1,$wd-1,$ht-1));
-    &$subr($data, -to => (3,4));
-  }
   $win->add(
 [
  "<O TO:H: Cpgedi - A ChordPro Editor > ",

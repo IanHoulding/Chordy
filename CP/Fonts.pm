@@ -415,16 +415,15 @@ sub fonts {
   my $row = 1;
   foreach my $f (@{$list}) {
     my $fp = ($f eq 'Editor') ? \%EditFont : $Media->{"$f"};
-    $f = 'Small-Notes' if ($f eq 'SNotes');
     FontS($frame, $row++, $f, $fp);
   }
   my $attr = $frame->new_ttk__labelframe(-text => " Font Attributes ", -padding => [4,2,0,4]);
   $attr->g_grid(-row => $row, -column => 2, -columnspan => 5, -pady => [4,0], -sticky => 'we');
 
   my $col = 0;
-  foreach my $m (['Bold',   1, 8], #[qw/1 2 3 4 5 6 7 8/]],
-		 ['Heavy',  1, 8],  #[qw/1 2 3 4 5 6 7 8/]],
-		 ['Italic', -20, 20], ) { #[qw/20 18 16 14 12 10 8 6 4 2 0 -2 -4 -6 -8 -10 -12 -14 -16 -18 -20/]]) {
+  foreach my $m (['Bold',   1, 8],
+		 ['Heavy',  1, 8],
+		 ['Italic', -20, 20], ) {
     my($lab,$frst,$last) = @{$m};
     $a = $attr->new_ttk__label(-text => "$lab", -anchor => 'e');
 
@@ -444,7 +443,8 @@ sub fonts {
 sub FontS {
   my($frame,$r,$title,$fp) = @_;
 
-  my $ttl = $frame->new_ttk__label(-text => "$title");
+  my $tlab = ($title eq 'SNotes') ? 'Small Notes' : $title;
+  my $ttl = $frame->new_ttk__label(-text => "$tlab");
 
   my $fg = $Opt->{"FG$title"};
   my $bg = bgSet($title);
