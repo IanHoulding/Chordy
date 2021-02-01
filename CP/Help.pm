@@ -74,7 +74,7 @@ sub new {
 			       -justify => 'center',
 			       -foreground => HFG,
 			       -background => SELECT);
-  $textWin->tag_configure('h', -font => "Times ".($sz+5)." bold",
+  $textWin->tag_configure('h', -font => "Times ".($sz+4)." bold",
 			       -foreground => HFG,
 			       -background => SELECT);
   # Sub Headings

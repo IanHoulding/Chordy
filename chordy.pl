@@ -304,34 +304,8 @@ sub editArticles {
   $pop->popDestroy();
 }
 
-sub saveMed {
-  message(SMILE, "Media Config Saved", 1) if ($Media->save());
-}
-
-sub loadMed {
-  message(SMILE, " Done ", 1) if ($Media->load());
-}
-
-sub resetMed {
-  $Media->default();
-  message(SMILE, "Done - but not saved (yet).");
-}
-
-sub editMed {
-  CP::Editor::Edit($Path->{Media}, 1);
-}
-
 sub saveCmnd {
   message(SMILE, "Commands Saved", 1) if ($Cmnd->save());
-}
-
-sub loadCmnd {
-  message(SMILE, " Done ", 1) if ($Cmnd->load());
-}
-
-sub resetCmnd {
-  $Cmnd->default();
-  message(SMILE, "Done - but not saved (yet).");
 }
 
 sub selectFiles {

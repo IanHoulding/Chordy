@@ -76,7 +76,7 @@ sub CHedit {
       makeImage("Eicon", \%XPM);
       $MW->g_wm_iconphoto("Eicon");
       $Ed->{top} = $MW;
-      $Ed->{frame} = $MW->new_ttk__frame(qw/-relief raised -borderwidth 2/);
+      $Ed->{frame} = $frame = $MW->new_ttk__frame(qw/-relief raised -borderwidth 2/);
       $Ed->{frame}->g_pack(qw/-expand 1 -fill both/);
 
       $standAlone++;
@@ -151,34 +151,34 @@ sub CHedit {
   my($lb,$rb);
   if ($what eq 'Save') {
     $lb = $Ed->{bf}->new_ttk__button(-text => 'Exit', -style => 'Red.TButton',
-			       -command => sub{
-				 if ($standAlone) {
-				   $MW->g_destroy();
-				   exit(0);
-				 } else {
-				   $done = 'OK';
-				 } });
+				     -command => sub{
+				       if ($standAlone) {
+					 $MW->g_destroy();
+					 exit(0);
+				       } else {
+					 $done = 'OK';
+				       } });
     $rb = $Ed->{bf}->new_ttk__button(-text => 'Save', -style => 'Green.TButton',
-			       -command => sub{
-				 save();
-				 if ($standAlone) {
-				   $MW->g_destroy();
-				   exit(0);
-				 } else {
-				   $done = 'OK';
-				 } });
+				     -command => sub{
+				       save();
+				       if ($standAlone) {
+					 $MW->g_destroy();
+					 exit(0);
+				       } else {
+					 $done = 'OK';
+				       } });
   }
   else {
     $lb = $Ed->{bf}->new_ttk__button(-text => 'Cancel', -style => 'Red.TButton',
-			       -command => sub{
-				 if ($standAlone) {
-				   $MW->g_destroy();
-				   exit(0);
-				 } else {
-				   $done = 'Cancel';
-				 } });
+				     -command => sub{
+				       if ($standAlone) {
+					 $MW->g_destroy();
+					 exit(0);
+				       } else {
+					 $done = 'Cancel';
+				       } });
     $rb = $Ed->{bf}->new_ttk__button(-text => 'OK', -style => 'Green.TButton',
-			       -command => sub{$done = 'OK';});
+				     -command => sub{$done = 'OK';});
   }
   $lb->g_pack(qw/-side left -pady 8 -padx 20/);
   $rb->g_pack(qw/-side right -pady 8 -padx 20/);

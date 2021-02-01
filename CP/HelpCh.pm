@@ -16,8 +16,7 @@ sub help {
 "<R Chordy PDF Generator> is where you get to convert your ChordPro files into a PDF file and/or Transposed etc.",
 "<R Setlists> allows you to create/modify/delete Setlists and is also where you select one or more ChordPro files you want to edit and/or create PDFs.",
 "<R Configuration Options> has the various settings used in each Collection.\n",
-#"<R Miscellaneous> lets you perform various house-keeping functions.\n",
-# "<O To:H: Table Of Contents >",
+
  "<O To:H:Menus>",
  "<V5>",
  "<O MF:S:File>",
