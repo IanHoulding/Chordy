@@ -64,6 +64,12 @@ sub MWoptions {
 
   BGclr($Opt->{WinBG});
 
+  Tkx::ttk__style_configure('TNotebook.Tab',
+			    -font => "BTkDefaultFont",
+			    -background => '#C8D0D0',
+			    -foreground => '#000060');
+  Tkx::ttk__style_map('TNotebook.Tab', -background => "selected #D8E8FF active #CCDCDC");
+
   Tkx::ttk__style_configure('TFrame',
 			    -highlightthickness => 0,
 			    -borderwidth => 0,
@@ -93,9 +99,6 @@ sub MWoptions {
 			    -selectborderwidth => 0);
 
   Tkx::ttk__style_configure('TText', qw/-highlightthickness 0/);
-
-  Tkx::ttk__style_configure('TNotebook.Tab',
-			    -font => "BTkDefaultFont");
 
   Tkx::ttk__style_configure('Toolbutton',
 			    -relief => 'raised',

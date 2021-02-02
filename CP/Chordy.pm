@@ -110,6 +110,7 @@ sub notebookTabSelect {
       fontWin();
     }
   }
+  $MW->g_focus();
 }
 
 ##
