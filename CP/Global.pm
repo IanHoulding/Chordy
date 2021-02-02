@@ -303,6 +303,7 @@ sub setDefaults {
   $Opt = CP::Opt->new();
   $Media = CP::Media->new();
   $Swatches = CP::Swatch->new();
+  CP::Win::newLook();
 
   # Remove any old versions.
   cleanCache() if (OS eq "win32");

@@ -121,6 +121,7 @@ sub change {
     $Opt->load();
     $Media = $Media->change($Opt->{Media});
     $Swatches->load();
+    CP::Win::newLook();
     if (defined $MW && Tkx::winfo_exists($MW) && defined $AllSets) {
       $AllSets->change();
     }

@@ -133,18 +133,14 @@ sub confOpts {
 				       -padding => [4,0,4,0]);
   bgWin($bgf);
 
-  my $cf = $opts->new_ttk__labelframe(-text => " Chordy Appearance ");
-  lookFrm($cf);
-
   my $fw = $Chordy->{fontFr};
-  $tf->g_pack( qw/-side top -fill x/, -pady => [4,0]);
+  $tf->g_pack( qw/-side top -fill x/, -pady => [4,6]);
   $col->g_pack(qw/-side left -anchor n -expand 1 -fill both/, -padx => [0,8]);
   $sz->g_pack( qw/-side right -anchor n /);
 
-  $fw->g_pack( qw/-side top -anchor n -expand 1 -fill both/, -pady => [12,0]);
-  $bgf->g_pack(qw/-side top -anchor n -expand 1 -fill both/, -pady => [12,0]);
+  $fw->g_pack( qw/-side top -fill x -pady 6/);
+  $bgf->g_pack(qw/-side top -fill x -pady 6/);
 
-  $cf->g_pack(qw/-side top -fill x/, -pady => [12,0]);
 }
 
 ###############################
@@ -1133,75 +1129,6 @@ sub CmdS {
       $wid->g_focus();
     });
   $cbb->g_grid(-row => $r, qw/-column 3 -sticky w -padx 4 -pady 4/);
-}
-
-sub lookFrm {
-  my($frm) = shift;
-
-  my($a,$b,$c,$d,$e,$f,$g,$h,$i,$j,$k,$m);
-  $a = $frm->new_ttk__label(-text => "Colours:");
-  $b = $frm->new_ttk__button(
-    -text => "Button",
-    -width => 8,
-    -command => \&CP::Win::PBclr );
-  $c = $frm->new_ttk__button(
-    -text => "Menu",
-    -width => 8,
-    -style => 'Menu.TButton',
-    -command => \&CP::Win::MBclr );
-  $d = $frm->new_ttk__button(
-    -text => "Lists",
-    -width => 8,
-    -style => 'List.TButton',
-    -command => sub{CP::List::background(1)} );
-  $e = $frm->new_ttk__button(
-    -text => "Entry",
-    -width => 8,
-    -style => 'Ent.TButton',
-    -command => \&CP::Win::ENTclr );
-  $f = $frm->new_ttk__button(
-    -text => "Window",
-    -width => 8,
-    -style => 'Win.TButton',
-    -command => \&CP::Win::BGclr );
-  $g = $frm->new_ttk__button(
-    -text => "Message",
-    -width => 8,
-    -style => 'Msg.TButton',
-    -command => \&CP::Win::MSGclr );
-
-  $h = $frm->new_ttk__label(-text => "Fonts:");
-  $i = $frm->new_ttk__button(-text => "Normal/Bold", -command => \&main::useBold );
-
-#  my $bfrm = $frm->new_ttk__frame(-padding => [4,4,4,4]);
-  $j = $frm->new_ttk__button(
-    -text => "Save",
-    -style => 'Green.TButton',
-    -command => sub{$Opt->save()} );
-  $k = $frm->new_ttk__button(
-    -text => "Defaults",
-    -style => 'Green.TButton',
-    -command => \&CP::Win::defLook );
-  $m = $frm->new_ttk__button(
-    -text => "Copy To All Collections",
-    -style => 'Green.TButton',
-    -command => sub{$Opt->saveClr2all()} );
-
-
-  $a->g_grid(qw/-row 0 -column 0 -sticky e/, -padx => [4,0], -pady => [0,8]);
-  $b->g_grid(qw/-row 0 -column 1 -padx 4/, -pady => [0,8]);
-  $c->g_grid(qw/-row 0 -column 2 -padx 4/, -pady => [0,8]);
-  $d->g_grid(qw/-row 0 -column 3 -padx 4/, -pady => [0,8]);
-  $e->g_grid(qw/-row 0 -column 4 -padx 4/, -pady => [0,8]);
-  $f->g_grid(qw/-row 0 -column 5 -padx 4/, -pady => [0,8]);
-  $g->g_grid(qw/-row 0 -column 6 -padx 4/, -pady => [0,8]);
-  $h->g_grid(qw/-row 0 -column 7 -sticky e/, -padx => [12,0], -pady => [0,8]);
-  $i->g_grid(qw/-row 0 -column 8 -padx 4/, -pady => [0,8]);
-
-#  $bfrm->g_grid(qw/-row 1 -column 0 -columnspan 8/);
-  $j->g_grid(qw/-row 1 -column 1 -columnspan 2 -pady 4/);
-  $k->g_grid(qw/-row 1 -column 3 -columnspan 2 -pady 4/);
-  $m->g_grid(qw/-row 1 -column 5 -columnspan 3 -pady 4/);
 }
 
 1;

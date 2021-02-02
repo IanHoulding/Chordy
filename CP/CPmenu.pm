@@ -161,7 +161,6 @@ sub new {
       }
     }
   }
-#  $opt->add_separator;
   {
     my $hl = $opt->new_menu;
     $opt->add_cascade(-menu => $hl, -label => 'Highlight');
@@ -219,18 +218,37 @@ sub new {
 			-variable => \$Opt->{ShowLabels},
 			-command => sub{$Opt->saveOne('ShowLabels')},
 			 @cbopts );
-    {
-      my $ls = $opt->new_menu;
-      $opt->add_cascade(-menu => $ls, -label => 'Label Background %');
-      foreach (-15..15) {
-	$ls->add_radiobutton(-label => $_,
-			     -variable => \$Opt->{LabelPC},
-			     -command => sub{$Opt->saveOne('LabelPC')} );
-      }
+  {
+    my $ls = $opt->new_menu;
+    $opt->add_cascade(-menu => $ls, -label => 'Label Background %');
+    for(my $i = 15; $i != -16; $i--) {
+      $ls->add_radiobutton(-label => $i,
+			   -variable => \$Opt->{LabelPC},
+			   -command => sub{$Opt->saveOne('LabelPC')} );
     }
-
+  }
   $opt->add_separator;
-  $opt->add_command(-label => 'Defaults', -command => sub{$Opt->resetOpt()});
+  {
+    my $ap = $opt->new_menu(-disabledforeground => '#600000');
+    $opt->add_cascade(-menu => $ap, -label => 'Appearance');
+    $ap->add_command(-label => 'Colours:', -state => 'disabled');
+    foreach my $e (['     Window',  \&CP::Win::BGclr],
+		   ['     Button',  \&CP::Win::PBclr],
+		   ['     Menu',    \&CP::Win::MBclr],
+		   ['     Entry',   \&CP::Win::ENTclr],
+		   ['     Lists',   sub{CP::List::background(1)}],
+		   ['     Message', \&CP::Win::MSGclr]) {
+      my($lab,$func) = (@{$e});
+      $ap->add_command(-label => $lab, -command => $func);
+    }
+    $ap->add_separator;
+    $ap->add_command(-label => 'Fonts - Normal<->Bold',   -command => \&main::useBold);
+    $ap->add_command(-label => 'Copy to all Collections', -command => sub{$Opt->saveClr2all()});
+    $ap->add_separator;
+    $ap->add_command(-label => 'Default Appearance',      -command => \&CP::Win::defLook);
+  }
+  $opt->add_separator;
+  $opt->add_command(-label => 'Default Options', -command => sub{$Opt->resetOpt()});
   
   $misc->add_command(-label => 'View Error Log',     -command => \&viewElog);
   $misc->add_command(-label => 'Clear Error Log',    -command => \&clearElog);

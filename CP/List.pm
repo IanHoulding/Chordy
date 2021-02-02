@@ -72,7 +72,7 @@ sub new {
   return $self;
 }
 
-# If $set is not defined then we assume $Opt->{ListFG} and/or $Opt->{ListBG} have been.
+# If $set is defined then we request new values via the colour editor.
 sub background {
   my($set) = shift;
 
@@ -95,8 +95,7 @@ sub background {
   }
   $Opt->{ListFG} = $fg;
   $Opt->{ListBG} = $bg;
-  Tkx::ttk__style_configure("List.TButton", -foreground => $fg);
-  Tkx::ttk__style_configure("List.TButton", -background => $bg);
+  $Opt->save();
 }
 
 sub set {

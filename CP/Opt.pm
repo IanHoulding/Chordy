@@ -183,7 +183,7 @@ sub load {
     print localtime."\n  $Path->{Option} saved: version mismatch - old=$version new=$Version\n";
     save($self);
   }
-  CP::Win::newLook();
+#  CP::Win::newLook();
 }
 
 sub save {

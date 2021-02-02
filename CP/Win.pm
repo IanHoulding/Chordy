@@ -132,9 +132,6 @@ sub MWoptions {
   Tkx::ttk__style_configure("Menu.TButton",
 			    -foreground => $Opt->{MenuFG},
 			    -background => $Opt->{MenuBG});
-  Tkx::ttk__style_configure("List.TButton",
-			    -foreground => $Opt->{ListFG},
-			    -background => $Opt->{ListBG});
   Tkx::ttk__style_configure("Ent.TButton",
 			    -foreground => $Opt->{EntryFG},
 			    -background => $Opt->{EntryBG});
@@ -262,52 +259,60 @@ sub TLabelBGset {
 
 sub PBclr {
   my($fg,$bg) = FgBgClr("Push Button", 'TButton');
+  my $save = 0;
   if ($fg ne '') {
     $Opt->{PushFG} = $fg;
-    $Opt->save();
+    $save++;
   }
   if ($bg ne '') {
     $Opt->{PushBG} = $bg;
-    $Opt->save();
+    $save++;
   }
+  $Opt->save() if ($save);
 }
 
 sub MBclr {
   my($fg,$bg) = FgBgClr("Menu Button", 'Menu.TButton');
+  my $save = 0;
   if ($fg ne '') {
     $Opt->{MenuFG} = $fg;
-    $Opt->save();
+    $save++;
   }
   if ($bg ne '') {
     $Opt->{MenuBG} = $bg;
-    $Opt->save();
+    $save++;
   }
+  $Opt->save() if ($save);
 }
 
 sub ENTclr {
   my($fg,$bg) = FgBgClr("Entry Box", 'Ent.TButton');
+  my $save = 0;
   if ($fg ne '') {
     $Opt->{EntryFG} = $fg;
-    $Opt->save();
+    $save++;
   }
   if ($bg ne '') {
     $Opt->{EntryBG} = $bg;
-    $Opt->save();
+    $save++;
   }
+  $Opt->save() if ($save);
   Tkx::ttk__style_configure('TEntry', -fieldforeground => $Opt->{EntryFG});
   Tkx::ttk__style_configure('TEntry', -fieldbackground => $Opt->{EntryBG});
 }
 
 sub MSGclr {
   my($fg,$bg) = FgBgClr("Message Pop-Up", 'Msg.TButton');
+  my $save = 0;
   if ($fg ne '') {
     $Opt->{PopFG} = $fg;
-    $Opt->save();
+    $save++;
   }
   if ($bg ne '') {
     $Opt->{PopBG} = $bg;
-    $Opt->save();
+    $save++;
   }
+  $Opt->save() if ($save);
   Tkx::ttk__style_configure('Pop.TLabel', -foreground => $Opt->{PopFG});
   Tkx::ttk__style_configure('Pop.TLabel', -background => $Opt->{PopBG});
   Tkx::ttk__style_configure('Pop.TFrame', -background => $Opt->{PopBG});
@@ -332,46 +337,46 @@ sub FgBgClr {
 sub BGclr {
   my($clr) = shift;
 
-  my($fg,$bg);
+  my $fg = Tkx::ttk__style_lookup('TLabelframe.Label', -foreground);
+  my $bg = Tkx::ttk__style_lookup('TFrame', -background);
   if (! defined $clr) {
     CP::FgBgEd->new("Window Background");
-    $fg = Tkx::ttk__style_lookup('TLabelframe.Label', -foreground);
-    $bg = Tkx::ttk__style_lookup('TFrame', -background);
     (my $x,$clr) = $ColourEd->Show($fg, $bg, '', BACKGRND);
-  } else {
-    $bg = 'x';
   }
   if ($clr ne '' && $clr ne $bg) {
     foreach (qw/TFrame Win.TButton TCheckbutton TRadiobutton TLabel TLabelframe TLabelframe.Label/) {
       Tkx::ttk__style_configure($_, -background => $clr);
     }
     $Opt->{WinBG} = $clr;
+    $Opt->saveOne('WinBG');
   }
 }
 
 sub defLook {
-  $Opt->{EntryFG} = BLACK;
-  $Opt->{EntryBG} = WHITE;
-  $Opt->{ListFG} = BLACK;
-  $Opt->{ListBG} = WHITE;
-  $Opt->{MenuFG} = bFG;
-  $Opt->{MenuBG} = mBG;
-  $Opt->{PushFG} = bFG;
-  $Opt->{PushBG} = bBG;
-  $Opt->{WinBG}  = MWBG;
-  newLook();
-  $Opt->save();
+  if (msgYesNo("Are you sure you want to reset\nall Colours to their defaults?") eq 'Yes') {
+    $Opt->{EntryFG} = BLACK;
+    $Opt->{EntryBG} = WHITE;
+    $Opt->{ListFG} = BLACK;
+    $Opt->{ListBG} = WHITE;
+    $Opt->{MenuFG} = bFG;
+    $Opt->{MenuBG} = mBG;
+    $Opt->{PushFG} = bFG;
+    $Opt->{PushBG} = bBG;
+    $Opt->{WinBG}  = MWBG;
+    newLook();
+    $Opt->save();
+  }
 }
 
 sub newLook {
   Tkx::ttk__style_configure('TEntry', -fieldforeground => $Opt->{EntryFG});
   Tkx::ttk__style_configure('TEntry', -fieldbackground => $Opt->{EntryBG});
-  CP::List::background();
   Tkx::ttk__style_configure("Menu.TButton", -foreground => $Opt->{MenuFG});
   Tkx::ttk__style_configure("Menu.TButton", -background => $Opt->{MenuBG});
   Tkx::ttk__style_configure("TButton", -foreground => $Opt->{PushFG});
   Tkx::ttk__style_configure("TButton", -background => $Opt->{PushBG});
-  BGclr(MWBG);
+  BGclr($Opt->{WinBG});
+  CP::List::background();
 }
 
 1;

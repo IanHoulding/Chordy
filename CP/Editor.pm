@@ -685,10 +685,6 @@ sub directives {
     [['co', 0,1], ['ci', 1,1], ['cb', 2,1]],
       );
   my $row = 0;
-#  my %list = (Tkx::SplitList(Tkx::font_actual("TkDefaultFont")));
-#  $list{'-family'} = 'Lucida Console';
-#  $list{'-weight'} = 'bold';
-#  Tkx::font_create("TkDirective", %list);
   foreach my $r (@items) {
     foreach my $c (@{$r}) {
       my($id,$co,$cs) = (@{$c});
