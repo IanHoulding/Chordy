@@ -434,11 +434,6 @@ sub menu {
     }
   }
 
-#  $opt->add_checkbutton(-label => " Ignore Capo Directives",
-#			-variable => \$Opt->{IgnCapo},
-#			-command => sub{$Opt->saveOne('IgnCapo')},
-#			 @cbopts ); 
-
   $help->add_command(-label => 'Help',  -command => \&CP::HelpEd::help);
   $help->add_command(-label => 'About', -command => sub{message(SMILE, "Version $Version\nian\@houlding.me.uk");});
   if (OS eq 'aqua') {
@@ -659,61 +654,41 @@ sub directives {
 
   #    id   col,cspn
   my @items = (
-    [['ti', 0,2],
-     ['ky', 1,2]],
+    [['ti', 0,2], ['ky', 1,2]],
 
-    [['ca', 0,1],
-     ['te', 1,1],
-     ['nt', 2,1]],
+    [['ca', 0,1], ['te', 1,1], ['nt', 2,1]],
 
-    [['hz', 0,1],
-     ['vs', 1,1],
-     ['np', 2,1]],
+    [['hz', 0,1], ['vs', 1,1], ['np', 2,1]],
 
-    [['md', 0,2],
-     ['me', 1,2]],
+    [['md', 0,2], ['me', 1,2]],
     
-    [['cd', 0,2],
-     ['de', 1,2]],
+    [['cd', 0,2], ['de', 1,2]],
 
-    [['cf', 0,1],
-     ['cs', 1,1],
-     ['cc', 2,1]],
+    [['cf', 0,1], ['cs', 1,1], ['cc', 2,1]],
 
-    [['tf', 0,1],
-     ['ts', 1,1],
-     ['tc', 2,1]],
+    [['tf', 0,1], ['ts', 1,1], ['tc', 2,1]],
 
-    [['Tf', 0,1],
-     ['Ts', 1,1],
-     ['Tc', 2,1]],
+    [['Tf', 0,1], ['Ts', 1,1], ['Tc', 2,1]],
 
-    [['sg', 0,2],
-     ['eg', 1,2]],
+    [['sg', 0,2], ['eg', 1,2]],
 
-    [['sv', 0,1],
-     ['ev', 1,1],
-     ['ve', 2,1]],
+    [['sv', 0,1], ['ev', 1,1], ['ve', 2,1]],
 
-    [['sc', 0,1],
-     ['ec', 1,1],
-     ['ch', 2,1]],
+    [['sc', 0,1], ['ec', 1,1], ['ch', 2,1]],
 
-    [['bs', 0,1],
-     ['be', 1,1],
-     ['br', 2,1]],
+    [['bs', 0,1], ['be', 1,1], ['br', 2,1]],
 
-    [['st', 0,1],
-     ['et', 1,1],
-     ['Tb', 2,1]],
+    [['st', 0,1], ['et', 1,1], ['Tb', 2,1]],
 
     [['hl', 1,1]],
 
-    [['co', 0,1],
-     ['ci', 1,1],
-     ['cb', 2,1]],
+    [['co', 0,1], ['ci', 1,1], ['cb', 2,1]],
       );
   my $row = 0;
+#  my %list = (Tkx::SplitList(Tkx::font_actual("TkDefaultFont")));
+#  $list{'-family'} = 'Lucida Console';
+#  $list{'-weight'} = 'bold';
+#  Tkx::font_create("TkDirective", %list);
   foreach my $r (@items) {
     foreach my $c (@{$r}) {
       my($id,$co,$cs) = (@{$c});

@@ -502,7 +502,7 @@ sub FontS {
   my $but = $frame->new_ttk__button(
     -text => 'Choose ...',
     -command => sub{
-      fontPick($fp, $bg, "$title Font");
+      fontPick($fp, $fg, $bg, "$title Font");
       labUpdate($lab,$fp);
     });
   
