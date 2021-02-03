@@ -533,9 +533,14 @@ sub pickFG {
 
   CP::FgBgEd->new("$title Font");
   my $save = 0;
+  my $bdr = '';
   my $op = FOREGRND;
   $op |= BACKGRND if ($title =~ /Com|Hig|Tab|Tit|Cho|Lyr/);
-  ($fg,$bg) = $ColourEd->Show($fg, $bg, '', $op);
+  if ($title =~ /Com|Hig/) {
+    $op |= BORDER;
+    $bdr = ($title =~ /^Com/) ? $Opt->{CborderColour} : $Opt->{HborderColour};
+  }
+  ($fg,$bg) = $ColourEd->Show($fg, $bg, $bdr, $op);
   if ($fg ne '') {
     $Opt->{'FG'.$title} = $fg;
     Tkx::ttk__style_configure("$title.Font.TLabel", -foreground => $fg);

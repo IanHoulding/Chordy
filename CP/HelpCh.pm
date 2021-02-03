@@ -107,11 +107,10 @@ sub help {
  "<V5>",
  "<O FB:S:Configuration Options>",
  "<V1>",
- "<O CL:s: Collections>",
+ "<O CL:s: Collection>",
+ "<O FO:s: PDF Fonts - Colour and Size>",
+ "<O BC:s: PDF Sections Background Colours>",
  "<O PS:s: PDF Page Size>",
- "<O FO:s: Fonts - Colour and Size>",
- "<O BC:s: Background Colours>",
- "<O AP:s: Appearance>",
  "<V5>",
  "<O CE:S:Colour Editor>",
  "<V5>",
@@ -285,16 +284,16 @@ sub help {
  "<T Ch><H Chordy PDF Generator Tab\n>",
  "<V5>",
 
- "<T CP><S ChordPro File(s)>\n",
+ "<T CP><S ChordPro File(s)> ",
  "<M>These are files ending with a <B .pro> extension. The <R Browse> button allows you to select one or more files contained in the ChordPro folder (see the section on Folders and Commands).\nThe <R From Setlist> button lets you pull in a list of files from a pre defined Setlist.\n",
 
 ###
- "<T PD><S PDFs>\n",
+ "<T PD><S PDFs> ",
  "<M>You can elect to <B View>, <B Create> and/or <B Print> all listed ChordPro files or just a single selected file.\nThe viewer is <B SumatraPDF> on Windows systems (installed with Chordy), <B Preview> on Mac and <B acroread> on Linux. Whenever Chordy is creating a PDF, a small progress window will appear below the File List showing you which file is being worked on.",
  "The <R Single Song> button will <B View/Create/Print> a PDF file for the one selected ChordPro file.\nThe <R All Songs> button will <B View/Create/Print> a PDF file for each ChordPro file in the list unless the <R Single PDF> checkbox is active in which case a single PDF file will be created containing all the songs in the order shown in the ChordPro file list.\n",
 
 ###
- "<T SS><S Single File>\n",
+ "<T SS><S Single File> ",
  "<M>This section allows you to operate on ONE selected ChordPro File and perform various actions on it:\n",
 
  "<P  Edit > ",
@@ -307,7 +306,7 @@ sub help {
  "<M>Unlike when you create a PDF (see PDF Options below), this will permanently transpose all chords to the key defined in the option list and writes the new version back out to disk.\n",
 
 ###
- "<T Op><S PDF Options>\n",
+ "<T Op><S PDF Options> ",
 
  "<X checkbox><s  Center Lyrics> ",
  "<M>By default, the Lyrics, Highlights, Comments etc. are printed left justified (ie against the left side of the page). Turning this option on will center all text on each page.\n",
@@ -352,7 +351,7 @@ sub help {
  "<M>This section lets you specify (in points) the Left, Right, Top and Bottom margins. These margins <I only> apply to any text on each page so backgrounds (behind the Title for example) will extend the whole width (and/or height) of the physical page.\n",
 
  ###
- "<T DI><S Chord Diagrams>\n",
+ "<T DI><S Chord Diagrams> ",
 
  "<M>This option set allows you to have an index of all the chords in the current song displayed at the top of the first page or the top of every page. Although the <R Instrument> button lets you select the type to display the chords for, only 6 string guitar chords are currently implemented. If you want to add chords to any of the available intruments, use the Chord Editor via the <R Edit> button.\n",
 
@@ -360,9 +359,9 @@ sub help {
 
  "<T SL><H Setlists\n>",
  "<V5>",
-
  "This tab is split into an upper and a lower section.",
- "<S Upper Section>\n",
+ "<V5>",
+ "<S Upper Section> ",
  "The upper section shows (on the left) the currently available Setlists and to it's right a box which shows which Setlist is currently selected along with date/time information and to the right and below that, a number of buttons to manipulate the current Setlist:\n",
  "<P  New > ",
  "<M>Creates a new Setlist.",
@@ -411,28 +410,28 @@ sub help {
  "<T FB><H Configuration Options\n>",
  "<V5>",
 
- "<T CL><S Collections>\n",
- "A <B Collection> is a grouping of ChordPro, PDF and Tab files along with various configuration files.\nThe default Collection from the install is called (wait for it ....) <B Chordy> and lives in the <R C:/Users/[USERNAME]> folder on Windows or in <R \$ENV{HOME}> on Linux/Mac.\nNote the use of Unix path separators / instead of the Windows \\ - this is historical because the Perl programming language (which Chordy is written in) was developed for the Unix environment.\nYou cannot delete a Collection if it is the only one but if you create a second Collection you can delete the original Chordy Collection. This isn't 100% accurate as the global configuration files are always left in the <R C:/Users/[USERNAME]/Chordy> or <R \$ENV{HOME}/Chordy> folder but the Pro, PDF and Tab folders are emptied.\nThe Collection section shows you the current Collection name and the path to it. Clicking on the Edit button allows you to <B Delete>, <B Rename> or create a <B New> Collection.\n(The only Collection you aren't allowed to rename is the Chordy one)\n",
+ "<T CL><S Collection> ",
+ "<M>A <B Collection> is a grouping of ChordPro, PDF and Tab files along with various configuration files.\nThe default Collection from the install is called (wait for it ....) <B Chordy> and lives in the <R C:/Users/[USERNAME]> folder on Windows or in <R \$ENV{HOME}> on Linux/Mac.\nNote the use of Unix path separators / instead of the Windows \\ - this is historical because the Perl programming language (which Chordy is written in) was developed for the Unix environment.\nYou cannot delete a Collection if it is the only one but if you create a second Collection you can delete the original Chordy Collection. This isn't 100% accurate as the global configuration files are always left in the <R C:/Users/[USERNAME]/Chordy> or <R \$ENV{HOME}/Chordy> folder but the Pro, PDF and Tab folders are emptied.\nThe Collection section shows you the current Collection name and the path to it. Clicking on the button allows you to change the current Collection.\n(The only Collection you aren't allowed to rename is the Chordy one)\n",
 
  "<s Common PDF Path> ",
  "<M>This allows any combination of Collections to share a PDF Folder. For example I have one Collection for a 4 string Bass and another for a 5 string but I want to have a common PDF folder. When a PDF file is created a copy will go into both this <I and> the Collection's PDF folder.\n",
 
- "<T PS><S PDF Page Size>\n",
+ "<T FO><S PDF Fonts - Colour and Size> ",
+ "This section allows you to define the fonts, their colour, size, weight (bold) and slant (italic), used for the various parts of the PDF and editor. The small (coloured) square to the left of the font name is a button that will let you define the colour that particular font will be displayed in. (See the separate section below that describes the colour editor)",
+ "The <R Choose> button gives you access to all the available fonts.\n",
+
+ "<T BC><S PDF Section Background Colours> ",
+ "A Verse, Chorus, Bridge or Tab section can have their background colour defined using these buttons.\n",
+
+ "<T PS><S PDF Page Size> ",
 
  "This section allows you to specify the output page size for the PDF file in points (72/inch), inches or millimeters. The default size is A4 (297mm x 210mm). As an example, I use a Samsung Galaxy Note Pro 12.2 which has a screen size of 263mm x 164mm which is slightly smaller than A4 and therefore I had to reduce the various text sizes by 2 points to fit the same lines onto this page size.\n",
 
- "<P  Edit Media > ",
+ "<P  Media > ",
  "<M>This button brings up a small window that allows you to delete or create a new media type or just edit the media height and/or width. Deleting a Media type happens immediately you select <R OK> in the confirmation box. Editing the Media Name causes a new type of Media to be created.\n",
 
  "<P Print Media > ",
  "<M>This allows you to specify the Media size and fonts to be used when printing as opposed to the Media size/fonts you use for PDF generation for use on a tablet.\n",
-
- "<T FO><S Fonts - Colour and Size>\n",
- "This section allows you to define the fonts, their colour, size, weight (bold) and slant (italic), used for the various parts of the PDF and editor. The small (coloured) square to the left of the font name is a button that will let you define the colour that particular font will be displayed in. (See the separate section below that describes the colour editor)",
- "The <R Choose> button gives you access to all the available fonts.\n",
-
- "<T BC><S Background Colours>\n",
- "A Comment, Highlight, Title, Verse, Chorus, Bridge or Tab section can all have their background colour defined using these buttons. With Comment and Higlight you can also specify the Border colour.\n",
 
 ################
 

@@ -40,9 +40,6 @@ sub new {
   $Chordy->{nb} = my $NB = $MW->new_ttk__notebook();
   $NB->g_pack(qw/-side top -expand 1 -fill both/);
 
-  my $butf = $MW->new_ttk__frame(-padding => [0,8,0,8]);
-  $butf->g_pack(qw/-side bottom -fill x/);
-
   my $chordy = $NB->new_ttk__frame(-padding => [4,4,4,4]);
   $Chordy->{setLst} = my $setLst = $NB->new_ttk__frame(-padding => [4,4,4,4]);
   $Chordy->{opts}   = my $opts   = $NB->new_ttk__frame(-padding => [4,4,4,4]);
@@ -57,7 +54,22 @@ sub new {
 
   $NB->g_bind('<<NotebookTabChanged>>', [\&notebookTabSelect, $Chordy]);
 
+#### This is NoteBook Tab 0 and is always made and displayed first.
+#### Chordy PDF Generator Tab
+  $Chordy->{currentColl} = '';
+  my $ctf = $chordy->new_ttk__labelframe(-text => " ChordPro Files ", -padding => [4,4,4,4]);
+  filesWin($ctf);
+
+  my $cmf = $chordy->new_ttk__labelframe(-text => " PDF Options ", -padding => [4,4,4,4]);
+  optWin($cmf);
+
+  $ctf->g_pack(qw/-side top -anchor n -expand 0 -fill x -pady 4/);
+  $cmf->g_pack(qw/-side top -anchor n -expand 0 -fill x -pady 4/);
+
   #### Bottom Button Frame
+  my $butf = $chordy->new_ttk__frame(-padding => [4,4,4,4]);
+  $butf->g_pack(qw/-side bottom -fill x/);
+
   my $about = $butf->new_ttk__button(
     -text => 'About',
     -style => 'Green.TButton',
@@ -76,18 +88,6 @@ sub new {
   $about->g_pack(qw/-side left -padx/ => [60,0]);
   $help->g_pack(qw/-side left -padx 20/);
   $ext->g_pack(qw/-side right -padx 60/);
-
-#### This is NoteBook Tab 0 and is always made and displayed first.
-#### Chordy PDF Generator Tab
-  $Chordy->{currentColl} = '';
-  my $ctf = $chordy->new_ttk__labelframe(-text => " ChordPro Files ", -padding => [4,4,4,4]);
-  filesWin($ctf);
-
-  my $cmf = $chordy->new_ttk__labelframe(-text => " PDF Options ", -padding => [4,4,4,4]);
-  optWin($cmf);
-
-  $ctf->g_pack(qw/-side top -anchor n -expand 0 -fill x -pady 4/);
-  $cmf->g_pack(qw/-side top -anchor n -expand 0 -fill x -pady 4/);
 
   $NB->select(0);
   $chordy->g_focus();
@@ -119,28 +119,25 @@ sub notebookTabSelect {
 sub confOpts {
   my $opts = $Chordy->{opts};
 
-  my $tf = $opts->new_ttk__frame();
-  my $col = $tf->new_ttk__labelframe(-text => " Collection ", -padding => [4,0,4,4]);
-  my $sz = $tf->new_ttk__labelframe(-text => " PDF Page Size ", -padding => [4,0,4,4]);
+  my $col = $opts->new_ttk__labelframe(-text => " Collection ", -padding => [4,0,4,4]);
+  $col->g_pack(qw/-side top -fill x -padx 4/);
   collectionWin($col);
-  mediaWin($sz);
 
   $Chordy->{fontFr} = $opts->new_ttk__labelframe(-text => " PDF Fonts - Colour and Size ",
-						 -padding => [4,0,4,8]);
+						 -padding => [4,0,4,4]);
+  $Chordy->{fontFr}->g_pack( qw/-side top -fill x -padx 4 -pady 6/);
   fontWin();
 
-  my $bgf = $opts->new_ttk__labelframe(-text => " PDF Background Colours ",
-				       -padding => [4,0,4,0]);
+  my $bf = $opts->new_ttk__frame();
+  $bf->g_pack( qw/-side top -fill x -padx 4/, -pady => [4,6]);
+  my $bgf = $bf->new_ttk__labelframe(-text => " PDF Section Background Colours ",
+				     -padding => [4,0,4,4]);
+  $bgf->g_pack(qw/-side left -expand 1 -fill x/, -padx => [0,4]);
   bgWin($bgf);
 
-  my $fw = $Chordy->{fontFr};
-  $tf->g_pack( qw/-side top -fill x/, -pady => [4,6]);
-  $col->g_pack(qw/-side left -anchor n -expand 1 -fill both/, -padx => [0,8]);
-  $sz->g_pack( qw/-side right -anchor n /);
-
-  $fw->g_pack( qw/-side top -fill x -pady 6/);
-  $bgf->g_pack(qw/-side top -fill x -pady 6/);
-
+  my $sz = $bf->new_ttk__labelframe(-text => " PDF Page Size ", -padding => [4,0,4,4]);
+  $sz->g_pack( qw/-side right -expand 1 -fill x/, -padx => [4,0]);
+  mediaWin($sz);
 }
 
 ###############################
@@ -838,18 +835,22 @@ sub collectionWin {
   $d = $wid->new_ttk__label(-text => "Common PDF Path: ");
   $e = $wid->new_ttk__label(-textvariable => \$Opt->{PDFpath});
 
-  $a->g_grid(qw/-row 0 -column 0 -sticky w -padx 4/, -pady => [4,0]);
-  $b->g_grid(qw/-row 1 -column 0 -sticky e/, -pady => [8,0]);
-  $c->g_grid(qw/-row 1 -column 1 -sticky w/, -pady => [8,0]);
+  $a->g_grid(qw/-row 0 -column 0 -rowspan 2 -sticky w/, -padx => [4,16]);
 
-  $d->g_grid(qw/-row 2 -column 0 -sticky e/);
-  $e->g_grid(qw/-row 2 -column 1 -sticky w/);
+  $b->g_grid(qw/-row 0 -column 1 -sticky e/);
+  $c->g_grid(qw/-row 0 -column 2 -sticky w/);
+
+  $d->g_grid(qw/-row 1 -column 1 -sticky e/);
+  $e->g_grid(qw/-row 1 -column 2 -sticky w/);
 }
 
 sub collEdit {
   if ($Collection->edit() eq 'OK' && $Collection->{name} ne $Chordy->{currentColl}) {
     $Chordy->{currentColl} = $Collection->{name};
     collItems($Chordy);
+    if ($Chordy->{nb}->index('current') == 2) {
+      fontWin();
+    }
   } else {
     showSize();
   }
@@ -988,13 +989,13 @@ sub fontWin {
 sub bgWin {
   my($bgf) = shift;
 
-  BGcS($bgf, 0, 'Comment',   'C');
-  BGcS($bgf, 1, 'Highlight', 'H');
-  BGcS($bgf, 2, 'Title');
-  BGcS($bgf, 3, 'Verse');
-  BGcS($bgf, 4, 'Chorus');
-  BGcS($bgf, 5, 'Bridge');
-  BGcS($bgf, 6, 'Tab');
+#  BGcS($bgf, 0,0, 'Title');
+#  BGcS($bgf, 0,1, 'Comment',   'C');
+#  BGcS($bgf, 0,2, 'Highlight', 'H');
+  BGcS($bgf, 0, 'Verse');
+  BGcS($bgf, 1, 'Chorus');
+  BGcS($bgf, 2, 'Bridge');
+  BGcS($bgf, 3, 'Tab');
 }
 
 sub BGcS {

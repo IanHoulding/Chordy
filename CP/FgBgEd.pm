@@ -138,14 +138,13 @@ sub new {
   $mid[2]->g_pack();
 
   my($r,$c) = (0,0);
-  foreach my $chc (qw/verse chorus bridge tab highlight comment/) { 
-    my $uc = ucfirst($chc);
+  foreach my $chc (qw/Verse Chorus Bridge Tab Highlight Comment/) { 
     my $b = $mid[2]->new_ttk__button(
-      -text => $uc,
-      -style => "$uc.BG.TButton",
-      -command => sub {color($self, $Media->{"${chc}BG"})});
+      -text => $chc,
+      -style => "$chc.BG.TButton",
+      -command => sub {color($self, $Opt->{"BG$chc"})});
     $b->g_grid(-row => $r, -column => $c++, -padx => 4, -pady => [2,4]);
-    if ($chc eq 'tab') {
+    if ($chc eq 'Tab') {
       $r++;
       $c = 1;
     }
@@ -211,7 +210,6 @@ sub new {
   $can->delete($id);
   @{$self->{swrect}} = (5, 5, $wid+1, $ht+1, '-width', 4);
   $self->{bdid} = '';
-#  $can->create_rectangle(@{$self->{swrect}}, -outline => '#E0E070');
   $self->{swid} = $can->create_text($wid / 2, ($ht + $dsc) / 2,
 				    -text => BLACK, -justify => 'center',
 				    -fill => '#000000', -font => $font);
