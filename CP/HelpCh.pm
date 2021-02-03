@@ -68,8 +68,14 @@ sub help {
  "<O Moi:s: Ignore Capo Directives>",
  "<O Mon:s: No Long Line warnings>",
  "<O Mos:s: Show Labels>",
- "<O Mol:s: Label Background %>",
+ "<O Mob:s: Label Background %>",
  "<V1>",
+ "<O Moa:N: Appearance> ",
+ "<O Mac:s:    Colours - Window Button Menu Entry List Message>",
+ "<O Maf:s:    Fonts - Normal/Bold>",
+ "<O Map:s:    Copy to all Collections>",
+ "<O Mad:s:    Default Appearance>",
+ "<V2>",
  "<O Mod:s: Defaults>",
  "<V5>",
  "<O MS:S:Misc>",
@@ -213,11 +219,22 @@ sub help {
  "<T Mos><s Show Labels\n>",
  "<M>Any of the Verse, Chord, Bridge or Tab sections can have a <R Label> associated with it. This option allows you to turn the Labels on or off.",
  "<V2>",
- "<T Mol><s Label Background %\n>",
+ "<T Mob><s Label Background %\n>",
  "<M>If Labels are displayed they will have a background which is a shade of the sections background. This shade will be a percentage shift lighter (negative values) or darker (positive values) by this ammount.",
- "<V5>",
- "<T Mod><s Defaults\n>",
- "<M>Resets <B ALL> options to their default settings.",
+
+ "<V2>",
+ "<T Moa><N Appearance\n>",
+ "<T Mac><s    Colours - Window Button Menu Entry List Message\n>",
+ "<M>Allows you to specify the Background colour for all the windows and lets you change the Foreground and Background colours for Push and Menu buttons, Lists, Entry and Message boxes.",
+ "<V2>",
+ "<T Maf><s    Fonts - Normal/Bold\n>",
+ "<M>All buttons and lists can be displayed in \"Normal\" or \"<B Bold>\" text.",
+ "<V2>",
+ "<T Map><s    Copy to all Collections\n>",
+ "<M>The current colour definitions will be copied to all Collection Options.",
+ "<V2>",
+ "<T Mad><s    Default Appearance\n>",
+ "<M>Resets all colour definitions to their original default values.",
  "<V5>",
 
 ######
@@ -416,12 +433,6 @@ sub help {
 
  "<T BC><S Background Colours>\n",
  "A Comment, Highlight, Title, Verse, Chorus, Bridge or Tab section can all have their background colour defined using these buttons. With Comment and Higlight you can also specify the Border colour.\n",
-
- "<T AP><S Appearance>\n",
- "<s Colours> ",
- "<M>Allows you to change the Foreground and Background colours for Push and Menu buttons, Lists, Entry and Message boxes. Also lets you specify the Background colour for all the windows.\n",
- "<s Fonts> ",
- "<M>All buttons and lists can be displayed in \"Normal\" or \"<B Bold>\" text.\n",
 
 ################
 
