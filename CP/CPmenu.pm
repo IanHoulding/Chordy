@@ -232,7 +232,8 @@ sub new {
     my $ap = $opt->new_menu(-disabledforeground => '#600000');
     $opt->add_cascade(-menu => $ap, -label => 'Appearance');
     $ap->add_command(-label => 'Colours:', -state => 'disabled');
-    foreach my $e (['     Window',  \&CP::Win::BGclr],
+    foreach my $e (['     Tabs',    \&CP::Win::TABclr],
+		   ['     Window',  \&CP::Win::BGclr],
 		   ['     Button',  \&CP::Win::PBclr],
 		   ['     Menu',    \&CP::Win::MBclr],
 		   ['     Entry',   \&CP::Win::ENTclr],

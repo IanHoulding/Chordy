@@ -66,9 +66,10 @@ sub MWoptions {
 
   Tkx::ttk__style_configure('TNotebook.Tab',
 			    -font => "BTkDefaultFont",
-			    -background => '#C8D0D0',
-			    -foreground => '#000060');
-  Tkx::ttk__style_map('TNotebook.Tab', -background => "selected #D8E8FF active #CCDCDC");
+			    -background => LGREY,
+			    -foreground => $Opt->{TabFG});
+  Tkx::ttk__style_map('TNotebook.Tab',
+		      -background => "selected ".$Opt->{TabBG}." active ".$Opt->{TabAC});
 
   Tkx::ttk__style_configure('TFrame',
 			    -highlightthickness => 0,
@@ -350,6 +351,32 @@ sub BGclr {
     $Opt->{WinBG} = $clr;
     $Opt->saveOne('WinBG');
   }
+}
+
+sub TABclr {
+  my $save = 0;
+  my $fg = $Opt->{TabFG};
+  my $bg = $Opt->{TabBG};
+  CP::FgBgEd->new("Window Background");
+  my($nfg,$nbg) = $ColourEd->Show($fg, $bg, '', (FOREGRND|BACKGRND));
+  if ($nfg ne '' && $nfg ne $fg) {
+    Tkx::ttk__style_configure('TNotebook.Tab', -foreground => $nfg);
+    $Opt->{TabFG} = $nfg;
+    $save++;
+  }
+  if ($nbg ne '' && $nbg ne $bg) {
+    $Opt->{TabBG} = $nbg;
+    $save++;
+    my $grey = 208;  # D0
+    my($nr,$ng,$nb) = ($nbg =~ /\#(..)(..)(..)/);
+    $nr = $grey - int(($grey - hex($nr)) / 2);
+    $ng = $grey - int(($grey - hex($ng)) / 2);
+    $nb = $grey - int(($grey - hex($nb)) / 2);
+    $Opt->{TabAC} = sprintf "#%02x%02x%02x", $nr, $ng, $nb;
+    Tkx::ttk__style_map('TNotebook.Tab',
+			-background => "selected ".$nbg." active ".$Opt->{TabAC});
+  }
+  $Opt->save() if ($save);
 }
 
 sub defLook {

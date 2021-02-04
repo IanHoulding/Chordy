@@ -127,7 +127,7 @@ sub printSL {
   if ($AllSets->{meta}{s1end} ne '' || $AllSets->{meta}{s2end} ne '') {
     $setw += ($timew + _measure(' - ', $pfp, $Lsz));
   }
-  my $x = $w - $setw - ($Opt->{RightMargin} * 2);
+  my $x = $w - $setw - (INDENT * 4);
   my $y = $h - ($Tsz * 4);
   foreach my $xtr (['Setup','setup'], ['Sound Check','soundcheck']) {
     my($lab,$key) = (@{$xtr});

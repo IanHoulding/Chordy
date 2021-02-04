@@ -21,7 +21,7 @@ my @strOpt = (qw/Articles Instrument Media PDFpath PrintMedia
 	         FGNotes FGSNotes FGTab FGTitle FGWords
 	         HborderRelief HborderColour CborderRelief CborderColour
 	         PopFG PopBG PushFG PushBG MenuFG MenuBG ListFG ListBG EntryFG EntryBG
-	         WinBG PageBG SortBy/);
+	         TabAC TabFG TabBG WinBG PageBG SortBy/);
 my @numOpt = (qw/AutoSave Bold Heavy Center EditScale
 	         FullLineCM CborderWidth
 	         FullLineHL HborderWidth
@@ -128,6 +128,9 @@ sub default {
   $self->{SortBy}      = 'Alphabetical';
   $self->{StaffSpace}  = 10;
   $self->{ShowLabels}  = 0;
+  $self->{TabAC}       = '#CCDCDC';
+  $self->{TabFG}       = '#000060';
+  $self->{TabBG}       = LGREY;
   $self->{Together}    = 1;
   $self->{TopMargin}   = INDENT;
   $self->{UseBold}     = 1;
