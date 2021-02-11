@@ -17,7 +17,6 @@ use CP::Cconst qw/:OS :PATH :SMILIE :COLOUR/;
 use CP::Global qw/:PATH :FUNC :WIN :OPT :PRO :MEDIA :SETL/;
 use CP::Pop qw/:POP :MENU/;
 use File::Path qw(make_path remove_tree);
-use CP::Tab;
 use CP::Cmsg;
 
 #
@@ -113,10 +112,8 @@ sub change {
   if (defined $All{$name}) {
     $CurrentCollection = $name;
     $self->{name} = $name;
-    $self->{path} = $All{$name};
-    $self->{fullPath} = $self->{path}.'/'.$name;
-    $Parent = $self->{path};
-    $Home = "$Parent/$name";
+    $self->{path} = $Parent = $All{$name};
+    $self->{fullPath} = $Home = "$Parent/$name";
     $Path->change($Home);
     $Opt->load();
     $Media = $Media->change($Opt->{Media});
@@ -130,21 +127,12 @@ sub change {
 }
 
 sub select {
-  my($self,$tab) = @_;
+  my($self) = shift;
 
   my $cc = $self->{name};
   popMenu(\$cc, undef, list());
   if ($cc ne $self->{name}) {
     change($self, $cc);
-    if (defined $tab) {
-      # Only run in the Tab Editor.
-      if ((my $fn = $tab->{fileName}) ne '') {
-	$fn = (-e $fn) ? "$Path->{Tab}/$fn" : '';
-	$tab->new($fn);
-      }
-      $tab->drawPageWin();
-      CP::TabMenu::refresh();
-    }
   }
 }
 
@@ -456,8 +444,9 @@ sub edit {
   $i->g_grid(qw/-row 3 -column 2 -padx 5/);
   $j->g_grid(qw/-row 3 -column 3 -padx 5/);
 
+  my $ppath = $Opt->{PDFpath};
   $a = $mf->new_ttk__label(-text => "Common PDF Path");
-  $b = $mf->new_ttk__entry(qw/-width 40 -textvariable/ => \$Opt->{PDFpath});
+  $b = $mf->new_ttk__entry(qw/-width 40 -textvariable/ => \$ppath);
   $c = $mf->new_ttk__button(
     -text => "Browse ...",
     -command => sub{
@@ -466,8 +455,7 @@ sub edit {
 	-initialdir => "$Home");
       $dir =~ s/\/$//;
       if ($dir ne '') {
-	$Opt->{PDFpath} = $dir;
-	$Opt->save();
+	$ppath = $dir;
       }
       $wt->g_focus();
     },
@@ -476,7 +464,7 @@ sub edit {
     -text => "Set",
     -width => 6,
     -style =>'Green.TButton',
-    -command => sub{$Opt->save()}, );
+    -command => sub{$Opt->{PDFpath} = $ppath; $Opt->saveOne('PDFpath');}, );
 
   $a->g_grid(qw/-row 0 -column 0 -sticky e -padx 4/);
   $b->g_grid(qw/-row 0 -column 1 -sticky w/);
@@ -484,23 +472,20 @@ sub edit {
   $d->g_grid(qw/-row 0 -column 3/);
 
   my $Done = '';
-#  my $cancel = $bf->new_ttk__button(
-#    -text => "Cancel",
-#    -command => sub{$Done = "Cancel";});
-#  $cancel->g_pack(qw/-side left -padx 60/, -pady => [4,8]);
 
   my $ok = $bf->new_ttk__button(
     -text => "OK",
     -command => sub{$Done = "OK";});
   $ok->g_pack(qw/-side right -padx 60/, -pady => [4,8]);
 
+  my $can = $bf->new_ttk__button(
+    -text => "Cancel",
+    -command => sub{$Done = "Cancel";});
+  $can->g_pack(qw/-side left -padx 60/, -pady => [4,8]);
+
   Tkx::vwait(\$Done);
   if ($Done eq "OK") {
     change($self, $CurrentCollection) if ($CurrentCollection ne $orgcol);
-  } else {
-#    change($self, $orgcol);
-#    $CurrentCollection = $orgcol;
-#    $CollectionPath = $self->{path};
   }
   $pop->popDestroy();
   $Done;

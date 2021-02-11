@@ -10,13 +10,11 @@ sub help {
   $win->add(
 [
  "<O TO:H: Cpgedi - A ChordPro Editor > ",
- "This was Gedi (Gregs EDItor) Ver. 1.0, Copyright 1999 Greg London",
- "This program is free software. You can redistribute it and/or modify it under",
- "the same terms as Perl itself. Special Thanks to Nick Ing-Simmons.\n",
- "Modified by Ian Houlding (2015-20) for use with Chordy running under Tkx (Tcl/Tk).",
- "Not much (if any) of the original code survives :-)\n",
+ "<M>This was Gedi (Gregs EDItor) Ver. 1.0, Copyright 1999 Greg London",
+ "This program is free software. You can redistribute it and/or modify it under the same terms as Perl itself. Special Thanks to Nick Ing-Simmons.\n",
+ "Modified by Ian Houlding (2015-20) for use with Chordy running under Tkx (Tcl/Tk). Not much (if any) of the original code survives :-)",
 
- "The basic intention with this Editor was to make creating/editing ChordPro files easier. To this end the window is split into 5 main areas:\n",
+ "<M>The basic intention with this Editor was to make creating/editing ChordPro files easier. To this end the window is split into 5 main areas:\n",
  "<s Edit area (bottom right)> ",
  "Fairly obviously where all the text to be edited lives.\n",
  "<s Command Menu (top right)> ",

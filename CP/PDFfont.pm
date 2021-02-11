@@ -16,7 +16,6 @@ use POSIX qw/ceil/;
 use CP::Cconst qw/:FONT :MUSIC :TEXT :INDEX :COLOUR/;
 use CP::Global qw/:FUNC :OPT :WIN :CHORD :SCALE :SETL/;
 use PDF::API2;
-use CP::Chord;
 
 sub new {
   my($proto,$media,$idx,$pdf) = @_;

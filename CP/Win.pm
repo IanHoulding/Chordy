@@ -94,6 +94,8 @@ sub MWoptions {
   Tkx::ttk__style_configure('Wh.TLabelframe', -background => WHITE);
   Tkx::ttk__style_configure('Wh.TLabelframe.Label', -background => WHITE);
 
+  Tkx::ttk__style_configure('H.TSeparator', -background => BLACK);
+
   Tkx::ttk__style_configure('TCanvas',
 			    -highlightthickness => 0,
 			    -borderwidth => 0,

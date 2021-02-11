@@ -2,6 +2,7 @@ Chordy, Tab et al Revision history.
 Bit late starting with 2.6.4 but about time I documented it :-)
 
 3.9.1
+	   Removed the need for the Hyphen image.
            Unified Menu and Window checkboxes to show images for on/off.
      Tab - Playing a Tab (Windows only still) will now handle chords and you can
              vary the rate at which each individual note is struck.
@@ -40,6 +41,9 @@ Bit late starting with 2.6.4 but about time I documented it :-)
 	     selected.
 	   Added the ChordPro 'meta' directive with the usual colour enhancement. Can
 	     be used to change the colour of in-line text.
+	   Can now customise the Notebook Tab colours.
+	   Help, About & Exit buttons now only on the first Tab.
+	   Appearance window moved to the Menu Bar under Options.
 	   Bugfix's:
 	    - Export Setlist to a single Collection failed.
 	    - Changing Collection gave no indication as to why a Setlist might have

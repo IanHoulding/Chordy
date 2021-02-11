@@ -568,7 +568,6 @@ sub pageButtons {
   $bu13->g_grid(qw/-row 0 -column 1 -sticky we/, -padx => [4,8], -pady => [0,4]);
 
 ######
-  makeImage('hyphen', \%XPM);
   my $cp = $frm->new_ttk__labelframe(-text => ' Copy/Paste ');
   $cp->g_pack(qw/-side top -expand 1 -fill both -padx 4 -pady 4/);
 
@@ -583,8 +582,11 @@ sub pageButtons {
 				 -command => sub{$tab->Copy($volt|$rep|$hdg|$just|$bg|$newlp|$note)});
   $bu5->g_grid(qw/-row 1 -column 0 -sticky e/, -padx => [4,0]);
 
-  my $ch1 = $cp->new_ttk__label(-image => 'hyphen', -font => "BTkDefaultFont");
-  $ch1->g_grid(qw/-row 1 -column 1 -padx 2/);
+  $cp->g_grid_columnconfigure(1, -minsize => 16);
+  $cp->g_grid_columnconfigure(3, -minsize => 10);
+  $cp->g_grid_columnconfigure(5, -minsize => 10);
+  my $ch1 = $cp->new_ttk__separator(-style => 'H.TSeparator', -orient => 'horizontal');
+  $ch1->g_grid(qw/-row 1 -column 1 -sticky ew -padx 4/);
 
   my $cpf = $cp->new_ttk__frame();
   $cpf->g_grid(qw/-row 1 -column 2 -columnspan 6/);
@@ -624,21 +626,21 @@ sub pageButtons {
 
   my $paste = $cp->new_ttk__label(-text => 'Paste', -font => "BTkDefaultFont");
   $paste->g_grid(qw/-row 2 -column 0 -sticky e -padx/ => [4,0]);
-  my $ph1 = $cp->new_ttk__label(-image => 'hyphen', -font => "BTkDefaultFont");
-  $ph1->g_grid(qw/-row 2 -column 1 -padx 2/);
+  my $ph1 = $cp->new_ttk__separator(-style => 'H.TSeparator', -orient => 'horizontal');
+  $ph1->g_grid(qw/-row 2 -column 1 -sticky ew -padx 4/);
   my $bu6 = $cp->new_ttk__button(-text => 'Before',
 				 -style => "Green.TButton",
 				 -command => sub{$tab->PasteBefore});
   $bu6->g_grid(qw/-row 2 -column 2 -sticky we/, -pady => [4,0]);
-  my $ph2 = $cp->new_ttk__label(-image => 'hyphen', -font => "BTkDefaultFont");
-  $ph2->g_grid(qw/-row 2 -column 3 -padx 2/);
+  my $ph2 = $cp->new_ttk__separator(-style => 'H.TSeparator', -orient => 'horizontal');
+  $ph2->g_grid(qw/-row 2 -column 3 -sticky ew -padx 4/);
   my $povar = 1;
   my $bu7 = $cp->new_ttk__button(-text => 'Over',
 				 -style => "Green.TButton",
 				 -command => sub{$tab->PasteOver($povar)});
   $bu7->g_grid(qw/-row 2 -column 4 -sticky we/, -pady => [4,0]);
-  my $ph3 = $cp->new_ttk__label(-image => 'hyphen', -font => "BTkDefaultFont");
-  $ph3->g_grid(qw/-row 2 -column 5 -padx 2/);
+  my $ph3 = $cp->new_ttk__separator(-style => 'H.TSeparator', -orient => 'horizontal');
+  $ph3->g_grid(qw/-row 2 -column 5 -sticky ew -padx 4/);
   my $bu8 = $cp->new_ttk__button(-text => 'After',
 				 -style => "Green.TButton",
 				 -command => sub{$tab->PasteAfter});
@@ -683,7 +685,17 @@ sub pageButtons {
   my $colb = $sel->new_ttk__button(
     -textvariable => \$Collection->{name},
     -style => 'Menu.TButton',
-    -command => sub{$Collection->select($tab)}
+    -command => sub{ my $cc = $Collection->{name};
+		     $Collection->select();
+		     if ($cc ne $Collection->{name}) {
+		       if ((my $fn = $tab->{fileName}) ne '') {
+			 $fn = (-e "$Path->{Tab}/$fn") ? "$Path->{Tab}/$fn" : '';
+			 $tab->new($fn);
+		       }
+		       $tab->drawPageWin();
+		       CP::TabMenu::refresh();
+		     }
+                   }
     );
   my $medl = $sel->new_ttk__label(-text => 'Media');
   my $medb = $sel->new_ttk__button(

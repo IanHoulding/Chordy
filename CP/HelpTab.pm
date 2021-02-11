@@ -8,7 +8,6 @@ sub help {
   my $win = CP::Help->new("Tab Help");
   return if ($win eq '');
   makeImage("scheckbox", \%XPM);
-  makeImage("hyphen", \%XPM);
   $win->add(
 [
  "<T CTO><O TO:H:Tab Editor>",
@@ -41,14 +40,14 @@ sub help {
  "  <O Mfn:s: New Tab>",
  "  <O Mfc:s: Close Tab>",
  "  <O Mfd:s: Delete Tab>",
- "   <x hyphen> <x hyphen> <x hyphen> <x hyphen>",
+ "  <l 2 100 #800000>",
  "<V 1>",
  "  <O Mfs:s: Save Tab>",
  "  <O Mfa:s: Save Tab As>",
  "  <O Mfm:s: Save, Make & Close>",
  "  <O Mfr:s: Rename Tab>",
  "  <O Mfe:s: Export Tab>",
- "   <x hyphen> <x hyphen> <x hyphen> <x hyphen>",
+ "  <l 2 100 #800000>",
  "<V 1>",
  "  <O Mfx:s: Exit>",
  "<V 5>",
@@ -66,7 +65,7 @@ sub help {
  "  <O Mpc:s: Make>",
  "  <O Mpb:s: Batch Make>",
  "  <O Mpp:s: Print>",
- "   <x hyphen> <x hyphen> <x hyphen> <x hyphen>",
+ "  <l 2 100 #800000>",
  "<V 1>",
  "  <O Mps:s: Save, Make & Close>",
  "  <O Mpt:s: Save As Text>",
@@ -90,7 +89,7 @@ sub help {
  "  <O Mmv:s: View Error Log>",
  "  <O Mmc:s: Clear Error Log>",
  "  <O Mmr:s: View Release Notes>",
- "   <x hyphen> <x hyphen> <x hyphen> <x hyphen>",
+ "  <l 2 100 #800000>",
  "<V 1>",
  "  <O Mmd:s: Delete Tab Backups>",
  "<V 5>",
@@ -229,7 +228,7 @@ sub help {
  "<T Mfd><s  Delete Tab> ",
  "<M>Deletes the current Tab.",
 
- "<x hyphen> <x hyphen> <x hyphen> <x hyphen> <x hyphen> ",
+ "<l 2 100 #800000>",
 
  "<T Mfs><s  Save Tab> ",
  "<M>Saves the current Tab put keeps the edit session open.",
@@ -250,7 +249,7 @@ sub help {
  "<T XT><s  Export Tab > ",
  "<M>Allows you to save the current session (with the current name) to a selectable folder.",
 
- "<x hyphen> <x hyphen> <x hyphen> <x hyphen> <x hyphen> ",
+ "<l 2 100 #800000>",
 
  "<T EX><s  Exit> ",
  "<M>Quits Tab but prompts to Save any changes made.",
@@ -286,7 +285,7 @@ sub help {
  "<T Mpv><s  Print> ",
  "<M>Creates a temporary PDF and prints it. Be aware that if your Media type is not <B A4> but your printer paper is, then the resulting printout will either be smaller than a page or will overflow a page, depending on the relevant sizes.",
 
- "<x hyphen> <x hyphen> <x hyphen> <x hyphen> <x hyphen> ",
+ "<l 2 100 #800000>",
 
  "<T Mpv><s  Save, Make & Close> ",
  "<M>Performs the operations as a single sequence.",
@@ -324,7 +323,7 @@ sub help {
  "<M>Removes everything from the current Error Log.",
  "<T Mmr><s  View Release Notes> ",
  "<M>Displays the Release Notes file in a text window.",
- "<x hyphen> <x hyphen> <x hyphen> <x hyphen> <x hyphen> ",
+ "<l 2 100 #800000>",
  "<T Mmd><s  Delete Tab Backups> ",
  "<M>Every time a Teb file is modified and Saved the original is saved to a file in the Temp folder with an incrementing number as an extension. This function clears them out of the Temp folder.",
  "<V 10>",

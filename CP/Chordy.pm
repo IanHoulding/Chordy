@@ -645,20 +645,16 @@ sub setLists {
   $labc->g_grid(-row => 0,    -column => 1);
   $row++;
 
-  makeImage('hyphen', \%XPM);
-  my %list = (Tkx::SplitList(Tkx::font_actual("BTkDefaultFont")));
-  $list{'-size'} += 10;
-  Tkx::font_create("HyphenFont", %list);
-
   foreach my $set (1..2) {
     my $lab = $sltCS->new_ttk__label(-text => "Set $set", -background => WHITE);
     my $sFr = $sltCS->new_ttk__frame(qw/-style Wh.TFrame/);
+    $sFr->g_grid_columnconfigure(1, -minsize => 10);
 
     my $buts = $sFr->new_ttk__button(-textvariable => \$AllSets->{meta}{"s${set}start"},
 				       -style => $st,
 				       -width => 5,
 				       -command => [$tsub, "s${set}start"] );
-    my $h = $sFr->new_ttk__label(qw/-image hyphen -font HyphenFont/, -background => WHITE);
+    my $h = $sFr->new_ttk__separator(-style => 'H.TSeparator', -orient => 'horizontal');
     my $bute = $sFr->new_ttk__button(-textvariable => \$AllSets->{meta}{"s${set}end"},
 				       -style => $st,
 				       -width => 5,
@@ -666,7 +662,7 @@ sub setLists {
     $lab->g_grid( -row => $row, -column => 0, -sticky => 'e', -pady => 3);
     $sFr->g_grid( -row => $row, -column => 1, -sticky => 'w', -pady => 3);
     $buts->g_grid(-row => 0,    -column => 0, -padx => 4);
-    $h->g_grid(   -row => 0,    -column => 1);
+    $h->g_grid(   -row => 0,    -column => 1, -sticky => 'ew');
     $bute->g_grid(-row => 0,    -column => 2, -padx => 4);
     $row++;
   }
