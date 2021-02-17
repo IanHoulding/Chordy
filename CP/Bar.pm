@@ -126,14 +126,13 @@ sub Clear {
   $self->blank();
 }
   
-# Clears the Edit Bars and redraws them.
-# Usually done after a change to one of the size/distance parameters.
-#sub remap {
-#  my $sel = CP::Tab->get()->{select1};
-#  ClearEbar();
-#  $sel->select();
-#  $sel->Edit();
-#}
+sub ClearEbars {
+  $EditBar->Clear();
+  $EditBar->{pbar} = 0;
+  $EditBar1->Clear();
+  $EditBar1->{pbar} = 0;
+  $EditBar->{tab}->ClearSel();
+}
 
 sub comp {
   my($self,$b) = @_;
@@ -152,14 +151,7 @@ sub comp {
   }
   0;
 }
-# This sub can be called in 2 ways:
-# 1) Where we pass in a bar object that we want to display.
-#    In this case we only pass in the bar object.
-#    Currently ONLY for the EditBar.
-# 2) Where we don't have a bar object but still want the bar outline.
-#    In this case we pass in the tab object, page index and x/y values.
-#    Currently ONLY for Page bar outlines.
-#
+
 sub editBarOutline {
   my($self) = shift;
 
@@ -287,55 +279,6 @@ sub markers {
   }
 }
 
-sub EditPrev { _pn('prev', @_) }
-sub EditNext { _pn('next', @_) }
-
-sub _pn {
-  my($pn,$tab,$save) = @_;
-
-  my $bar = $tab->{select1};
-  if ($save) {
-    Update();
-    $tab->indexBars();
-    $tab->newPage($tab->{pageNum});
-  } else {
-    if (($bar && comp($EditBar, $bar)) || ($bar == 0 && ! isblank($EditBar))) {
-      my $ans = CP::Cmsg::msgYesNoCan("Save current Bar?");
-      return if ($ans eq 'Cancel');
-      Save() if ($ans eq 'Yes');
-    }
-  }
-  if ($bar) {
-    $bar = $bar->{$pn};
-    if ($bar == 0 && $pn eq 'prev') {
-      CP::Cmsg::message(SAD, "This is the first Bar.", 1);
-      return;
-    }
-  }
-  $tab->ClearEbars();
-  $bar->select() if ($bar);
-  Edit($bar);
-}
-
-# This is ONLY called for the EditBar.
-sub Background {
-  my($self) = @_;
-
-  if ((my $bg = bgGet($self)) ne '') {
-    $self->{bg} = $bg;
-    $self->{canvas}->itemconfigure("bg-1", -fill => $bg);
-  }
-}
-
-sub bgGet {
-  my($self) = shift;
-
-  $self->{bg} = WHITE if ($self->{bg} eq '');
-  CP::FgBgEd->new("Background Colour");
-  my($fg,$bg) = $ColourEd->Show($self->{tab}{noteColor}, $self->{bg}, '', BACKGRND);
-  $bg;
-}
-
 sub getNote {
   my($self,$id) = @_;
 
@@ -457,102 +400,13 @@ sub Edit {
   show($EditBar1);
 }
 
-sub InsertBefore { insert(shift,BEFORE); }
-sub InsertAfter  { insert(shift,AFTER); }
-
-# $self is actually $EditBar
-sub insert {
-  my($self,$where) = @_;
-
-  my $tab = $self->{tab};
-  if ($tab->{select1}) {
-    $self->{pbar} = $tab->{select1};
-    $self->save_bar($where);
-    $tab->ClearAndRedraw();
-  } else {
-    message(SAD, "No Bar selected - don't know where to put this one!", 1);
-  }
-}
-
-sub Save {
-  $EditBar1->save_bar(REPLACE) if ($EditBar1->{pbar} && comp($EditBar1, $EditBar1->{pbar}));
-  $EditBar->save_bar(REPLACE) if (comp($EditBar, $EditBar->{pbar}));
-  $EditBar->{tab}->ClearAndRedraw();
-}
-
-sub Update {
-  if ($EditBar->{pbar}) {
-    $EditBar1->save_bar(UPDATE) if ($EditBar1->{pbar} && comp($EditBar1, $EditBar1->{pbar}));
-    $EditBar->save_bar(UPDATE) if (comp($EditBar, $EditBar->{pbar}));
-  } else {
-    # Editing a bar to tack on the end.
-    $EditBar->save_bar(UPDATE);
-#    message(SAD, "No Bar selected - don't know which bar to update!", 1);
-  }
-}
-
-sub save_bar {
-  my($self,$insert) = @_;
-
-  my $tab = $self->{tab};
-  my($bar);
-  if ($self->{pbar} == 0) {
-    # We've edited a (new) blank Bar.
-    $bar = CP::Bar->new($tab);
-    if ($tab->{bars} == 0) {
-      $tab->{bars} = $bar;
-    } else {
-      $tab->{lastBar}{next} = $bar;
-      $bar->{prev} = $tab->{lastBar};
-    }
-    $insert = REPLACE;
-  } else {
-    my $dest = $self->{pbar};
-    if ($insert == BEFORE || $insert == AFTER) {
-      $bar = CP::Bar->new($tab);
-      if ($insert == AFTER) {
-	$bar->{prev} = $dest;
-	$bar->{next} = $dest->{next};
-	$dest->{next}{prev} = $bar;
-	$dest->{next} = $bar;
-      } else {
-	if ($dest->{prev} == 0) {
-	  $bar->{next} = $dest;
-	  $dest->{prev} = $bar;
-	  $tab->{bars} = $bar;
-	} else {
-	  $bar->{prev} = $dest->{prev};
-	  $bar->{next} = $dest;
-	  $dest->{prev}{next} = $bar;
-	  $dest->{prev} = $bar;
-	}
-      }
-    } else {
-      $bar = $dest;
-    }
-  }
-  $tab->{lastBar} = $bar if ($bar->{next} == 0);
-  foreach my $v (qw/newline newpage volta header justify rep bg/) {
-    $bar->{$v} = $self->{$v};
-  }
-  $bar->{notes} = [];
-  foreach my $n (noteSort($self)) {
-    $n->{bar} = $bar;
-    push(@{$bar->{notes}}, $n);
-  }
-  if ($insert == UPDATE) {
-    $bar->unMap();
-    $bar->show();
-  }
-  $tab->setEdited(1);
-}
-
-# ONLY called on the EditBar
-sub RemoveBG {
+sub bgGet {
   my($self) = shift;
 
-  $self->{canvas}->itemconfigure("bg$self->{pidx}", -fill => BLANK);
-  $self->{bg} = BLANK;
+  $self->{bg} = WHITE if ($self->{bg} eq '');
+  CP::FgBgEd->new("Background Colour");
+  my($fg,$bg) = $ColourEd->Show($self->{tab}{noteColor}, $self->{bg}, '', BACKGRND);
+  $bg;
 }
 
 # ONLY called on the Page Bars
@@ -652,7 +506,7 @@ sub Cancel {
   my($self) = shift;
 
   my $tab = $self->{tab};
-  $tab->ClearEbars();
+  $EditBar->ClearEbars();
   $tab->ClearSel();
   $tab->{eWin}->g_wm_withdraw();
 }

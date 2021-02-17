@@ -158,7 +158,7 @@ sub new {
     $es->add_radiobutton(-label => $_,
 			 -variable => \$Opt->{EditScale},
 			 -font => 'TkMenuFont',
-			 -command => sub{CP::TabWin::editWindow($tab);
+			 -command => sub{CP::BarEd::editWindow($tab);
 					 config(1);
 					 $Opt->saveOne('EditScale');
 			 });
@@ -249,7 +249,7 @@ sub new {
 			 -variable => \$Opt->{StaffSpace},
 			 -font => 'TkMenuFont',
 			 -command => sub{$tab->drawPageWin();
-					 CP::TabWin::editWindow($tab);
+					 CP::BarEd::editWindow($tab);
 					 $tab->setEdited(1);
 					 config(7);
 					 $Opt->saveOne('StaffSpace');
@@ -267,7 +267,7 @@ sub new {
 			  -command => sub{my($t,$_t) = split('/', $tab->{Timing});
 					  $tab->{BarEnd} = $t * 8;
 					  $tab->drawPageWin();
-					  CP::TabWin::editWindow($tab);
+					  CP::BarEd::editWindow($tab);
 					  $tab->setEdited(1);
 					  config(8);
 			  });

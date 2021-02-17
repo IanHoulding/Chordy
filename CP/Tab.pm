@@ -43,6 +43,7 @@ use File::Basename;
 use File::Slurp;
 use CP::Offset;
 use CP::Bar;
+use CP::BarEd;
 use CP::Cmsg;
 use CP::TabWin;
 use CP::Lyric;
@@ -63,7 +64,7 @@ sub new {
   if (! defined $Tab) {
     my $class = ref($proto) || $proto;
     $Tab = {};
-    $Tab->{eWin} = '';
+    $Tab->{eWin} = $Tab->{eCan} = $Tab->{nFrm} = $Tab->{nCan} = $Tab->{pFrm} = $Tab->{pCan} = '';
     bless $Tab, $class;
   }
   if ($fn eq '_EXIT_' && $Tab->checkSave() ne 'Cancel') {
@@ -138,7 +139,7 @@ sub drawPageWin {
   offsets($self);
   setXY($self);
   CP::TabWin::pageWindow($self);
-  CP::TabWin::editWindow($self);
+  CP::BarEd::editWindow($self);
   $self->tabTitle($self->{fileName});
   indexBars($self);
   $self->pageHdr();
@@ -1097,19 +1098,9 @@ sub ClearAndRedraw {
   my($self) = shift;
 
   $self->{eWin}->g_wm_withdraw();
-  $self->ClearEbars();
+  $EditBar->ClearEbars();
   $self->indexBars();
   $self->newPage($self->{pageNum});
-}
-
-sub ClearEbars {
-  my($self) = shift;
-
-  $EditBar->Clear();
-  $EditBar->{pbar} = 0;
-  $EditBar1->Clear();
-  $EditBar1->{pbar} = 0;
-  $self->ClearSel();
 }
 
 sub ClearSel {

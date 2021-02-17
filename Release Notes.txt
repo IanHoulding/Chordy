@@ -12,6 +12,8 @@ Bit late starting with 2.6.4 but about time I documented it :-)
 	   Added the "Save Fonts" option for when a Tab is saved.
 	   $Tab variable now not global.
 	   When copying a Bar you can now specify which elements you want to copy.
+	   Split the Bar Editor specific code into a separate module.
+	   Reformatted the Bar Editor.
 	   Bugfix's:
 	    - 'Recent' list now gets reformatted when it changes - the command
 	      element was not being updated.
@@ -23,6 +25,7 @@ Bit late starting with 2.6.4 but about time I documented it :-)
 	    - Lyric Editor would not 'Save' on second use.
 	    - Editing a new Bar on a blank Tab failed.
 	    - adjusted the screen position for Notes - they were showing too low.
+	    - Prev/Next with Save not working correctly.
   Chordy - Re-engineered the Chord object to be easier to manipulate.
            Made ChordPro chords follow the spec closer by allowing '*' as the first
 	     character followed by any text.
