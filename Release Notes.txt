@@ -26,6 +26,7 @@ Bit late starting with 2.6.4 but about time I documented it :-)
 	    - Editing a new Bar on a blank Tab failed.
 	    - adjusted the screen position for Notes - they were showing too low.
 	    - Prev/Next with Save not working correctly.
+	    - More issues with Edit Update, especially when handling the last bar.
   Chordy - Re-engineered the Chord object to be easier to manipulate.
            Made ChordPro chords follow the spec closer by allowing '*' as the first
 	     character followed by any text.

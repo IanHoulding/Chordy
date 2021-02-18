@@ -377,10 +377,11 @@ sub _pn {
     }
   } else {
     if ($pn eq 'next') {
-      CP::Cmsg::message(SAD, "This is the last Bar.", 1);
-      return;
+      if ($EditBar->isblank()) {
+	CP::Cmsg::message(SAD, "This is the last Bar.", 1);
+	return;
+      }
     }
-    $bar = $tab->{lastBar};
   }
   $EditBar->ClearEbars();
   $bar->select() if ($bar);
@@ -409,13 +410,14 @@ sub Save {
   $EditBar->{tab}->ClearAndRedraw();
 }
 
+# This updates the bar on the page but leaves the Edit Bar intact.
 sub Update {
   if ($EditBar->{pbar}) {
     save_bar($EditBar1, UPDATE) if ($EditBar1->{pbar} && $EditBar1->comp($EditBar1->{pbar}));
     save_bar($EditBar, UPDATE) if ($EditBar->comp($EditBar->{pbar}));
   } else {
     # Editing a bar to tack on the end.
-    save_bar($EditBar, UPDATE);
+    save_bar($EditBar, UPDATE) if (! $EditBar->isblank());
   }
 }
 
@@ -433,7 +435,8 @@ sub save_bar {
       $tab->{lastBar}{next} = $bar;
       $bar->{prev} = $tab->{lastBar};
     }
-    $insert = REPLACE;
+    $ebar->{pbar} = $bar;
+    $insert = REPLACE if ($insert != UPDATE);
   } else {
     my $dest = $ebar->{pbar};
     if ($insert == BEFORE || $insert == AFTER) {
@@ -470,7 +473,8 @@ sub save_bar {
   }
   if ($insert == UPDATE) {
     $bar->unMap();
-    $bar->show();
+    $tab->indexBars();
+    $tab->newPage($tab->{pageNum});
   }
   $tab->setEdited(1);
 }
