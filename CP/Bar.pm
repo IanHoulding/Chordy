@@ -360,40 +360,36 @@ sub posSelect {
 }
 
 sub Edit {
-  my($tab) = shift;
+  my($self,$tab) = @_;
 
-  my $bar = $tab->{select1};
-  if ($bar) {
-    if ($tab->{eWin}->g_wm_state() eq 'normal') {
-      # We have a Bar being Edited and someone's selected a new Bar for editing.
-      my $pbar = $EditBar->{pbar};
-      if (($pbar && comp($EditBar, $pbar)) || ($pbar == 0 && ! isblank($EditBar))) {
-	my $ans = CP::Cmsg::msgYesNoCan("Save current Bar?");
-	if ($ans eq 'Cancel') {
-	  $tab->ClearSel();
-	  $pbar->select();
-	  $tab->{select1} = $pbar;
-	  return;
-	}
-	Save() if ($ans eq 'Yes');
+  if ($tab->{eWin}->g_wm_state() eq 'normal') {
+    # We have a Bar being Edited and someone's selected a new Bar for editing.
+    my $pbar = $EditBar->{pbar};
+    if (($pbar && comp($EditBar, $pbar)) || ($pbar == 0 && ! isblank($EditBar))) {
+      my $ans = CP::Cmsg::msgYesNoCan("Save current Bar?");
+      if ($ans eq 'Cancel') {
+	$tab->ClearSel();
+	$pbar->select();
+	$tab->{select1} = $pbar;
+	return;
       }
-      $EditBar->Clear();
-      $EditBar1->Clear();
+      Save() if ($ans eq 'Yes');
     }
-    copy($bar, $EditBar, ALLB);
-    $EditBar->{pbar} = $bar;
-    $EditBar->{prev} = $bar->{prev};
-    if ($bar->{next} != 0) {
-      $EditBar1->{pbar} = $bar->{next};
-      copy($bar->{next}, $EditBar1, ALLB);
-      $EditBar1->{next} = $bar->{next}{next};
-    } else {
-      $EditBar1->{next} = $EditBar1->{pbar} = 0;
-    }
-    $EditBar->{bidx} = $bar->{bidx};
-  } else {
-    $EditBar->{bidx} = ($tab->{bars}) ? $tab->{lastBar}{bidx} + 1 : 1;
+    $EditBar->Clear();
+    $EditBar1->Clear();
   }
+  copy($self, $EditBar, ALLB);
+  $EditBar->{pbar} = $self;
+  $EditBar->{prev} = $self->{prev};
+  if ($self->{next} != 0) {
+    $EditBar1->{pbar} = $self->{next};
+    copy($self->{next}, $EditBar1, ALLB);
+    $EditBar1->{next} = $self->{next}{next};
+  } else {
+    $EditBar1->{next} = $EditBar1->{pbar} = 0;
+  }
+  $EditBar->{bidx} = $self->{bidx};
+
   $tab->{eWin}->g_wm_deiconify() if (Tkx::winfo_ismapped($tab->{eWin}) == 0);
   $tab->{eWin}->g_raise();
   show($EditBar);
@@ -456,7 +452,7 @@ sub checkDel {
   my($tab) = shift;
 
   if ($tab->{select1}) {
-    $tab->DeleteBars();
+    $tab->DeleteBars(1);
   }
 }
 
@@ -500,15 +496,6 @@ sub copy {
       push(@{$dst->{notes}}, $n->copy($dst));
     }
   }
-}
-
-sub Cancel {
-  my($self) = shift;
-
-  my $tab = $self->{tab};
-  $EditBar->ClearEbars();
-  $tab->ClearSel();
-  $tab->{eWin}->g_wm_withdraw();
 }
 
 sub show {
@@ -576,7 +563,7 @@ sub show {
   } else {
     my $tag = "det$pidx";
     if ($can->bind($tag) eq '') {
-      my $sub = sub{$tab->ClearSel();$self->select();Edit($tab);};
+      my $sub = sub{$tab->ClearSel();$self->select();$self->Edit($tab);};
       $can->itemconfigure("b$pidx", -fill => BLACK);
       $can->bind($tag, '<Button-1>', sub{$self->select()});
       $can->bind($tag, '<Shift-Button-1>', sub{$self->rangeSelect()});

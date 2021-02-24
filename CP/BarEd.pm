@@ -33,7 +33,7 @@ sub editWindow {
     ($tab->{eWin}, my $outer) = ($pop->{top}, $pop->{frame});
     $pop->{top}->g_wm_withdraw();
 
-    $tab->{eWin}->g_wm_protocol('WM_DELETE_WINDOW', sub{$EditBar->Cancel()});
+    $tab->{eWin}->g_wm_protocol('WM_DELETE_WINDOW', \&Cancel);
     $outer->g_pack(qw//);
 
     $EditBar = CP::Bar->new($tab);
@@ -127,16 +127,14 @@ sub buttons {
 		 ['Set Background',   'Background',   'Green'],
 		 ['Clear Bar',        'Clear',        'Red']) {
     my($txt,$func,$fg) = @{$t};
-    my $b = $frm->new_ttk__button(
-      -text => $txt,
-      -style => "$fg.TButton",
-      -command => \&$func);
+    my $b = $frm->new_ttk__button(-text => $txt,
+				  -style => "$fg.TButton",
+				  -command => \&$func);
     $b->g_pack(qw/-side right -padx 10 -pady 4/);
   }
-  my $c = $frm->new_ttk__button(
-    -text => '>> Cancel <<',
-    -style => "Red.TButton",
-    -command => sub{$EditBar->Cancel()});
+  my $c = $frm->new_ttk__button(-text => '>> Cancel <<',
+				-style => "Red.TButton",
+				-command => \&Cancel);
   $c->g_pack(qw/-side left -padx 10 -pady 4/);
 }
 
@@ -153,12 +151,11 @@ sub canvas {
     $ecan->delete('all');
     $ecan->configure(-width => $ew, -height => $eh);
   } else {
-    $ecan = $tab->{eCan} = $frame->new_tk__canvas(
-      -width => $ew,
-      -height => $eh,
-      -bg => "WHITE",
-      -relief => 'solid',
-      -borderwidth => 1);
+    $ecan = $tab->{eCan} = $frame->new_tk__canvas(-width => $ew,
+						  -height => $eh,
+						  -bg => "WHITE",
+						  -relief => 'solid',
+						  -borderwidth => 1);
     $ecan->g_pack(qw//);
   }
 
@@ -200,12 +197,11 @@ sub fretsAndRests {
   foreach $row (0..1) {
     foreach $col (0..12) {
       my $txt = ($row | $col) ? $i : 'X';
-      my $rb = $fr1->new_ttk__radiobutton(
-	-text => "$txt",
-	-width => 2,
-	-variable => \$tab->{fret},
-	-value => $txt,
-	-style => 'Toolbutton',
+      my $rb = $fr1->new_ttk__radiobutton(-text => "$txt",
+					  -width => 2,
+					  -variable => \$tab->{fret},
+					  -value => $txt,
+					  -style => 'Toolbutton',
 	);
       $rb->g_grid(-row => $row, -column => $col, -padx => 3, -pady => 3);
       $i++;
@@ -223,11 +219,10 @@ sub fretsAndRests {
     my $lb = $fr2->new_ttk__label(-text => $lbl, -width => length($lbl), -anchor => 'e');
     $lb->g_grid(-row => $row, -column => $col++, -padx => [4,0], -pady => [0,4]);
     makeImage("$but", \%XPM);
-    my $rb = $fr2->new_ttk__radiobutton(
-      -image => $but,
-      -variable => \$tab->{fret},
-      -value => $val,
-      -style => 'Toolbutton',
+    my $rb = $fr2->new_ttk__radiobutton(-image => $but,
+					-variable => \$tab->{fret},
+					-value => $val,
+					-style => 'Toolbutton',
 	);
     $rb->g_grid(-row => $row, -column => $col++, -padx => 2, -pady => [0,4]);
     if ($col == 6) {
@@ -243,20 +238,18 @@ sub fretsAndRests {
 		 ['Hammer',      'h',0,1],
 		 ['Bend',        'b',1,0],
 		 ['Bend/Release','r',1,1]) {
-    my $rb = $fr3->new_ttk__radiobutton(
-      -text => $b->[0],
-      -variable => \$tab->{shbr},
-      -value => $b->[1],
-      -style => 'Toolbutton',
-      -command => sub{$EditBar->deselect()});
+    my $rb = $fr3->new_ttk__radiobutton(-text => $b->[0],
+					-variable => \$tab->{shbr},
+					-value => $b->[1],
+					-style => 'Toolbutton',
+					-command => sub{$EditBar->deselect()});
     $rb->g_grid(-row => $b->[2], -column => $b->[3], -padx => 8, -pady => 4);
   }
-  my $c = $fr3->new_ttk__radiobutton(
-	-text => '  Off  ',
-	-variable => \$tab->{shbr},
-	-value => '',
-	-style => 'Toolbutton',
-	-command => sub{$tab->{shbr} = ''});
+  my $c = $fr3->new_ttk__radiobutton(-text => '  Off  ',
+				     -variable => \$tab->{shbr},
+				     -value => '',
+				     -style => 'Toolbutton',
+				     -command => sub{$tab->{shbr} = ''});
   $c->g_grid(-row => 0, -column => 2, -rowspan => 2, -padx => [16,8], -pady => 4);
 }
 
@@ -268,54 +261,49 @@ sub barOpts {
 
   my $vbl = $frm->new_ttk__label(-text => 'Volta Bracket');
 
-  my $vbb = $frm->new_ttk__button(
-    -textvariable => \$EditBar->{volta},
-    -width => 8,
-    -style => 'Menu.TButton',
-    -command => sub{
-      popMenu(\$EditBar->{volta},
-	      sub{$EditBar->volta()},
-	      [qw/None Left Center Right Both/]);
-    });
+  my $vbb = $frm->new_ttk__button(-textvariable => \$EditBar->{volta},
+				  -width => 8,
+				  -style => 'Menu.TButton',
+				  -command => sub{
+				    popMenu(\$EditBar->{volta},
+					    sub{$EditBar->volta()},
+					    [qw/None Left Center Right Both/]);
+				  });
   my $htl = $frm->new_ttk__label(-text => 'Header Text');
-  my $hte = $frm->new_ttk__entry(
-    -width => 40,
-    -validate => 'key',
-    -validatecommand => [sub{
-      $EditBar->{header} = shift;
-      $EditBar->topText();
-      1;}, Tkx::Ev("%P")]);
+  my $hte = $frm->new_ttk__entry(-width => 40,
+				 -validate => 'key',
+				 -validatecommand => [sub{
+				   $EditBar->{header} = shift;
+				   $EditBar->topText();
+				   1;}, Tkx::Ev("%P")]);
   $EditBar->{topEnt} = $hte;
   my $jul = $frm->new_ttk__label(-text => 'Justify ');
-  my $jub = $frm->new_ttk__button(
-    -textvariable => \$EditBar->{justify},
-    -width => 8,
-    -style => 'Menu.TButton',
-    -command => sub{
-      popMenu(\$EditBar->{justify},
-	      sub{$EditBar->topText()},
-	      [qw/Left Right/]);
-    });
+  my $jub = $frm->new_ttk__button(-textvariable => \$EditBar->{justify},
+				  -width => 8,
+				  -style => 'Menu.TButton',
+				  -command => sub{
+				    popMenu(\$EditBar->{justify},
+					    sub{$EditBar->topText()},
+					    [qw/Left Right/]);
+				  });
   my $rel = $frm->new_ttk__label(-text => 'Repeat');
-  my $reb = $frm->new_ttk__button(
-    -textvariable => \$EditBar->{rep},
-    -width => 8,
-    -style => 'Menu.TButton',
-    -command => sub{
-      popMenu(\$EditBar->{rep},
-	      sub{$EditBar->repeat()},
-	      [qw/None Start End/]);
-    });
+  my $reb = $frm->new_ttk__button(-textvariable => \$EditBar->{rep},
+				  -width => 8,
+				  -style => 'Menu.TButton',
+				  -command => sub{
+				    popMenu(\$EditBar->{rep},
+					    sub{$EditBar->repeat()},
+					    [qw/None Start End/]);
+				  });
   my $nfl = $frm->new_ttk__label(-text => 'Note Font');
-  my $nfb = $frm->new_ttk__button(
-    -textvariable => \$tab->{noteFsize},
-    -width => 8,
-    -style => 'Menu.TButton',
-    -command => sub{
-      popMenu(\$tab->{noteFsize},
-	      undef,
-	      [qw/Normal Small/]);
-    });
+  my $nfb = $frm->new_ttk__button(-textvariable => \$tab->{noteFsize},
+				  -width => 8,
+				  -style => 'Menu.TButton',
+				  -command => sub{
+				    popMenu(\$tab->{noteFsize},
+					    undef,
+					    [qw/Normal Small/]);
+				  });
   my $bsl = $frm->new_ttk__label(-text => "Bar Starts:");
   my $cb1 = $frm->new_ttk__checkbutton(-style => 'My.TCheckbutton',
 				       -compound => 'left',
@@ -361,7 +349,8 @@ sub _pn {
   if ($save) {
     Update();
     $tab->indexBars();
-    $tab->newPage($tab->{pageNum});
+    $tab->newPage($bar->{pnum}); # Clears the selection
+    $bar->select();
   } else {
     if (($bar && $EditBar->comp($bar)) || ($bar == 0 && ! $EditBar->isblank())) {
       my $ans = CP::Cmsg::msgYesNoCan("Save current Bar?");
@@ -369,23 +358,24 @@ sub _pn {
       Save() if ($ans eq 'Yes');
     }
   }
-  if ($bar) {
-    $bar = $bar->{$pn};
-    if ($bar == 0 && $pn eq 'prev') {
+  $bar = $bar->{$pn};
+  if ($bar == 0) {
+    if ($pn eq 'prev') {
       CP::Cmsg::message(SAD, "This is the first Bar.", 1);
       return;
-    }
-  } else {
-    if ($pn eq 'next') {
+    } else {
       if ($EditBar->isblank()) {
 	CP::Cmsg::message(SAD, "This is the last Bar.", 1);
 	return;
       }
+      $bar = $tab->add1bar();
+      $tab->indexBars();
+      $tab->newPage($bar->{pnum});
     }
   }
   $EditBar->ClearEbars();
-  $bar->select() if ($bar);
-  CP::Bar::Edit($tab);
+  $bar->select();
+  $bar->Edit($tab);
 }
 
 sub InsertBefore { insert(BEFORE); }
@@ -426,16 +416,11 @@ sub save_bar {
 
   my $tab = $ebar->{tab};
   my($bar);
-  if ($ebar->{pbar} == 0) {
-    # We've edited a (new) blank Bar.
-    $bar = CP::Bar->new($tab);
-    if ($tab->{bars} == 0) {
-      $tab->{bars} = $bar;
-    } else {
-      $tab->{lastBar}{next} = $bar;
-      $bar->{prev} = $tab->{lastBar};
-    }
-    $ebar->{pbar} = $bar;
+  if ($tab->{select1} == 0) {
+    # Shouldn't happen but someone could edit a bar (new or old)
+    # and deselect the original so we tack this onto the end.
+    $bar = $ebar->{pbar} = $tab->add1bar();
+    $bar->select();
     $insert = REPLACE if ($insert != UPDATE);
   } else {
     my $dest = $ebar->{pbar};
@@ -479,7 +464,16 @@ sub save_bar {
   $tab->setEdited(1);
 }
 
-# This is ONLY called for the EditBar.
+sub Cancel {
+  my $tab = $EditBar->{tab};
+  if ($EditBar->{pbar}->isblank()) {
+    $tab->DeleteBars(0);
+  }
+  $EditBar->ClearEbars();
+  $tab->ClearSel();
+  $tab->{eWin}->g_wm_withdraw();
+}
+
 sub Background {
   if ((my $bg = $EditBar->bgGet()) ne '') {
     $EditBar->{bg} = $bg;
@@ -487,7 +481,6 @@ sub Background {
   }
 }
 
-# ONLY called on the EditBar
 sub RemoveBG {
   $EditBar->{canvas}->itemconfigure("bg-1", -fill => BLANK);
   $EditBar->{bg} = BLANK;

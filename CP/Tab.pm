@@ -485,8 +485,10 @@ sub add1bar {
   my $last = $self->{lastBar};
   my $bar = CP::Bar->new($self);
   if ($last == 0) {
+    $bar->{bidx} = 1;
     $self->{bars} = $bar;
   } else {
+    $bar->{bidx} = $last->{bidx} + 1;
     $last->{next} = $bar;
     $bar->{prev} = $last;
   }
@@ -905,24 +907,26 @@ sub clearBG {
 sub editBar {
   my($self) = shift;
 
-  my($a,$b) = $self->diff();
+  my($a,$b) = ($self->{select1},$self->{select2});
   if ($a == 0) {
-    CP::Bar::Edit($self);
-  } else {
-    if ($a != $b) {
-      if (msgYesNo("Only the first Bar will be edited.\nContinue?") eq "No") {
-	return;
-      }
-      my $can = $self->{pCan};
-      while ($b != $a) {
-	$can->itemconfigure("bg$b->{pidx}", -fill => $b->{bg});
-	$b = $b->{prev};
-      }
-      $self->{select1} = $a;
-      $self->{select2} = 0;
+    # This is either the first bar or a
+    # new one to be tacked onto the end.
+    $a = $self->add1bar();
+    $self->indexBars();
+    $self->newPage($a->{pnum});
+    $a->select();
+  } elsif ($b) {
+    if ($b != $a) {
+      return if (msgYesNo("Only the first Bar will be edited.\nContinue?") eq "No");
     }
-    $a->Edit();
+    my $can = $self->{pCan};
+    while ($b != $a) {
+      $can->itemconfigure("bg$b->{pidx}", -fill => $b->{bg});
+      $b = $b->{prev};
+    }
+    $self->{select2} = 0;
   }
+  $a->Edit($self);
 }
 
 sub Clone {
@@ -1118,7 +1122,7 @@ sub ClearSel {
 }
 
 sub DeleteBars {
-  my($self) = shift;
+  my($self,$query) = @_;
 
   my($a,$b) = $self->diff();
   if ($a == 0) {
@@ -1126,11 +1130,18 @@ sub DeleteBars {
   } else {
     my $msg = "Are you sure you want to\ndelete the selected Bar";
     $msg .= 's' if ($a != $b);
-    if (msgYesNo($msg) eq 'Yes') {
+    if ($query == 0 || msgYesNo($msg) eq 'Yes') {
       if ($a->{prev} == 0) {
-	$self->{bars} = $b->{next};
-	$b->{next}{prev} = 0 if ($b->{next} != 0);
+	# $a is the first bar
+	if ($a->{next} == 0) {
+	  #$a is the only bar
+	  $self->{bars} = $self->{lastBar} = 0;
+	} else {
+	  $self->{bars} = $b->{next};
+	  $b->{next}{prev} = 0 if ($b->{next} != 0);
+	}
       } elsif ($b->{next} == 0) {
+	# $b is the last bar
 	$self->{lastBar} = $a->{prev};
 	$a->{prev}{next} = 0;
       } else {

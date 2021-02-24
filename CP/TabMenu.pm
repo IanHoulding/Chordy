@@ -371,7 +371,7 @@ sub newTab {
     }
     $tab = CP::Tab->new("$Path->{Tab}/$tab->{fileName}");
     $tab->drawPageWin();
-    main::tabTitle($tab, $tab->{fileName});
+    $tab->tabTitle($tab->{fileName});
     $Opt->add2recent($tab->{fileName}, 'RecentTab', \&refresh);
   }
 }
@@ -413,7 +413,7 @@ sub renameTab {
     }
     rename("$Path->{Tab}/$ofn", "$Path->{Tab}/$newfn");
     $tab->{fileName} = $newfn;
-    main::tabTitle($tab, "$newfn");
+    $tab->tabTitle("$newfn");
     $Opt->add2recent($newfn, 'RecentTab', \&refresh);
   } else {
     Tkx::bell();

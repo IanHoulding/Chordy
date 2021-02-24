@@ -98,7 +98,7 @@ sub help {
  "<V 1>",
  "  <O Mhh:s: Help>",
  "  <O Mha:s: About>",
- "<V 5>",
+ "<V 10>",
 
 #####################
 
@@ -109,29 +109,34 @@ sub help {
  "  <O PP:P: {{{ Prev Page ><V3>",
  "  <O PE:P: Edit Lyrics ><V3>",
  "  <O PN:P: Next Page }}} ><V3>",
- "<V 5>",
+ "<V 10>",
 
 #####################
 
  "<T CEO><O EO:h:   Page Editing & Options   >",
  "<V 10>",
 
+ " <O SL:S:Select>",
+ "<V 1>",
+ "  <O So:P: Collection ><V3>",
+ "  <O Sm:P: Media ><V3>",
+ "<V 5>",
+
+ " <O TFN:S:File Options>",
+ "<V 1>",
  "<O TFN:s: Tab File Name>",
  "<O PFN:s: PDF File Name>",
  "<O TI:s: Title>",
- "<O HN:s: Heading Note>",
+ "<O HN:s: Heading Note><V3>",
  "<V 5>",
 
  " <O EE:S:Edit>",
  "<V 1>",
  "  <O Ee:P: Edit Bar ><V3>",
  "  <O Ec:P: Clone Bar(s) ><V3>",
- "<V 5>",
-
- " <O BG:S:Background>",
- "<V 1>",
- "  <O Bs:P: Set ><V3>",
- "  <O Bc:P: Clear ><V3>",
+ "  <O Sc:P: Clear Selection ><V3>",
+ "  <O Sb:P: Clear Bar(s) ><V3>",
+ "  <O Sd:P: Delete Bar(s) ><V3>",
  "<V 5>",
 
  " <O CP:S:Copy/Paste>",
@@ -142,23 +147,16 @@ sub help {
  "  <O Cf:P: After ><V3>",
  "<V 5>",
 
- " <O SE:S:Selection>",
+ " <O BG:S:Background>",
  "<V 1>",
- "  <O Sc:P: Clear Selection ><V3>",
- "  <O Sb:P: Clear Bar(s) ><V3>",
- "  <O Sd:P: Delete Bar(s) ><V3>",
+ "  <O Bs:P: Set ><V3>",
+ "  <O Bc:P: Clear ><V3>",
  "<V 5>",
 
  " <O LY:S:Lyric>",
  "<V 1>",
- "  <O Lu:P: Shift Up One Line ><V3>",
- "  <O Ld:P: Shift Down One Line ><V3>",
- "<V 5>",
-
- " <O SL:S:Select>",
- "<V 1>",
- "  <O So:P: Collection ><V3>",
- "  <O Sm:P: Media ><V3>",
+ "  <O Lu:P: Shift Up 1 Line ><V3>",
+ "  <O Ld:P: Shift Down 1 Line ><V3>",
  "<V 5>",
 
  " <O TR:S:Transpose>",
@@ -364,6 +362,14 @@ sub help {
 
  "<T EO><H Page Editing & Options\n>",
  "<V 10><E>",
+
+ "<E><T SL> <S Select> ",
+ "<V 5><E>",
+ "<T So><s  Collection > ",
+ "<T Sm><s  Media > ",
+ "<M>These two buttons let you select which Collection to use and with which Media.\n",
+
+ "<E><T TFN> <S File Options> ",
  "<E><T TFN><s  Tab File Name>",
  "<V 5><E>",
  "<T PFN><s  PDF File Name>",
@@ -374,13 +380,22 @@ sub help {
  "<T HN><s  Heading Note> ",
  "<M>This gets placed at the top right of the page.\n",
 
- "<T EE> <S Edit> ",
+ "<E><T EE> <S Edit> ",
  "<V 5><E>",
  "<T Ee> <P  Edit Bar > ",
  "<M>Click this after selecting a bar to transfer it to the Bar Editor.",
  "<V 5><E>",
  "<T Ec> <P  Clone Bar(s) > ",
- "<M>After selecting one or more bars this will copy the selection to the end of the current bars.\n",
+ "<M>After selecting one or more bars this will copy the selection to the end of the current bars.",
+ "<V 5><E>",
+ "<T Sc> <P  Clear Selection > ",
+ "<M>Any Bar Selection is cleared.",
+ "<V 5><E>",
+ "<T Sb> <P  Clear Bar(s) > ",
+ "<M>All the Selected Bars will be cleared of all Notes, Headings, Voltas, etc. Any Lyrics below the Bars will not be affected.",
+ "<V 5><E>",
+ "<T Sd> <P  Delete Bar(s) > ",
+ "<M>After a confirmation prompt, all the Selected Bars will be deleted and the resulting empty space removed.\n",
 
  "<E><T CP> <S Copy/Paste> ",
  "<V 5><E>",
@@ -395,17 +410,6 @@ sub help {
  "<V 5><E>",
  "<T Cf> <P  After > ",
  "<M>Will insert any Bars in the Copy Buffer <B After> the selected Bar.\n",
-
- "<E><T SE> <S Selection> ",
- "<V 5><E>",
- "<T Sc> <P  Clear Selection > ",
- "<M>Any Bar Selection is cleared.",
- "<V 5><E>",
- "<T Sb> <P  Clear Bar(s) > ",
- "<M>All the Selected Bars will be cleared of all Notes, Headings, Voltas, etc. Any Lyrics below the Bars will not be affected.",
- "<V 5><E>",
- "<T Sd> <P  Delete Bar(s) > ",
- "<M>After a confirmation prompt, all the Selected Bars will be deleted and the resulting empty space removed.\n",
 
  "<E><T BG> <S Background> ",
  "<V 5><E>",
@@ -422,12 +426,6 @@ sub help {
  "<V 5><E>",
  "<T Ld><P  Shift Down One Line > ",
  "<M>Moves all the Lyrics Down one Lyric line. The Lyric line at the bottom of the last page will be placed at the start of the first page.\n\n",
-
- "<E><T SL> <S Select> ",
- "<V 5><E>",
- "<T So><s  Collection > ",
- "<T Sm><s  Media > ",
- "<M>These two buttons let you select which Collection to use and with which Media.\n",
 
  "<E><T TR> <S Transpose> ",
  "<V 5><E>",
@@ -450,13 +448,12 @@ sub help {
       [
        "<E><T TP> <S Tab Player> ",
        "<V 5>",
-       "<M>Use the slider to set the tempo of the piece (beats/minute). If no start or stop bar is selected then the whole piece will be played. If just the start is selected then play will continue to the end of the piece. If both are selected then the (inclusive) bars will be played. The same applies to the 'Loop' function. If you 'Pause' play, you can continue with either the <R Play> or the <R Loop> button and play will continue in that mode.\n"
+       "<M>Use the slider to set the tempo of the piece (beats/minute). If no start or stop bars are selected then the whole piece will be played. If just the start is selected then play will continue to the end of the piece. If both are selected then the (inclusive) bars will be played. The same applies to the 'Loop' function. If you 'Pause' play, you can continue with either the <R Play> or the <R Loop> button and play will continue in that mode.\n"
       ]);
   }
 
   $win->add(
 [
-
 #####################
  "\n<E><T CE><H Colour Editor (Backgrounds and Fonts)\n>",
  "<V 10>",

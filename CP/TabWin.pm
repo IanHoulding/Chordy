@@ -83,7 +83,7 @@ sub pageWindow {
     $tab->{nCan}->g_grid(qw/-row 1 -column 0 -sticky n/);
 
     $tab->{pCan} = $leftF->new_tk__canvas(
-      -bg => "WHITE",
+      -bg => WHITE,
       -width => $Media->{width} - 1,
       -height => $Media->{height},
       -relief => 'solid',
@@ -186,6 +186,38 @@ sub transCmnd {
 sub pageButtons {
   my($tab,$frm) = @_;
 
+  my $sel = $frm->new_ttk__labelframe(-text => ' Select ');
+  $sel->g_pack(qw/-side top -fill x -padx 4 -pady 4/);
+
+  my $coll = $sel->new_ttk__label(-text => 'Collection');
+  my $colb = $sel->new_ttk__button(
+    -textvariable => \$Collection->{name},
+    -style => 'Menu.TButton',
+    -command => sub{ my $cc = $Collection->{name};
+		     $Collection->select();
+		     if ($cc ne $Collection->{name}) {
+		       if ((my $fn = $tab->{fileName}) ne '') {
+			 $fn = (-e "$Path->{Tab}/$fn") ? "$Path->{Tab}/$fn" : '';
+			 $tab->new($fn);
+		       }
+		       $tab->drawPageWin();
+		       CP::TabMenu::refresh();
+		     }
+                   }
+    );
+  my $medl = $sel->new_ttk__label(-text => 'Media');
+  my $medb = $sel->new_ttk__button(
+    -textvariable => \$Opt->{Media},
+    -style => 'Menu.TButton',
+    -command => [\&newMedia, $tab],
+    );
+
+  $coll->g_grid(qw/-row 0 -column 0 -sticky e/, -padx => [4,0], -pady => [0,4]);
+  $colb->g_grid(qw/-row 0 -column 1 -sticky w/, -padx => [2,0], -pady => [0,4]);
+  $medl->g_grid(qw/-row 0 -column 2 -sticky e/, -padx => [20,0], -pady => [0,4]);
+  $medb->g_grid(qw/-row 0 -column 3 -sticky w/, -padx => [2,0], -pady => [0,4]);
+######
+
   my $frt = $frm->new_ttk__frame(qw/-relief raised -borderwidth 2/);
   $frt->g_pack(qw/-side top -fill x -padx 4 -pady 4/);
 
@@ -212,34 +244,31 @@ sub pageButtons {
   $lb6->g_grid(qw/-row 3 -column 0 -sticky e/, -padx => [0,2], -pady => [0,4]);  # HN
   $en6->g_grid(qw/-row 3 -column 1 -sticky w/, -padx => [0,0], -pady => [0,4]);
 
-##########
+######
 
-  my $ebg = $frm->new_ttk__frame();
-  $ebg->g_pack(qw/-side top -fill x -padx 4 -pady 4/);
-
-##########
-
-  my $edit = $ebg->new_ttk__labelframe(-text => ' Edit ');
-  $edit->g_pack(qw/-side left -fill x/, -padx => [0,4]);
+  my $edit = $frm->new_ttk__labelframe(-text => ' Edit ');
+  $edit->g_pack(qw/-side top -fill x -padx 4 -pady 4/);
   my $bu1 = $edit->new_ttk__button(-text => 'Edit Bar',
 				   -style => "Green.TButton",
 				   -command => sub{$tab->editBar});
-  $bu1->g_grid(qw/-row 0 -column 0 -sticky we -padx 8/, -pady => [0,4]);
+  $bu1->g_grid(qw/-row 0 -column 0 -padx 8/, -pady => [0,4]);
   my $bu2 = $edit->new_ttk__button(-text => 'Clone Bar(s)',
 				   -style => "Green.TButton",
 				   -command => sub{$tab->Clone});
-  $bu2->g_grid(qw/-row 0 -column 1 -sticky we -padx 8/, -pady => [0,4]);
-######
-  my $bgnd = $ebg->new_ttk__labelframe(-text => ' Background ');
-  $bgnd->g_pack(qw/-side right -fill x/, -padx => [4,0]);
-  my $bu12 = $bgnd->new_ttk__button(-text => 'Set',
-				    -style => "Green.TButton",
-				    -command => sub{$tab->setBG});
-  $bu12->g_grid(qw/-row 0 -column 0 -sticky we -padx 8/, -pady => [0,4]);
-  my $bu13 = $bgnd->new_ttk__button(-text => 'Clear',
-				    -style => "Red.TButton",
-				    -command => sub{$tab->clearBG});
-  $bu13->g_grid(qw/-row 0 -column 1 -sticky we -padx 8/, -pady => [0,4]);
+  $bu2->g_grid(qw/-row 0 -column 1 -padx 8/, -pady => [0,4]);
+
+  my $bu9 = $edit->new_ttk__button(-text => 'Clear Selection',
+				   -style => "Red.TButton",
+				   -command => sub{$tab->ClearSel});
+  $bu9->g_grid(qw/-row 1 -column 0 -padx 8 -pady 4/);
+  my $bu10 = $edit->new_ttk__button(-text => 'Clear Bar(s)',
+				   -style => "Red.TButton",
+				   -command => sub{$tab->ClearBars});
+  $bu10->g_grid(qw/-row 1 -column 1 -padx 8 -pady 4/);
+  my $bu11 = $edit->new_ttk__button(-text => 'Delete Bar(s)',
+				   -style => "Red.TButton",
+				   -command => sub{$tab->DeleteBars(1)});
+  $bu11->g_grid(qw/-row 0 -rowspan 2 -column 2 -padx 8/, -pady => [0,4]);
 ######
 
   my $cp = $frm->new_ttk__labelframe(-text => ' Copy/Paste ');
@@ -326,65 +355,32 @@ sub pageButtons {
   $por->g_grid(qw/-row 3 -column 4/, -pady => [0,4]);
 ######
 
-  my $seln = $frm->new_ttk__labelframe(-text => ' Selection ');
-  $seln->g_pack(qw/-side top -fill x -padx 4 -pady 4/);
-  my $bu9 = $seln->new_ttk__button(-text => 'Clear Selection',
-				   -style => "Red.TButton",
-				   -command => sub{$tab->ClearSel});
-  $bu9->g_grid(qw/-row 0 -column 0 -sticky we -padx 8/, -pady => [0,4]);
-  my $bu10 = $seln->new_ttk__button(-text => 'Clear Bar(s)',
-				   -style => "Red.TButton",
-				   -command => sub{$tab->ClearBars});
-  $bu10->g_grid(qw/-row 0 -column 1 -sticky we -padx 8/, -pady => [0,4]);
-  my $bu11 = $seln->new_ttk__button(-text => 'Delete Bar(s)',
-				   -style => "Green.TButton",
-				   -command => sub{$tab->DeleteBars});
-  $bu11->g_grid(qw/-row 0 -column 2 -sticky we -padx 8/, -pady => [0,4]);
-######
+  my $selbg = $frm->new_ttk__frame();
+  $selbg->g_pack(qw/-side top -fill x/);
 
-  my $lyr = $frm->new_ttk__labelframe(-text => ' Lyrics ');
-  $lyr->g_pack(qw/-side top -fill x -padx 4 -pady 4/);
-  my $bu14 = $lyr->new_ttk__button(-text => 'Shift Up One Line',
+  my $bgnd = $selbg->new_ttk__labelframe(-text => ' Background ');
+  $bgnd->g_pack(qw/-side left -fill x/, -padx => [4,0]);
+  my $bu12 = $bgnd->new_ttk__button(-text => 'Set',
+				    -width => 6,
+				    -style => "Green.TButton",
+				    -command => sub{$tab->setBG});
+  $bu12->g_grid(qw/-row 0 -column 0 -sticky we -padx 8/, -pady => [0,4]);
+  my $bu13 = $bgnd->new_ttk__button(-text => 'Clear',
+				    -width => 6,
+				    -style => "Red.TButton",
+				    -command => sub{$tab->clearBG});
+  $bu13->g_grid(qw/-row 0 -column 1 -sticky we -padx 8/, -pady => [0,4]);
+
+  my $lyr = $selbg->new_ttk__labelframe(-text => ' Lyrics ');
+  $lyr->g_pack(qw/-side right -fill x -padx 4 -pady 4/);
+  my $bu14 = $lyr->new_ttk__button(-text => 'Shift Up 1 Line',
 				   -style => "Green.TButton",
 				   -command => sub{$tab->{lyrics}->shiftUp()});
   $bu14->g_grid(qw/-row 0 -column 0 -sticky we -padx 8/, -pady => [0,4]);
-  my $bu15 = $lyr->new_ttk__button(-text => 'Shift Down One Line',
+  my $bu15 = $lyr->new_ttk__button(-text => 'Shift Down 1 Line',
 				   -style => "Green.TButton",
 				   -command => sub{$tab->{lyrics}->shiftDown()});
   $bu15->g_grid(qw/-row 0 -column 1 -sticky we -padx 8/, -pady => [0,4]);
-######
-
-  my $sel = $frm->new_ttk__labelframe(-text => ' Select ');
-  $sel->g_pack(qw/-side top -fill x -padx 4 -pady 4/);
-
-  my $coll = $sel->new_ttk__label(-text => 'Collection');
-  my $colb = $sel->new_ttk__button(
-    -textvariable => \$Collection->{name},
-    -style => 'Menu.TButton',
-    -command => sub{ my $cc = $Collection->{name};
-		     $Collection->select();
-		     if ($cc ne $Collection->{name}) {
-		       if ((my $fn = $tab->{fileName}) ne '') {
-			 $fn = (-e "$Path->{Tab}/$fn") ? "$Path->{Tab}/$fn" : '';
-			 $tab->new($fn);
-		       }
-		       $tab->drawPageWin();
-		       CP::TabMenu::refresh();
-		     }
-                   }
-    );
-  my $medl = $sel->new_ttk__label(-text => 'Media');
-  my $medb = $sel->new_ttk__button(
-    -textvariable => \$Opt->{Media},
-    -style => 'Menu.TButton',
-    -command => [\&newMedia, $tab],
-    );
-
-  $coll->g_grid(qw/-row 0 -column 0 -sticky e/, -padx => [4,0], -pady => [0,4]);
-  $colb->g_grid(qw/-row 0 -column 1 -sticky w/, -padx => [2,0], -pady => [0,4]);
-  $medl->g_grid(qw/-row 0 -column 2 -sticky e/, -padx => [20,0], -pady => [0,4]);
-  $medb->g_grid(qw/-row 0 -column 3 -sticky w/, -padx => [2,0], -pady => [0,4]);
-
 ###
   my $frb = $frm->new_ttk__labelframe(-text => ' Transpose ');
   $frb->g_pack(qw/-side top -fill x -padx 4 -pady 4/);
