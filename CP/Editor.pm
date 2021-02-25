@@ -607,12 +607,12 @@ my %Dtv = (
   br => {dir => 'bridge',             lab => 'Bridge',         clr => 'BGBridge'},
   bs => {dir => 'start_of_bridge',    lab => 'Start Bridge',   clr => 'BGBridge'},
   ca => {dir => 'capo',               lab => 'Capo',           clr => '#FFE0E0'},
-  cb => {dir => 'comment_box',        lab => 'Cmnt Box',       clr => 'BGComment'},
+  cb => {dir => 'comment_box',        lab => 'Comment Box',    clr => 'BGComment'},
   cc => {dir => 'chordcolour',        lab => 'Chord Colour',   clr => '#FFE8B8'},
   cd => {dir => 'chord',              lab => 'Chord',          clr => '#FFE8B8'},
   cf => {dir => 'chordfont',          lab => 'Chord Font',     clr => '#FFE8B8'},
   ch => {dir => 'chorus',             lab => 'Chorus',         clr => 'BGChorus'},
-  ci => {dir => 'comment_italic',     lab => 'Cmnt Italic',    clr => 'BGComment'},
+  ci => {dir => 'comment_italic',     lab => 'Comment Italic', clr => 'BGComment'},
   cl => {dir => 'colour',             lab => 'Colour',         clr => ''},
   co => {dir => 'comment',            lab => 'Comment',        clr => 'BGComment'},
   cs => {dir => 'chordsize',          lab => 'Chord Size',     clr => '#FFE8B8'},
@@ -652,54 +652,39 @@ sub directives {
 
   makeImage("colour", \%XPM);
 
-  #    id   col,cspn
-  my @items = (
-    [['ti', 0,2], ['ky', 1,2]],
-
-    [['ca', 0,1], ['te', 1,1], ['nt', 2,1]],
-
-    [['hz', 0,1], ['vs', 1,1], ['np', 2,1]],
-
-    [['md', 0,2], ['me', 1,2]],
-    
-    [['cd', 0,2], ['de', 1,2]],
-
-    [['cf', 0,1], ['cs', 1,1], ['cc', 2,1]],
-
-    [['tf', 0,1], ['ts', 1,1], ['tc', 2,1]],
-
-    [['Tf', 0,1], ['Ts', 1,1], ['Tc', 2,1]],
-
-    [['sg', 0,2], ['eg', 1,2]],
-
-    [['sv', 0,1], ['ev', 1,1], ['ve', 2,1]],
-
-    [['sc', 0,1], ['ec', 1,1], ['ch', 2,1]],
-
-    [['bs', 0,1], ['be', 1,1], ['br', 2,1]],
-
-    [['st', 0,1], ['et', 1,1], ['Tb', 2,1]],
-
-    [['hl', 1,1]],
-
-    [['co', 0,1], ['ci', 1,1], ['cb', 2,1]],
-      );
   my $row = 0;
-  foreach my $r (@items) {
+  #                 id col,cspn
+  foreach my $r ([['ti', 0,2], ['ky', 1,2]],
+		 [['ca', 0,1], ['te', 1,1], ['nt', 2,1]],
+		 [['hz', 0,1], ['vs', 1,1], ['np', 2,1]],
+		 [['md', 0,2], ['me', 1,2]],
+		 [['cd', 0,2], ['de', 1,2]],) {
     foreach my $c (@{$r}) {
-      my($id,$co,$cs) = (@{$c});
-      my $cv = $Dtv{$id}{clr};
-      my $clr = ($cv =~ /^#/) ? $cv : $Opt->{$cv};
-      txtButton($frame, $id, $clr, [\&idef, $id], $row, $co, $cs);
+      txtButton($frame, $row, $c);
     }
     $row++;
   }
+  foreach my $r ([['Chord', [qw/cf cs cc/], 0,1],
+		  ['Text',  [qw/tf ts tc/], 1,1],
+		  ['Tab',   [qw/Tf Ts Tc/], 2,1]],
+		 [['Verse', [qw/sv ev ve/], 0,1],
+		  ['Chorus',[qw/sc ec ch/], 1,1],
+		  ['Bridge',[qw/bs be br/], 2,1]],
+		 [['Tab',   [qw/st et Tb/], 0,2],
+		  ['Grid',  [qw/sg eg/],    1,2]]) {
+    foreach my $c (@{$r}) {
+      menuButton($frame, $row, $c);
+    }
+    $row++;
+  }
+  txtButton($frame, $row, ['hl', 0,2]);
+  menuButton($frame, $row++, ['Comment', [qw/co ci cb/], 1,2]);
   my $sbfrm = $frame->new_ttk__frame();
   $sbfrm->g_grid(-row => $row, -column => 0, -columnspan => 3);
   foreach my $c (['sb', 0,1],
 		 ['eb', 1,1] ) {
     my($id,$co,$cs) = (@{$c});
-    txtButton($sbfrm, $id, $Dtv{$id}->{clr}, [\&idef, $id], 0, $co, $cs);
+    txtButton($sbfrm, $row, $c);
   }
   $row++;
   my $cfrm = $frame->new_ttk__frame();
@@ -732,14 +717,46 @@ sub directives {
 }
 
 sub txtButton {
-  my($frm,$id,$clr,$func,$row,$col,$cspn) = @_;
+  my($frm,$row,$c) = @_;
 
+  my($id,$col,$cspn) = (@{$c});
+  my $cv = $Dtv{$id}{clr};
+  my $clr = ($cv =~ /^#/) ? $cv : $Opt->{$cv};
   Tkx::ttk__style_configure("$clr.TButton", -background => $clr);
   my $lab = $Dtv{$id}{lab};
-  my $but = $frm->new_ttk__button(-text => $lab, -style => "$clr.TButton", -command => $func);
+  my $but = $frm->new_ttk__button(-text => $lab,
+				  -style => "$clr.TButton",
+				  -command => [\&idef, $id]);
   $but->g_grid(-row => $row, -column => $col,
 	       -columnspan => $cspn,
-	       -padx => 2, -pady => 2);
+	       -padx => 2, -pady => 4);
+}
+
+sub menuButton {
+  my($frm,$row,$c) = @_;
+
+  my($lab,$me,$col,$cspn) = (@{$c});
+  my $cv = $Dtv{$me->[0]}{clr};
+  my $clr = ($cv =~ /^#/) ? $cv : $Opt->{$cv};
+  Tkx::ttk__style_configure("$clr.TButton", -background => $clr);
+  my $but = $frm->new_ttk__button(-text => $lab,
+				  -style => "$clr.TButton",
+				  -command => sub{
+				    my $ent = '';
+				    my $m = [];
+				    foreach my $l (@{$me}) { push(@{$m}, $Dtv{$l}{lab})}
+				    popMenu(\$ent, undef, $m);
+				    for(my $i = 0; $i < @{$m}; $i++) {
+				      if ($ent eq $m->[$i]) {
+					idef($me->[$i]);
+					last;
+				      }
+				    }
+				  } );
+
+  $but->g_grid(-row => $row, -column => $col,
+	       -columnspan => $cspn,
+	       -padx => 2, -pady => 4);
 }
 
 sub colourEd {

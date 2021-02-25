@@ -75,7 +75,8 @@ sub new {
   my $pop = CP::Pop->new(0, '.fe', $title);
   return if ($pop eq '');
   my($top,$fr) = ($pop->{top}, $pop->{frame});
-
+  $top->g_wm_protocol('WM_DELETE_WINDOW' => sub{$Done = 'Cancel';});
+  
   my $ftop = $fr->new_ttk__frame(qw/-borderwidth 1 -relief solid/);
   $ftop->g_pack(qw/-side top -expand 1 -fill x/);
 

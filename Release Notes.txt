@@ -55,6 +55,8 @@ Bit late starting with 2.6.4 but about time I documented it :-)
   Editor - Removed a whole bunch of buttons and replaced them with a Window Menu bar.
              An effort to bring the Editor in line with Chordy and Tab and as a means
 	     to reduce the screen real estate.
+	   Converted some of the Directive buttons to Menu buttons to save on real
+	     estate.
 
 3.9
            Changed the way fonts are handled. We now only look for "Regular" fonts
