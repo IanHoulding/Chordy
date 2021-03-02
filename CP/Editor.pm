@@ -122,18 +122,6 @@ sub new {
   my $chord_frame = $leftF->new_ttk__labelframe(-text => " Chords ", -labelanchor => 'n');
   $chord_frame->g_pack(qw/-side top -fill x -anchor nw/);
 
-#  my $cfl = $chord_frame->new_ttk__frame();
-#  $cfl->g_pack(qw/-side left -anchor nw -padx 8 -pady 2/);
-#  foreach my $r (['bracket',   'braceColour', 'Colour', 0],
-#		 ['bracketsz', 'braceSize',   'Size',   7],
-#		 ['bracketoff','braceOffset', 'Offset', 0]) {
-#    my($img,$func,$desc,$pad) = @{$r};
-#    makeImage($img, \%XPM);
-#    my $br = $cfl->new_ttk__button(-image => $img, -command => [\&$func, $img]);
-#    $br->g_pack(qw/-side top/, -pady => $pad);
-#    balloon($br, 'Chord '.$desc);
-#  }
-
   my $cf = $chord_frame->new_ttk__frame();
   $cf->g_pack(qw/-side top -anchor n/);
   chords($cf);
@@ -652,6 +640,25 @@ sub directives {
 
   makeImage("colour", \%XPM);
 
+  #
+  # Style definitions for the pop-up menus.
+  #
+  Tkx::ttk__style_configure('PopMenu.TFrame',
+			    -bordercolor => BLACK,
+			    -background => $Opt->{MenuBG});
+  Tkx::ttk__style_configure('PopMenu.TButton',
+			    -highlightthickness => 0,
+			    -borderwidth => 0,
+			    -activeborderwidth => 0,
+			    -selectborderwidth => 0,
+			    -background => $Opt->{MenuBG},
+			    -foreground => $Opt->{MenuFG});
+  Tkx::ttk__style_map('PopMenu.TButton',
+		      -background => "active #3830FF",
+		      -foreground => "active #FFFFFF");
+  Tkx::ttk__style_configure('PopShad.TFrame',
+			    -background => '#B0B0B0');
+
   my $row = 0;
   #                 id col,cspn
   foreach my $r ([['ti', 0,2], ['ky', 1,2]],
@@ -677,14 +684,10 @@ sub directives {
     }
     $row++;
   }
-  txtButton($frame, $row, ['hl', 0,2]);
-  menuButton($frame, $row++, ['Comment', [qw/co ci cb/], 1,2]);
-  my $sbfrm = $frame->new_ttk__frame();
-  $sbfrm->g_grid(-row => $row, -column => 0, -columnspan => 3);
-  foreach my $c (['sb', 0,1],
-		 ['eb', 1,1] ) {
-    my($id,$co,$cs) = (@{$c});
-    txtButton($sbfrm, $row, $c);
+  txtButton($frame, $row, ['hl', 0,1]);
+  foreach my $c (['Comment', [qw/co ci cb/], 1,1],
+		 ['Background', [qw/sb eb/], 2,1]) {
+    menuButton($frame, $row, $c);
   }
   $row++;
   my $cfrm = $frame->new_ttk__frame();
@@ -696,14 +699,14 @@ sub directives {
   balloon($clrb, "Colour Selector");
 
   foreach my $btn (
-    [0,1, 'HighLight', 'BGHighlight'],
-    [0,2, 'Comment',   'BGComment'],
-    [0,3, 'Verse',     'BGVerse'],
-    [0,4, 'Chorus',    'BGChorus'],
-    [0,5, 'Bridge',    'BGBridge'],
-    [0,6, 'Tab',       'BGTab'],
+    [1, 'HighLight', 'BGHighlight'],
+    [2, 'Comment',   'BGComment'],
+    [3, 'Verse',     'BGVerse'],
+    [4, 'Chorus',    'BGChorus'],
+    [5, 'Bridge',    'BGBridge'],
+    [6, 'Tab',       'BGTab'],
       ) {
-    my($r,$c,$stl,$med) = @{$btn};
+    my($c,$stl,$med) = @{$btn};
     Tkx::ttk__style_configure("$stl.TButton", -background => $Opt->{$med});
     Tkx::ttk__style_map("$stl.TButton", -background => "active $Opt->{$med}");
     my $but = $cfrm->new_ttk__button(
@@ -711,7 +714,7 @@ sub directives {
       -style => "$stl.TButton",
       -command => sub {$Ed->{TxtWin}->insert('insert', $Opt->{$med});$Ed->{TxtWin}->g_focus();}
 	);
-    $but->g_grid(-row => $r, -column => $c, -padx => 8, -pady => [0,4]);
+    $but->g_grid(-row => 0, -column => $c, -padx => 8, -pady => [0,4]);
     balloon($but, "$stl Background");
   }
 }
@@ -738,25 +741,63 @@ sub menuButton {
   my($lab,$me,$col,$cspn) = (@{$c});
   my $cv = $Dtv{$me->[0]}{clr};
   my $clr = ($cv =~ /^#/) ? $cv : $Opt->{$cv};
+
   Tkx::ttk__style_configure("$clr.TButton", -background => $clr);
   my $but = $frm->new_ttk__button(-text => $lab,
 				  -style => "$clr.TButton",
-				  -command => sub{
-				    my $ent = '';
-				    my $m = [];
-				    foreach my $l (@{$me}) { push(@{$m}, $Dtv{$l}{lab})}
-				    popMenu(\$ent, undef, $m);
-				    for(my $i = 0; $i < @{$m}; $i++) {
-				      if ($ent eq $m->[$i]) {
-					idef($me->[$i]);
-					last;
-				      }
-				    }
-				  } );
-
+				  -command => sub{EdpopMenu($me)});
+  $but->g_bind('<Enter>', sub{EdpopMenu($me)});
   $but->g_grid(-row => $row, -column => $col,
 	       -columnspan => $cspn,
 	       -padx => 2, -pady => 4);
+}
+
+sub EdpopMenu {
+  my($list) = shift;
+
+  return if (Tkx::winfo_exists('.pm'));
+  my($x,$y) = (Tkx::winfo_pointerx($MW), Tkx::winfo_pointery($MW));
+
+  my $pop = $MW->new_toplevel(-name => '.pm', -background => '');
+  $pop->g_wm_overrideredirect(1);
+
+  my $fr = $pop->new_ttk__frame(-style => 'PopMenu.TFrame',
+				-relief => 'ridge',
+				-borderwidth => 1,
+				-padding => [2,2,2,2]);
+
+  foreach my $l (@{$list}) {
+    my $but = $fr->new_ttk__button(-text => $Dtv{$l}{lab},
+				   -style => 'PopMenu.TButton',
+				   -command => sub{$pop->g_destroy();idef($l);});
+    $but->g_pack(qw/-side top -fill y -ipadx 10/);
+  }
+
+  Tkx::update_idletasks(); # So the winfo_req's work.
+  my($w,$h) = (Tkx::winfo_reqwidth($fr), Tkx::winfo_reqheight($fr));
+  
+  my $bg = $pop->new_ttk__frame(-style => 'PopShad.TFrame', -width => $w, -height => $h);
+  $fr->g_place(qw/-x 0 -y 0/);
+  $bg->g_place(qw/-x 4 -y 4/);
+  $fr->g_raise();
+
+  $x -= int($w / 2);
+  $y -= int($h / 3);
+  $pop->g_wm_geometry("+$x+$y"); 
+  Tkx::after(100, sub{Where($pop,$x,$y,$w,$h)});
+}
+
+sub Where {
+  my($pop,$Px,$Py,$Pw,$Ph) = @_;
+
+  if (Tkx::winfo_exists('.pm')) {
+    my($x,$y) = (Tkx::winfo_pointerx($MW), Tkx::winfo_pointery($MW));
+    if ($x < $Px || $x >= ($Px + $Pw) || $y < $Py || $y >= ($Py + $Ph)) {
+      $pop->g_destroy();
+    } else {
+      Tkx::after(100, sub{Where($pop,$Px,$Py,$Pw,$Ph)});
+    }
+  }
 }
 
 sub colourEd {
@@ -1144,27 +1185,27 @@ sub chordDesel {
   $Ed->{TaggedChord} = '';
 }
 
-
-#  ti = 'title',              co = 'comment',
-#  np = 'new_page',	      ci = 'comment_italic',
-#  ca = 'capo',	              cb = 'comment_box',
-#  ky = 'key',	              sb = 'x_start_background',
-#  te = 'tempo',
-#  me = 'meta',
-#  nt = 'x_note',	      eb = 'x_end_background',
-#  sv = 'start_of_verse',     cd = 'chord',
-#  ev = 'end_of_verse',       de = 'define',
-#  ve = 'verse',	      hz = 'x_horizontal_line',
-#  sc = 'start_of_chorus',    cl = 'colour',
-#  ec = 'end_of_chorus',      cf = 'chordfont',
-#  ch = 'chorus',	      cs = 'chordsize',
-#  bs = 'start_of_bridge',    cc = 'chordcolour',
-#  be = 'end_of_bridge',      tf = 'textfont',
-#  br = 'bridge',	      ts = 'textsize',
-#  st = 'start_of_tab',	      tc = 'textcolour',
-#  et = 'end_of_tab',	      Tf = 'tabfont',
-#  tb = 'tab',	      	      Ts = 'tabsize',
-#  hl = 'highlight',	      Tc = 'tabcolour',
+#  be = end_of_bridge       ky = key               
+#  br = bridge              md = meta              
+#  bs = start_of_bridge     me =                   
+#  ca = capo                np = new_page          
+#  cb = comment_box         nt = x_note            
+#  cc = chordcolour         sb = x_start_background
+#  cd = chord               sc = start_of_chorus   
+#  cf = chordfont           sg = start_of_grid     
+#  ch = chorus              st = start_of_tab      
+#  ci = comment_italic      sv = start_of_verse    
+#  cl = colour              Tb = tab               
+#  co = comment             Tf = tabfont           
+#  cs = chordsize           Tc = tabcolour         
+#  de = define              Ts = tabsize           
+#  eb = x_end_background    tc = textcolour        
+#  ec = end_of_chorus       te = tempo             
+#  eg = end_of_grid         tf = textfont          
+#  et = end_of_tab          ti = title             
+#  ev = end_of_verse        ts = textsize          
+#  hl = highlight           ve = verse             
+#  hz = x_horizontal_line   vs = x_vspace          
 
 sub idef {
   my($k) = shift;
@@ -1175,10 +1216,10 @@ sub idef {
   # Find the current insertion point.
   #
   my($l,$c) = split(/\./, $Ed->{TxtWin}->index("insert"));
+  $l += 1 if ($c);
   my $s = ($k eq 'me') ? '%{' : '{';
   if ($k =~ /eb|sv|ev|ve|sc|ec|ch|bs|be|br|st|et|tb|np|eg/) {
     $s .= $long."\}\n";
-    $l = 2 if ($k eq 'gr');
     $Ed->{TxtWin}->mark_set('insert', "$l.0");
   } elsif ($k eq 'me') {
     $adj = 1;

@@ -57,6 +57,8 @@ Bit late starting with 2.6.4 but about time I documented it :-)
 	     to reduce the screen real estate.
 	   Converted some of the Directive buttons to Menu buttons to save on real
 	     estate.
+	   Created a new Menu popup that comes and goes when the mouse traverses a
+	     button.
 
 3.9
            Changed the way fonts are handled. We now only look for "Regular" fonts

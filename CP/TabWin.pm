@@ -36,9 +36,6 @@ use CP::LyricEd;
 
 my $helpWin = '';
 
-#
-# This whole module relies on the external global $Tab object being initialised.
-#
 sub pageWindow {
   my($tab) = shift;
 

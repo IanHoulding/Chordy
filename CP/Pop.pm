@@ -110,7 +110,7 @@ sub popMenu {
 	-command => $subr);
     }
   }
-  $menu->g_tk___popup(Tkx::winfo_pointerx($MW), Tkx::winfo_pointery($MW));
+  $menu->g_tk___popup(Tkx::winfo_pointerx($MW) - 40, Tkx::winfo_pointery($MW) - 20);
   Tkx::update();
 }
 

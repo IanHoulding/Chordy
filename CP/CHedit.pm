@@ -286,8 +286,7 @@ sub oneButton {
 
   if (@{$Groups{$name}}) {
     $but->g_bind(
-      '<Enter>' =>
-      sub{ $IDs{$name} = Tkx::after(600, sub{popChords($but, $name, $func);}) }
+      '<Enter>' => sub{ $IDs{$name} = Tkx::after(600, sub{popChords($but, $name, $func);}) }
       );
   } else {
     $but->g_bind('<Enter>' => sub{} );
@@ -316,7 +315,8 @@ sub popChords {
     $Pop->{top}->g_raise();
   } elsif (@{$Groups{$name}}) {
     if ($but->m_instate('active')) {
-      $Pop = CP::Pop->new(1, '.ch', '', (pX()-20), (pY()-15));
+      my($x,$y) = (Tkx::winfo_pointerx($MW), Tkx::winfo_pointery($MW));
+      $Pop = CP::Pop->new(1, '.ch', '', $x, $y);
       my($top,$fr) = ($Pop->{top}, $Pop->{frame});
       my($row,$col) = qw/0 0/;
       my $chord = "$name";
@@ -335,7 +335,11 @@ sub popChords {
       }
       Tkx::update_idletasks();
       $top->g_raise();
-      Tkx::after(400, \&Where);
+      my($w,$h) = (Tkx::winfo_reqwidth($fr), Tkx::winfo_reqheight($fr));
+      $x -= int($w / 2);
+      $y -= int($h / 3);
+      $top->g_wm_geometry("+$x+$y"); 
+      Tkx::after(200, sub{Where($Pop,$x,$y,$w,$h)});
     } else {
       popCancel($name);
     }
@@ -343,24 +347,18 @@ sub popChords {
 }
 
 sub Where {
+  my($pop,$Px,$Py,$Pw,$Ph) = @_;
+
   if (popExists('.ch')) {
-    my $top = $Pop->{top};
-    my $x = pX();
-    my $y = pY();
-    my $Px = Tkx::winfo_x($top);
-    my $Py = Tkx::winfo_y($top);
-    my $Pw = Tkx::winfo_reqwidth($top);
-    my $Ph = Tkx::winfo_reqheight($top);
+    my $top = $pop->{top};
+    my($x,$y) = (Tkx::winfo_pointerx($MW), Tkx::winfo_pointery($MW));
     if ($x < $Px || $x >= ($Px + $Pw) || $y < $Py || $y >= ($Py + $Ph)) {
-      $Pop->popDestroy();
+      $pop->popDestroy();
     } else {
-      Tkx::after(400, \&Where);
+      Tkx::after(200, sub{Where($pop,$Px,$Py,$Pw,$Ph)});
     }
   }
 }
-
-sub pX {Tkx::winfo_pointerx($MW)};
-sub pY {Tkx::winfo_pointery($MW)};
 
 sub readFing {
   my($inst) = shift();
