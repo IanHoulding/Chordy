@@ -48,7 +48,7 @@ sub editWindow {
     $EditBar1->{prev} = $EditBar;
 
     my $frnp = $outer->new_ttk__frame();
-    $frnp->g_pack(qw/-side top -fill x/, -padx => 16, -pady => [4,4]);
+    $frnp->g_pack(qw/-side top -anchor n/, -padx => 16, -pady => [4,4]);
     prevNext($tab, $frnp);
 
     my $eFrm = $tab->{eFrm} = $outer->new_ttk__frame();
@@ -85,27 +85,27 @@ sub editWindow {
 sub prevNext {
   my($tab,$frnp) = @_;
 
+  my $bps = $frnp->new_ttk__button(
+    -text => '<<< Prev w/Save ',
+    -style => "Green.TButton",
+    -command => [\&EditPrev, $tab, 1]);
+  $bps->g_pack(qw/-side left -pady 4/);
   my $bp = $frnp->new_ttk__button(
     -text => '<<< Prev Bar ',
     -style => "Green.TButton",
     -command => [\&EditPrev, $tab, 0]);
-  $bp->g_pack(qw/-side left -padx 20 -pady 4/);
-  my $bps = $frnp->new_ttk__button(
-    -text => '<<< Prev W/Save ',
-    -style => "Green.TButton",
-    -command => [\&EditPrev, $tab, 1]);
-  $bps->g_pack(qw/-side left -pady 4/);
+  $bp->g_pack(qw/-side left -pady 4/, -padx => [16,20]);
 
+  my $bns = $frnp->new_ttk__button(
+    -text => ' Next w/Save >>>',
+    -style => "Green.TButton",
+    -command => [\&EditNext, $tab, 1]);
+  $bns->g_pack(qw/-side right -pady 4/);
   my $bn = $frnp->new_ttk__button(
       -text => ' Next Bar >>>',
     -style => "Green.TButton",
     -command => [\&EditNext, $tab, 0]);
-  $bn->g_pack(qw/-side right -padx 20 -pady 4/);
-  my $bns = $frnp->new_ttk__button(
-    -text => ' Next W/Save >>>',
-    -style => "Green.TButton",
-    -command => [\&EditNext, $tab, 1]);
-  $bns->g_pack(qw/-side right -pady 4/);
+  $bn->g_pack(qw/-side right -pady 4/, -padx => [20,16]);
 }
 
 ############################

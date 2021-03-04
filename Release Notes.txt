@@ -4,7 +4,7 @@ Bit late starting with 2.6.4 but about time I documented it :-)
 3.9.1
 	   Removed the need for the Hyphen image.
            Unified Menu and Window checkboxes to show images for on/off.
-     Tab - Playing a Tab (Windows only still) will now handle chords and you can
+     Tab - Playing a Tab (still only on Windows) will now handle chords and you can
              vary the rate at which each individual note is struck.
            Options Menu now in alphabetical order.
 	   Added Edit Lyrics to the Edit button frame.
