@@ -237,12 +237,13 @@ sub get_smtp {
   my $ld = $tf->new_ttk__label(-text => 'Security:');
   $ld->g_grid(qw/-row 3 -column 0 -sticky e/, -pady => 2);
 
-  my $swid = $tf->new_ttk__button(
-    -textvariable => \$SMTP->{security},
-    -width => 10,
-    -style => 'Menu.TButton',
-    -command => sub{popMenu(\$SMTP->{security}, undef, [qw/None Password TLS STARTTLS/]);
-    });
+  my $swid = popButton($tf,
+		       \$SMTP->{security},
+		       sub{},
+		       [qw/None Password TLS STARTTLS/],
+		       -width => 10,
+		       -style => 'Menu.TButton',
+      );
   $swid->g_grid(qw/-row 3 -column 1 -sticky w/, -pady => 2);
 ####
   my $le = $tf->new_ttk__label(-text => 'User Name:');

@@ -192,8 +192,6 @@ sub load {
 sub save {
   my($self) = shift;
 
-#  my ($package, $filename, $line) = caller;
-#  print "Opts save() from $filename, $line\n";
   Tkx::update();  # Make sure any variables dependant on buttons/menus get updated.
   my $OFH = openConfig("$Path->{Option}");
   return(0) if ($OFH == 0);
@@ -226,8 +224,6 @@ sub save {
 sub saveOne {
   my($self,$opt) = @_;
 
-#  my ($package, $filename, $line) = caller;
-#  print "Opts saveOne() from $filename, $line\n";
   our($version,%opts);
   do "$Path->{Option}";
   $opts{$opt} = $self->{$opt};

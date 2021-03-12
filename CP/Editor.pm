@@ -366,7 +366,7 @@ sub menu {
     }
   }
   $edit->add_separator;
-  $edit->add_command(-label => 'Select Al', -command => \&SelectAll);
+  $edit->add_command(-label => 'Select Al', -command => \&selectAll);
   $edit->add_command(-label => 'Deselect',  -command => \&deselectAll);
   $edit->add_separator;
   $edit->add_command(-label => 'Text to ChordPro',  -command => \&text2cp);
@@ -1359,13 +1359,6 @@ sub setTags {
       $col++;
     }
   }
-}
-
-sub wrapText {
-  my $vr = $Ed->{TxtWin}->m_cget(-wrap);
-  popMenu(\$vr, undef, ['word','char','none']);
-  Tkx::update();
-  $Ed->{TxtWin}->m_configure(-wrap => $vr);
 }
 
 sub selectAll {

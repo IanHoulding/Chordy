@@ -261,14 +261,13 @@ sub barOpts {
 
   my $vbl = $frm->new_ttk__label(-text => 'Volta Bracket');
 
-  my $vbb = $frm->new_ttk__button(-textvariable => \$EditBar->{volta},
-				  -width => 8,
-				  -style => 'Menu.TButton',
-				  -command => sub{
-				    popMenu(\$EditBar->{volta},
-					    sub{$EditBar->volta()},
-					    [qw/None Left Center Right Both/]);
-				  });
+  my $vbb = popButton($frm,
+		      \$EditBar->{volta},
+		      sub{$EditBar->volta()},
+		      [qw/None Left Center Right Both/],
+		      -width => 8,
+		      -style => 'Menu.TButton',
+      );
   my $htl = $frm->new_ttk__label(-text => 'Header Text');
   my $hte = $frm->new_ttk__entry(-width => 40,
 				 -validate => 'key',
@@ -278,32 +277,29 @@ sub barOpts {
 				   1;}, Tkx::Ev("%P")]);
   $EditBar->{topEnt} = $hte;
   my $jul = $frm->new_ttk__label(-text => 'Justify ');
-  my $jub = $frm->new_ttk__button(-textvariable => \$EditBar->{justify},
-				  -width => 8,
-				  -style => 'Menu.TButton',
-				  -command => sub{
-				    popMenu(\$EditBar->{justify},
-					    sub{$EditBar->topText()},
-					    [qw/Left Right/]);
-				  });
+  my $jub = popButton($frm,
+		      \$EditBar->{justify},
+		      sub{$EditBar->topText()},
+		      [qw/Left Right/],
+		      -width => 8,
+		      -style => 'Menu.TButton',
+      );
   my $rel = $frm->new_ttk__label(-text => 'Repeat');
-  my $reb = $frm->new_ttk__button(-textvariable => \$EditBar->{rep},
-				  -width => 8,
-				  -style => 'Menu.TButton',
-				  -command => sub{
-				    popMenu(\$EditBar->{rep},
-					    sub{$EditBar->repeat()},
-					    [qw/None Start End/]);
-				  });
+  my $reb = popButton($frm,
+		      \$EditBar->{rep},
+		      sub{$EditBar->repeat()},
+		      [qw/None Start End/],
+		      -width => 8,
+		      -style => 'Menu.TButton',
+      );
   my $nfl = $frm->new_ttk__label(-text => 'Note Font');
-  my $nfb = $frm->new_ttk__button(-textvariable => \$tab->{noteFsize},
-				  -width => 8,
-				  -style => 'Menu.TButton',
-				  -command => sub{
-				    popMenu(\$tab->{noteFsize},
-					    undef,
-					    [qw/Normal Small/]);
-				  });
+  my $nfb = popButton($frm,
+		      \$tab->{noteFsize},
+		      sub{},
+		      [qw/Normal Small/],
+		      -width => 8,
+		      -style => 'Menu.TButton',
+      );
   my $bsl = $frm->new_ttk__label(-text => "Bar Starts:");
   my $cb1 = $frm->new_ttk__checkbutton(-style => 'My.TCheckbutton',
 				       -compound => 'left',

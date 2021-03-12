@@ -76,6 +76,28 @@ sub MWoptions {
 			    -borderwidth => 0,
 			    -activeborderwidth => 0,
 			    -selectborderwidth => 0);
+
+  Tkx::ttk__style_configure('PopMenu.TFrame',
+			    -bordercolor => BLACK,
+			    -background => $Opt->{MenuBG});
+  Tkx::ttk__style_configure('PopMenu.TButton',
+			    -padding => [8,0,8,0],
+			    -anchor => 'w',
+			    -highlightthickness => 0,
+			    -borderwidth => 0,
+			    -activeborderwidth => 0,
+			    -selectborderwidth => 0,
+			    -background => $Opt->{MenuBG},
+			    -foreground => $Opt->{MenuFG});
+  Tkx::ttk__style_map('PopMenu.TButton',
+		      -background => "active #3830FF",
+		      -foreground => "active #FFFFFF");
+  Tkx::ttk__style_configure('PopShad.TFrame',
+			    -borderwidth => 1,
+			    -bordercolor => '#C8C8C8',
+			    -relief => 'raised',
+			    -background => '#B0B0B0');
+
   Tkx::ttk__style_configure('Pop.TFrame',
 			    -background => $Opt->{PopBG});
   Tkx::ttk__style_configure('Wh.TFrame',

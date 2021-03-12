@@ -111,16 +111,14 @@ sub shiftOpt {
 
   my $lb1 = $frm->new_ttk__label(-text => 'Semi-tones');
 
-  my $me1 = $frm->new_ttk__button(
-    -textvariable => \$tab->{trans},
-    -width => 4,
-    -style => 'Menu.TButton',
-    -command => sub{
-      popMenu(\$tab->{trans},
-	      sub {},
-	      [qw/+12 +11 +10 +9 +8 +7 +6 +5 +4 +3 +2 +1 0
-	       -1 -2 -3 -4 -5 -6 -7 -8 -9 -10 -11 -12/]);
-    });
+  my $me1 = popButton($frm,
+		      \$tab->{trans},
+		      sub{},
+		      [qw/+12 +11 +10 +9 +8 +7 +6 +5 +4 +3 +2 +1 0
+	               -1 -2 -3 -4 -5 -6 -7 -8 -9 -10 -11 -12/],
+		      -width => 4,
+		      -style => 'Menu.TButton',
+      );
 
   my $bu1 = $frm->new_ttk__button(
     -text    => ' Go ',
@@ -187,21 +185,19 @@ sub pageButtons {
   $sel->g_pack(qw/-side top -fill x -padx 4 -pady 4/);
 
   my $coll = $sel->new_ttk__label(-text => 'Collection');
-  my $colb = $sel->new_ttk__button(
-    -textvariable => \$Collection->{name},
-    -style => 'Menu.TButton',
-    -command => sub{ my $cc = $Collection->{name};
-		     $Collection->select();
-		     if ($cc ne $Collection->{name}) {
-		       if ((my $fn = $tab->{fileName}) ne '') {
-			 $fn = (-e "$Path->{Tab}/$fn") ? "$Path->{Tab}/$fn" : '';
-			 $tab->new($fn);
-		       }
-		       $tab->drawPageWin();
-		       CP::TabMenu::refresh();
-		     }
-                   }
-    );
+  my $colb = popButton($sel,
+		      \$Collection->{name},
+		       sub{$Collection->change($Collection->{name});
+			   if ((my $fn = $tab->{fileName}) ne '') {
+			     $fn = (-e "$Path->{Tab}/$fn") ? "$Path->{Tab}/$fn" : '';
+			     $tab->new($fn);
+			   }
+			   $tab->drawPageWin();
+			   CP::TabMenu::refresh();
+		       },
+		       sub{$Collection->list()},
+		       -style => 'Menu.TButton',
+      );
   my $medl = $sel->new_ttk__label(-text => 'Media');
   my $medb = $sel->new_ttk__button(
     -textvariable => \$Opt->{Media},
@@ -408,7 +404,7 @@ sub pageButtons {
 sub newMedia {
   my($tab) = shift;
 
-  popMenu(\$Opt->{Media}, undef, $Media->list());
+  popBmenu(\$Opt->{Media}, undef, $Media->list());
   $Media = $Media->change($Opt->{Media});
   $tab->drawPageWin();
   CP::TabMenu::refresh();

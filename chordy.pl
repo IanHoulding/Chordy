@@ -128,7 +128,7 @@ sub expFile {
     if ($ext eq '.pro') {
       my $exp = '';
       my @lst = ('All', @{$Collection->list()}, 'SeP', 'FOLDER');
-      popMenu(\$exp, sub{}, \@lst);
+      CP::Pop::popBmenu(\$exp, sub{}, \@lst);
       return if ($exp eq '');
       if ($exp ne 'FOLDER') {
 	if ($exp eq 'All') {

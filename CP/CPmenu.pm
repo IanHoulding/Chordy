@@ -105,7 +105,7 @@ sub new {
 
   $edit->add_command(-label => "Chord Editor",  -command => sub{CHedit('Save');});
   $edit->add_separator;
-  $edit->add_command(-label => 'Collections',   -command => \&CP::Chordy::collEdit);
+  $edit->add_command(-label => 'Collections',   -command => sub{$Collection->edit()});
   $edit->add_command(-label => 'PDF Page Size', -command => sub{CP::Chordy::newMedia() if ($Media->edit() eq "OK");});
   $edit->add_command(-label => 'Sort Articles', -command => \&main::editArticles);
   $edit->add_command(-label => 'Options File',  -command => [\&CP::Editor::Edit, $Path->{Option}, 1]);

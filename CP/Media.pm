@@ -200,9 +200,6 @@ sub save {
     print $OFH "  '$s' => {\n";
     print $OFH "    width  => ".$ref->{width}.",\n";
     print $OFH "    height => ".$ref->{height}.",\n";
-#    foreach my $bg (keys %BGs) {
-#      printf $OFH "    %-11s => '%s',\n", $bg, $ref->{$bg};
-#    }
     foreach my $f (keys %Fonts) {
       my $fp = \%{$ref->{$f}};
       printf $OFH ("    %-9s => {qw/size %-2d weight %-6s slant %-6s family/ => '%s'},\n",
@@ -245,33 +242,35 @@ sub edit {
   $Edit{U} = $newu = 'pt';
 
   $a = $tf->new_ttk__label(-text => "Media:");
-  $b = $tf->new_ttk__button(
-    -width => 20,
-    -textvariable => \$Edit{Media},
-    -style => 'Menu.TButton',
-    -command => sub{popMenu(\$Edit{Media}, \&changeMedia, list());});
+  $b = popButton($tf,
+		 \$Edit{Media},
+		 \&changeMedia,
+		 sub{list()},
+		 -width => 20,
+		 -style => 'Menu.TButton',
+	);
 
   $c = $tf->new_ttk__button(qw/-text Delete -width 8 -command/ => \&mdelete );
 
   $d = $tf->new_ttk__label(-text => "Width: ");
   $e = $tf->new_ttk__entry(qw/-width 6 -textvariable/ => \$Edit{W});
-  $f = $tf->new_ttk__button(
-    -width => 5,
-    -textvariable => \$newu,
-    -style => 'Menu.TButton',
-    -command => sub{
-      popMenu(\$newu, sub{changeUnits($newu)}, [qw/in mm pt/]);
-    });
+  $f = popButton($tf,
+		 \$newu,
+		 sub{changeUnits($newu)},
+		 [qw/in mm pt/],
+		 -width => 5,
+		 -style => 'Menu.TButton',
+	);
 
   $g = $tf->new_ttk__label(-text => "Height: ", -width => 10, -anchor => 'e');
   $h = $tf->new_ttk__entry(qw/-width 6 -textvariable/ => \$Edit{H});
-  $i = $tf->new_ttk__button(
-    -width => 5,
-    -textvariable => \$newu,
-    -style => 'Menu.TButton',
-    -command => sub{
-      popMenu(\$newu, sub{changeUnits($newu)}, [qw/in mm pt/]);
-    });
+  $i = popButton($tf,
+		 \$newu,
+		 sub{changeUnits($newu)},
+		 [qw/in mm pt/],
+		 -width => 5,
+		 -style => 'Menu.TButton',
+	);
 
   $j = $tf->new_ttk__separator(qw/-orient horizontal/);
 

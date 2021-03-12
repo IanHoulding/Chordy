@@ -27,7 +27,6 @@ use CP::Cmsg;
 #
 our %All;
 
-#our $CollectionPath = '';
 our $CurrentCollection = '';
 
 sub new {
@@ -126,16 +125,6 @@ sub change {
   }
 }
 
-sub select {
-  my($self) = shift;
-
-  my $cc = $self->{name};
-  popMenu(\$cc, undef, list());
-  if ($cc ne $self->{name}) {
-    change($self, $cc);
-  }
-}
-
 sub add {
   my($self,$name) = @_;
 
@@ -166,7 +155,7 @@ sub add {
 	  }
 	}
 	$All{$name} = $path;
-	change($self, $name);
+#	change($self, $name);
 	return(1);
       }
     }
@@ -174,7 +163,7 @@ sub add {
   return(0);
 }
 
-sub newname {
+sub reName {
   my($self,$name) = @_;
 
   if ($name eq "") {
@@ -194,21 +183,22 @@ sub newname {
     $All{$name} = $Parent;
     delete $All{$CurrentCollection};
     change($self, $name);
+    CP::Chordy::showCollChange();
   }
   return(1);
 }
 
 sub _delete {
-  my($self, $delorg) = @_;
+  my($name,$delFF) = @_;
 
-  if (scalar keys %{$self} == 1) {
+  if (scalar keys %All == 1) {
     message(SAD, "You can't delete the ONLY Collection!");
   } else {
-    my $msg = "Are you sure you want to delete Collection:\n   $self->{name}";
-    $msg .= "\nand ALL its associated files?" if ($delorg);
+    my $msg = "Are you sure you want to delete Collection:\n   $name";
+    $msg .= "\nand ALL its associated files?" if ($delFF);
     if (msgYesNo($msg) eq 'Yes') {
-      if ($delorg) {
-	if ($self->{name} eq 'Chordy') {
+      if ($delFF) {
+	if ($name eq 'Chordy') {
 	  # Special case - just clean up the folder but leave the
 	  # "Global" config files
 	  remove_tree(USER."/PDF", {keep_root => 1});
@@ -218,12 +208,10 @@ sub _delete {
 	  unlink glob USER."/SetList*";
 	  unlink glob USER."/*.bak";
 	} else {
-	  remove_tree("$Home");
+	  remove_tree("$All{$name}/$name");
 	}
       }
-      delete $All{$self->{name}};
-      my @c = sort keys %All;
-      change($self, shift(@c));
+      delete $All{$name};
     }
   }
 }
@@ -388,27 +376,49 @@ sub edit {
 
   my($a,$b,$c,$ca,$cb,$d,$e,$f,$g,$h,$i,$j);
 
+  my $orgcol = $self->{name};
+  my $delFF = 0;
+  my $newColl = $self->{name};
+  my $newPath = $self->{path};
+  my $PDFpath = $Opt->{PDFpath};
+  my $newName = '';
   $a = $tf->new_ttk__label(-text => "Collection",);
-  $b = $tf->new_ttk__button(
-    -width => 20,
-    -textvariable => \$self->{name},
-    -command => sub{$Collection->select()}
+  $b = popButton($tf,
+		 \$newColl,
+		 sub{
+		   if ($newColl ne $self->{name} && defined $All{$newColl}) {
+		     $newPath = $All{$newColl};
+		     $PDFpath = commonPDF("$newPath/$newColl/Option.cfg");
+		     $top->g_raise();
+		   }
+		 },
+		 sub{listAll()},
+		 -width => 20,
+		 -style => 'Menu.TButton',
       );
 
-  my $orgcol = $CurrentCollection;
-  my $delorg = 0;
-  $c = $tf->new_ttk__button(
-    qw/-text Delete -command/ => sub{_delete($self, $delorg);$top->g_raise();}
-      );
-  $ca = $tf->new_ttk__button(qw/-text Move -command/ =>
-			     sub{_move($self,$delorg);$top->g_raise();});
+  $c = $tf->new_ttk__button(-text => 'Delete',
+			    -command => sub{_delete($newColl, $delFF);
+					    if ($newColl eq $orgcol) {
+					      my $l = listAll();
+					      my $nc = shift(@{$l});
+					      change($self, $nc);
+					      CP::Chordy::showCollChange();
+					      $newColl = $orgcol = $nc;
+					      $PDFpath = $Opt->{PDFpath};
+					    }
+					    $top->g_raise();}
+                           );
+  $ca = $tf->new_ttk__button(-text => 'Move',
+			     -command => sub{_move($self,$delFF);$top->g_raise();}
+                            );
   $cb = $tf->new_ttk__checkbutton(-style => 'My.TCheckbutton',
 				  -compound => 'left',
 				  -image => ['xtick', 'selected', 'tick'],
-				  -text => 'Delete original',
-				  -variable => \$delorg);
+				  -text => " Delete all\n Folders/Files",
+				  -variable => \$delFF);
   $d = $tf->new_ttk__label(-text => "Path");
-  $e = $tf->new_ttk__label(-textvariable => \$self->{path}, -width => 50);
+  $e = $tf->new_ttk__label(-textvariable => \$newPath, -width => 50);
 
   $a->g_grid(qw/-row 0 -column 0 -sticky e/);
   $b->g_grid(qw/-row 0 -column 1 -sticky w -padx 4/);
@@ -418,35 +428,46 @@ sub edit {
   $d->g_grid(qw/-row 1 -column 0 -sticky e/, -pady => 4);
   $e->g_grid(qw/-row 1 -column 1 -columnspan 4 -sticky w -padx 4 -pady 4/);
 
-  my $newColl = "";
   $g = $tf->new_ttk__label(-text => "New Name");
-  $h = $tf->new_ttk__entry(
-    -width => 40,
-    -textvariable => \$newColl);
-  $i = $tf->new_ttk__button(
-    -text => 'New',
-    -command => sub{
-      if (add($self, $newColl)) {
-	main::selectClear();
-      }
-      $newColl = "";
-      $top->g_raise();
-    });
-  $j = $tf->new_ttk__button(
-    -text => 'Rename',
-    -command => sub{
-      $newColl = "";
-      $top->g_raise();
-    });
+  $h = $tf->new_ttk__entry(-width => 40,
+			   -textvariable => \$newName);
+  $i = $tf->new_ttk__button(-text => 'New',
+			    -command => sub{
+			      if (add($self, $newName)) {
+				message(SMILE, "Collection \"$newName\" created.", 1);
+				save();
+#				main::selectClear();
+			      }
+			      $newName = "";
+			      $top->g_raise();
+			    });
+  $j = $tf->new_ttk__button(-text => 'Rename',
+			    -command => sub{
+			      if ($newColl ne $orgcol) {
+				if ($newName ne '') {
+				  rename("$newPath/$newColl", "$newPath/$newName");
+				  delete($All{$newColl});
+				  $All{$newName} = $newPath;
+				  $newColl = $newName;
+				  save();
+				} else {
+				  message(SAD, "Can't rename a Collection without a name!");
+				}
+			      } else {
+				if (reName($self, $newName)) {
+				  $newColl = $orgcol = $newName;
+				}
+			      }
+			      $top->g_raise();
+			    });
 
   $g->g_grid(qw/-row 3 -column 0 -sticky e/);
   $h->g_grid(qw/-row 3 -column 1 -sticky w -padx 4/);
   $i->g_grid(qw/-row 3 -column 2 -padx 5/);
   $j->g_grid(qw/-row 3 -column 3 -padx 5/);
 
-  my $ppath = $Opt->{PDFpath};
   $a = $mf->new_ttk__label(-text => "Common PDF Path");
-  $b = $mf->new_ttk__entry(qw/-width 40 -textvariable/ => \$ppath);
+  $b = $mf->new_ttk__entry(qw/-width 40 -textvariable/ => \$PDFpath);
   $c = $mf->new_ttk__button(
     -text => "Browse ...",
     -command => sub{
@@ -455,7 +476,7 @@ sub edit {
 	-initialdir => "$Home");
       $dir =~ s/\/$//;
       if ($dir ne '') {
-	$ppath = $dir;
+	$PDFpath = $dir;
       }
       $wt->g_focus();
     },
@@ -464,7 +485,13 @@ sub edit {
     -text => "Set",
     -width => 6,
     -style =>'Green.TButton',
-    -command => sub{$Opt->{PDFpath} = $ppath; $Opt->saveOne('PDFpath');}, );
+    -command => sub{my $orgopt = $Path->{Option};
+		    $Path->{Option} = "$newPath/$newColl/Option.cfg";
+		    our($version,%opts);
+		    do "$Path->{Option}";
+		    $opts{PDFpath} = $PDFpath;
+		    CP::Opt::save(\%opts);
+		    $Path->{Option} = $orgopt;}, );
 
   $a->g_grid(qw/-row 0 -column 0 -sticky e -padx 4/);
   $b->g_grid(qw/-row 0 -column 1 -sticky w/);
@@ -474,21 +501,24 @@ sub edit {
   my $Done = '';
 
   my $ok = $bf->new_ttk__button(
-    -text => "OK",
+    -text => "Close",
     -command => sub{$Done = "OK";});
-  $ok->g_pack(qw/-side right -padx 60/, -pady => [4,8]);
-
-  my $can = $bf->new_ttk__button(
-    -text => "Cancel",
-    -command => sub{$Done = "Cancel";});
-  $can->g_pack(qw/-side left -padx 60/, -pady => [4,8]);
+  $ok->g_pack(-side => 'top', -pady => [4,8]);
 
   Tkx::vwait(\$Done);
-  if ($Done eq "OK") {
-    change($self, $CurrentCollection) if ($CurrentCollection ne $orgcol);
-  }
+
   $pop->popDestroy();
-  $Done;
+}
+
+sub commonPDF {
+  my($path) = shift;
+
+  if (-e $path) {
+    our($version,%opts);
+    do "$path";
+    return(defined $opts{PDFpath} ? $opts{PDFpath} : '');
+  }
+  return('');
 }
 
 1;

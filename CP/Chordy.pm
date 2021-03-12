@@ -191,15 +191,13 @@ sub filesWin {
     -style => 'Tr.Menu.TButton',
     -command => sub{$main::PDFtrans = 1;main::transposeOne(SINGLE);});
   no warnings; # stops perl bleating about '#' in array definition.
-  my $onek = $tFsf->new_ttk__button(
-    -textvariable => \$Opt->{Transpose},
-    -width => 3,
-    -style => 'Tr.Menu.TButton',
-    -command => sub{popMenu(
-		      \$Opt->{Transpose},
-		      undef,
-		      [qw/- Ab A A# Bb B C C# Db D D# Eb E F F# Gb G G#/])
-    });
+  my $onek = popButton($tFsf,
+		       \$Opt->{Transpose},
+		       sub{},
+		       [qw/- Ab A A# Bb B C C# Db D D# Eb E F F# Gb G G#/],
+		       -width => 3,
+		       -style => 'Tr.Menu.TButton',
+      );
   use warnings;
 
 ### Now pack everything
@@ -237,18 +235,20 @@ sub filesWin {
       );
   actWin($act);
 
-  my $cob = $tFact->new_ttk__button(
-    -text => "Collection",
-    -command => sub{popMenu(\$Collection->{name}, undef, $Collection->list());
-		    $Collection->change($Collection->{name});
-		    collItems($Chordy);} );
+  my $cob = popButton($tFact,
+		      \$Collection->{name},
+		      sub{$Collection->change($Collection->{name});collItems($Chordy);},
+		      sub{$Collection->list()},
+		      -style => 'Menu.TButton',
+      );
+  my $cobl = $tFact->new_ttk__label(-text => 'Collection');
 
   ## Browse/From Setlist/PDFs
   $brw->g_pack(qw/-side top -pady 4/);
   $fsl->g_pack(qw/-side top -pady 4/);
   $act->g_pack(qw/-side top -pady 8/);  # LabelFrame
-  $cob->g_pack(qw/-side bottom -pady 8/);
-
+  $cob->g_pack(qw/-side bottom/, -pady => [0,8]);
+  $cobl->g_pack(qw/-side bottom/);
   my $progl = $tFbot->new_ttk__label(-text => "Please Wait .... PDF'ing: ", -style => 'Pop.TLabel');
   Tkx::ttk__style_configure('Prog.Pop.TLabel', -font => "BTkDefaultFont");
 
@@ -412,33 +412,34 @@ sub optWin {
   ################
   
   $a = $wid->new_ttk__label(-text => "Line Spacing:");
-  $b = $wid->new_ttk__button(
-    -textvariable => \$Opt->{LineSpace},
-    -style => 'Menu.TButton',
-    -width => 3,
-    -command => sub{popMenu(\$Opt->{LineSpace},undef,[qw/1 2 3 4 5 6 7 8 9 10 12 14 16 18 20/]);
-		    $Opt->saveOne('LineSpace');});
+  $b = popButton($wid,
+		 \$Opt->{LineSpace},
+		 sub{$Opt->saveOne('LineSpace')},
+		 [qw/1 2 3 4 5 6 7 8 9 10 12 14 16 18 20/],
+		 -style => 'Menu.TButton',
+		 -width => 3,
+      );
 
   $Opt->{Capo} = "No";
   $c = $wid->new_ttk__label(-text => "Capo On:");
-  $d = $wid->new_ttk__button(
-    -textvariable => \$Opt->{Capo},
-    -style => 'Menu.TButton',
-    -width => 3,
-    -command => sub{popMenu(\$Opt->{Capo}, sub{$Opt->{Capo} = 'No' if ($Opt->{Capo} == 0)}, [0..12])});
+  $d = popButton($wid,
+		 \$Opt->{Capo},
+		 sub{$Opt->{Capo} = 'No' if ($Opt->{Capo} == 0)},
+		 [0..12],
+		 -style => 'Menu.TButton',
+		 -width => 3,
+      );
 
   $Opt->{Transpose} = "-";
   $e = $wid->new_ttk__label(-text => "Transpose To:");
   no warnings; # stops perl bleating about '#' in array definition.
-  $f = $wid->new_ttk__button(
-    -textvariable => \$Opt->{Transpose},
-    -width => 3,
-    -style => 'Menu.TButton',
-    -command => sub{popMenu(
-		      \$Opt->{Transpose},
-		      undef,
-		      [qw/- Ab A A# Bb B C C# Db D D# Eb E F F# Gb G G#/])
-    });
+  $f = popButton($wid,
+		 \$Opt->{Transpose},
+		 sub{},
+		 [qw/- Ab A A# Bb B C C# Db D D# Eb E F F# Gb G G#/],
+		 -style => 'Menu.TButton',
+		 -width => 3,
+      );
   use warnings;
 
   $g = $wid->new_ttk__radiobutton(-text => "Force Sharp",
@@ -447,13 +448,13 @@ sub optWin {
 				  -variable => \$Opt->{SharpFlat}, -value => FLAT);
 
   $a->g_grid(qw/-row 0 -column 2 -sticky e/, -padx => [4,0]);
-  $b->g_grid(qw/-row 0 -column 3 -sticky w/, -padx => [2,4]);
+  $b->g_grid(qw/-row 0 -column 3 -sticky w -pady 2/, -padx => [2,4]);
 
   $c->g_grid(qw/-row 1 -column 2 -sticky e/, -padx => [4,0]);
-  $d->g_grid(qw/-row 1 -column 3 -sticky w/, -padx => [2,4]);
+  $d->g_grid(qw/-row 1 -column 3 -sticky w -pady 2/, -padx => [2,4]);
 
   $e->g_grid(qw/-row 2 -column 2 -sticky e/, -padx => [4,0]);
-  $f->g_grid(qw/-row 2 -column 3 -sticky w/, -padx => [2,4]);
+  $f->g_grid(qw/-row 2 -column 3 -sticky w -pady 2/, -padx => [2,4]);
 
   $g->g_grid(qw/-row 3 -column 2 -columnspan 2 -sticky w/, -padx => [14,0]);
   $h->g_grid(qw/-row 4 -column 2 -columnspan 2 -sticky w/, -padx => [14,0]);
@@ -464,14 +465,13 @@ sub optWin {
     -labelanchor => 'n');
   $fcd->g_grid(qw/-row 0 -column 1 -sticky n/, -padx => [8,4]);
   $a = $fcd->new_ttk__label(-text => "Instrument");
-  $b = $fcd->new_ttk__button(
-    -textvariable => \$Opt->{Instrument},
-    -width => 9,
-    -style => 'Menu.TButton',
-    -command => sub{
-      popMenu(\$Opt->{Instrument},sub{readChords();},$Opt->{Instruments});
-      $Opt->saveOne('Instrument');
-    });
+  $b = popButton($fcd,
+		 \$Opt->{Instrument},
+		 sub{readChords();$Opt->saveOne('Instrument');},
+		 $Opt->{Instruments},
+		 -style => 'Menu.TButton',
+		 -width => 9,
+      );
 
   $c = $fcd->new_ttk__radiobutton(-text => "None",
 				  -variable => \$Opt->{Grid}, -value => NONE,
@@ -709,7 +709,14 @@ sub setLists {
     -text => "Export",
     -width => 8,
     -style => 'Green.TButton',
-    -command => sub{$AllSets->export()});
+    -command => sub{if ($CurSet ne '') {
+                      my $newC = $Collection->{name};
+		      my $set = $AllSets->{sets}{$CurSet};
+		      my $clst = $Collection->list();
+		      my $lst = ['To all', 'SeP', @{$clst}, 'SeP', 'File'];
+		      popBmenu(\$newC, sub{CP::SetList::export($set, $newC, $clst)}, $lst);
+		    }
+    });
 
   ## Now pack everything
   # Setlists
@@ -811,20 +818,15 @@ sub collectionWin {
   my($wid) = @_;
 
   $Chordy->{currentColl} = $Collection->{name};
-  my $ccsub = sub{
-    popMenu(\$Collection->{name},
-	    sub{$Collection->change($Collection->{name});
-		collItems($Chordy);
-		showSize();
-		fontWin();
-	    }, $Collection->list() );
-  };
   my($a,$b,$c,$d,$e);
 
-  $a = $wid->new_ttk__button(-textvariable => \$Collection->{name},
-			     -width => 10,
-			     -style => 'Menu.TButton',
-			     -command => $ccsub);
+  $a = popButton($wid,
+		 \$Collection->{name},
+		 sub{$Collection->change($Collection->{name});showCollChange();},
+		 sub{$Collection->list()},
+		 -style => 'Menu.TButton',
+		 -width => 10,
+      );
   $b = $wid->new_ttk__label(-text => "Path: ");
   $c = $wid->new_ttk__label(-textvariable => \$Collection->{fullPath});
 
@@ -840,21 +842,15 @@ sub collectionWin {
   $e->g_grid(qw/-row 1 -column 2 -sticky w/);
 }
 
-sub collEdit {
-  if ($Collection->edit() eq 'OK' && $Collection->{name} ne $Chordy->{currentColl}) {
-    $Chordy->{currentColl} = $Collection->{name};
-    collItems($Chordy);
-    if ($Chordy->{nb}->index('current') == 2) {
-      fontWin();
-    }
-  } else {
+sub showCollChange {
+  collItems();
+  if ($Chordy->{nb}->m_index('current') == 2) { # '2' is the Config Tab.
     showSize();
+    fontWin();
   }
 }
 
 sub collItems {
-  my($Chordy) = shift;
-
   my @del = ();
   foreach my $idx (0..$#ProFiles) {
     if (! -e "$Path->{Pro}/$ProFiles[$idx]->{name}") {
@@ -889,14 +885,13 @@ sub mediaWin {
   showSize();
 
   $a = $wid->new_ttk__label(-width => 8, -anchor => 'e', -text => "Media:");
-  $b = $wid->new_ttk__button(
-    -textvariable => \$Opt->{Media},
-    -width => 15,
-    -style => 'Menu.TButton',
-    -command => sub{
-      popMenu(\$Opt->{Media}, undef, $Media->list());
-      Tkx::after_idle(\&newMedia);
-    });
+  $b = popButton($wid,
+		 \$Opt->{Media},
+		 sub{Tkx::after_idle(\&newMedia)},
+		 sub{$Media->list()},
+		 -style => 'Menu.TButton',
+		 -width => 15,
+      );
 
   my $st = 'Media.TLabel';
   Tkx::ttk__style_configure($st,
@@ -914,15 +909,13 @@ sub mediaWin {
 
   Tkx::ttk__style_configure("Win.TButton", -background => MWBG);
   $c = $wid->new_ttk__label(-text => "Print Media:");
-  $d = $wid->new_ttk__button(
-    -textvariable => \$Opt->{PrintMedia},
-    -width => 15,
-    -style => 'Win.TButton',
-    -command => sub{
-      popMenu(\$Opt->{PrintMedia}, undef, $Media->list());
-      # Need to delay the save otherwise Opt->{PrintMedia} = 0
-      Tkx::after_idle(sub{$Opt->saveOne('PrintMedia')});
-    });
+  $d = popButton($wid,
+		 \$Opt->{PrintMedia},
+		 sub{Tkx::after_idle(sub{$Opt->saveOne('PrintMedia')})},
+		 sub{$Media->list()},
+		 -style => 'Menu.TButton',
+		 -width => 15,
+      );
 
   Tkx::ttk__style_configure('Menu.TFrame',
 			    -background => $Opt->{MenuBG});
@@ -960,6 +953,7 @@ sub mediaWin {
 
 sub newMedia {
   $Media = $Media->change($Opt->{Media});
+  $Opt->saveOne('Media');
   showSize();
   fontWin();
   CP::Win::title();
@@ -985,9 +979,6 @@ sub fontWin {
 sub bgWin {
   my($bgf) = shift;
 
-#  BGcS($bgf, 0,0, 'Title');
-#  BGcS($bgf, 0,1, 'Comment',   'C');
-#  BGcS($bgf, 0,2, 'Highlight', 'H');
   BGcS($bgf, 0, 'Verse');
   BGcS($bgf, 1, 'Chorus');
   BGcS($bgf, 2, 'Bridge');

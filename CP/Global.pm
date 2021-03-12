@@ -63,7 +63,7 @@ use CP::Cmnd;
 use CP::Opt;
 use CP::Media;
 
-our $Version = "3.9.1";
+our $Version = "4.0";
 
 our($Parent, $Home, $Collection, $Opt, $Path, $Cmnd, $Swatches);
 our(%Fingers, $Nstring, @Tuning, $CurSet);

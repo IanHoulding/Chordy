@@ -1,9 +1,10 @@
 Chordy, Tab et al Revision history.
 Bit late starting with 2.6.4 but about time I documented it :-)
 
-3.9.1
+4.0
 	   Removed the need for the Hyphen image.
            Unified Menu and Window checkboxes to show images for on/off.
+	   Rewrote the pop-up menu button code.
      Tab - Playing a Tab (still only on Windows) will now handle chords and you can
              vary the rate at which each individual note is struck.
            Options Menu now in alphabetical order.
@@ -52,6 +53,8 @@ Bit late starting with 2.6.4 but about time I documented it :-)
 	    - Export Setlist to a single Collection failed.
 	    - Changing Collection gave no indication as to why a Setlist might have
 	      no files or a truncated list - now shows a message.
+	    - Collection editor needed a lot of coding work - some functions just had
+	      marker entries - I'd forgotten to actually write the code!
   Editor - Removed a whole bunch of buttons and replaced them with a Window Menu bar.
              An effort to bring the Editor in line with Chordy and Tab and as a means
 	     to reduce the screen real estate.

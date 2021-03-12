@@ -413,6 +413,7 @@ sub fretBoard {
   # fretboard position
   $Indent = 10;
 
+  my $top = $Ed->{top};
   my $sw = $BASE;      # these are both half
   my $fw = $BASE * 2;  # the actual width
   my $w = ($Pitch * $Nstring);
@@ -423,11 +424,13 @@ sub fretBoard {
   my $x = $Indent + int($Pitch / 2);
   my $bh;
   foreach my $s (0..($Nstring-1)) {
-    my $wid = $Ed->{top}->new_ttk__button(
-      -textvariable => \$String[$s][0],
-      -width => 1);
-    $wid->m_configure(
-      -command => sub{popMenu(\$String[$s][0], sub{setString($s)}, [qw/0 X/])});
+    my $wid = popButton($top,
+			\$String[$s][0],
+			sub{setString($s)},
+			[qw/0 X/],
+			-width => 1,
+			-style => 'Menu.TButton',
+	);
     $bh = Tkx::winfo_reqheight($wid) if ($s == 0);
     $Canvas->create_window($x,$bh/2, -window => $wid, -anchor => 'center', -tags => 'FB');
     $x += $Pitch;
@@ -447,14 +450,17 @@ sub fretBoard {
       $Canvas->create_rectangle($Indent,$y-$fw, $Indent+$w,$y+$fw, -fill => 'grey', -tags => 'FB');
     }
     if ($_ == 1) {
-      my $wb = $Ed->{top}->new_ttk__button(
-	-textvariable => \$Ffret,
-	-width => 2);
-      $wb->m_configure(-command => sub{popMenu(\$Ffret, \&fretBoard, [1..20])});
+      my $wb = popButton($top,
+			\$Ffret,
+			\&fretBoard,
+			[1..20],
+			-width => 2,
+			-style => 'Menu.TButton',
+	);
       $bh = Tkx::winfo_reqwidth($wb);
       $Canvas->create_window($Indent+$w+8,$y, -window => $wb, -anchor => 'w', -tags => 'FB');
       $dx += ($bh + 4);
-      my $wl = $Ed->{top}->new_ttk__label(
+      my $wl = $top->new_ttk__label(
 	-text => "Base\nFret",
 	-font => "Arial 10 bold");
       $Canvas->create_window($Indent+$w+$bh+10,$y, -window => $wl, -anchor => 'w', -tags => 'FB');

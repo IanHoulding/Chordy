@@ -467,13 +467,14 @@ sub FontS {
     -style => "$title.Font.TLabel",
       );
 
-  my $fontsizes = [qw( 5  6  7  8  9 10 11 12 13 14 15 16 17 18 19
-		   20 21 22 23 24 25 26 27 28 29 30 33 34 36 40)];
-  my $siz = $frame->new_ttk__button(
-    -textvariable => \$fp->{size},
-    -width => 3,
-    -style => 'Menu.TButton',
-    -command => sub{popMenu(\$fp->{size}, sub{labUpdate($lab, $fp)}, $fontsizes)});
+  my $siz = popButton($frame,
+		      \$fp->{size},
+		      sub{labUpdate($lab, $fp)},
+		      [qw( 5  6  7  8  9 10 11 12 13 14 15 16 17 18 19
+		          20 21 22 23 24 25 26 27 28 29 30 33 34 36 40)],
+		      -width => 3,
+		      -style => 'Menu.TButton',
+      );
 
   my($wtb,$wth);
   $wtb = $frame->new_ttk__checkbutton(-style => 'My.TCheckbutton',

@@ -508,22 +508,24 @@ sub pagePlay {
   $pm->g_grid(qw/-row 0 -column 4 -padx 5 -pady 4/);
 
   my $bsl = $frb->new_ttk__label(-text => "Damping:");
-  my $bsm = $frb->new_ttk__button(
-    -textvariable => \$Damp,
-    -style => 'Menu.TButton',
-    -width => 3,
-    -command => sub{popMenu(\$Damp, sub{}, [qw/0 1 2 3 4/]);
-    });
+  my $bsm = popButton($frb,
+		      \$Damp,
+		      sub{},
+		      [qw/0 1 2 3 4/],
+		      -width => 3,
+		      -style => 'Menu.TButton',
+      );
   $bsl->g_grid(qw/-row 0 -column 5 -padx 4 -pady 4/);
   $bsm->g_grid(qw/-row 0 -column 6 -padx 0 -pady 4/);
 
   my $crl = $frb->new_ttk__label(-text => "Chord Rate:");
-  my $bcr = $frb->new_ttk__button(
-    -textvariable => \$Crate,
-    -style => 'Menu.TButton',
-    -width => 4,
-    -command => sub{popMenu(\$Crate, sub{}, ['1', '1/2', '1/4', '1/8', '1/16', '1/32', '1/64', '0']);
-    });
+  my $bcr = popButton($frb,
+		      \$Crate,
+		      sub{},
+		      ['1', '1/2', '1/4', '1/8', '1/16', '1/32', '1/64', '0'],
+		      -width => 4,
+		      -style => 'Menu.TButton',
+      );
   $crl->g_grid(qw/-row 1 -column 5 -padx 4 -pady 4/);
   $bcr->g_grid(qw/-row 1 -column 6 -padx 0 -pady 4/);
 }
