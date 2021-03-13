@@ -122,7 +122,6 @@ sub popBmenu {
 				-relief => 'ridge',
 				-borderwidth => 1,
 				-padding => [1,2,1,2]);
-  $fr->g_pack();
 
   my $len = 0;
   foreach my $l (@{$list}) {
@@ -148,9 +147,11 @@ sub popBmenu {
   Tkx::update(); # So the winfo_req's work.
   my($w,$h) = (Tkx::winfo_reqwidth($fr), Tkx::winfo_reqheight($fr));
 
-  my $bg = $pop->new_ttk__frame(-style => 'PopShad.TFrame', -width => $w - 2, -height => $h - 2);
+  my $bg = $pop->new_ttk__frame(-style => 'PopShad.TFrame',
+				-width => $w - 3,
+				-height => $h - 3);
   $fr->g_place(qw/-x 0 -y 0/);
-  $bg->g_place(qw/-x 6 -y 6/);
+  $bg->g_place(qw/-x 7 -y 7/);
   $fr->g_raise();
 
   $x -= int($w / 2);

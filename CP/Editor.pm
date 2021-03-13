@@ -735,6 +735,8 @@ sub txtButton {
 	       -padx => 2, -pady => 4);
 }
 
+# These next 2 subs are modified copies
+# of popButton and popBmenu in Pop.pm
 sub menuButton {
   my($frm,$row,$c) = @_;
 
@@ -755,39 +757,56 @@ sub menuButton {
 sub EdpopMenu {
   my($list) = shift;
 
+  Tkx::update();
   return if (Tkx::winfo_exists('.pm'));
   my($x,$y) = (Tkx::winfo_pointerx($MW), Tkx::winfo_pointery($MW));
 
   my $pop = $MW->new_toplevel(-name => '.pm', -background => '');
+  $pop->g_wm_withdraw();
   $pop->g_wm_overrideredirect(1);
 
   my $fr = $pop->new_ttk__frame(-style => 'PopMenu.TFrame',
 				-relief => 'ridge',
 				-borderwidth => 1,
-				-padding => [2,2,2,2]);
+				-padding => [1,2,1,2]);
 
+  my $len = 0;
+  my @labs = ();
   foreach my $l (@{$list}) {
-    my $but = $fr->new_ttk__button(-text => $Dtv{$l}{lab},
+    my $lab = $Dtv{$l}{lab};
+    push(@labs, $lab);
+    my $x = length($lab);
+    $len = $x if ($x > $len);
+  }
+  foreach my $l (@{$list}) {
+    my $but = $fr->new_ttk__button(-text => shift(@labs),
+				   -width => $len,
 				   -style => 'PopMenu.TButton',
 				   -command => sub{$pop->g_destroy();idef($l);});
-    $but->g_pack(qw/-side top -fill y -ipadx 10/);
+    $but->g_pack();
   }
 
-  Tkx::update_idletasks(); # So the winfo_req's work.
+  Tkx::update(); # So the winfo_req's work.
   my($w,$h) = (Tkx::winfo_reqwidth($fr), Tkx::winfo_reqheight($fr));
   
-  my $bg = $pop->new_ttk__frame(-style => 'PopShad.TFrame', -width => $w, -height => $h);
+  my $bg = $pop->new_ttk__frame(-style => 'PopShad.TFrame',
+				-width => $w - 3,
+				-height => $h - 3);
   $fr->g_place(qw/-x 0 -y 0/);
-  $bg->g_place(qw/-x 4 -y 4/);
+  $bg->g_place(qw/-x 7 -y 7/);
   $fr->g_raise();
 
   $x -= int($w / 2);
   $y -= int($h / 3);
-  $pop->g_wm_geometry("+$x+$y"); 
-  Tkx::after(100, sub{Where($pop,$x,$y,$w,$h)});
+  $w += 4;
+  $h += 4;
+  $pop->g_wm_geometry($w."x$h+$x+$y");
+  Tkx::after(100, sub{where($pop,$x,$y,$w,$h)});
+  $pop->g_wm_deiconify();
+  $pop->g_raise();
 }
 
-sub Where {
+sub where {
   my($pop,$Px,$Py,$Pw,$Ph) = @_;
 
   if (Tkx::winfo_exists('.pm')) {
@@ -795,7 +814,7 @@ sub Where {
     if ($x < $Px || $x >= ($Px + $Pw) || $y < $Py || $y >= ($Py + $Ph)) {
       $pop->g_destroy();
     } else {
-      Tkx::after(100, sub{Where($pop,$Px,$Py,$Pw,$Ph)});
+      Tkx::after(100, sub{where($pop,$Px,$Py,$Pw,$Ph)});
     }
   }
 }
