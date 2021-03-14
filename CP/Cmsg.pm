@@ -230,10 +230,11 @@ sub msgYesNoAll {
     $bfr->g_grid(qw/-row 1 -column 0 -sticky we/);
     my $chk = 0;
     my $c = $bfr->new_ttk__button(-text => ' Yes ', -command => sub{topDown($pop,'Yes',\$done);});
-    my $d = $bfr->new_ttk__checkbutton(
-      -text => "Apply to all",
-      -variable => \$chk,
-      -style => 'Pop.TCheckbutton');
+    my $d = $bfr->new_ttk__checkbutton(-style => 'Pop.My.TCheckbutton',
+				       -compound => 'left',
+				       -image => ['xtick', 'selected', 'tick'],
+				       -text => "Apply to all",
+				       -variable => \$chk);
     my $e = $bfr->new_ttk__button(-text => ' No ',  -command => sub{topDown($pop,'No',\$done);});
 
     $c->g_pack(qw/-side right/, -padx => [30,10]);

@@ -32,7 +32,7 @@ use warnings;
 
 BEGIN {
   our @ISA = qw(Exporter);
-  our @EXPORT = qw/$Tab $EditBar $EditBar1/;
+  our @EXPORT = qw/$EditBar $EditBar1/;
   require Exporter;
 }
 
@@ -43,12 +43,12 @@ use File::Basename;
 use File::Slurp;
 use CP::Offset;
 use CP::Bar;
+use CP::BarEd;
 use CP::Cmsg;
 use CP::TabWin;
 use CP::Lyric;
 use POSIX;
 
-our $Tab;
 our($EditBar, $EditBar1);
 our(@pageXY, $SaveID);
 our $OneOrMore = "Please select one or more bars first.";
@@ -60,14 +60,19 @@ our $OneOrMore = "Please select one or more bars first.";
 sub new {
   my($proto,$fn) = @_;
 
+  CORE::state $Tab;
   if (! defined $Tab) {
     my $class = ref($proto) || $proto;
     $Tab = {};
-    $Tab->{eWin} = '';
+    $Tab->{eWin} = $Tab->{eCan} = $Tab->{nFrm} = $Tab->{nCan} = $Tab->{pFrm} = $Tab->{pCan} = '';
     bless $Tab, $class;
   }
+  if ($fn eq '_EXIT_' && $Tab->checkSave() ne 'Cancel') {
+    $MW->g_destroy();
+    exit(0);
+  }
   # These keys do NOT get reset:
-  #   eCan nFrm nCan pFrm pCan pOffset eOffset
+  #   eWin eCan nFrm nCan pFrm pCan pOffset eOffset
   #
   $Tab->{fileName} = '';
   $Tab->{PDFname}  = '';
@@ -77,6 +82,7 @@ sub new {
   $Tab->{rowsPP}   = 0;
   $Tab->{shbr}     = '';  # Can be one of 's', 'h', 'b' or 'r'.
   $Tab->{fret}     = '';
+  $Tab->{edited}   = 0;
   $Tab->{selected} = 0;
   $Tab->{select1}  = 0;
   $Tab->{select2}  = 0;
@@ -87,13 +93,12 @@ sub new {
   $Tab->{Timing}   = '4/4';
   $Tab->{BarEnd}   = 32;
   $Tab->{trans}    = 0;
-  $Tab->{edited}   = 0;
   $Tab->{bars}     = 0;
   $Tab->{lastBar}  = 0;
   $Tab->{staveGap} = 0;
   $Tab->{lyricSpace} = 0;
   $Tab->{lyricEdit}  = 0;
-  $Tab->{lyrics}   = CP::Lyric->new(); # array containing ALL the lyrics
+  $Tab->{lyrics}   = CP::Lyric->new($Tab); # array containing ALL the lyrics
   $Tab->{rests}    = {};
   $Tab->{pstart}   = [];
   $Tab->{noteFsize} = 'Normal';
@@ -104,10 +109,27 @@ sub new {
 
   if ($fn ne '') {
     $Tab->{fileName} = fileparse($fn);
-    ($Tab->{title} = $Tab->{fileName}) =~ s/\.tab$//;
-    $Tab->{PDFname} = $Tab->{title}.'.pdf';
     load($Tab, $fn);
+    if ($Tab->{title} eq '') {
+      ($Tab->{title} = $Tab->{fileName}) =~ s/\.tab(.\d+)?$//;
+    }
+    $Tab->{PDFname} = $Tab->{title}.'.pdf';
   }
+  $Tab;
+}
+
+sub setEdited {
+  my($self,$edit) = @_;
+
+  $self->{edited} = ($self->{fileName} ne '') ? $edit : 0;
+  tabTitle($self, $self->{fileName});
+}
+
+sub tabTitle {
+  my($self,$fn) = @_;
+
+  my $ed = ($self->{edited}) ? ' (edited)' : '';
+  $MW->g_wm_title("Tab Editor  |  Collection: ".$Collection->{name}."  |  Media: $Opt->{Media}  |  Tab: $fn$ed");
 }
 
 sub drawPageWin {
@@ -116,9 +138,9 @@ sub drawPageWin {
   readChords();  # Need $Nstring and @Tuning
   offsets($self);
   setXY($self);
-  CP::TabWin::pageWindow();
-  CP::TabWin::editWindow();
-  main::tabTitle($self->{fileName});
+  CP::TabWin::pageWindow($self);
+  CP::BarEd::editWindow($self);
+  $self->tabTitle($self->{fileName});
   indexBars($self);
   $self->pageHdr();
   $self->newPage(0);
@@ -147,14 +169,14 @@ sub offsets {
   $self->{barTop} = $self->{pageHeader} + 1 + $Opt->{TopMargin};
 
   $off{width} = int(($Media->{width} - ($Opt->{LeftMargin} + $Opt->{RightMargin})) / $Opt->{Nbar});
-  my($t,$_t) = split('/', $Tab->{Timing});
-  $Tab->{BarEnd} = $t * 8;
+  my($t,$_t) = split('/', $self->{Timing});
+  $self->{BarEnd} = $t * 8;
   $off{interval} = $off{width} / (($t * 8) + 3);
   # Distance between lines of a Staff.
   $off{staffSpace} = $Opt->{StaffSpace};
   $off{staffHeight} = $off{staffSpace} * ($Nstring - 1);
 
-  # Something like a "Verse" above a bar is:
+  # With something like "Verse" above a bar, the top staff line (staffY} is:
   #    Volta bar + The Text + 1/2 Note text size
   $off{staffX} = 0;
   $off{headY}  = $off{fat} + $self->{headSize} + 1;
@@ -244,12 +266,11 @@ sub makeFonts {
       $size = $fp->{size};
       $wt = $fp->{weight};
       $sl = $fp->{slant};
-      $clr = $fp->{color};
+      $clr = $Opt->{'FG'.$med};
     }
     $esize = int($size * $es);
     # PDF 'heavy' fonts show as bold on the screen.
     $wt = 'bold' if ($wt eq 'heavy');
-    # Remove the colour element to form a pure font spec.
     $self->{"$font"} = "{$fam} $size $wt $sl";
     my $dsc = Tkx::font_metrics($self->{"$font"}, '-descent');
     $self->{"${type}Cap"} = $size - $dsc;
@@ -372,10 +393,6 @@ sub indexBars {
   $self->{lyrics}->adjust($Opt->{LyricLines}) if ($Opt->{LyricLines});
 }
 
-sub startEdit {
-  main::setEdited(0);
-}
-
 sub load {
   my($self,$fn) = @_;
 
@@ -401,7 +418,7 @@ sub load {
       elsif ($cmd =~ /^newpage$/i)        {$newpage = 1;}
       elsif ($cmd =~ /^instrument$/i)     {$Opt->{Instrument} = ucfirst(lc($txt)); readChords();}
       elsif ($cmd =~ /^bars_per_stave$/i) {$Opt->{Nbar} = $txt + 0;}
-      elsif ($cmd =~ /^timing$/i)         {$Tab->{Timing} = $txt}
+      elsif ($cmd =~ /^timing$/i)         {$self->{Timing} = $txt}
       elsif ($cmd =~ /^staff_space$/i)    {$Opt->{StaffSpace} = $txt + 0;}
       elsif ($cmd =~ /^stave_gap$/i)      {$self->{staveGap} = $txt + 0;}
       elsif ($cmd =~ /^lyric_space$/i)    {$self->{lyricSpace} = $txt + 0;}
@@ -420,8 +437,10 @@ sub load {
 	}
       }
       elsif ($cmd =~ /^([^_]*)_font/i) {
-	my $font = $1."Font";
-	$self->{$font} = $txt;
+	if ($Opt->{SaveFonts}) {
+	  my $font = $1."Font";
+	  $self->{$font} = $txt;
+	}
       }
       elsif ($cmd =~ /^lyric$/i) {
 	my($stave,$line,$lyr) = split(':', $txt, 3);
@@ -438,10 +457,10 @@ sub load {
 	$bar->{justify} = $just;
 	$bar->{rep} = $rep;
 	$bar->{bg} = $bg;
-	while ($notes =~ /([r\d])\(([^\)]*)\)/g) {
+	while ($notes =~ /(r|\d+)\(([^\)]*)\)/g) {
 	  my $n = $2;
-	  my $string = $1;
-	  $string -= 1 if ($string ne 'r');
+	  my $string = ($1 eq 'r') ? REST : $1;
+	  $string -= 1 if ($string != REST);
 	  foreach my $s (split(' ', $n)) {
 	    my $nt = CP::Note->new($bar, $string, $s);
 	    push(@{$bar->{notes}}, $nt);
@@ -454,7 +473,7 @@ sub load {
       }
     }
   }
-  $Tab->{Timing} .= '/4' if (length($Tab->{Timing}) == 1);
+  $self->{Timing} .= '/4' if (length($self->{Timing}) == 1);
   close(IFH);
   $self->guessKey() if ($self->{key} eq '-');
   $self->{loaded} = 1;
@@ -464,10 +483,12 @@ sub add1bar {
   my($self) = shift;
 
   my $last = $self->{lastBar};
-  my $bar = CP::Bar->new($self->{pOffset});
+  my $bar = CP::Bar->new($self);
   if ($last == 0) {
+    $bar->{bidx} = 1;
     $self->{bars} = $bar;
   } else {
+    $bar->{bidx} = $last->{bidx} + 1;
     $last->{next} = $bar;
     $bar->{prev} = $last;
   }
@@ -479,7 +500,7 @@ sub guessKey {
 
   for(my $bar = $self->{bars}; $bar != 0; $bar = $bar->{next}) {
     foreach my $n (@{$bar->{notes}}) {
-      if ($n->{string} ne 'r' && $n->{fret} ne 'X') {
+      if ($n->{string} != REST && $n->{fret} ne 'X') {
 	my $idx = (idx($Tuning[$n->{string}]) + $n->{fret}) % 12;
 	my $c = $Scale->[$idx];
 	if ($c =~ /[a-g]/) {
@@ -523,7 +544,7 @@ sub checkSave {
   my($self) = shift;
 
   my $ans = '';
-  if ($self->{edited}) {
+  if ($self->{edited} && $self->{fileName} ne '') {
     $ans = msgYesNoCan("Do you want to save any changes made to:\n$self->{fileName}");
     if ($ans eq 'Yes') {
       $self->save();
@@ -574,14 +595,16 @@ sub save {
       print $OFH '{note:'.$self->{note}."}\n" if ($self->{note} ne '');
       print $OFH '{tempo:'.$self->{tempo}."}\n";
       print $OFH '{bars_per_stave:'.$Opt->{Nbar}."}\n";
-      print $OFH '{timing:'.$Tab->{Timing}."}\n";
+      print $OFH '{timing:'.$self->{Timing}."}\n";
       print $OFH '{staff_space:'.$Opt->{StaffSpace}."}\n";
       print $OFH '{stave_gap:'.$self->{staveGap}."}\n";
       print $OFH '{lyric_space:'.$self->{lyricSpace}."}\n";
       print $OFH '{lyric_lines:'.$Opt->{LyricLines}."}\n";
-      foreach my $type (qw/title head note snote word/) {
-	my $font = "${type}Font";
-	print $OFH "\{${type}_font:$self->{$font}\}\n";
+      if ($Opt->{SaveFonts}) {
+	foreach my $type (qw/title head note snote word/) {
+	  my $font = "${type}Font";
+	  print $OFH "\{${type}_font:$self->{$font}\}\n";
+	}
       }
       for(my $bar = $self->{bars}; $bar != 0; $bar = $bar->{next}) {
 	print $OFH "{newline}\n"                   if ($bar->{newline});
@@ -594,8 +617,8 @@ sub save {
 	print $OFH "[";
 	foreach my $n ($bar->noteSort()) {
 	  my $fs = '';
-	  if ($n->{string} eq 'r') {
-	    $fs = "r($n->{fret},$n->{pos})";
+	  if ($n->{string} == REST) {
+	    $fs = REST."($n->{fret},$n->{pos})";
 	  } else {
 	    my $fnt = ($n->{font} eq 'Small') ? 'f' : '';
 	    $fs = ($n->{string}+1).'('.$fnt.$n->{fret};
@@ -616,7 +639,6 @@ sub save {
       }
       $self->{lyrics}->lprint($OFH);
       close($OFH);
-      main::setEdited(0);
     } else {
       $Sip = 0;
       message(SAD, "Tab Save could not create temporary file:\n\"$tmpTab\"");
@@ -633,7 +655,7 @@ sub save {
 #    if ($Opt->{AutoSave}) {
 #      $SaveID = Tkx::after(($Opt->{AutoSave} * 60000), \&save);
 #    }
-    main::setEdited(0);
+    $self->setEdited(0);
     $Sip = 0;
     message(SMILE, " Saved ", 1);
     return(1);
@@ -645,8 +667,8 @@ sub pageHdr {
   my($self) = shift;
 
   $self->{pCan}->delete(qw/hdrk hdrn hdrt hdrp hdrb/);
-  if ($Media->{titleBG} ne WHITE) {
-    my @ft = ('-width', 0, '-fill', $Media->{titleBG});
+  if ($Opt->{BGTitle} ne WHITE) {
+    my @ft = ('-width', 0, '-fill', $Opt->{BGTitle});
     $self->{pCan}->create_rectangle(0, 0, $Media->{width}, $self->{pageHeader}, @ft);
   }
   $self->pageKey();
@@ -885,24 +907,26 @@ sub clearBG {
 sub editBar {
   my($self) = shift;
 
-  my($a,$b) = $self->diff();
+  my($a,$b) = ($self->{select1},$self->{select2});
   if ($a == 0) {
-    CP::Bar::Edit();
-  } else {
-    if ($a != $b) {
-      if (msgYesNo("Only the first Bar will be edited.\nContinue?") eq "No") {
-	return;
-      }
-      my $can = $self->{pCan};
-      while ($b != $a) {
-	$can->itemconfigure("bg$b->{pidx}", -fill => $b->{bg});
-	$b = $b->{prev};
-      }
-      $self->{select1} = $a;
-      $self->{select2} = 0;
+    # This is either the first bar or a
+    # new one to be tacked onto the end.
+    $a = $self->add1bar();
+    $self->indexBars();
+    $self->newPage($a->{pnum});
+    $a->select();
+  } elsif ($b) {
+    if ($b != $a) {
+      return if (msgYesNo("Only the first Bar will be edited.\nContinue?") eq "No");
     }
-    $a->Edit();
+    my $can = $self->{pCan};
+    while ($b != $a) {
+      $can->itemconfigure("bg$b->{pidx}", -fill => $b->{bg});
+      $b = $b->{prev};
+    }
+    $self->{select2} = 0;
   }
+  $a->Edit($self);
 }
 
 sub Clone {
@@ -917,7 +941,7 @@ sub Clone {
     if ($bp && ! $bp->isblank()) {
       do {
 	$bp = $self->add1bar();
-	$a->copy($bp, HANDN);
+	$a->copy($bp, ALLB);
 	$a = $a->{next};
       } while ($a && $a->{prev} != $b);
       pasteEnd($self, $bp);
@@ -936,7 +960,7 @@ sub Copy {
   } else {
     @Copy = ();
     do {
-      my $copy = CP::Bar->new($self->{pOffset});
+      my $copy = CP::Bar->new($self);
       $a->copy($copy, $what);
       $copy->{bidx} = $a->{bidx};
       push(@Copy, $copy);
@@ -955,14 +979,32 @@ sub Copy {
 }
 
 sub PasteOver {
-  my($self) = shift;
+  my($self,$replace) = @_;
 
   if (pasteStart($self)) {
     my $dst = $self->{select1};
     my $lastdst;
     foreach my $src (@Copy) {
       $dst = $self->add1bar() if ($dst == 0); # $dst is pointing at {lastBar}
-      $src->copy($dst, HANDN);
+      if ($replace) {
+	$src->copy($dst, ALLB);
+      } else {
+	# /volta rep header justify bg newline newpage/
+	$dst->{volta}   = $src->{volta}   if ($src->{volta} ne 'None');
+	$dst->{rep}     = $src->{rep}     if ($src->{rep} ne 'None');
+	$dst->{header}  = $src->{header}  if ($src->{header} ne '');
+	$dst->{justify} = $src->{justify} if ($dst->{justify} ne $src->{justify});
+	$dst->{bg}      = $src->{bg}      if ($src->{bg} ne '');
+	$dst->{newline} = $src->{newline} if ($src->{newline} != 0);
+	$dst->{newpage} = $src->{newpage} if ($src->{newpage} != 0);
+	foreach my $s (@{$src->{notes}}) {
+	  my $eq = 0;
+	  foreach my $d (@{$dst->{notes}}) {
+	    $eq++, last if ($s->comp($d) == 0);
+	  }
+	  push(@{$dst->{notes}}, $s->copy($dst)) if ($eq == 0);
+	}
+      }
       $lastdst = $dst;
       $dst = $dst->{next};
     }
@@ -976,8 +1018,8 @@ sub PasteBefore {
   if (pasteStart($self)) {
     my $dst = $self->{select1}{prev};
     foreach my $src (@Copy) {
-      my $bar = CP::Bar->new($self->{pOffset});
-      $src->copy($bar, HANDN);
+      my $bar = CP::Bar->new($self);
+      $src->copy($bar, ALLB);
       if ($dst == 0) {
 	$self->{bars} = $bar;
       } else {
@@ -999,8 +1041,8 @@ sub PasteAfter {
     my $dst = $self->{select1};
     my $next = $dst->{next};
     foreach my $src (@Copy) {
-      my $bar = CP::Bar->new($self->{pOffset});
-      $src->copy($bar, HANDN);
+      my $bar = CP::Bar->new($self);
+      $src->copy($bar, ALLB);
       $dst->{next} = $bar;
       $bar->{prev} = $dst;
       $dst = $bar;
@@ -1032,7 +1074,7 @@ sub pasteStart {
 sub pasteEnd {
   my($self,$dst) = @_;
 
-  main::setEdited(1);
+  $self->setEdited(1);
   $self->ClearSel();
   indexBars($self);
   $self->newPage($dst->{pnum});
@@ -1056,6 +1098,15 @@ sub ClearBars {
   }
 }
 
+sub ClearAndRedraw {
+  my($self) = shift;
+
+  $self->{eWin}->g_wm_withdraw();
+  $EditBar->ClearEbars();
+  $self->indexBars();
+  $self->newPage($self->{pageNum});
+}
+
 sub ClearSel {
   my($self) = shift;
 
@@ -1071,7 +1122,7 @@ sub ClearSel {
 }
 
 sub DeleteBars {
-  my($self) = shift;
+  my($self,$query) = @_;
 
   my($a,$b) = $self->diff();
   if ($a == 0) {
@@ -1079,11 +1130,18 @@ sub DeleteBars {
   } else {
     my $msg = "Are you sure you want to\ndelete the selected Bar";
     $msg .= 's' if ($a != $b);
-    if (msgYesNo($msg) eq 'Yes') {
+    if ($query == 0 || msgYesNo($msg) eq 'Yes') {
       if ($a->{prev} == 0) {
-	$self->{bars} = $b->{next};
-	$b->{next}{prev} = 0 if ($b->{next} != 0);
+	# $a is the first bar
+	if ($a->{next} == 0) {
+	  #$a is the only bar
+	  $self->{bars} = $self->{lastBar} = 0;
+	} else {
+	  $self->{bars} = $b->{next};
+	  $b->{next}{prev} = 0 if ($b->{next} != 0);
+	}
       } elsif ($b->{next} == 0) {
+	# $b is the last bar
 	$self->{lastBar} = $a->{prev};
 	$a->{prev}{next} = 0;
       } else {
@@ -1160,7 +1218,7 @@ sub transpose {
     while ($bar && $bar->{prev} != $last) {
       my $tr = $self->{trans} + 0;
       foreach my $n (@{$bar->{notes}}) {
-	if ($n->{string} ne 'r' && $n->{fret} ne 'X') {
+	if ($n->{string} != REST && $n->{fret} ne 'X') {
 	  $n->{fret} += $tr;
 	  if ($Opt->{Refret}) {
 	    foreach my $ups (5, 10) {
@@ -1187,7 +1245,7 @@ sub transpose {
     if ($pe == PAGE) {
       $self->setKey($self->{trans}) if ($all);
       $self->newPage($self->{pageNum});
-      main::setEdited(1);
+      $self->setEdited(1);
     } else {
       $EditBar->unMap();
       $EditBar->show();
@@ -1205,7 +1263,7 @@ sub ud1string {
   while ($bar && $bar->{prev} != $last) {
     foreach my $n (@{$bar->{notes}}) {
       my $str = $n->{string};
-      if ($str ne 'r') {
+      if ($str != REST) {
 	if (($adj > 0 && ($str + 1) == $Nstring) || ($adj < 0 && ($str - 1) < 0)) {
 	  $n->{fret} += $adj if ($n->{fret} ne 'X');
 	} else {
@@ -1222,7 +1280,7 @@ sub ud1string {
   if ($pe == PAGE) {
     $self->setKey($adj) if ($all);
     $self->newPage($self->{pageNum});
-    main::setEdited(1);
+    $self->setEdited(1);
   } else {
     $EditBar->unMap();
     $EditBar->show();
@@ -1286,7 +1344,7 @@ sub saveAsText {
     return();
   }
   my @bars = ();
-  my($t,$_t) = split('/', $Tab->{Timing});
+  my($t,$_t) = split('/', $self->{Timing});
   my $div = 8;
   for(my $b = $self->{bars}; $b != 0; $b = $b->{next}) {
     foreach my $n (@{$b->{notes}}) {
@@ -1329,7 +1387,7 @@ sub saveAsText {
     $bar->{newline} = $b->{newline} | $b->{newpage};
     $bar->{header} = $b->{header};
     foreach my $n (@{$b->{notes}}) {
-      if ($n->{string} ne 'r') {
+      if ($n->{string} != REST) {
 	my $s = abs($n->{string} - $Nstring);
 	my $p = (($n->{pos} / $div) * 2) + 2;
 	substr($bar->{asc}[$s], $p, length($n->{fret}), $n->{fret});

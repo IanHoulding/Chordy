@@ -12,6 +12,12 @@ package CP::FgBgEd;
 use strict;
 use warnings;
 
+BEGIN {
+  our @ISA = qw(Exporter);
+  our @EXPORT = qw(&lighten &darken);
+  require Exporter;
+}
+
 use POSIX;
 
 use CP::Global qw/:FUNC :OPT :WIN :XPM/;
@@ -132,14 +138,13 @@ sub new {
   $mid[2]->g_pack();
 
   my($r,$c) = (0,0);
-  foreach my $chc (qw/verse chorus bridge tab highlight comment/) { 
-    my $uc = ucfirst($chc);
+  foreach my $chc (qw/Verse Chorus Bridge Tab Highlight Comment/) { 
     my $b = $mid[2]->new_ttk__button(
-      -text => $uc,
-      -style => "$uc.BG.TButton",
-      -command => sub {color($self, $Media->{"${chc}BG"})});
+      -text => $chc,
+      -style => "$chc.BG.TButton",
+      -command => sub {color($self, $Opt->{"BG$chc"})});
     $b->g_grid(-row => $r, -column => $c++, -padx => 4, -pady => [2,4]);
-    if ($chc eq 'tab') {
+    if ($chc eq 'Tab') {
       $r++;
       $c = 1;
     }
@@ -174,7 +179,7 @@ sub new {
   my $sc = $mid[3]->new_ttk__button(-text => "Set Colour", -command => sub{setSwatch($self)});
   $sc->g_pack(-pady => [0,8]);
 
-  # Create the color display swatch on the right side of the window.
+  # Create the color display Swatch on the right side of the window.
 
   $self->{helpl} = '';
   my $help_label = $right->new_ttk__label(
@@ -188,52 +193,70 @@ sub new {
     -textvariable => \$self->{help},
     -font       => 'Times 12',
     -justify    => 'center',
-    -wraplength => '2.5i');
+    -wraplength => '2i');
   $help->g_pack(qw/-side top/);
 
-  Tkx::ttk__style_configure('Sw.TLabel',
-			    -selectborderwidth  => 0, -borderwidth => 1,
-			    -highlightthickness => 0, -bordercolor => BLACK,
-			    -relief     => 'ridge',   -padding     => [20,10,20,10],
-			    -foreground => BLACK, -background  => WHITE);
+  my $can = $right->new_tk__canvas(qw/-relief solid -borderwidth 1/);
+  $can->g_pack(qw/-side top -pady 4/);
+  $self->{swcan} = $can;
+  my $font = "{Courier New} 18 bold roman";
+  my $dsc = Tkx::font_metrics($font, '-descent');
 
-  my $swatch = $right->new_ttk__label(
-    -text    => BLACK,
-    -font    => 'Courier 18 bold',
-    -justify => 'center',
-    -style   => 'Sw.TLabel');
-  $swatch->g_pack(qw/-side top -pady 4/);
-  $self->{swatch} = $swatch;
+  my $id = $can->create_text(0, 0, -text => '#FFFFFF', -font => $font);
+  my($x1,$y1,$x2,$y2) = split(/ /, $can->bbox($id));
+  my $wid = abs($x1) + $x2 + 40;
+  my $ht = abs($y1) + $y2 + 20;
+  $can->configure(-width => $wid, -height => $ht);
+  $can->delete($id);
+  @{$self->{swrect}} = (5, 5, $wid+1, $ht+1, '-width', 4);
+  $self->{bdid} = '';
+  $self->{swid} = $can->create_text($wid / 2, ($ht + $dsc) / 2,
+				    -text => BLACK, -justify => 'center',
+				    -fill => '#000000', -font => $font);
 
-  $self->{fgbg} = '-foreground';
+  $self->{fgbgbd} = FOREGRND;
 
   my $fg = $right->new_ttk__radiobutton(
     -text => 'Set Foreground colour',
-    -variable => \$self->{fgbg},
-    -value => '-foreground',
-    -command => sub{color($self,Tkx::ttk__style_lookup('Sw.TLabel', -foreground));});
+    -variable => \$self->{fgbgbd},
+    -value => FOREGRND,
+    -command => sub{color($self, $self->{fg});});
   $fg->g_pack(qw/-side top/);
 
   my $bg = $right->new_ttk__radiobutton(
     -text => 'Set Background colour',
-    -variable => \$self->{fgbg},
-    -value => '-background',
-    -command => sub{color($self,Tkx::ttk__style_lookup('Sw.TLabel', -background));});
+    -variable => \$self->{fgbgbd},
+    -value => BACKGRND,
+    -command => sub{color($self, $self->{bg});});
   $bg->g_pack(qw/-side top/);
+  $self->{bgrb} = $bg;
+
+  # Create this one but don't pack it.
+  my $bd = $right->new_ttk__radiobutton(
+    -text => 'Set Border colour',
+    -variable => \$self->{fgbgbd},
+    -value => BORDER,
+    -command => sub{color($self, $self->{bd});});
+  $self->{bdrb} = $bd;
 
   my $lt = $right->new_ttk__button(
     -text => "Lighten",
     -command => sub {
-      my($clr) = Tkx::ttk__style_lookup('Sw.TLabel', $self->{fgbg});
-      color($self, lighten($clr));
+      my $op = $self->{fgbgbd};
+      my $ops = ($op == FOREGRND) ? 'fg' : ($op == BACKGRND) ? 'bg' : 'bd';
+      color($self, lighten($self->{$ops}));
+#      my $clr = Tkx::ttk__style_lookup('Sw.TLabel', $self->{fgbgbd});
+#      color($self, lighten($clr));
     });
   $lt->g_pack(qw/-side top -pady 8/);
 
   my $dk = $right->new_ttk__button(
     -text => "Darken",
     -command => sub {
-      my $clr = Tkx::ttk__style_lookup('Sw.TLabel', $self->{fgbg});
-      color($self, darken($clr));
+      my $op = $self->{fgbgbd};
+      my $ops = ($op == FOREGRND) ? 'fg' : ($op == BACKGRND) ? 'bg' : 'bd';
+#      my $clr = Tkx::ttk__style_lookup('Sw.TLabel', $self->{fgbgbd});
+      color($self, darken($self->{$ops}));
     });
   $dk->g_pack(qw/-side top -pady 8/);
 
@@ -329,32 +352,6 @@ sub Hex
   sprintf('#%02x%02x%02x',@rgb)
 }
 
-sub fgcolor {
-  my ($self,$name) = @_;
-
-  if (defined $name) {
-    if ($name ne '') {
-      my $tmp = $self->{fgbg};
-      $self->{fgbg} = '-foreground';
-      color($self, $name);
-      $self->{fgbg} = $tmp;
-    }
-  }
-}
-
-sub bgcolor {
-  my ($self,$name) = @_;
-
-  if (defined $name) {
-    if ($name ne '') {
-      my $tmp = $self->{fgbg};
-      $self->{fgbg} = '-background';
-      color($self, $name);
-      $self->{fgbg} = $tmp;
-    }
-  }
-}
-
 sub lbcolor {
   my($self,$names) = @_;
   if (scalar keys(%Names) > 0) {
@@ -390,13 +387,43 @@ sub color {
 	$self->{'color'} = $hex;
 	$self->{'Entry'} = $colour;
 	Tkx::after_idle(sub{set_scales($self)}) unless ($self->{pending}++);
-	Tkx::ttk__style_configure('Sw.TLabel', $self->{fgbg} => $hex);
-	$self->{swatch}->m_configure(-text => $hex);
+	my $can = $self->{swcan};
+	if ($self->{fgbgbd} == FOREGRND) {
+	  setFG($self, $hex);
+	} elsif ($self->{fgbgbd} == BACKGRND) {
+	  setBG($self, $hex);
+	} elsif ($self->{fgbgbd} == BORDER) {
+	  setBD($self, $hex);
+	}
+	$can->dchars($self->{swid}, '0', 'end');
+	$can->insert($self->{swid}, '0', uc($hex));
       } else {
 	message(SAD, "Colour Editor:\n   syntax error in color name \"$colour\"");
       }
     }
   }
+}
+
+sub setFG {
+  my($self,$hex) = @_;
+
+  $self->{swcan}->itemconfigure($self->{swid}, -fill => $hex);
+  $self->{fg} = $hex;
+}
+
+sub setBG {
+  my($self,$hex) = @_;
+
+  $self->{swcan}->configure(-background => $hex);
+  $self->{bg} = $hex;
+}
+
+sub setBD {
+  my($self,$hex) = @_;
+
+  $self->{swcan}->delete($self->{bdid}) if ($self->{bdid} ne '');
+  $self->{bdid} = $self->{swcan}->create_rectangle(@{$self->{swrect}}, -outline => $hex);
+  $self->{bd} = $hex;
 }
 
 # The procedure below is invoked when one of the scales is adjusted.
@@ -468,7 +495,7 @@ sub scale_colour {
 my $nofgbghelp = "You can manipulate the %s colour to help determine the %s to use but it will not be used when you click on 'OK'.";
 
 sub Show {
-  my($self,$fg,$bg,$op) = @_;
+  my($self,$fg,$bg,$bd,$op) = @_;
 
   @LclSwtch = @{$Swatches};
   my $stdbd = Tkx::ttk__style_lookup("TButton", "-background");
@@ -479,26 +506,40 @@ sub Show {
 			      -bordercolor => $stdbd);
   }
   $self->{'SwIdx'} = -1;
-  bgcolor($self, ($bg eq '') ? WHITE : $bg);
-  fgcolor($self, ($fg eq '') ? BLACK : $fg);
+  $self->{op} = $op;
+  setBG($self, (($bg eq '') ? WHITE : $bg));
+  setFG($self, (($fg eq '') ? BLACK : $fg));
   my($label,$txt);
-  if ($op & FOREGRND) {
-    if ($op & BACKGRND) {
-      $label = "ForeGround & BackGround mode.";
-      $txt = "Make any adjustments to both the foreground and background colours and then click on OK.";
-    } else {
-      $label = "ForeGround only mode.";
-      $txt = sprintf("$nofgbghelp", "background", "foreground");
-    }
-    $self->{fgbg} = '-foreground';
-  } elsif ($op & BACKGRND) {
-    $label = "BackGround only mode.";
-    $txt = sprintf("$nofgbghelp", "foreground", "background");
-    bgcolor($self, Tkx::ttk__style_lookup('Sw.TLabel', -background));
-    $self->{fgbg} = '-background';
+  if ($op & BORDER) {
+    $op |= BACKGRND;
+    $label = 'Background & Border mode.';
+    $txt = sprintf("$nofgbghelp", "foreground", "background & border");
+    $self->{fgbgbd} = BORDER;
+    $self->{bdrb}->g_pack(-after => $self->{bgrb}) if (Tkx::winfo_manager($self->{bdrb}) eq '');
+    color($self, (($bd eq '') ? $self->{bg} : $bd));
+    Tkx::update();
   } else {
-    $label = "Something appears to be wrong!";
-    $txt = "Neither the ForeGround nor the BackGround have been selected.";
+    $self->{swcan}->delete($self->{bdid}) if ($self->{bdid} ne '');
+    $self->{bdrb}->g_pack_forget(); # if (Tkx::winfo_manager($self->{bdrb}) ne '');
+    if ($op & FOREGRND) {
+      if ($op & BACKGRND) {
+	$label = "ForeGround & BackGround mode.";
+	$txt = "Make any adjustments to both the foreground and background colours and then click on OK.";
+      } else {
+	$label = 'ForeGround only mode.';
+	$txt = sprintf("$nofgbghelp", "background", "foreground");
+      }
+      $self->{fgbgbd} = FOREGRND;
+      color($self, $self->{fg});
+    } elsif ($op & BACKGRND) {
+      $label = 'BackGround only mode.';
+      $txt = sprintf("$nofgbghelp", "foreground", "background");
+      $self->{fgbgbd} = BACKGRND;
+      color($self, $self->{bg});
+    } else {
+      $label = "Something appears to be wrong!";
+      $txt = "Neither the ForeGround nor the BackGround have been selected.";
+    }
   }
   $self->{helpl} = $label;
   $self->{help} = $txt;
@@ -510,15 +551,16 @@ sub Show {
   Tkx::vwait(\$self->{'done'});
 
   if ($self->{'done'} eq 'OK') {
-    $fg  = Tkx::ttk__style_lookup('Sw.TLabel', -foreground);
-    $bg  = Tkx::ttk__style_lookup('Sw.TLabel', -background);
+    $fg = $self->{fg} if ($op & FOREGRND);
+    $bg = $self->{bg} if ($op & BACKGRND);
+    $bd = $self->{bd} if ($op & BORDER);
     $Swatches->set(@LclSwtch);
     $Swatches->save();
   } else {
-    $fg = $bg = '';
+    $fg = $bg = $bd = '';
   }
   $self->{toplevel}->g_wm_withdraw();
-  return($fg,$bg);
+  return($fg,$bg,$bd);
 }
 
 %Colour = (

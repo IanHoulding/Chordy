@@ -12,6 +12,8 @@ package CP::Seg;
 use strict;
 use warnings;
 
+use CP::Global qw/:OPT/;
+
 my $BG = '';
 
 sub new {
@@ -20,11 +22,9 @@ sub new {
   my $class = ref($proto) || $proto;
   my $self = {
     x     => 0,
-    chord => [],
-    lyric => '',
+    lyric => "$text",
     bg    => '',
   };
-  $self->{lyric} = $text;
   bless $self, $class;
   return($self);
 }
@@ -39,11 +39,13 @@ sub maxlen {
 sub _measure {
   my($self,$pro,$mypdf) = @_;
 
-  my $cl = 0;
-  if ($main::Opt->{LyricOnly} == 0) {
-    $cl = $mypdf->chordLen($self->{chord}->trans2obj($pro)) if (@{$self->{chord}});
+  my $cl =  my $ll = 0;
+  if ($Opt->{LyricOnly} == 0) {
+    $cl = $mypdf->chordLen($self->{chord}->trans2obj($pro)) if (defined $self->{chord});
   }
-  my $ll = $mypdf->lyricLen($self->{lyric});
+  if ($self->{lyric} ne '') {
+    $ll = $mypdf->lyricLen($self->{lyric});
+  }
   ($cl,$ll);
 }
 

@@ -14,7 +14,7 @@ use warnings;
 
 use Tkx;
 use CP::Cconst qw(:OS :LENGTH :PDF :MUSIC :TEXT :SHFL :INDEX :BROWSE :SMILIE :COLOUR);
-use CP::Global qw/:FUNC :OPT :WIN :XPM :MEDIA :CHORD/;
+use CP::Global qw/:FUNC :VERS :OPT :WIN :XPM :MEDIA :CHORD/;
 use CP::Pop qw/:MENU :POP/;
 use CP::Win;
 use CP::Collection;
@@ -52,20 +52,23 @@ sub new {
     return();
   }
   bless $Ed, $class;
+  my($pop,$mainFrame);
   $Ed->{Top} = '';
   $Ed->{FileName} = '';
   $Ed->{IgnCase} = 0;
   $Ed->{Tagged} = 0;
   $Ed->{TxtWin} = '';
   $Ed->{CntrLabel} = '';
-  $Ed->{TotlLabel} = '';
   $Ed->{FindV} = '';
   $Ed->{RepV} = '';
   $Ed->{TaggedChord} = '';
 
   # Create MainWindow first to handle X11 options.
   if (defined $MW && Tkx::winfo_exists($MW)) {
-    $Ed->{Top} = $MW->new_toplevel();
+    $pop = CP::Pop->new(0, '.ed', 'ChordPro Editor', undef, undef, 'Eicon');
+    $Ed->{Top} = $pop->{top};
+    $mainFrame = $pop->{frame};
+    $Ed->{standAlone} = 0;
   } else {
     # Running stand-alone.
     CP::Global::init();
@@ -73,13 +76,19 @@ sub new {
     $Path = CP::Path->new();
     $Cmnd = CP::Cmnd->new();
     $Opt = CP::Opt->new();
-    $Media = CP::Media->new($Opt->{Media});
+    $Media = CP::Media->new();
     $Swatches = CP::Swatch->new();
 
     fontSetup();
 
     CP::Win::init();
     $Ed->{Top} = $MW;
+    $mainFrame = $MW->new_ttk__frame(qw/-relief raised -borderwidth 2/);
+    $mainFrame->g_pack(qw/-expand 1 -fill both/);
+
+    makeImage("tick", \%XPM);
+    makeImage("xtick", \%XPM);
+    $Ed->{standAlone} = 1;
   }
   $Ed->{Top}->g_wm_withdraw();
   $Ed->{Top}->g_wm_protocol('WM_DELETE_WINDOW' => \&ExitCheck);
@@ -87,6 +96,7 @@ sub new {
   makeImage("Eicon", \%XPM);
   $Ed->{Top}->g_wm_iconphoto("Eicon");
 
+  menu($Ed->{Top});
   CP::FgBgEd->new();
 
   CP::CHedit::readFing('Guitar');
@@ -101,9 +111,6 @@ sub new {
   ##  Right: menu_frame and text_frame
   ##############################################
 
-  my $mainFrame = $Ed->{Top}->new_ttk__frame(qw/-relief raised -borderwidth 2/);
-  $mainFrame->g_pack(qw/-expand 1 -fill both/);
-
   my $leftF = $Ed->{leftFrame} = $mainFrame->new_ttk__frame(-padding => [4,4,2,4]);
   $leftF->g_pack(qw/-side left -expand 0 -fill y/);
 
@@ -115,20 +122,8 @@ sub new {
   my $chord_frame = $leftF->new_ttk__labelframe(-text => " Chords ", -labelanchor => 'n');
   $chord_frame->g_pack(qw/-side top -fill x -anchor nw/);
 
-  my $cfl = $chord_frame->new_ttk__frame();
-  $cfl->g_pack(qw/-side left -anchor nw -padx 8 -pady 2/);
-  foreach my $r (['bracket',   'braceColour', 'Colour', 0],
-		 ['bracketsz', 'braceSize',   'Size',   7],
-		 ['bracketoff','braceOffset', 'Offset', 0]) {
-    my($img,$func,$desc,$pad) = @{$r};
-    makeImage($img, \%XPM);
-    my $br = $cfl->new_ttk__button(-image => $img, -command => [\&$func, $img]);
-    $br->g_pack(qw/-side top/, -pady => $pad);
-    balloon($br, 'Chord '.$desc);
-  }
-
   my $cf = $chord_frame->new_ttk__frame();
-  $cf->g_pack(qw/-side left -anchor nw/);
+  $cf->g_pack(qw/-side top -anchor n/);
   chords($cf);
 
   my $dirtv_frame = $leftF->new_ttk__labelframe(-text => " Directives ", -labelanchor => 'n');
@@ -160,8 +155,8 @@ sub new {
     -insertwidth => 2,
     -font => "\{$EditFont{family}\} $EditFont{size} $EditFont{weight} $EditFont{slant}",
     -relief => 'raised',
-    -foreground => $EditFont{color},
-    -background => $EditFont{background},
+    -foreground => $Opt->{FGEditor},
+    -background => $Opt->{BGEditor},
     -borderwidth => 2,
     -highlightthickness => 0,
     -selectborderwidth => 0,
@@ -220,29 +215,13 @@ sub new {
   ##############################################
 
   $Ed->{CntrLabel} = $counter_frame->new_ttk__label(
-    -text => 'line:  1   column:  0',
-    -width => 20,
-    -justify => 'center');
-  $Ed->{CntrLabel}->g_grid(qw/-row 0 -column 0/, -pady => [4,2]);
-
+    -text => 'line: 1   column: 0   total lines: 0');
+  $Ed->{CntrLabel}->g_grid(qw/-row 0 -column 0 -columnspan 2 -pady 0/);
   my $goto = '';
-  my $gotob = $counter_frame->new_ttk__button(-text => 'Go To:', -width => 6, -command => sub{JumpTo($goto)});
+  my $gotob = $counter_frame->new_ttk__button(-text => 'Go To Line', -command => sub{JumpTo($goto)});
   my $gotoe = $counter_frame->new_ttk__entry(-width => 6, -textvariable => \$goto);
-  $gotob->g_grid(qw/-row 0 -column 1 -rowspan 2 -pady 2 -sticky e/, -padx => [20,2]);
-  $gotoe->g_grid(qw/-row 0 -column 2 -rowspan 2 -pady 2 -sticky w/, -padx => [2,8]);
-
-  my $help = $counter_frame->new_ttk__button(
-    -text => 'Help',
-    -width => 5,
-    -style => 'Green.TButton',
-    -command => [\&CP::HelpEd::help] );
-  $help->g_grid(qw/-row 0 -column 3 -rowspan 2 -padx 4 -sticky e/);
-  $counter_frame->g_grid_columnconfigure(3, -weight => 1);
-
-  $Ed->{TotlLabel} = $counter_frame->new_ttk__label(
-    -text => 'total lines: 1',
-    -justify => 'center');
-  $Ed->{TotlLabel}->g_grid(qw/-row 1 -column 0/, -pady => [2,4]);
+  $gotob->g_grid(qw/-row 1 -column 0 -pady 4 -sticky e/, -padx => [20,2]);
+  $gotoe->g_grid(qw/-row 1 -column 1 -pady 4 -sticky w/, -padx => [2,8]);
 
   Tkx::update();
 }
@@ -319,8 +298,7 @@ sub Edit {
     $Done = '';
     goto WAIT;
   }
-  if ($Ed->{Top} eq $MW) {
-    # Running stand-alone
+  if ($Ed->{standAlone}) {
     $Ed->{Top}->g_destroy();
     exit(0);
   }
@@ -341,6 +319,116 @@ sub Edit {
 ###################
 ###################
 
+sub menu {
+  my($win) = shift;
+
+  my($m,$menu,$file,$edit,$opts,$help);
+  if (OS eq 'aqua') {
+    $m = $win->new_menu();
+    $menu = Tkx::widget->new(Tkx::menu($m->_mpath . ".apple"));
+    $m->add_cascade(-menu => $menu);
+  } else {
+    $menu = $win->new_menu();
+    $win->configure(-menu => $menu);
+  }
+  $file = $menu->new_menu();
+  $edit = $menu->new_menu();
+  $opts = $menu->new_menu();
+  $help = $menu->new_menu();
+
+  $menu->add_cascade(-menu => $file, -label => "File");
+  $menu->add_cascade(-menu => $edit, -label => "Edit");
+  $menu->add_cascade(-menu => $opts, -label => "Options");
+  $menu->add_cascade(-menu => $help, -label => "Help");
+
+  $file->add_command(-label => 'Open',    -command => \&fileOpen);
+  $file->add_command(-label => 'New',     -command => \&fileNew);
+  $file->add_command(-label => 'Close',   -command => \&Close);
+  $file->add_command(-label => 'Include', -command => \&fileInclude);
+  $file->add_separator;
+  $file->add_command(-label => 'Save',    -command => \&fileSave);
+  $file->add_command(-label => 'Save As', -command => \&fileSaveAs);
+  $file->add_separator;
+  $file->add_command(-label => 'Exit',    -command => \&ExitCheck);
+
+  $edit->add_command(-label => 'Cut',     -command => \&clipCut);
+  $edit->add_command(-label => 'Copy',    -command => \&clipCopy);
+  $edit->add_command(-label => 'Paste',   -command => \&clipPaste);
+  $edit->add_separator;
+  {
+    my $wr = $edit->new_menu;
+    $edit->add_cascade(-menu => $wr, -label => 'Wrap');
+    my $vr = 'none';
+    foreach (qw{word char none}) {
+      $wr->add_radiobutton(-label => $_,
+			   -variable => \$vr,
+			   -command => sub{$Ed->{TxtWin}->m_configure(-wrap => $vr)} );
+    }
+  }
+  $edit->add_separator;
+  $edit->add_command(-label => 'Select Al', -command => \&selectAll);
+  $edit->add_command(-label => 'Deselect',  -command => \&deselectAll);
+  $edit->add_separator;
+  $edit->add_command(-label => 'Text to ChordPro',  -command => \&text2cp);
+
+  {
+    my $ls = $opts->new_menu;
+    my $lspc = 6;
+    $opts->add_cascade(-menu => $ls, -label => 'Line Spacing');
+    foreach (qw(2 4 6 8 10 12)) {
+      $ls->add_radiobutton(-label => $_,
+			   -variable => \$lspc,
+			   -command => sub{$Ed->{TxtWin}->m_configure(-spacing1 => $lspc)});
+    }
+  }
+
+  $opts->add_separator;
+  $opts->add_command(-label => 'Editor Font',  -command => \&editFont);
+  {
+    my $fs = $opts->new_menu;
+    $opts->add_cascade(-menu => $fs, -label => 'Font Size');
+    foreach (qw/5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20/) {
+      $fs->add_radiobutton(-label => $_, -variable => \$EditFont{size}, -command => \&fontUpdt);
+    }
+  }
+  $opts->add_command(-label => 'Font Colour',  -command => \&fgSet);
+  $opts->add_command(-label => 'Editor Background',  -command => \&bgSet);
+  $opts->add_separator;
+  $opts->add_command(-label => 'Chord Colour', -command => [\&braceColour, 'bracket']);
+  {
+    my $cs = $opts->new_menu;
+    $opts->add_cascade(-menu => $cs, -label => 'Chord Size');
+    foreach (qw/5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20/) {
+      $cs->add_radiobutton(-label => $_, -variable => \$EditFont{bracketsz},
+			   -command => \&fontUpdt);
+    }
+  }
+  {
+    my $co = $opts->new_menu;
+    $opts->add_cascade(-menu => $co, -label => 'Chord Offset');
+    foreach (qw/-4 -3 -2 -1 0 1 2 3 4 6 8 10 12 14 16 18 20/) {
+      $co->add_radiobutton(-label => $_, -variable => \$EditFont{bracketoff},
+			   -command => \&fontUpdt);
+    }
+  }
+  $opts->add_separator;
+  $opts->add_command(-label => 'Directive Colour', -command => [\&braceColour, 'brace']);
+  {
+    my $cs = $opts->new_menu;
+    $opts->add_cascade(-menu => $cs, -label => 'Directive Size');
+    foreach (qw/5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20/) {
+      $cs->add_radiobutton(-label => $_, -variable => \$EditFont{bracesz},
+			   -command => \&fontUpdt);
+    }
+  }
+
+  $help->add_command(-label => 'Help',  -command => \&CP::HelpEd::help);
+  $help->add_command(-label => 'About', -command => sub{message(SMILE, "Version $Version\nian\@houlding.me.uk");});
+  if (OS eq 'aqua') {
+    $win->configure(-menu => $m);
+  }
+}
+
 ###################################################
 ## create all the quick access buttons plus images
 ###################################################
@@ -350,23 +438,6 @@ sub quickButtons {
 
   my %but = ();
   foreach my $b (
-    ['open',       'fileOpen',    'Open File'],
-    ['new',        'fileNew',     'New File'],
-    ['save',       'fileSave',    'Save File'],
-    ['saveAs',     'fileSaveAs',  'Save File As'],
-    ['close',      'Close',       'Close File'],
-    ['exit',       'ExitCheck',   'Exit'],
-    ['text',       'editFont',    'Editor Font'],
-    ['textsize',   'fontUpdt',    'Font Size'],
-    ['textfg',     'fgSet',       'Font Colour'],
-    ['textbg',     'bgSet',       'Editor Background'],
-    ['cut',        'clipCut',     'Cut'],
-    ['copy',       'clipCopy',    'Copy'],
-    ['paste',      'clipPaste',   'Paste'],
-    ['include',    'fileInclude', 'Include'],
-    ['wrap',       'wrapText',    'Wrap'],
-    ['SelectAll',  'selectAll',   'Select All'],
-    ['Unselect',   'unselectAll', 'Deselect All'],
     ['Undo',       'un_do',       'Undo'],
     ['Redo',       're_do',       'Redo'],
     ['settags',    'setTags',     'Reformat Buffer'],
@@ -390,87 +461,50 @@ sub quickButtons {
     balloon($but{$img}, $desc);
   }
 
-  my $fontsizes = [qw(5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20)];
-  $but{textsize}->m_configure(
-    -command => sub{popMenu(\$EditFont{size}, \&fontUpdt, $fontsizes); });
-
-  my $spcl = $Ed->{Top}->new_ttk__label(-text => "Line Spacing: ", -justify => 'center');
-  my $lspc = 6;
-  my $spcb = $Ed->{Top}->new_ttk__button(
-    -textvariable => \$lspc,
-    -style => 'Menu.TButton',
-    -width => 2,
-    -command => sub{
-      popMenu(\$lspc,
-	      sub{$Ed->{TxtWin}->m_configure(-spacing1 => $lspc);},
-	      [qw/2 4 6 8 10 12/]);
-    });
-
-  my $a2cp = $Ed->{Top}->new_ttk__button(-text => 'Text to ChordPro', -command => \&text2cp);
-
-  my $lfrm = $frame->new_ttk__frame(-padding => [0,0,4,0]);
+  my $lfrm = $frame->new_ttk__frame();
   $lfrm->g_grid(qw/-row 0 -column 0/);
-  my $mfrm = $frame->new_ttk__frame(-padding => [4,0,4,0]);
+  my $mfrm = $frame->new_ttk__frame();
   $mfrm->g_grid(qw/-row 0 -column 1/);
   $Ed->{menuFrame} = $mfrm;
-  my $rfrm = $frame->new_ttk__frame(-padding => [4,0,4,0]);
+  my $rfrm = $frame->new_ttk__frame(-padding => [24,4,0]);
   $rfrm->g_grid(qw/-row 0 -column 2/);
 
-  my $ignc = $frame->new_ttk__checkbutton(-text => " Ignore\n Case", -variable => \$Ed->{IgnCase});
+  my $ignc = $frame->new_ttk__checkbutton(-style => 'My.TCheckbutton',
+					  -compound => 'left',
+					  -image => ['xtick', 'selected', 'tick'],
+					  -text => "Ignore Case",
+					  -variable => \$Ed->{IgnCase});
 
   $Ed->{FindV} = '';
-  my $findl = $frame->new_ttk__label(-text => 'Find:');
+  my $findl = $frame->new_ttk__label(-text => 'Find');
   my $finde = $frame->new_ttk__entry(-width => 10, -textvariable => \$Ed->{FindV});
 
   my($repl,$repe);
   $Ed->{RepV} = '';
   if (OS ne 'aqua') {
-    $repl = $frame->new_ttk__label(-text => 'Replace with:');
+    $repl = $frame->new_ttk__label(-text => 'Replace with');
     $repe = $frame->new_ttk__entry(-width => 10, -textvariable => \$Ed->{RepV});
   }
-  $but{exit}->g_grid(      -in => $rfrm, qw/-row 0 -column 0 -padx 12 -pady 2/);
-  $findl->g_grid(          -in => $rfrm, qw/-row 0 -column 1 -pady 2 -sticky e/, -padx => [0,2]);
-  $finde->g_grid(          -in => $rfrm, qw/-row 0 -column 2 -pady 2 -sticky w/, -padx => [0,4]);
-  $but{Find}->g_grid(      -in => $rfrm, qw/-row 0 -column 3 -padx 4 -pady 2/);
-  $but{FindNext}->g_grid(  -in => $rfrm, qw/-row 0 -column 4 -padx 4 -pady 2/);
-  $but{FindPrev}->g_grid(  -in => $rfrm, qw/-row 0 -column 5 -padx 4 -pady 2/);
-  $ignc->g_grid(           -in => $rfrm, qw/-row 0 -column 6 -columnspan 2 -sticky w/, -padx => [8,0]);
+  $findl->g_grid(        -in => $rfrm, qw/-row 0 -column 0 -pady 0 -sticky e/, -padx => [0,2]);
+  $finde->g_grid(        -in => $rfrm, qw/-row 0 -column 1 -pady 0 -sticky w/, -padx => [0,4]);
+  $but{Find}->g_grid(    -in => $rfrm, qw/-row 0 -column 2 -padx 4 -pady 0/);
+  $but{FindNext}->g_grid(-in => $rfrm, qw/-row 0 -column 3 -padx 4 -pady 0/);
+  $but{FindPrev}->g_grid(-in => $rfrm, qw/-row 0 -column 4 -padx 4 -pady 0/);
   if (OS ne 'aqua') {
-    $repl->g_grid(           -in => $rfrm, qw/-row 1 -column 1 -pady 2 -sticky e/, -padx => [0,2]);
-    $repe->g_grid(           -in => $rfrm, qw/-row 1 -column 2 -pady 2 -sticky w/, -padx => [0,4]);
-    $but{Replace}->g_grid(   -in => $rfrm, qw/-row 1 -column 3 -padx 4 -pady 2/);
-    $but{ReplaceAll}->g_grid(-in => $rfrm, qw/-row 1 -column 4 -padx 4 -pady 2/);
+    $repl->g_grid(           -in => $rfrm, qw/-row 0 -column 5 -pady 0 -sticky e/, -padx => [8,2]);
+    $repe->g_grid(           -in => $rfrm, qw/-row 0 -column 6 -pady 0 -sticky w/, -padx => [0,4]);
+    $but{Replace}->g_grid(   -in => $rfrm, qw/-row 0 -column 7 -padx 4 -pady 0/);
+    $but{ReplaceAll}->g_grid(-in => $rfrm, qw/-row 0 -column 8 -padx 4 -pady 0/);
   }
+  $ignc->g_grid(             -in => $rfrm, qw/-row 1 -column 0 -columnspan 2 -padx 0/);
 
-  $spcl->g_grid(          -in => $lfrm, qw/-row 0 -column 0 -pady 2 -sticky e/, -padx => [0,2]);
-  $spcb->g_grid(          -in => $lfrm, qw/-row 0 -column 1 -pady 2 -sticky w/, -padx => [0,16]);
-  $a2cp->g_grid(          -in => $lfrm, qw/-row 1 -columnspan 2 -sticky w -padx 4 -pady 2/);
-
-  $but{open}->g_grid(     -in => $lfrm, qw/-row 0 -column 2 -padx 2 -pady 2/);
-  $but{new}->g_grid(      -in => $lfrm, qw/-row 0 -column 3 -padx 2 -pady 2/);
-  $but{close}->g_grid(    -in => $lfrm, qw/-row 0 -column 4 -padx 2 -pady 2/);
-  $but{include}->g_grid(  -in => $lfrm, qw/-row 0 -column 5         -pady 2 -padx/ => [2,8]);
-  $but{save}->g_grid(     -in => $lfrm, qw/-row 0 -column 6 -padx 2 -pady 2/);
-  $but{saveAs}->g_grid(   -in => $lfrm, qw/-row 0 -column 7         -pady 2 -padx/ => [2,8]);
-  $but{text}->g_grid(     -in => $lfrm, qw/-row 0 -column 8 -padx 2 -pady 2/);
-  $but{textsize}->g_grid( -in => $lfrm, qw/-row 0 -column 9 -padx 2 -pady 2/);
-  $but{textfg}->g_grid(   -in => $mfrm, qw/-row 0 -column 0 -padx 2 -pady 2/);
-  $but{textbg}->g_grid(   -in => $mfrm, qw/-row 0 -column 1         -pady 2 -padx/ => [2,8]);
-  $but{chordL}->g_grid(   -in => $mfrm, qw/-row 0 -column 2 -padx 2 -pady 2/);
-  $but{chordR}->g_grid(   -in => $mfrm, qw/-row 0 -column 3 -padx 2 -pady 2/);
-#  $but{exit}->g_grid(     -in => $lfrm, qw/-row 0 -column 14 -padx 12 -pady 2/);
-
-  $but{cut}->g_grid(      -in => $lfrm, qw/-row 1 -column 2 -padx 2 -pady 2/);
-  $but{copy}->g_grid(     -in => $lfrm, qw/-row 1 -column 3 -padx 2 -pady 2/);
-  $but{paste}->g_grid(    -in => $lfrm, qw/-row 1 -column 4 -padx 2 -pady 2/);
-  $but{wrap}->g_grid(     -in => $lfrm, qw/-row 1 -column 5         -pady 2 -padx/ => [2,8]);
-  $but{SelectAll}->g_grid(-in => $lfrm, qw/-row 1 -column 6 -padx 2 -pady 2/);
-  $but{Unselect}->g_grid( -in => $lfrm, qw/-row 1 -column 7 -padx 2 -pady 2 -padx/ => [2,8]);
-  $but{Undo}->g_grid(     -in => $lfrm, qw/-row 1 -column 8 -padx 2 -pady 2/);
-  $but{Redo}->g_grid(     -in => $lfrm, qw/-row 1 -column 9 -padx 2 -pady 2/);
-  $but{settags}->g_grid(  -in => $mfrm, qw/-row 1 -column 1         -pady 2 -padx/ => [2,8]);
-  $but{chordU}->g_grid(   -in => $mfrm, qw/-row 1 -column 2 -padx 2 -pady 2/);
-  $but{chordD}->g_grid(   -in => $mfrm, qw/-row 1 -column 3 -padx 2 -pady 2/);
+  $but{Undo}->g_grid(   -in => $lfrm, qw/-row 0 -column 0 -rowspan 2 -padx 2  -pady 2/);
+  $but{Redo}->g_grid(   -in => $lfrm, qw/-row 0 -column 1 -rowspan 2 -padx 2  -pady 2/);
+  $but{settags}->g_grid(-in => $mfrm, qw/-row 0 -column 0 -rowspan 2 -padx 16 -pady 2/);
+  $but{chordU}->g_grid( -in => $mfrm, qw/-row 0 -column 1 -padx 2 -pady 2/);
+  $but{chordD}->g_grid( -in => $mfrm, qw/-row 0 -column 2 -padx 2 -pady 2/);
+  $but{chordL}->g_grid( -in => $mfrm, qw/-row 0 -column 3 -padx 2 -pady 2/);
+  $but{chordR}->g_grid( -in => $mfrm, qw/-row 0 -column 4 -padx 2 -pady 2/);
 }
 
 sub text2cp {
@@ -486,7 +520,7 @@ sub text2cp {
 }
 
 sub editFont {
-  CP::Fonts::fontPick(\%EditFont, VLMWBG, 'Editor Font');
+  CP::Fonts::fontPick(\%EditFont, $Opt->{FGEditor}, $Opt->{BGEditor}, 'Editor Font');
   fontUpdt();
 }
 
@@ -501,56 +535,45 @@ sub checkFont {
 }
 
 sub fontUpdt {
+  my($fam,$wt,$sl) = ($EditFont{family},$EditFont{weight},$EditFont{slant});
   $Ed->{TxtWin}->m_configure(
-    -font => "\{$EditFont{family}\} $EditFont{size} $EditFont{weight} $EditFont{slant}");
+    -font => "\{$fam\} $EditFont{size} $wt $sl");
+  $Ed->{TxtWin}->tag_configure(
+    'dirtv',
+    -font => "\{$fam\} $EditFont{bracesz} $wt $sl",
+    -foreground => $EditFont{brace});
   $Ed->{TxtWin}->tag_configure(
     'chord',
     -offset => $EditFont{bracketoff},
-    -font => "\{$EditFont{family}\} $EditFont{bracketsz} $EditFont{weight} $EditFont{slant}",
+    -font => "\{$fam\} $EditFont{bracketsz} $wt $sl",
     -foreground => $EditFont{bracket});
-  $Ed->{TxtWin}->tag_configure(
-    'dirtv',
-    -font => "\{$EditFont{family}\} $EditFont{bracesz} $EditFont{weight} $EditFont{slant}",
-    -foreground => $EditFont{brace});
   $Media->save();
 }
 
 sub bgSet {
-  my($fg,$bg) = $ColourEd->Show($EditFont{color}, $EditFont{background}, BACKGRND);
+  my($fg,$bg) = $ColourEd->Show($Opt->{FGEditor}, $Opt->{BGEditor}, '', BACKGRND);
   if ($bg ne '') {
     $Ed->{TxtWin}->m_configure(-background => $bg);
-    $EditFont{background} = $bg;
+    $Opt->{BGEditor} = $bg;
   }
 }
 
 sub fgSet {
-  my($fg,$bg) = $ColourEd->Show($EditFont{color}, $EditFont{background}, FOREGRND);
+  my($fg,$bg) = $ColourEd->Show($Opt->{FGEditor}, $Opt->{BGEditor}, '', FOREGRND);
   if ($fg ne '') {
     $Ed->{TxtWin}->m_configure(-foreground => $fg);
-    $EditFont{color} = $fg;
+    $Opt->{FGEditor} = $fg;
   }
 }
 
 sub braceColour {
   my($what) = shift;
 
-  my($fg,$bg) = $ColourEd->Show($EditFont{$what}, $EditFont{background}, FOREGRND);
+  my($fg,$bg) = $ColourEd->Show($EditFont{$what}, $Opt->{BGEditor}, '', FOREGRND);
   if ($fg ne '') {
     $EditFont{$what} = $fg;
     fontUpdt();
   }
-}
-
-sub braceSize {
-  my($what) = @_;
-
-  my $fontsizes = [qw(5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20)];
-  popMenu(\$EditFont{$what}, \&fontUpdt, $fontsizes);
-}
-
-sub braceOffset {
-  my $offsets = [qw/-4 -3 -2 -1 0 1 2 3 4 6 8 10 12 14 16 18 20/];
-  popMenu(\$EditFont{bracketoff}, \&fontUpdt, $offsets);
 }
 
 sub chords {
@@ -567,149 +590,108 @@ sub chords {
   $br->g_grid(-row => $row, -column => 0, -columnspan => 6, -padx => 1, -pady => [4,8]);
 }
 
-  my %LongName = (
-    be => 'end_of_bridge',
-    br => 'bridge',
-    bs => 'start_of_bridge',
-    ca => 'capo',
-    cb => 'comment_box',
-    cc => 'chordcolour',
-    cd => 'chord',
-    cf => 'chordfont',
-    ch => 'chorus',
-    ci => 'comment_italic',
-    cl => 'colour',
-    co => 'comment',
-    cs => 'chordsize',
-    de => 'define',
-    eb => 'x_end_background',
-    ec => 'end_of_chorus',
-    eg => 'end_of_grid',
-    et => 'end_of_tab',
-    ev => 'end_of_verse',
-    hl => 'highlight',
-    hz => 'x_horizontal_line',
-    vs => 'x_vspace',
-    ky => 'key',
-    np => 'new_page',
-    nt => 'x_note',
-    sb => 'x_start_background',
-    sc => 'start_of_chorus',
-    sg => 'start_of_grid',
-    st => 'start_of_tab',
-    sv => 'start_of_verse',
-    Tb => 'tab',
-    Tf => 'tabfont',
-    Tc => 'tabcolour',
-    Ts => 'tabsize',
-    tc => 'textcolour',
-    te => 'tempo',
-    tf => 'textfont',
-    ti => 'title',
-    ts => 'textsize',
-    ve => 'verse',
-      );
-
-sub setFont {
-  my($name,$fp) = @_;
-
-  my %font = (family => $fp->{family},
-	      size   => $fp->{size},
-	      weight => $fp->{weight},
-	      slant  => $fp->{slant},
-	      color  => $fp->{color});
-  if (fontPick(\%font, WHITE, 'Font') eq 'OK') {
-    idef($name, \%font);
-  }
-}
+my %Dtv = (
+  be => {dir => 'end_of_bridge',      lab => 'End Bridge',     clr => 'BGBridge'},
+  br => {dir => 'bridge',             lab => 'Bridge',         clr => 'BGBridge'},
+  bs => {dir => 'start_of_bridge',    lab => 'Start Bridge',   clr => 'BGBridge'},
+  ca => {dir => 'capo',               lab => 'Capo',           clr => '#FFE0E0'},
+  cb => {dir => 'comment_box',        lab => 'Comment Box',    clr => 'BGComment'},
+  cc => {dir => 'chordcolour',        lab => 'Chord Colour',   clr => '#FFE8B8'},
+  cd => {dir => 'chord',              lab => 'Chord',          clr => '#FFE8B8'},
+  cf => {dir => 'chordfont',          lab => 'Chord Font',     clr => '#FFE8B8'},
+  ch => {dir => 'chorus',             lab => 'Chorus',         clr => 'BGChorus'},
+  ci => {dir => 'comment_italic',     lab => 'Comment Italic', clr => 'BGComment'},
+  cl => {dir => 'colour',             lab => 'Colour',         clr => ''},
+  co => {dir => 'comment',            lab => 'Comment',        clr => 'BGComment'},
+  cs => {dir => 'chordsize',          lab => 'Chord Size',     clr => '#FFE8B8'},
+  de => {dir => 'define',             lab => 'Define',         clr => '#FFE8B8'},
+  eb => {dir => 'x_end_background',   lab => 'End Backgrnd',   clr => '#D0E0B0'},
+  ec => {dir => 'end_of_chorus',      lab => 'End Chorus',     clr => 'BGChorus'},
+  eg => {dir => 'end_of_grid',        lab => 'End Grid',       clr => '#D0EFA0'},
+  et => {dir => 'end_of_tab',         lab => 'End Tab',        clr => 'BGTab'},
+  ev => {dir => 'end_of_verse',       lab => 'End Verse',      clr => 'BGVerse'},
+  hl => {dir => 'highlight',          lab => 'Highlight',      clr => 'BGHighlight'},
+  hz => {dir => 'x_horizontal_line',  lab => 'Horiz\'l Line',  clr => '#E0E0F8'},
+  ky => {dir => 'key',                lab => 'Key',            clr => '#F0D050'},
+  md => {dir => 'meta',               lab => 'Meta',           clr => '#FFF090'},
+  me => {dir => '',                   lab => 'Meta Entry',     clr => '#FFF090'},
+  np => {dir => 'new_page',           lab => 'New Page',       clr => '#E0E0F8'},
+  nt => {dir => 'x_note',             lab => 'Note',           clr => '#FFE0E0'},
+  sb => {dir => 'x_start_background', lab => 'Start Backgrnd', clr => '#D0E0B0'},
+  sc => {dir => 'start_of_chorus',    lab => 'Start Chorus',   clr => 'BGChorus'},
+  sg => {dir => 'start_of_grid',      lab => 'Start Grid',     clr => '#D0EFA0'},
+  st => {dir => 'start_of_tab',       lab => 'Start Tab',      clr => 'BGTab'},
+  sv => {dir => 'start_of_verse',     lab => 'Start Verse',    clr => 'BGVerse'},
+  Tb => {dir => 'tab',                lab => 'Tab',            clr => 'BGTab'},
+  Tf => {dir => 'tabfont',            lab => 'Tab Font',       clr => '#E0C898'},
+  Tc => {dir => 'tabcolour',          lab => 'Tab Colour',     clr => '#E0C898'},
+  Ts => {dir => 'tabsize',            lab => 'Tab Size',       clr => '#E0C898'},
+  tc => {dir => 'textcolour',         lab => 'Text Colour',    clr => '#F0D8A8'},
+  te => {dir => 'tempo',              lab => 'Tempo',          clr => '#FFE0E0'},
+  tf => {dir => 'textfont',           lab => 'Text Font',      clr => '#F0D8A8'},
+  ti => {dir => 'title',              lab => 'Title',          clr => '#F0D050'},
+  ts => {dir => 'textsize',           lab => 'Text Size',      clr => '#F0D8A8'},
+  ve => {dir => 'verse',              lab => 'Verse',          clr => 'BGVerse'},
+  vs => {dir => 'x_vspace',           lab => 'Vert\'l Space',  clr => '#E0E0F8'},
+);
 
 sub directives {
   my($frame) = shift;
 
   makeImage("colour", \%XPM);
 
-  #                     function                  row,col,rspn,cspn
-  my $items = [
-    [['bc', 'braceclr', [\&braceColour, 'brace'], 0,0,1,2],
-     ['bz', 'bracesz',  [\&braceSize, 'bracesz'], 0,1,1,2]],
+  #
+  # Style definitions for the pop-up menus.
+  #
+  Tkx::ttk__style_configure('PopMenu.TFrame',
+			    -bordercolor => BLACK,
+			    -background => $Opt->{MenuBG});
+  Tkx::ttk__style_configure('PopMenu.TButton',
+			    -highlightthickness => 0,
+			    -borderwidth => 0,
+			    -activeborderwidth => 0,
+			    -selectborderwidth => 0,
+			    -background => $Opt->{MenuBG},
+			    -foreground => $Opt->{MenuFG});
+  Tkx::ttk__style_map('PopMenu.TButton',
+		      -background => "active #3830FF",
+		      -foreground => "active #FFFFFF");
+  Tkx::ttk__style_configure('PopShad.TFrame',
+			    -background => '#B0B0B0');
 
-    [['ti', '#F0D050',  [\&idef, 'ti'], 1,0,1,2],
-     ['ky', '#F0D050',  [\&idef, 'ky'], 1,1,1,2]],
-
-    [['ca', '#FFE0E0',  [\&idef, 'ca'], 2,0,1,1],
-     ['te', '#FFE0E0',  [\&idef, 'te'], 2,1,1,1],
-     ['nt', '#FFE0E0',  [\&idef, 'nt'], 2,2,1,1]],
-
-    [['hz', '#E0E0F8',  [\&idef, 'hz'], 3,0,1,1],
-     ['vs', '#E0E0F8',  [\&idef, 'vs'], 3,1,1,1],
-     ['np', '#E0E0F8',  [\&idef, 'np'], 3,2,1,1]],
-
-    [['cd', '#FFE8B8',  [\&idef, 'cd'], 4,0,1,2],
-     ['de', '#FFE8B8',  sub{my $s=CHedit('Define'); idef('de', $s) if ($s ne ''); }, 4,1,1,2]],
-
-    [['cf', '#FFE8B8',  [\&setFont, 'cf', \%{$Media->{Chord}}], 5,0,1,1],
-     ['cs', '#FFE8B8',  [\&idef, 'cs'], 5,1,1,1],
-     ['cc', '#FFE8B8',  [\&idef, 'cc'], 5,2,1,1]],
-
-    [['tf', '#F0D8A8',  [\&setFont, 'tf', \%{$Media->{Lyric}}], 6,0,1,1],
-     ['ts', '#F0D8A8',  [\&idef, 'ts'], 6,1,1,1],
-     ['tc', '#F0D8A8',  [\&idef, 'tc'], 6,2,1,1]],
-
-    [['Tf', '#E0C898',  [\&setFont, 'Tf', \%{$Media->{Tab}}], 7,0,1,1],
-     ['Ts', '#E0C898',  [\&idef, 'Ts'], 7,1,1,1],
-     ['Tc', '#E0C898',  [\&idef, 'Tc'], 7,2,1,1]],
-
-    [['sg', '#D0EFA0',  [\&idef, 'sg'], 8,0,1,2],
-     ['eg', '#D0EFA0',  [\&idef, 'eg'], 8,1,1,2]],
-
-    [['sv', $Media->{verseBG},     [\&idef, 'sv'], 9,0,1,1],
-     ['ev', $Media->{verseBG},     [\&idef, 'ev'], 9,1,1,1],
-     ['ve', $Media->{verseBG},     [\&idef, 've'], 9,2,1,1]],
-
-    [['sc', $Media->{chorusBG},    [\&idef, 'sc'], 10,0,1,1],
-     ['ec', $Media->{chorusBG},    [\&idef, 'ec'], 10,1,1,1],
-     ['ch', $Media->{chorusBG},    [\&idef, 'ch'], 10,2,1,1]],
-
-    [['bs', $Media->{bridgeBG},    [\&idef, 'bs'], 11,0,1,1],
-     ['be', $Media->{bridgeBG},    [\&idef, 'be'], 11,1,1,1],
-     ['br', $Media->{bridgeBG},    [\&idef, 'br'], 11,2,1,1]],
-
-    [['st', $Media->{tabBG},       [\&idef, 'st'], 12,0,1,1],
-     ['et', $Media->{tabBG},       [\&idef, 'et'], 12,1,1,1],
-     ['Tb', $Media->{tabBG},       [\&idef, 'tb'], 12,2,1,1]],
-
-    [['hl', $Media->{highlightBG}, [\&idef, 'hl'], 13,1,1,1]],
-
-    [['co', $Media->{commentBG},   [\&idef, 'co'], 14,0,1,1],
-     ['ci', $Media->{commentBG},   [\&idef, 'ci'], 14,1,1,1],
-     ['cb', $Media->{commentBG},   [\&idef, 'cb'], 14,2,1,1]],
-      ];
-  foreach my $r (@{$items}) {
+  my $row = 0;
+  #                 id col,cspn
+  foreach my $r ([['ti', 0,2], ['ky', 1,2]],
+		 [['ca', 0,1], ['te', 1,1], ['nt', 2,1]],
+		 [['hz', 0,1], ['vs', 1,1], ['np', 2,1]],
+		 [['md', 0,2], ['me', 1,2]],
+		 [['cd', 0,2], ['de', 1,2]],) {
     foreach my $c (@{$r}) {
-      if ($c->[1] =~ /^\#/) {
-	# Text button
-	txtButton($frame, @${c});
-      }
-      else {
-	#Image button
-	my($name,$img,$func,$row,$col,$rspn,$cspn) = @{$c};
-	makeImage($img, \%XPM);
-	my $but = $frame->new_ttk__button(-image => $img, -command => $func);
-	balloon($but, 'Directive '.(($name eq 'bz') ? 'Size' : 'Colour'));
-	$but->g_grid(-row => $row, -column => $col,
-		     -rowspan => $rspn, -columnspan => $cspn,
-		     -padx => 4, -pady => 4);
-      }
+      txtButton($frame, $row, $c);
     }
+    $row++;
   }
-  my $sbfrm = $frame->new_ttk__frame();
-  $sbfrm->g_grid(-row => 15, -column => 0, -columnspan => 3);
-  foreach my $c (['sb', '#D0E0B0',  [\&idef, 'sb'], 0,0,1,1],
-		 ['eb', '#D0E0B0',  [\&idef, 'eb'], 0,1,1,1] ) {
-    txtButton($sbfrm, @{$c});
+  foreach my $r ([['Chord', [qw/cf cs cc/], 0,1],
+		  ['Text',  [qw/tf ts tc/], 1,1],
+		  ['Tab',   [qw/Tf Ts Tc/], 2,1]],
+		 [['Verse', [qw/sv ev ve/], 0,1],
+		  ['Chorus',[qw/sc ec ch/], 1,1],
+		  ['Bridge',[qw/bs be br/], 2,1]],
+		 [['Tab',   [qw/st et Tb/], 0,2],
+		  ['Grid',  [qw/sg eg/],    1,2]]) {
+    foreach my $c (@{$r}) {
+      menuButton($frame, $row, $c);
+    }
+    $row++;
   }
+  txtButton($frame, $row, ['hl', 0,1]);
+  foreach my $c (['Comment', [qw/co ci cb/], 1,1],
+		 ['Background', [qw/sb eb/], 2,1]) {
+    menuButton($frame, $row, $c);
+  }
+  $row++;
   my $cfrm = $frame->new_ttk__frame();
-  $cfrm->g_grid(-row => 16, -column => 0, -columnspan => 3);
+  $cfrm->g_grid(-row => $row, -column => 0, -columnspan => 3);
   my $clrb = $cfrm->new_ttk__button(
     -image => 'colour',
     -command => \&colourEd);
@@ -717,23 +699,123 @@ sub directives {
   balloon($clrb, "Colour Selector");
 
   foreach my $btn (
-    [0,1, 'HighLight', 'highlightBG'],
-    [0,2, 'Comment',   'commentBG'],
-    [0,3, 'Verse',     'verseBG'],
-    [0,4, 'Chorus',    'chorusBG'],
-    [0,5, 'Bridge',    'bridgeBG'],
-    [0,6, 'Tab',       'tabBG'],
+    [1, 'HighLight', 'BGHighlight'],
+    [2, 'Comment',   'BGComment'],
+    [3, 'Verse',     'BGVerse'],
+    [4, 'Chorus',    'BGChorus'],
+    [5, 'Bridge',    'BGBridge'],
+    [6, 'Tab',       'BGTab'],
       ) {
-    my($r,$c,$stl,$med) = @{$btn};
-    Tkx::ttk__style_configure("$stl.TButton", -background => $Media->{$med});
-    Tkx::ttk__style_map("$stl.TButton", -background => "active $Media->{$med}");
+    my($c,$stl,$med) = @{$btn};
+    Tkx::ttk__style_configure("$stl.TButton", -background => $Opt->{$med});
+    Tkx::ttk__style_map("$stl.TButton", -background => "active $Opt->{$med}");
     my $but = $cfrm->new_ttk__button(
       -image => 'blank',
       -style => "$stl.TButton",
-      -command => sub {$Ed->{TxtWin}->insert('insert', $Media->{$med});$Ed->{TxtWin}->g_focus();}
+      -command => sub {$Ed->{TxtWin}->insert('insert', $Opt->{$med});$Ed->{TxtWin}->g_focus();}
 	);
-    $but->g_grid(-row => $r, -column => $c, -padx => 8, -pady => [0,4]);
+    $but->g_grid(-row => 0, -column => $c, -padx => 8, -pady => [0,4]);
     balloon($but, "$stl Background");
+  }
+}
+
+sub txtButton {
+  my($frm,$row,$c) = @_;
+
+  my($id,$col,$cspn) = (@{$c});
+  my $cv = $Dtv{$id}{clr};
+  my $clr = ($cv =~ /^#/) ? $cv : $Opt->{$cv};
+  Tkx::ttk__style_configure("$clr.TButton", -background => $clr);
+  my $lab = $Dtv{$id}{lab};
+  my $but = $frm->new_ttk__button(-text => $lab,
+				  -style => "$clr.TButton",
+				  -command => [\&idef, $id]);
+  $but->g_grid(-row => $row, -column => $col,
+	       -columnspan => $cspn,
+	       -padx => 2, -pady => 4);
+}
+
+# These next 2 subs are modified copies
+# of popButton and popBmenu in Pop.pm
+sub menuButton {
+  my($frm,$row,$c) = @_;
+
+  my($lab,$me,$col,$cspn) = (@{$c});
+  my $cv = $Dtv{$me->[0]}{clr};
+  my $clr = ($cv =~ /^#/) ? $cv : $Opt->{$cv};
+
+  Tkx::ttk__style_configure("$clr.TButton", -background => $clr);
+  my $but = $frm->new_ttk__button(-text => $lab,
+				  -style => "$clr.TButton",
+				  -command => sub{EdpopMenu($me)});
+  $but->g_bind('<Enter>', sub{EdpopMenu($me)});
+  $but->g_grid(-row => $row, -column => $col,
+	       -columnspan => $cspn,
+	       -padx => 2, -pady => 4);
+}
+
+sub EdpopMenu {
+  my($list) = shift;
+
+  Tkx::update();
+  return if (Tkx::winfo_exists('.pm'));
+  my($x,$y) = (Tkx::winfo_pointerx($MW), Tkx::winfo_pointery($MW));
+
+  my $pop = $MW->new_toplevel(-name => '.pm', -background => '');
+  $pop->g_wm_withdraw();
+  $pop->g_wm_overrideredirect(1);
+
+  my $fr = $pop->new_ttk__frame(-style => 'PopMenu.TFrame',
+				-relief => 'ridge',
+				-borderwidth => 1,
+				-padding => [1,2,1,2]);
+
+  my $len = 0;
+  my @labs = ();
+  foreach my $l (@{$list}) {
+    my $lab = $Dtv{$l}{lab};
+    push(@labs, $lab);
+    my $x = length($lab);
+    $len = $x if ($x > $len);
+  }
+  foreach my $l (@{$list}) {
+    my $but = $fr->new_ttk__button(-text => shift(@labs),
+				   -width => $len,
+				   -style => 'PopMenu.TButton',
+				   -command => sub{$pop->g_destroy();idef($l);});
+    $but->g_pack();
+  }
+
+  Tkx::update(); # So the winfo_req's work.
+  my($w,$h) = (Tkx::winfo_reqwidth($fr), Tkx::winfo_reqheight($fr));
+  
+  my $bg = $pop->new_ttk__frame(-style => 'PopShad.TFrame',
+				-width => $w - 3,
+				-height => $h - 3);
+  $fr->g_place(qw/-x 0 -y 0/);
+  $bg->g_place(qw/-x 7 -y 7/);
+  $fr->g_raise();
+
+  $x -= int($w / 2);
+  $y -= int($h / 3);
+  $w += 4;
+  $h += 4;
+  $pop->g_wm_geometry($w."x$h+$x+$y");
+  Tkx::after(100, sub{where($pop,$x,$y,$w,$h)});
+  $pop->g_wm_deiconify();
+  $pop->g_raise();
+}
+
+sub where {
+  my($pop,$Px,$Py,$Pw,$Ph) = @_;
+
+  if (Tkx::winfo_exists('.pm')) {
+    my($x,$y) = (Tkx::winfo_pointerx($MW), Tkx::winfo_pointery($MW));
+    if ($x < $Px || $x >= ($Px + $Pw) || $y < $Py || $y >= ($Py + $Ph)) {
+      $pop->g_destroy();
+    } else {
+      Tkx::after(100, sub{where($pop,$Px,$Py,$Pw,$Ph)});
+    }
   }
 }
 
@@ -748,21 +830,9 @@ sub colourEd {
       $bg = sprintf "#%02x%02x%02x", $r, $g, $b;
     }
   }
-  ($fg,$bg) = $ColourEd->Show(BLACK, $bg, BACKGRND);
+  ($fg,$bg) = $ColourEd->Show(BLACK, $bg, '', BACKGRND);
   $Ed->{TxtWin}->insert('insert', $bg) if ($bg ne '');
   $Ed->{TxtWin}->g_focus();
-}
-
-sub txtButton {
-  my($frm,$name,$clr,$func,$row,$col,$rspn,$cspn) = @_;
-
-  Tkx::ttk__style_configure("$clr.TButton", -background => $clr);
-  (my $txt = $LongName{$name}) =~ s/x_//;
-  $txt =~ s/_/ /g;
-  my $but = $frm->new_ttk__button(-text => $txt, -style => "$clr.TButton", -command => $func);
-  $but->g_grid(-row => $row, -column => $col,
-	       -rowspan => $rspn, -columnspan => $cspn,
-	       -padx => 4, -pady => 4);
 }
 
 sub press {
@@ -785,11 +855,9 @@ sub update_indicators {
 
   my($height,$last_col) = split(/\./,$Ed->{TxtWin}->index('end'));
 
-  my $lab = sprintf "line: %3d   column: %3d", $line, $column;
-  my $tot = sprintf "total lines: %3d", --$height;
+  my $lab = sprintf "line: %3d   column: %3d   total lines: %3d", $line, $column, ($height - 1);
 
   $Ed->{CntrLabel}->m_configure(-text => $lab);
-  $Ed->{TotlLabel}->m_configure(-text => $tot);
 
   my $edit_flag = ($Ed->{TxtWin}->edit_modified()) ? 'edited' : '';
   $Ed->{Top}->g_wm_title("Editor  |  Collection: ".$Collection->{name}."  |  $edit_flag $Ed->{FileName}");
@@ -1100,11 +1168,14 @@ sub moveChord {
       }
       $tw->mark_set('insert', "$line.$column");
       $lc = my $pc = $tw->index('insert');
-      $dir = '-1c' if ($dir ne '+1c');
-      while ($tw->tag_names($lc) ne '' && $lc ne '1.0') {
-	$pc = $lc;
-	$tw->mark_set('insert', "$lc $dir");
-	$lc = $tw->index('insert');
+      if ($tw->tag_names($lc) =~ /(CH_\d+)/) {
+	$dir = '-1c' if ($dir ne '+1c');
+	my $t = $1;
+	while ($tw->tag_names($lc) =~ /$t/ && $lc ne '1.0') {
+	  $pc = $lc;
+	  $tw->mark_set('insert', "$lc $dir");
+	  $lc = $tw->index('insert');
+	}
       }
       $pc = $lc if ($dir =~ /^\+/);
       $tw->mark_set('insert', $pc);
@@ -1129,45 +1200,49 @@ sub chordSel {
 sub chordDesel {
   $Ed->{TxtWin}->tag_configure("$Ed->{TaggedChord}",
 			       -foreground => $EditFont{bracket},
-			       -background => $EditFont{background});
+			       -background => $Opt->{BGEditor});
   $Ed->{TaggedChord} = '';
 }
 
-
-#  ti = 'title',              co = 'comment',
-#  np = 'new_page',	      ci = 'comment_italic',
-#  ca = 'capo',	              cb = 'comment_box',
-#  ky = 'key',	              sb = 'x_start_background',
-#  te = 'tempo'
-#  nt = 'x_note',	      eb = 'x_end_background',
-#  sv = 'start_of_verse',     cd = 'chord',
-#  ev = 'end_of_verse',       de = 'define',
-#  ve = 'verse',	      hz = 'x_horizontal_line',
-#  sc = 'start_of_chorus',    cl = 'colour',
-#  ec = 'end_of_chorus',      cf = 'chordfont',
-#  ch = 'chorus',	      cs = 'chordsize',
-#  bs = 'start_of_bridge',    cc = 'chordcolour',
-#  be = 'end_of_bridge',      tf = 'textfont',
-#  br = 'bridge',	      ts = 'textsize',
-#  st = 'start_of_tab',	      tc = 'textcolour',
-#  et = 'end_of_tab',	      Tf = 'tabfont',
-#  tb = 'tab',	      	      Ts = 'tabsize',
-#  hl = 'highlight',	      Tc = 'tabcolour',
+#  be = end_of_bridge       ky = key               
+#  br = bridge              md = meta              
+#  bs = start_of_bridge     me =                   
+#  ca = capo                np = new_page          
+#  cb = comment_box         nt = x_note            
+#  cc = chordcolour         sb = x_start_background
+#  cd = chord               sc = start_of_chorus   
+#  cf = chordfont           sg = start_of_grid     
+#  ch = chorus              st = start_of_tab      
+#  ci = comment_italic      sv = start_of_verse    
+#  cl = colour              Tb = tab               
+#  co = comment             Tf = tabfont           
+#  cs = chordsize           Tc = tabcolour         
+#  de = define              Ts = tabsize           
+#  eb = x_end_background    tc = textcolour        
+#  ec = end_of_chorus       te = tempo             
+#  eg = end_of_grid         tf = textfont          
+#  et = end_of_tab          ti = title             
+#  ev = end_of_verse        ts = textsize          
+#  hl = highlight           ve = verse             
+#  hz = x_horizontal_line   vs = x_vspace          
 
 sub idef {
-  my($k,$str) = @_;
+  my($k) = shift;
 
-  my $long = $LongName{$k};
+  my $long = $Dtv{$k}{dir};
   my $adj = 0;
   #
   # Find the current insertion point.
   #
   my($l,$c) = split(/\./, $Ed->{TxtWin}->index("insert"));
-  my $s = '{';
+  $l += 1 if ($c);
+  my $s = ($k eq 'me') ? '%{' : '{';
   if ($k =~ /eb|sv|ev|ve|sc|ec|ch|bs|be|br|st|et|tb|np|eg/) {
     $s .= $long."\}\n";
-    $l = 2 if ($k eq 'gr');
     $Ed->{TxtWin}->mark_set('insert', "$l.0");
+  } elsif ($k eq 'me') {
+    $adj = 1;
+    $s .= "}";
   } else {
     $s .= $long.":";
     if ($k eq 'ti') {
@@ -1182,11 +1257,31 @@ sub idef {
     } else {
       $Ed->{TxtWin}->mark_set('insert', "$l.0");
       if ($k eq 'de') {
-	$s .= $str;
+	if ((my $def = CHedit('Define')) ne '') {
+	  $s .= $def;
+	} else {
+	  return;
+	}
       } elsif ($k eq 'hz') {
 	$s .= "1 #000000";
       } elsif ($k =~ /cf|tf|Tf/) {
-	$s .= "\{$str->{family}\} $str->{size} $str->{weight} $str->{slant}";
+	my $fp;
+	if ($k eq 'cf') {
+	  $fp = \%{$Media->{Chord}};
+	} elsif ($k eq 'tf') {
+	  $fp = \%{$Media->{Lyric}};
+	} else {
+	  $fp = \%{$Media->{Tab}};
+	}
+	my %font = (family => $fp->{family},
+		    size   => $fp->{size},
+		    weight => $fp->{weight},
+		    slant  => $fp->{slant});
+	if (fontPick(\%font, $Opt->{FGEditor}, $Opt->{BGEditor}, 'Font') eq 'OK') {
+	  $s .= "\{$font{family}\} $font{size} $font{weight} $font{slant}";
+	} else {
+	  return;
+	}
       } else {
 	$adj = 2;
       }
@@ -1210,13 +1305,13 @@ sub re_do {
 
 sub clipCopy {
   Tkx::tk___textCopy($Ed->{TxtWin});
-  unselectAll();
+  deselectAll();
   $Ed->{TxtWin}->g_focus();
 }
 
 sub clipCut {
   Tkx::tk___textCut($Ed->{TxtWin});
-  unselectAll();
+  deselectAll();
   $Ed->{TxtWin}->g_focus();
 }
 
@@ -1230,7 +1325,7 @@ sub clipPaste {
 
   my $slc = $Ed->{TxtWin}->index('insert');
   Tkx::tk___textPaste($Ed->{TxtWin});
-  unselectAll();
+  deselectAll();
   my $elc = $Ed->{TxtWin}->index('insert');
   if ($slc ne $elc) {
     $Ed->{TxtWin}->edit_separator() if (defined $undo);
@@ -1272,23 +1367,17 @@ sub setTags {
 	my $chdend = "$lnum.".($col+1);
 	$Ed->{TxtWin}->tag_add('chord', $chdstart, $chdend);
 	$Ed->{TxtWin}->tag_add("CH_".$ChordTag++, $chdstart, $chdend);
+	if ($dirstart ne '') {
+	  $Ed->{TxtWin}->tag_lower('dirtv', 'chord');
+	}
 	$chdstart = '';
       } elsif ($c eq '{' && $dirstart eq '') {
 	$dirstart = "$lnum.$col";
+	$Ed->{TxtWin}->tag_add('dirtv', $dirstart, "$lnum.end");
       }
       $col++;
     }
-    if ($dirstart ne '') {
-      $Ed->{TxtWin}->tag_add('dirtv', $dirstart, "$lnum.$col");
-    }
   }
-}
-
-sub wrapText {
-  my $vr = $Ed->{TxtWin}->m_cget(-wrap);
-  popMenu(\$vr, undef, ['word','char','none']);
-  Tkx::update();
-  $Ed->{TxtWin}->m_configure(-wrap => $vr);
 }
 
 sub selectAll {
@@ -1296,7 +1385,7 @@ sub selectAll {
   $Ed->{TxtWin}->g_focus();
 }
 
-sub unselectAll {
+sub deselectAll {
   $Ed->{TxtWin}->tag_remove('sel', '1.0', 'end');
   $Ed->{TxtWin}->g_focus();
 }

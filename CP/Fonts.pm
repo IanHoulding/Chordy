@@ -75,7 +75,8 @@ sub new {
   my $pop = CP::Pop->new(0, '.fe', $title);
   return if ($pop eq '');
   my($top,$fr) = ($pop->{top}, $pop->{frame});
-
+  $top->g_wm_protocol('WM_DELETE_WINDOW' => sub{$Done = 'Cancel';});
+  
   my $ftop = $fr->new_ttk__frame(qw/-borderwidth 1 -relief solid/);
   $ftop->g_pack(qw/-side top -expand 1 -fill x/);
 
@@ -106,37 +107,45 @@ sub new {
   $midr->g_grid(qw/-row 1 -column 2 -sticky ns/);
  
   $Fweight = 'normal';
-  my $ch1 = $midr->new_ttk__checkbutton(
-    -text => 'Bold',
-    -variable => \$Fweight,
-    -onvalue => 'bold',
-    -offvalue => 'normal',
-    -command => \&showSample);
+  my $ch1 = $midr->new_ttk__checkbutton(-style => 'My.TCheckbutton',
+					-compound => 'left',
+					-image => ['xtick', 'selected', 'tick'],
+					-text => 'Bold',
+					-variable => \$Fweight,
+					-onvalue => 'bold',
+					-offvalue => 'normal',
+					-command => \&showSample);
   $ch1->g_grid(qw/-row 0 -column 0 -sticky nw/, -padx => 20, -pady => "20 5");
 
-  my $ch1a = $midr->new_ttk__checkbutton(
-    -text => 'Heavy',
-    -variable => \$Fweight,
-    -onvalue => 'heavy',
-    -offvalue => 'normal',
-    -command => \&showSample);
+  my $ch1a = $midr->new_ttk__checkbutton(-style => 'My.TCheckbutton',
+					 -compound => 'left',
+					 -image => ['xtick', 'selected', 'tick'], 
+					 -text => 'Heavy',
+					 -variable => \$Fweight,
+					 -onvalue => 'heavy',
+					 -offvalue => 'normal',
+					 -command => \&showSample);
   $ch1a->g_grid(qw/-row 1 -column 0 -sticky nw/, -padx => 20, -pady => 5);
 
   $Fslant = 'roman';
-  my $ch2 = $midr->new_ttk__checkbutton(
-    -text => 'Italic',
-    -variable => \$Fslant,
-    -onvalue => 'italic',
-    -offvalue => 'roman',
-    -command => \&showSample);
+  my $ch2 = $midr->new_ttk__checkbutton(-style => 'My.TCheckbutton',
+					-compound => 'left',
+					-image => ['xtick', 'selected', 'tick'], 
+					-text => 'Italic',
+					-variable => \$Fslant,
+					-onvalue => 'italic',
+					-offvalue => 'roman',
+					-command => \&showSample);
   $ch2->g_grid(qw/-row 2 -column 0 -sticky nw -padx 20 -pady 5/);
 
-  my $ch3 = $midr->new_ttk__checkbutton(
-    -text => 'Fixed Width',
-    -variable => \$Fmono,
-    -onvalue => 1,
-    -offvalue => 0,
-    -command => \&listFill);
+  my $ch3 = $midr->new_ttk__checkbutton(-style => 'My.TCheckbutton',
+					-compound => 'left',
+					-image => ['xtick', 'selected', 'tick'], 
+					-text => 'Fixed Width',
+					-variable => \$Fmono,
+					-onvalue => 1,
+					-offvalue => 0,
+					-command => \&listFill);
   $ch3->g_grid(qw/-row 3 -column 0 -sticky nw -padx 20 -pady 25/);
 
   my $b1 = $fbot->new_ttk__button(
@@ -185,7 +194,7 @@ sub showSample {
 }
 
 sub fontPick {
-  my($font,$bg,$title) = @_;
+  my($font,$fg,$bg,$title) = @_;
 
   return if ((my $pop = new($title)) eq '');
 
@@ -193,7 +202,7 @@ sub fontPick {
   $Fsize   = $font->{size};
   $Fweight = $font->{weight};
   $Fslant  = $font->{slant};
-  $Fcolor  = $font->{color};
+  $Fcolor  = $fg;
   $FontCan->m_configure(-background => $bg);
   my $i = 0;
   foreach my $f (@{$Fontlb->{array}}) {
@@ -398,25 +407,24 @@ sub OLDscan {
 sub fonts {
   my($frame,$list) = @_;
 
-  ($frame->new_ttk__label(qw/-text Size/))->g_grid(qw/-row 0 -column 3/, -padx => 8);
-  ($frame->new_ttk__label(qw/-text Bold/))->g_grid(qw/-row 0 -column 4 -padx 4/);
-  ($frame->new_ttk__label(qw/-text Heavy/))->g_grid(qw/-row 0 -column 5 -padx 0/);
-  ($frame->new_ttk__label(qw/-text Italic/))->g_grid(qw/-row 0 -column 6 -padx 4/);
+  ($frame->new_ttk__label(qw/-text Size/))->g_grid(qw/-row 0 -column 3 -padx 8 -pady 0/);
+  ($frame->new_ttk__label(qw/-text Bold/))->g_grid(qw/-row 0 -column 4 -padx 4 -pady 0/);
+  ($frame->new_ttk__label(qw/-text Heavy/))->g_grid(qw/-row 0 -column 5 -padx 0 -pady 0/);
+  ($frame->new_ttk__label(qw/-text Italic/))->g_grid(qw/-row 0 -column 6 -padx 4 -pady 0/);
 
   # There are a couple of exceptions :-(
   my $row = 1;
   foreach my $f (@{$list}) {
     my $fp = ($f eq 'Editor') ? \%EditFont : $Media->{"$f"};
-    $f = 'Small-Notes' if ($f eq 'SNotes');
     FontS($frame, $row++, $f, $fp);
   }
   my $attr = $frame->new_ttk__labelframe(-text => " Font Attributes ", -padding => [4,2,0,4]);
   $attr->g_grid(-row => $row, -column => 2, -columnspan => 5, -pady => [4,0], -sticky => 'we');
 
   my $col = 0;
-  foreach my $m (['Bold',   1, 8], #[qw/1 2 3 4 5 6 7 8/]],
-		 ['Heavy',  1, 8],  #[qw/1 2 3 4 5 6 7 8/]],
-		 ['Italic', -20, 20], ) { #[qw/20 18 16 14 12 10 8 6 4 2 0 -2 -4 -6 -8 -10 -12 -14 -16 -18 -20/]]) {
+  foreach my $m (['Bold',   1, 8],
+		 ['Heavy',  1, 8],
+		 ['Italic', -20, 20], ) {
     my($lab,$frst,$last) = @{$m};
     $a = $attr->new_ttk__label(-text => "$lab", -anchor => 'e');
 
@@ -436,19 +444,21 @@ sub fonts {
 sub FontS {
   my($frame,$r,$title,$fp) = @_;
 
-  my $ttl = $frame->new_ttk__label(-text => "${title}");
+  my $tlab = ($title eq 'SNotes') ? 'Small Notes' : $title;
+  my $ttl = $frame->new_ttk__label(-text => "$tlab");
 
+  my $fg = $Opt->{"FG$title"};
   my $bg = bgSet($title);
 
-  Tkx::ttk__style_configure("$title.FG.TButton", -background => $fp->{color});
+  Tkx::ttk__style_configure("$title.FG.TButton", -background => $fg);
   my $clr = $frame->new_ttk__button(
     -image => 'blank',
     -style => "$title.FG.TButton");
-  $clr->m_configure(-command => sub{pickFG($title, $fp, bgSet($title));});
+  $clr->m_configure(-command => sub{pickFG($title, $fp, $Opt->{"FG$title"}, bgSet($title));});
 
   my $wt = ($fp->{weight} eq 'heavy') ? 'bold' : $fp->{weight};
   Tkx::ttk__style_configure("$title.Font.TLabel",
-			    -foreground => "$fp->{color}",
+			    -foreground => $fg,
 			    -background => $bg,
 			    -font => "{$fp->{family}} $fp->{size} $wt $fp->{slant}");
   my $lab = $frame->new_ttk__label(
@@ -457,43 +467,50 @@ sub FontS {
     -style => "$title.Font.TLabel",
       );
 
-  my $fontsizes = [qw( 5  6  7  8  9 10 11 12 13 14 15 16 17 18 19
-		   20 21 22 23 24 25 26 27 28 29 30 33 34 36 40)];
-  my $siz = $frame->new_ttk__button(
-    -textvariable => \$fp->{size},
-    -width => 3,
-    -style => 'Menu.TButton',
-    -command => sub{popMenu(\$fp->{size}, sub{labUpdate($lab, $fp)}, $fontsizes)});
+  my $siz = popButton($frame,
+		      \$fp->{size},
+		      sub{labUpdate($lab, $fp)},
+		      [qw( 5  6  7  8  9 10 11 12 13 14 15 16 17 18 19
+		          20 21 22 23 24 25 26 27 28 29 30 33 34 36 40)],
+		      -width => 3,
+		      -style => 'Menu.TButton',
+      );
 
   my($wtb,$wth);
-  $wtb = $frame->new_ttk__checkbutton(
-    -variable => \$fp->{weight},
-    -onvalue => 'bold',
-    -offvalue => 'normal',
-    -command => sub{labUpdate($lab, $fp)});
+  $wtb = $frame->new_ttk__checkbutton(-style => 'My.TCheckbutton',
+				      -compound => 'left',
+				      -image => ['xtick', 'selected', 'tick'], 
+				      -variable => \$fp->{weight},
+				      -onvalue => 'bold',
+				      -offvalue => 'normal',
+				      -command => sub{labUpdate($lab, $fp)});
 
-  $wth = $frame->new_ttk__checkbutton(
-    -variable => \$fp->{weight},
-    -onvalue => 'heavy',
-    -offvalue => 'normal',
-    -command => sub{labUpdate($lab, $fp)});
+  $wth = $frame->new_ttk__checkbutton(-style => 'My.TCheckbutton',
+				      -compound => 'left',
+				      -image => ['xtick', 'selected', 'tick'], 
+				      -variable => \$fp->{weight},
+				      -onvalue => 'heavy',
+				      -offvalue => 'normal',
+				      -command => sub{labUpdate($lab, $fp)});
 
-  my $ita = $frame->new_ttk__checkbutton(
-    -variable => \$fp->{slant},
-    -onvalue => 'italic',
-    -offvalue => 'roman',
-    -command => sub{labUpdate($lab, $fp)});
+  my $ita = $frame->new_ttk__checkbutton(-style => 'My.TCheckbutton',
+					 -compound => 'left',
+					 -image => ['xtick', 'selected', 'tick'],
+					 -variable => \$fp->{slant},
+					 -onvalue => 'italic',
+					 -offvalue => 'roman',
+					 -command => sub{labUpdate($lab, $fp)});
 
   my $but = $frame->new_ttk__button(
     -text => 'Choose ...',
     -command => sub{
-      fontPick($fp, $bg, "$title Font");
+      fontPick($fp, $fg, $bg, "$title Font");
       labUpdate($lab,$fp);
     });
   
   $ttl->g_grid(-row => $r, qw/-column 0 -sticky e  -pady 2/, -padx => [4,0]);
   $clr->g_grid(-row => $r, qw/-column 1 -sticky we -pady 2/, -padx => 4);
-  $lab->g_grid(-row => $r, qw/-column 2 -sticky we -pady 3/, -padx => [2,4]);
+  $lab->g_grid(-row => $r, qw/-column 2 -sticky we -pady 2/, -padx => [2,4]);
   $siz->g_grid(-row => $r, qw/-column 3 -pady 2/);
   $wtb->g_grid(-row => $r, qw/-column 4 -pady 2/);
   $wth->g_grid(-row => $r, qw/-column 5 -pady 2/);
@@ -506,23 +523,28 @@ sub bgSet {
 
   my $bg = WHITE;
   if ($title =~ /Chord|Lyric/) {
-    $bg = $Media->{verseBG};
-  } elsif ($title =~ /Comment|Highlight|Tab|Title/) {
-    $bg = $Media->{lc($title)."BG"};
+    $bg = $Opt->{BGVerse};
+  } elsif ($title =~ /Comment|Editor|Highlight|Tab|Title/) {
+    $bg = $Opt->{"BG$title"};
   }
   $bg;
 }
 
 sub pickFG {
-  my($title,$fontp,$bg) = @_;
+  my($title,$fontp,$fg,$bg) = @_;
 
   CP::FgBgEd->new("$title Font");
   my $save = 0;
+  my $bdr = '';
   my $op = FOREGRND;
   $op |= BACKGRND if ($title =~ /Com|Hig|Tab|Tit|Cho|Lyr/);
-  (my $fg,$bg) = $ColourEd->Show($fontp->{color}, $bg, $op);
+  if ($title =~ /Com|Hig/) {
+    $op |= BORDER;
+    $bdr = ($title =~ /^Com/) ? $Opt->{CborderColour} : $Opt->{HborderColour};
+  }
+  ($fg,$bg) = $ColourEd->Show($fg, $bg, $bdr, $op);
   if ($fg ne '') {
-    $fontp->{color} = $fg;
+    $Opt->{'FG'.$title} = $fg;
     Tkx::ttk__style_configure("$title.Font.TLabel", -foreground => $fg);
     Tkx::ttk__style_configure("$title.FG.TButton", -background => $fg);
     $save++;
@@ -534,9 +556,9 @@ sub pickFG {
       my $t = ($title =~ /Cho/) ? 'Lyric' : 'Chord';
       Tkx::ttk__style_configure("$t.Font.TLabel", -background => $bg);
       Tkx::ttk__style_configure("Verse.BG.TButton", -background => $bg);
-      $Media->{verseBG} = $bg;
+      $Opt->{BGVerse} = $bg;
     } else {
-      $Media->{lc($title)."BG"} = $bg;
+      $Opt->{'BG'.$title} = $bg;
     }
     $save++;
   }

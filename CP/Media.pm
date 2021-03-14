@@ -22,26 +22,18 @@ use CP::Cmsg;
 our %AllMedia;
 
 our %Fonts = (
-  Comment   => {qw/size 16 weight normal slant roman  color #000000 family/ => "Times New Roman"},
-  Highlight => {qw/size 16 weight normal slant italic color #000000 family/ => "Times New Roman"},
-  Title     => {qw/size 16 weight bold   slant roman  color #700070 family/ => "Times New Roman"},
-  Lyric     => {qw/size 16 weight normal slant roman  color #000000 family/ => "Arial"},
-  Chord     => {qw/size 16 weight normal slant roman  color #700070 family/ => "Comic Sans MS"},
-  Tab       => {qw/size 16 weight normal slant roman  color #000000 family/ => "Courier New"},
-  Label     => {qw/size 16 weight normal slant roman  color #000000 family/ => "Times New Roman"},
-  Notes     => {qw/size  9 weight bold   slant roman  color #000000 family/ => "Tahoma"},
-  SNotes    => {qw/size  5 weight bold   slant roman  color #000000 family/ => "Tahoma"},
-  Header    => {qw/size  8 weight bold   slant roman  color #D00000 family/ => "Arial"},
-  Words     => {qw/size  8 weight normal slant roman  color #00A000 family/ => "Times New Roman"},
+  Comment   => {qw/size 16 weight normal slant roman  family/ => "Times New Roman"},
+  Highlight => {qw/size 16 weight normal slant italic family/ => "Times New Roman"},
+  Title     => {qw/size 16 weight bold   slant roman  family/ => "Times New Roman"},
+  Lyric     => {qw/size 16 weight normal slant roman  family/ => "Arial"},
+  Chord     => {qw/size 16 weight normal slant roman  family/ => "Comic Sans MS"},
+  Tab       => {qw/size 16 weight normal slant roman  family/ => "Courier New"},
+  Label     => {qw/size 16 weight normal slant roman  family/ => "Times New Roman"},
+  Notes     => {qw/size  9 weight bold   slant roman  family/ => "Tahoma"},
+  SNotes    => {qw/size  5 weight bold   slant roman  family/ => "Tahoma"},
+  Header    => {qw/size  8 weight bold   slant roman  family/ => "Arial"},
+  Words     => {qw/size  8 weight normal slant roman  family/ => "Times New Roman"},
 );
-
-our %BGs = (qw/commentBG   #E0E0E0
-	       highlightBG #FFFF80
-	       verseBG     #FFFFFF
-	       chorusBG    #CDFFCD
-	       bridgeBG    #FFFFFF
-	       titleBG     #FFFFFF
-	       tabBG       #FFFFFF/);
 
 # Sizes are all stored in pt
 our %Sizes = (
@@ -70,32 +62,46 @@ sub new {
   my $self = {};
   bless $self, $class;
 
+  my $type = $Opt->{Media};
   if (-e "$Path->{Media}") {
     load() if (scalar keys %AllMedia == 0);
   } else {
     %EditFont = (qw/family Arial size 14 weight normal slant roman
-		 color #A00000 background #FFF8E0
 		 brace #008000 bracesz 12
 		 bracket #008000 bracketsz 12 bracketoff 2/);
     copy(\%Sizes, \%AllMedia);
     foreach my $s (keys %Sizes) {
       copy(\%Fonts, \%{$AllMedia{$s}});
-      copy(\%BGs, \%{$AllMedia{$s}});
     }
     save();
   }
   if ($type eq '' || ! defined $AllMedia{$type}) {
-    $Opt->{Media} = $type = 'a4';
+    $type = $Opt->{Media} = 'a4';
     $Opt->saveOne('Media');
   }
   $self = $AllMedia{$type};
+  if (defined $EditFont{color}) {
+    # We've got all the FG/BG colours defined in Media.cfg
+    # and we need to transfer them to the Options file.
+    foreach my $b (qw/Bridge Chorus Comment Editor Highlight Tab Title Verse/) {
+      $Opt->{'BG'.$b} = $self->{lc($b).'BG'};
+    }
+    $Opt->{BGEditor} = $EditFont{background};
+    foreach my $f (qw/Chord Comment Header Highlight Label Lyric Notes SNotes Tab Title Words/) {
+      $Opt->{'FG'.$f} = $self->{$f}{color};
+    }
+    $Opt->{FGEditor} = $EditFont{color};
+    save();
+    $Opt->save();
+  }
+  $self;
 }
 
 sub default {
   my($self) = shift;
 
   copy(\%Fonts, $self);
-  copy(\%BGs, $self);
+#  copy(\%BGs, $self);
   copy($Sizes{$Opt->{Media}}, $self);
 }
 
@@ -126,12 +132,10 @@ sub change {
 
   if (! defined $AllMedia{$new}) {
     message(SAD, "Media definiton for $new does not exist.\nMedia type changed to: a4");
-    $Opt->{Media} = $new = 'a4';
-    $Opt->saveOne('Media');
+    $new = 'a4';
   }
-  #  copy(\%{$AllMedia{$$newref}}, $self);
-  $self = $AllMedia{$new};
-  CP::Win::TButtonBGset($self);
+  $self = new('CP::Media', $new);
+  CP::Win::TButtonBGset();
   $self;
 }
 
@@ -151,12 +155,12 @@ sub load {
 	  $save++;
 	}
       }
-      foreach my $bg (keys %BGs) {
-	if (! defined $AllMedia{$k}{$bg} || $AllMedia{$k}{$bg} eq '') {
-	  $AllMedia{$k}{$bg} = $BGs{$bg};
-	  $save++;
-	}
-      }
+#      foreach my $bg (keys %BGs) {
+#	if (! defined $AllMedia{$k}{$bg} || $AllMedia{$k}{$bg} eq '') {
+#	  $AllMedia{$k}{$bg} = $BGs{$bg};
+#	  $save++;
+#	}
+#      }
       bless($AllMedia{$k}, 'CP::Media');
     }
     my $sz = $EditFont{size} - 2;
@@ -165,7 +169,7 @@ sub load {
     $EditFont{bracket} = DGREEN if (! defined $EditFont{bracket});
     $EditFont{bracketsz} = $sz if (! defined $EditFont{bracketsz});
     $EditFont{bracketoff} = 2 if (! defined $EditFont{bracketoff});
-    $EditFont{background} = VLMWBG if (! defined $EditFont{background});
+#    $EditFont{background} = VLMWBG if (! defined $EditFont{background});
     save() if ($save);
   }
 }
@@ -179,7 +183,7 @@ sub save {
 
   print $OFH "# This is the default Editor font.\n";
   print $OFH "\%EditFont = (\n";
-  foreach my $k (sort keys %EditFont) {
+  foreach my $k (qw/brace bracesz bracket bracketoff bracketsz family size slant weight/) {
     if ($k eq 'size' || $k =~ /sz$/ || $k =~ /off$/) {
       print $OFH "  $k => $EditFont{$k},\n";
     } else {
@@ -196,13 +200,10 @@ sub save {
     print $OFH "  '$s' => {\n";
     print $OFH "    width  => ".$ref->{width}.",\n";
     print $OFH "    height => ".$ref->{height}.",\n";
-    foreach my $bg (keys %BGs) {
-      printf $OFH "    %-11s => '%s',\n", $bg, $ref->{$bg};
-    }
     foreach my $f (keys %Fonts) {
       my $fp = \%{$ref->{$f}};
-      printf $OFH ("    %-9s => {qw/size %-2d weight %-6s slant %-6s color %s family/ => '%s'},\n",
-		  $f, $fp->{size}, $fp->{weight}, $fp->{slant}, $fp->{color}, $fp->{family});
+      printf $OFH ("    %-9s => {qw/size %-2d weight %-6s slant %-6s family/ => '%s'},\n",
+		  $f, $fp->{size}, $fp->{weight}, $fp->{slant}, $fp->{family});
     }
    print $OFH "  },\n";
   }
@@ -241,33 +242,35 @@ sub edit {
   $Edit{U} = $newu = 'pt';
 
   $a = $tf->new_ttk__label(-text => "Media:");
-  $b = $tf->new_ttk__button(
-    -width => 20,
-    -textvariable => \$Edit{Media},
-    -style => 'Menu.TButton',
-    -command => sub{popMenu(\$Edit{Media}, \&changeMedia, list());});
+  $b = popButton($tf,
+		 \$Edit{Media},
+		 \&changeMedia,
+		 sub{list()},
+		 -width => 20,
+		 -style => 'Menu.TButton',
+	);
 
   $c = $tf->new_ttk__button(qw/-text Delete -width 8 -command/ => \&mdelete );
 
   $d = $tf->new_ttk__label(-text => "Width: ");
   $e = $tf->new_ttk__entry(qw/-width 6 -textvariable/ => \$Edit{W});
-  $f = $tf->new_ttk__button(
-    -width => 5,
-    -textvariable => \$newu,
-    -style => 'Menu.TButton',
-    -command => sub{
-      popMenu(\$newu, sub{changeUnits($newu)}, [qw/in mm pt/]);
-    });
+  $f = popButton($tf,
+		 \$newu,
+		 sub{changeUnits($newu)},
+		 [qw/in mm pt/],
+		 -width => 5,
+		 -style => 'Menu.TButton',
+	);
 
   $g = $tf->new_ttk__label(-text => "Height: ", -width => 10, -anchor => 'e');
   $h = $tf->new_ttk__entry(qw/-width 6 -textvariable/ => \$Edit{H});
-  $i = $tf->new_ttk__button(
-    -width => 5,
-    -textvariable => \$newu,
-    -style => 'Menu.TButton',
-    -command => sub{
-      popMenu(\$newu, sub{changeUnits($newu)}, [qw/in mm pt/]);
-    });
+  $i = popButton($tf,
+		 \$newu,
+		 sub{changeUnits($newu)},
+		 [qw/in mm pt/],
+		 -width => 5,
+		 -style => 'Menu.TButton',
+	);
 
   $j = $tf->new_ttk__separator(qw/-orient horizontal/);
 
@@ -412,16 +415,16 @@ sub mrename {
   }
 }
 
-sub pickClr {
-  my($title,$fontp,$clr,$ent) = @_;
-
-  CP::FgBgEd->new("$title Font");
-  my($fg,$bg) = $ColourEd->Show($fontp->{color}, VLMWBG, FOREGRND);
-  if ($fg ne '') {
-    $fontp->{color} = $fg;
-    $ent->m_configure(-fg => $fg);
-    $clr->m_configure(-bg => $fg);
-  }
-}
+#sub pickClr {
+#  my($title,$fontp,$clr,$ent) = @_;
+#
+#  CP::FgBgEd->new("$title Font");
+#  my($fg,$bg) = $ColourEd->Show($fontp->{color}, VLMWBG, '', FOREGRND);
+#  if ($fg ne '') {
+#    $fontp->{color} = $fg;
+#    $ent->m_configure(-fg => $fg);
+#    $clr->m_configure(-bg => $fg);
+#  }
+#}
 
 1;

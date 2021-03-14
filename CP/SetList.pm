@@ -46,6 +46,7 @@ sub load {
     } else {
       foreach (@lst) {
 	if (defined $list{$_}{set1time}) {
+	  # Convert legacy format
 	  $list{$_}{s1start} = $list{$_}{set1time};
 	  $list{$_}{s2start} = $list{$_}{set2time};
 	  delete($list{$_}{set1time});
@@ -210,12 +211,31 @@ sub setNRC {
 sub showSet {
   my($self) = shift;
 
+  Tkx::update();
   my $idx = $self->{setsLB}->curselection(0);
   my $sl = $self->{setsLB}{array}[$idx];
   if ($sl ne '') {
     $self->select($sl);
     $self->{browser}{selLB}{array} = $self->{sets}{$sl}{songs};
     $self->{browser}->refresh($Path->{Pro}, '.pro');
+    if (@{$self->{browser}{selLB}{array}} == 0) {
+      message(SAD, "None of the Setlist files are in this Collection.");
+    }
+    elsif (@{$self->{browser}{selLB}{array}} ne @{$self->{sets}{$sl}{songs}}) {
+      my @notin = ();
+      foreach my $slf (@{$self->{sets}{$sl}{songs}}) {
+	my $i = 0;
+	foreach my $brf (@{$self->{browser}{selLB}{array}}) {
+	  if ($slf eq $brf) {
+	    $i++;
+	    last;
+	  }
+	}
+	push(@notin, $slf) if ($i == 0);
+      }
+      message(SAD, "The following ChordPro files\nare not in this Collection:\n   ".
+	      join("\n   ", @notin));
+    }
   }
 }
 
@@ -265,76 +285,71 @@ sub importSet {
   }
 }
 
-sub export {
+sub _export {
   my($self) = shift;
 
   return if ($CurSet eq '');
 
-  my $newC = my $orgC = $Collection->{name};
-  my @lst = ('All', @{$Collection->list()}, 'SeP', 'File');
-  popMenu(
-    \$newC,
-    sub{
-      if ($newC eq 'File') {
-	my $file = $CurSet.'.sel';
-	$file = Tkx::tk___getSaveFile(
-	  -title => "Save As",
-	  -initialdir => "$Home",
-	  -initialfile => $file,
-	  -confirmoverwrite => 1,
-	    );
-	return if ($file eq '');
-	unless (open OFH, '>', $file) {
-	  errorPrint("Couldn't create SetList file:\n   '$file'\n$!");
-	  return();
-	}
-	my $sp = \%{$self->{sets}{$CurSet}};
-	print OFH "#!/usr/bin/perl\n\n";
-	print OFH "\%list = (\n";
-	print OFH "  \"$CurSet\" => {\n";
-	foreach my $s (@strOpt) {
-	  print OFH "    $s => '$sp->{$s}',\n";
-	}
-	print OFH "    songs => [\n";
-	foreach my $s (@{$sp->{songs}}) {
-	  print OFH '      "'.$s."\",\n";
-	}
-	print OFH "    ],\n";
-	print OFH "  },\n";
-	print OFH ");\n1;\n";
-	close(OFH);
-	message(SMILE, " Done ", 1);
-	return;
-      } elsif ($newC eq 'All') {
-	shift(@lst);
-      } else {
-	@lst = ($newC);
-      }
-      # Remove the Seperator and File entries.
-      pop(@lst);
-      pop(@lst);
-      my $orgHome = $Home;
-      my $all = 0;
-      foreach my $col (@lst) {
-	next if ($col eq $orgC);
-	$Home = $Collection->path($col)."/$col";
-	my $sl = CP::SetList->new();
-	if (exists $sl->{sets}{$CurSet} && $all == 0) {
-	  my $ans = msgYesNoAll("The Setlist:    \"$CurSet\"\nalready exists in Collection:\n    \"$col\"\nDo you want to overwrite it?");
-	  if ($ans eq "No") {
-	    undef $sl;
-	    next;
-	  } elsif ($ans eq 'All') {
-	    $all++;
-	  }
-	}
-	$sl->{sets}{$CurSet} = $self->{sets}{$CurSet};
-	$sl->save($col);
+  my $newC = $Collection->{name};
+  my $set = $self->{sets}{$CurSet};
+  my $lst = ['To all', 'SeP', @{$Collection->list()}, 'SeP', 'File'];
+  popBmenu(\$newC, sub{_export($set, $newC, $lst)}, $lst);
+}
+
+sub export {
+  my($set, $newC, $lst) = @_;
+
+  if ($newC eq 'File') {
+    my $file = $CurSet.'.sel';
+    $file = Tkx::tk___getSaveFile(
+      -title => "Save As",
+      -initialdir => "$Home",
+      -initialfile => $file,
+      -confirmoverwrite => 1,
+	);
+    return if ($file eq '');
+    unless (open OFH, '>', $file) {
+      errorPrint("Couldn't create SetList file:\n   '$file'\n$!");
+      return();
+    }
+    my $sp = \%{$set};
+    print OFH "#!/usr/bin/perl\n\n";
+    print OFH "\%list = (\n";
+    print OFH "  \"$CurSet\" => {\n";
+    foreach my $s (@strOpt) {
+      print OFH "    $s => '$sp->{$s}',\n";
+    }
+    print OFH "    songs => [\n";
+    foreach my $s (@{$sp->{songs}}) {
+      print OFH '      "'.$s."\",\n";
+    }
+    print OFH "    ],\n";
+    print OFH "  },\n";
+    print OFH ");\n1;\n";
+    close(OFH);
+    message(SMILE, " Done ", 1);
+    return;
+  } elsif ($newC ne 'To all') {
+    $lst = [$newC];
+  }
+  my $orgHome = $Home;
+  my $all = 0;
+  foreach my $col (@$lst) {
+    $Home = $Collection->path($col)."/$col";
+    my $sl = CP::SetList->new();
+    if (exists $sl->{sets}{$CurSet} && $all == 0) {
+      my $ans = msgYesNoAll("The Setlist:    \"$CurSet\"\nalready exists in Collection:\n    \"$col\"\nDo you want to overwrite it?");
+      if ($ans eq "No") {
 	undef $sl;
+	next;
+      } elsif ($ans eq 'All') {
+	$all++;
       }
-      $Home = $orgHome;
-    },
-    \@lst);
+    }
+    $sl->{sets}{$CurSet} = $set;
+    $sl->save($col);
+  }
+  $Home = $orgHome;
 }
 
 1;

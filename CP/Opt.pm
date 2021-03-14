@@ -16,10 +16,17 @@ use CP::Global qw/:FUNC :VERS :WIN :OPT/;
 use CP::Cmsg;
 
 my @strOpt = (qw/Articles Instrument Media PDFpath PrintMedia
+	         BGBridge BGChorus BGComment BGEditor BGHighlight BGTab BGTitle BGVerse
+	         FGChord FGComment FGEditor FGHeader FGHighlight FGLabel FGLyric
+	         FGNotes FGSNotes FGTab FGTitle FGWords
+	         HborderRelief HborderColour CborderRelief CborderColour
 	         PopFG PopBG PushFG PushBG MenuFG MenuBG ListFG ListBG EntryFG EntryBG
-	         WinBG PageBG SortBy/);
-my @numOpt = (qw/AutoSave Bold Heavy Center EditScale FullLineHL FullLineCM Grid HHBL
-	         IgnArticle IgnCapo ShowLabels
+	         TabAC TabFG TabBG WinBG PageBG SortBy/);
+my @numOpt = (qw/AutoSave Bold Heavy Center EditScale
+	         FullLineCM CborderWidth
+	         FullLineHL HborderWidth
+	         Grid HHBL
+	         SaveFonts IgnArticle IgnCapo ShowLabels LabelPC
 	         TopMargin BottomMargin LeftMargin RightMargin
 	         Italic LineSpace LyricLines LyricOnly Nbar NewLine NoWarn
 	         OnePDFfile PDFview PDFmake PDFprint
@@ -49,21 +56,46 @@ sub default {
   $self->{AutoSave}    = 0;
   $self->{Bold}        = 2;    # This is the 'heavyness' weight for PDF bold fonts.
   $self->{BottomMargin}= INDENT;
+  $self->{BGBridge}    = '#FFF8C8';
+  $self->{BGChorus}    = '#CDFFCD';
+  $self->{BGComment}   = '#D8E8FF';
+  $self->{BGEditor}    = '#FFF8E0';
+  $self->{BGHighlight} = '#FFFF80';
+  $self->{BGTab}       = '#FFFFFF';
+  $self->{BGTitle}     = '#FFF0D0';
+  $self->{BGVerse}     = '#FFFFFF';
   $self->{Capo}        = 'No';
+  $self->{CborderRelief} = 'raised';
+  $self->{CborderWidth}  = 2;
   $self->{Center}      = 0;
   $self->{EditScale}   = 4;
   $self->{EntryFG}     = BLACK;
   $self->{EntryBG}     = WHITE;
+  $self->{FGChord}     = '#700070';
+  $self->{FGComment}   = '#000060';
+  $self->{FGEditor}    = '#000000';
+  $self->{FGHeader}    = '#D00000';
+  $self->{FGHighlight} = '#800000';
+  $self->{FGLabel}     = '#900000';
+  $self->{FGLyric}     = '#000000';
+  $self->{FGNotes}     = '#540054';
+  $self->{FGSNotes}    = '#540054';
+  $self->{FGTab}       = '#000000';
+  $self->{FGTitle}     = '#700070';
+  $self->{FGWords}     = '#084040';
   $self->{FullLineCM}  = 0;
   $self->{FullLineHL}  = 0;
   $self->{Grid}        = 0;
   $self->{Heavy}       = 5;
+  $self->{HborderRelief} = 'raised';
+  $self->{HborderWidth}  = 2;
   $self->{HHBL}        = 0;    # Half Height Blank Lines
   $self->{IgnArticle}  = 0;
   $self->{IgnCapo}     = 0;
   $self->{Instrument}  = 'Guitar';
   $self->{Instruments} = [qw/Banjo Bass4 Bass5 Guitar Mandolin Ukelele/];
   $self->{Italic}      = 12;    # This is the slant angle for PDF italic fonts.
+  $self->{LabelPC}     = 6;
   $self->{LeftMargin}  = INDENT;
   $self->{LineSpace}   = 1;
   $self->{ListFG}      = BLACK;
@@ -91,10 +123,14 @@ sub default {
   $self->{Refret}      = 0;
   $self->{RevSort}     = 0;
   $self->{RightMargin} = INDENT;
+  $self->{SaveFonts}   = 0;
   $self->{SharpFlat}   = SHARP;
   $self->{SortBy}      = 'Alphabetical';
   $self->{StaffSpace}  = 10;
   $self->{ShowLabels}  = 0;
+  $self->{TabAC}       = '#CCDCDC';
+  $self->{TabFG}       = '#000060';
+  $self->{TabBG}       = LGREY;
   $self->{Together}    = 1;
   $self->{TopMargin}   = INDENT;
   $self->{UseBold}     = 1;
@@ -142,12 +178,15 @@ sub load {
   foreach my $o (keys %opts) {
     $self->{$o} = $opts{$o};
   }
+  if (! defined $opts{FGChord}) {
+    save($self);
+  }
   undef %opts;
   if ("$version" ne "$Version") {
     print localtime."\n  $Path->{Option} saved: version mismatch - old=$version new=$Version\n";
     save($self);
   }
-  CP::Win::newLook();
+#  CP::Win::newLook();
 }
 
 sub save {

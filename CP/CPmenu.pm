@@ -14,7 +14,7 @@ use warnings;
 
 use Tkx;
 use CP::Cconst qw/:OS :BROWSE :SMILIE/;
-use CP::Global qw/:FUNC :WIN :VERS :OPT/;
+use CP::Global qw/:FUNC :WIN :VERS :OPT :PRO/;
 use CP::CHedit qw(&CHedit);
 use CP::Cmsg;
 
@@ -26,7 +26,6 @@ our $Recent;
 #
 sub new {
   my($m,$menu,$file,$edit,$opt,$media,$setl,$misc,$help);
-
   if (OS eq 'aqua') {
     $m = $MW->new_menu();
     $menu = Tkx::widget->new(Tkx::menu($m->_mpath . ".apple"));
@@ -53,8 +52,8 @@ sub new {
   {
     $Recent = $file->new_menu;
     $file->add_cascade(-menu => $Recent, -label => 'Recent');
-    foreach (0..9) {
-      my $fn = (defined $Opt->{RecentPro}[$_]) ? $Opt->{RecentPro}[$_] : '. . .';
+    foreach my $i (0..9) {
+      my $fn = (defined $Opt->{RecentPro}[$i]) ? $Opt->{RecentPro}[$i] : '. . .';
       $Recent->add_command(-label => $fn,
 			   -command => sub{
 			     if ($fn ne '. . .') {
@@ -63,6 +62,15 @@ sub new {
 			   });
     }
   }
+  $file->add_command(-label => "Revert",
+		     -command => sub{
+		       my $fn = (CP::Browser->new($MW, FILE, $Path->{Pro}, '.pro'))[0];
+		       if ($fn eq '') {
+			 message(SAD, "You don't appear to have selected a ChordPro file.");
+			 return;
+		       }
+		       RevertTo(undef, $fn);
+		     });
   $file->add_separator;
   $file->add_command(-label => "Import ChordPro", -command => \&main::impProFile);
   {
@@ -97,39 +105,151 @@ sub new {
 
   $edit->add_command(-label => "Chord Editor",  -command => sub{CHedit('Save');});
   $edit->add_separator;
-  $edit->add_command(-label => 'Collections',   -command => \&CP::Chordy::collEdit);
+  $edit->add_command(-label => 'Collections',   -command => sub{$Collection->edit()});
   $edit->add_command(-label => 'PDF Page Size', -command => sub{CP::Chordy::newMedia() if ($Media->edit() eq "OK");});
   $edit->add_command(-label => 'Sort Articles', -command => \&main::editArticles);
   $edit->add_command(-label => 'Options File',  -command => [\&CP::Editor::Edit, $Path->{Option}, 1]);
 
+  my @cbopts = (
+    -compound => 'left',
+    -indicatoron => 0,
+    -image => 'xtick',
+    -selectimage => 'tick'
+  );
   {
     my $op = $opt->new_menu;
     $opt->add_cascade(-menu => $op, -label => 'PDFs');
-    $op->add_checkbutton(-label => "View",   -variable => \$Opt->{PDFview});
-    $op->add_checkbutton(-label => "Create", -variable => \$Opt->{PDFmake});
-    $op->add_checkbutton(-label => "Print",  -variable => \$Opt->{PDFprint});
+    $op->add_checkbutton(-label => " View",
+			 -variable => \$Opt->{PDFview},
+			 -command => sub{$Opt->saveOne('PDFview')},
+			 @cbopts );
+    $op->add_checkbutton(-label => " Create",
+			 -variable => \$Opt->{PDFmake},
+			 -command => sub{$Opt->saveOne('PDFmake')},
+			 @cbopts );
+    $op->add_checkbutton(-label => " Print",
+			 -variable => \$Opt->{PDFprint},
+			 -command => sub{$Opt->saveOne('PDFprint')},
+			 @cbopts );
   }
   {
     my $ol = $opt->new_menu;
     $opt->add_cascade(-menu => $ol, -label => 'Lyrics');
-    $ol->add_checkbutton(-label => "Center Lyrics",      -variable => \$Opt->{Center});
-    $ol->add_checkbutton(-label => "Lyrics Only",        -variable => \$Opt->{LyricOnly});
-    $ol->add_checkbutton(-label => "Group Lines",        -variable => \$Opt->{Together});
-    $ol->add_checkbutton(-label => "1/2 Ht Blank Lines", -variable => \$Opt->{HHBL});
+    $ol->add_checkbutton(-label => " Center Lyrics",
+			 -variable => \$Opt->{Center},
+			 -command => sub{$Opt->saveOne('Center')},
+			 @cbopts);
+    $ol->add_checkbutton(-label => " Lyrics Only",
+			 -variable => \$Opt->{LyricOnly},
+			 -command => sub{$Opt->saveOne('LyricOnly')},
+			 @cbopts );
+    $ol->add_checkbutton(-label => " Group Lines",
+			 -variable => \$Opt->{Together},
+			 -command => sub{$Opt->saveOne('Together')},
+			 @cbopts );
+    $ol->add_checkbutton(-label => " 1/2 Ht Blank Lines",
+			 -variable => \$Opt->{HHBL},
+			 -command => sub{$Opt->saveOne('HHBL')},
+			 @cbopts );
     {
       my $ls = $opt->new_menu;
       $opt->add_cascade(-menu => $ls, -label => 'Line Spacing');
       foreach (qw{0 1 2 3 4 5 6 7 8 9 10 12 14 16 18 20}) {
-	$ls->add_radiobutton(-label => $_, -variable => \$Opt->{LineSpace});
+	$ls->add_radiobutton(-label => $_,
+			     -variable => \$Opt->{LineSpace},
+			     -command => sub{$Opt->saveOne('LineSpace')} );
       }
     }
   }
-  $opt->add_checkbutton(-label => "Highlight Full Line", -variable => \$Opt->{FullLineHL});
-  $opt->add_checkbutton(-label => "Comment Full Line",   -variable => \$Opt->{FullLineCM});
-  $opt->add_checkbutton(-label => "Show Labels",         -variable => \$Opt->{ShowLabels});
-
+  {
+    my $hl = $opt->new_menu;
+    $opt->add_cascade(-menu => $hl, -label => 'Highlight');
+    $hl->add_checkbutton(-label => ' Full line',
+			 -variable => \$Opt->{FullLineHL},
+			 -command => sub{$Opt->saveOne('FullLineHL')},
+			 @cbopts );
+    my $br = $hl->new_menu;
+    $hl->add_cascade(-menu => $br, -label => ' Border Relief');
+    foreach (qw{raised sunken flat}) {
+      $br->add_radiobutton(-label => $_,
+			   -variable => \$Opt->{HborderRelief},
+			   -command => sub{$Opt->saveOne('HborderRelief')} );
+    }
+    my $bw = $hl->new_menu;
+    $hl->add_cascade(-menu => $bw, -label => ' Border Width');
+    foreach (qw{0 1 2 3 4 5}) {
+      $bw->add_radiobutton(-label => $_,
+			   -variable => \$Opt->{HborderWidth},
+			   -command => sub{$Opt->saveOne('HborderWidth')} );
+    }
+  }
+  {
+    my $cm = $opt->new_menu;
+    $opt->add_cascade(-menu => $cm, -label => 'Comment');
+    $cm->add_checkbutton(-label => " Full line",
+			 -variable => \$Opt->{FullLineCM},
+			 -command => sub{$Opt->saveOne('FullLineCM')},
+			 @cbopts );
+    my $br = $cm->new_menu;
+    $cm->add_cascade(-menu => $br, -label => ' Border Relief');
+    foreach (qw{raised sunken flat}) {
+      $br->add_radiobutton(-label => $_,
+			   -variable => \$Opt->{CborderRelief},
+			   -command => sub{$Opt->saveOne('CborderRelief')} );
+    }
+    my $bw = $cm->new_menu;
+    $cm->add_cascade(-menu => $bw, -label => ' Border Width');
+    foreach (qw{0 1 2 3 4 5}) {
+      $bw->add_radiobutton(-label => $_,
+			   -variable => \$Opt->{CborderWidth},
+			   -command => sub{$Opt->saveOne('CborderWidth')} );
+    }
+  }
   $opt->add_separator;
-  $opt->add_command(-label => 'Defaults', -command => sub{$Opt->resetOpt()});
+  $opt->add_checkbutton(-label => " Ignore Capo Directives",
+			-variable => \$Opt->{IgnCapo},
+			-command => sub{$Opt->saveOne('IgnCapo')},
+			 @cbopts ); 
+  $opt->add_checkbutton(-label => " No Long Line warnings",
+			-variable => \$Opt->{NoWarn},
+			-command => sub{$Opt->saveOne('NoWarn')},
+			 @cbopts );
+  $opt->add_checkbutton(-label => " Show Labels",
+			-variable => \$Opt->{ShowLabels},
+			-command => sub{$Opt->saveOne('ShowLabels')},
+			 @cbopts );
+  {
+    my $ls = $opt->new_menu;
+    $opt->add_cascade(-menu => $ls, -label => 'Label Background %');
+    for(my $i = 15; $i != -16; $i--) {
+      $ls->add_radiobutton(-label => $i,
+			   -variable => \$Opt->{LabelPC},
+			   -command => sub{$Opt->saveOne('LabelPC')} );
+    }
+  }
+  $opt->add_separator;
+  {
+    my $ap = $opt->new_menu(-disabledforeground => '#600000');
+    $opt->add_cascade(-menu => $ap, -label => 'Appearance');
+    $ap->add_command(-label => 'Colours:', -state => 'disabled');
+    foreach my $e (['     Tabs',    \&CP::Win::TABclr],
+		   ['     Window',  \&CP::Win::BGclr],
+		   ['     Button',  \&CP::Win::PBclr],
+		   ['     Menu',    \&CP::Win::MBclr],
+		   ['     Entry',   \&CP::Win::ENTclr],
+		   ['     Lists',   sub{CP::List::background(1)}],
+		   ['     Message', \&CP::Win::MSGclr]) {
+      my($lab,$func) = (@{$e});
+      $ap->add_command(-label => $lab, -command => $func);
+    }
+    $ap->add_separator;
+    $ap->add_command(-label => 'Fonts - Normal<->Bold',   -command => \&main::useBold);
+    $ap->add_command(-label => 'Copy to all Collections', -command => sub{$Opt->saveClr2all()});
+    $ap->add_separator;
+    $ap->add_command(-label => 'Default Appearance',      -command => \&CP::Win::defLook);
+  }
+  $opt->add_separator;
+  $opt->add_command(-label => 'Default Options', -command => sub{$Opt->resetOpt()});
   
   $misc->add_command(-label => 'View Error Log',     -command => \&viewElog);
   $misc->add_command(-label => 'Clear Error Log',    -command => \&clearElog);
@@ -148,9 +268,16 @@ sub new {
 }
 
 sub refreshRcnt {
-  foreach (0..9) {
-    my $fn = (defined $Opt->{RecentPro}[$_]) ? $Opt->{RecentPro}[$_] : '. . .';
-    $Recent->entryconfigure($_, -label => $fn);
+  foreach my $i (0..9) {
+    my $fn = (defined $Opt->{RecentPro}[$i]) ? $Opt->{RecentPro}[$i] : '. . .';
+    $Recent->entryconfigure($i,
+			    -label => $fn,
+			    -command => sub{
+			      if ($fn ne '. . .') {
+				main::showSelection([$fn]);
+			      }
+			    }
+	);
   }
 }
 

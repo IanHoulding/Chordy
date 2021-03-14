@@ -31,7 +31,7 @@ use CP::Pop qw/:POP :MENU/;
 use CP::Chordy;
 use CP::CPmenu;
 use CP::List;
-use CP::Pro qw/$LenError/;
+use CP::Pro;
 use CP::Collection;
 use CP::Path;
 use CP::Cmnd;
@@ -89,7 +89,7 @@ CP::Win::init();
 
 makeImage("Cicon", \%XPM);
 $MW->g_wm_iconphoto("Cicon");
-$MW->g_wm_protocol('WM_DELETE_WINDOW' => sub{$MW->g_destroy()}); 
+$MW->g_wm_protocol('WM_DELETE_WINDOW' => sub{$MW->g_destroy(); exit(0);}); 
 CP::Win::title();
 
 CP::Chordy->new();
@@ -128,7 +128,7 @@ sub expFile {
     if ($ext eq '.pro') {
       my $exp = '';
       my @lst = ('All', @{$Collection->list()}, 'SeP', 'FOLDER');
-      popMenu(\$exp, sub{}, \@lst);
+      CP::Pop::popBmenu(\$exp, sub{}, \@lst);
       return if ($exp eq '');
       if ($exp ne 'FOLDER') {
 	if ($exp eq 'All') {
@@ -304,34 +304,8 @@ sub editArticles {
   $pop->popDestroy();
 }
 
-sub saveMed {
-  message(SMILE, "Media Config Saved", 1) if ($Media->save());
-}
-
-sub loadMed {
-  message(SMILE, " Done ", 1) if ($Media->load());
-}
-
-sub resetMed {
-  $Media->default();
-  message(SMILE, "Done - but not saved (yet).");
-}
-
-sub editMed {
-  CP::Editor::Edit($Path->{Media}, 1);
-}
-
 sub saveCmnd {
   message(SMILE, "Commands Saved", 1) if ($Cmnd->save());
-}
-
-sub loadCmnd {
-  message(SMILE, " Done ", 1) if ($Cmnd->load());
-}
-
-sub resetCmnd {
-  $Cmnd->default();
-  message(SMILE, "Done - but not saved (yet).");
 }
 
 sub selectFiles {
@@ -343,9 +317,11 @@ sub selectFiles {
 }
 
 sub showSelection {
+  my($files) = shift;
+
   selectClear();
   my $idx = 0;
-  foreach my $x (@{$_[0]}) {
+  foreach my $x (@{$files}) {
     if ($x =~ /\.pro$/i) {
       my $ref = CP::Pro->new($x);
       $ProFiles[$idx++] = $ref;
@@ -457,18 +433,17 @@ sub Main {
     message(QUIZ, "Can't do anything without a ChordPro file.");
     return;
   }
-  $LenError = 0;
+  my $lengthErr = 0;
   if (($Opt->{PDFview} | $Opt->{PDFmake} | $Opt->{PDFprint}) == 0) {
     message(QUIZ, "Hmmm ... Might help if you gave me something to do!");
     return;
   }
   my $tmpMedia = '';
-  my $tmpView = 0;
+  my $tmpView = $Opt->{PDFview};
   if ($Opt->{PDFprint}) {
     if ($Opt->{PrintMedia} ne $Opt->{Media}) {
       my $ans = msgYesNoCan("Your Printer page size is different to your Media page size.\nDo you want to see a preview of the Printer page?");
       if ($ans eq 'Yes') {
-	$tmpView = $Opt->{PDFview};
 	$Opt->{PDFview} = 1;
 	$tmpMedia = $Opt->{Media};
 	$Opt->{Media} = $Opt->{PrintMedia};
@@ -482,18 +457,25 @@ sub Main {
   if ($oneorall == SINGLE) {
     ### Handle one single ChordPro file
     my $idx = $FileLB->curselection(0);
-    if ($idx ne '') {
-      my($pdf,$name) = makeOnePDF($ProFiles[$idx], undef, undef, $chordy->{ProgLab});
+    if (@ProFiles) {
+      if ($idx eq '') {
+	$idx = 0;
+	$FileLB->set(0);
+      }
+      my($pdf,$name,$err) = makeOnePDF($ProFiles[$idx], $chordy, undef, undef);
+      $lengthErr |= $err;
       $pdf->close();
       actionPDF($chordy, "$Path->{Temp}/$name", $name);
     } else {
       message(SAD, "You don't appear to have selected a ChordPro file.");
+      $Opt->{PDFview} = $tmpView;
       return;
     }
   } else {
     if ($Opt->{Transpose} ne "-") {
       my $msg = "This will Transpose ALL files to the key of $Opt->{Transpose}.\nDo you want to continue?";
       if (msgYesNo($msg) eq 'No') {
+	$Opt->{PDFview} = $tmpView;
 	return;
       }
     }
@@ -509,17 +491,21 @@ sub Main {
       if (! defined $CurSet || $CurSet eq "") {
 	my $ans = msgSet("You need to provide a name for the PDF File:",\$CurSet);
 	if ($ans eq "Cancel" || $CurSet eq "") {
+	  $Opt->{PDFview} = $tmpView;
 	  return;
 	}
       }
       progressEnable($chordy);
       my $PdfFileName = "$CurSet.pdf";
       my $pdf = undef;
+      my $err;
       foreach my $idx (@pfn) {
-	($pdf,$PdfFileName) = makeOnePDF($ProFiles[$idx], $PdfFileName, $pdf, $chordy->{ProgLab});
+	($pdf,$PdfFileName,$err) = makeOnePDF($ProFiles[$idx], $chordy, $PdfFileName, $pdf);
+	$lengthErr |= $err;
 	if ($chordy->{ProgCan}) {
 	  $pdf->close();
 	  progressDisable($chordy);
+	  $Opt->{PDFview} = $tmpView;
 	  return;
 	}
 	Tkx::after(500); # Give user a chance to hit Cancel!
@@ -532,9 +518,11 @@ sub Main {
       foreach my $idx (@pfn) {
 	if ($chordy->{ProgCan}) {
 	  progressDisable($chordy);
+	  $Opt->{PDFview} = $tmpView;
 	  return;
 	}
-	my($pdf,$name) = makeOnePDF($ProFiles[$idx], undef, undef, $chordy->{ProgLab});
+	my($pdf,$name,$err) = makeOnePDF($ProFiles[$idx], $chordy, undef, undef);
+	$lengthErr |= $err;
 	$pdf->close();
 	if ($chordy->{ProgCan} || actionPDF($chordy, "$Path->{Temp}/$name", $name) < 0) {
 	  progressDisable($chordy);
@@ -544,17 +532,15 @@ sub Main {
     }
   }
   progressDisable($chordy);
+  $Opt->{PDFview} = $tmpView;
   if ($tmpMedia ne '') {
-    $Opt->{PDFview} = $tmpView;
     $Opt->{Media} = $tmpMedia;
     $Media = $Media->change($Opt->{Media});
   }
-  # $LenError is set in CP::Pro::makePDF()
-  if ($LenError) {
+  if ($lengthErr) {
     if ($Opt->{NoWarn} == 0) {
       message(SAD, "One or more lines were reduced in size to fit on their page.\nSee the error log for specific details.");
     }
-    $LenError = 0;
   } else {
     message(SMILE, ' Done ', 1) if ($PDFtrans || $oneorall == MULTIPLE);
   }
@@ -576,9 +562,9 @@ sub progressDisable {
 }
 
 sub makeOnePDF {
-  my($pro,$name,$pdf,$label) = @_;
+  my($pro,$chordy,$name,$pdf) = @_;
 
-  $label->m_configure(-text => $pro->{name});
+  $chordy->{ProgLab}->m_configure(-text => $pro->{name});
   Tkx::update();
   if (! defined $name) {
     ($name = $pro->{name}) =~ s/\.pro$//i;
@@ -594,10 +580,40 @@ sub makeOnePDF {
   my $tmpCapo = $pro->{capo};
   $pro->{capo} = $Opt->{Capo} if ($Opt->{Capo} ne "No");
 
-  $pro->makePDF($pdf);
+  my $err = $pro->makePDF($pdf);
 
   $pro->{capo} = $tmpCapo;
-  ($pdf, $name);
+  ($pdf, $name, $err);
+}
+
+# $xxx is only used in the Tab version of this sub.
+sub viewOnePDF {
+  my($xxx,$path,$fn) = @_;
+
+  my $pro = {};
+  bless $pro, 'CP::Pro';
+  $pro->decompose($path, $fn);
+  my $tmpPDF = "$path/$fn.pdf";
+  my $pdf = CP::CPpdf->new($pro, $tmpPDF);
+  my $tmpCapo = $pro->{capo};
+  $pro->{capo} = $Opt->{Capo} if ($Opt->{Capo} ne "No");
+  $pro->makePDF($pdf);
+  $pdf->close();
+  $pro->{capo} = $tmpCapo;
+  my $Pact = "";
+  if ($Cmnd->{Acro} ne "") {
+    if ($Cmnd->{Acro} =~ /(\%file\%)/i) {
+      ($Pact = $Cmnd->{Acro}) =~ s/$1/\"$tmpPDF\"/i;
+    } else {
+      $Pact = "$Cmnd->{Acro} \"$tmpPDF\"";
+    }
+  } else {
+    message(SAD, "You need to have a PDF viewer installed\nto be able to view (and possibly print)\nthe PDF file just created.\nSee the 'Commands' entry under the 'Misc' menu.");
+    return(0);
+  }
+  jobSpawn($Pact) if ($Pact ne "");
+  Tkx::update();
+  unlink($tmpPDF);
 }
 
 sub actionPDF {

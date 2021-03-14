@@ -16,7 +16,7 @@ use Tkx;
 use CP::Cconst qw/:OS :LENGTH :TEXT :SHFL :INDEX :PDF :BROWSE :SMILIE :COLOUR/;
 use CP::Global qw(:FUNC :VERS :PATH :OPT :PRO :SETL :XPM :WIN :MEDIA);
 use CP::Pop qw /:MENU/;
-use CP::CHedit;
+use CP::CHedit qw(&CHedit);
 use CP::FgBgEd;
 use CP::List;
 use CP::Opt;
@@ -40,9 +40,6 @@ sub new {
   $Chordy->{nb} = my $NB = $MW->new_ttk__notebook();
   $NB->g_pack(qw/-side top -expand 1 -fill both/);
 
-  my $butf = $MW->new_ttk__frame(-padding => [0,8,0,8]);
-  $butf->g_pack(qw/-side bottom -fill x/);
-
   my $chordy = $NB->new_ttk__frame(-padding => [4,4,4,4]);
   $Chordy->{setLst} = my $setLst = $NB->new_ttk__frame(-padding => [4,4,4,4]);
   $Chordy->{opts}   = my $opts   = $NB->new_ttk__frame(-padding => [4,4,4,4]);
@@ -57,7 +54,22 @@ sub new {
 
   $NB->g_bind('<<NotebookTabChanged>>', [\&notebookTabSelect, $Chordy]);
 
+#### This is NoteBook Tab 0 and is always made and displayed first.
+#### Chordy PDF Generator Tab
+  $Chordy->{currentColl} = '';
+  my $ctf = $chordy->new_ttk__labelframe(-text => " ChordPro Files ", -padding => [4,4,4,4]);
+  filesWin($ctf);
+
+  my $cmf = $chordy->new_ttk__labelframe(-text => " PDF Options ", -padding => [4,4,4,4]);
+  optWin($cmf);
+
+  $ctf->g_pack(qw/-side top -anchor n -expand 0 -fill x -pady 4/);
+  $cmf->g_pack(qw/-side top -anchor n -expand 0 -fill x -pady 4/);
+
   #### Bottom Button Frame
+  my $butf = $chordy->new_ttk__frame(-padding => [4,4,4,4]);
+  $butf->g_pack(qw/-side bottom -fill x/);
+
   my $about = $butf->new_ttk__button(
     -text => 'About',
     -style => 'Green.TButton',
@@ -76,18 +88,6 @@ sub new {
   $about->g_pack(qw/-side left -padx/ => [60,0]);
   $help->g_pack(qw/-side left -padx 20/);
   $ext->g_pack(qw/-side right -padx 60/);
-
-#### This is NoteBook Tab 0 and is always made and displayed first.
-#### Chordy PDF Generator Tab
-  $Chordy->{currentColl} = '';
-  my $ctf = $chordy->new_ttk__labelframe(-text => " ChordPro Files ", -padding => [4,4,4,4]);
-  filesWin($ctf);
-
-  my $cmf = $chordy->new_ttk__labelframe(-text => " PDF Options ", -padding => [4,4,4,4]);
-  optWin($cmf);
-
-  $ctf->g_pack(qw/-side top -anchor n -expand 0 -fill x -pady 4/);
-  $cmf->g_pack(qw/-side top -anchor n -expand 0 -fill x -pady 4/);
 
   $NB->select(0);
   $chordy->g_focus();
@@ -110,6 +110,7 @@ sub notebookTabSelect {
       fontWin();
     }
   }
+  $MW->g_focus();
 }
 
 ##
@@ -118,32 +119,25 @@ sub notebookTabSelect {
 sub confOpts {
   my $opts = $Chordy->{opts};
 
-  my $tf = $opts->new_ttk__frame();
-  my $col = $tf->new_ttk__labelframe(-text => " Collection ", -padding => [4,0,4,4]);
-  my $sz = $tf->new_ttk__labelframe(-text => " PDF Page Size ", -padding => [4,0,4,4]);
+  my $col = $opts->new_ttk__labelframe(-text => " Collection ", -padding => [4,0,4,4]);
+  $col->g_pack(qw/-side top -fill x -padx 4/);
   collectionWin($col);
-  mediaWin($sz);
 
   $Chordy->{fontFr} = $opts->new_ttk__labelframe(-text => " PDF Fonts - Colour and Size ",
-						 -padding => [4,0,4,8]);
+						 -padding => [4,0,4,4]);
+  $Chordy->{fontFr}->g_pack( qw/-side top -fill x -padx 4 -pady 6/);
   fontWin();
 
-  my $bgf = $opts->new_ttk__labelframe(-text => " PDF Background Colours ",
-				       -padding => [4,0,4,0]);
+  my $bf = $opts->new_ttk__frame();
+  $bf->g_pack( qw/-side top -fill x -padx 4/, -pady => [4,6]);
+  my $bgf = $bf->new_ttk__labelframe(-text => " PDF Section Background Colours ",
+				     -padding => [4,0,4,4]);
+  $bgf->g_pack(qw/-side left -expand 1 -fill x/, -padx => [0,4]);
   bgWin($bgf);
 
-  my $cf = $opts->new_ttk__labelframe(-text => " Chordy Appearance ");
-  lookFrm($cf);
-
-  my $fw = $Chordy->{fontFr};
-  $tf->g_pack( qw/-side top -fill x/, -pady => [4,0]);
-  $col->g_pack(qw/-side left -anchor n -expand 1 -fill both/, -padx => [0,8]);
-  $sz->g_pack( qw/-side right -anchor n /);
-
-  $fw->g_pack( qw/-side top -anchor n -expand 1 -fill both/, -pady => [12,0]);
-  $bgf->g_pack(qw/-side top -anchor n -expand 1 -fill both/, -pady => [12,0]);
-
-  $cf->g_pack(qw/-side top -fill x/, -pady => [12,0]);
+  my $sz = $bf->new_ttk__labelframe(-text => " PDF Page Size ", -padding => [4,0,4,4]);
+  $sz->g_pack( qw/-side right -expand 1 -fill x/, -padx => [4,0]);
+  mediaWin($sz);
 }
 
 ###############################
@@ -167,11 +161,9 @@ sub filesWin {
 						      -borderwidth => 2,
 						      -padding => [4,0,4,4]);
 
-#  $Fff->g_grid_columnconfigure(0, -weight => 1);
-#  $Fff->g_grid_columnconfigure(2, -weight => 1);
-  $tFsf->g_grid( qw/-row 0 -column 0 -sticky nsw -padx 16/, -pady => [0,8]);
-  $tFlst->g_grid(qw/-row 0 -column 1 -sticky nsw -padx 16/);
-  $tFact->g_grid(qw/-row 0 -column 2 -sticky nsw -padx 16/);
+  $tFsf->g_grid( qw/-row 0 -column 2 -sticky nsw -padx 16/, -pady => [0,8]);
+  $tFlst->g_grid(qw/-row 0 -column 0 -sticky nsw -padx 16/);
+  $tFact->g_grid(qw/-row 0 -column 1 -sticky nsw -padx 16/);
   $tFbot->g_grid(qw/-row 1 -column 0 -columnspan 3 -sticky ew -padx 16/, -pady => [4,0]);
 
 ###
@@ -199,15 +191,13 @@ sub filesWin {
     -style => 'Tr.Menu.TButton',
     -command => sub{$main::PDFtrans = 1;main::transposeOne(SINGLE);});
   no warnings; # stops perl bleating about '#' in array definition.
-  my $onek = $tFsf->new_ttk__button(
-    -textvariable => \$Opt->{Transpose},
-    -width => 3,
-    -style => 'Tr.Menu.TButton',
-    -command => sub{popMenu(
-		      \$Opt->{Transpose},
-		      undef,
-		      [qw/- Ab A A# Bb B C C# Db D D# Eb E F F# Gb G G#/])
-    });
+  my $onek = popButton($tFsf,
+		       \$Opt->{Transpose},
+		       sub{},
+		       [qw/- Ab A A# Bb B C C# Db D D# Eb E F F# Gb G G#/],
+		       -width => 3,
+		       -style => 'Tr.Menu.TButton',
+      );
   use warnings;
 
 ### Now pack everything
@@ -245,18 +235,20 @@ sub filesWin {
       );
   actWin($act);
 
-  my $cob = $tFact->new_ttk__button(
-    -text => "Collection",
-    -command => sub{popMenu(\$Collection->{name}, undef, $Collection->list());
-		    $Collection->change($Collection->{name});
-		    collItems($Chordy);} );
+  my $cob = popButton($tFact,
+		      \$Collection->{name},
+		      sub{$Collection->change($Collection->{name});collItems($Chordy);},
+		      sub{$Collection->list()},
+		      -style => 'Menu.TButton',
+      );
+  my $cobl = $tFact->new_ttk__label(-text => 'Collection');
 
   ## Browse/From Setlist/PDFs
   $brw->g_pack(qw/-side top -pady 4/);
   $fsl->g_pack(qw/-side top -pady 4/);
   $act->g_pack(qw/-side top -pady 8/);  # LabelFrame
-  $cob->g_pack(qw/-side top -pady 8/);
-
+  $cob->g_pack(qw/-side bottom/, -pady => [0,8]);
+  $cobl->g_pack(qw/-side bottom/);
   my $progl = $tFbot->new_ttk__label(-text => "Please Wait .... PDF'ing: ", -style => 'Pop.TLabel');
   Tkx::ttk__style_configure('Prog.Pop.TLabel', -font => "BTkDefaultFont");
 
@@ -291,13 +283,24 @@ sub actWin {
   my($act) = shift;
 
   ####
-  my $view = $act->new_ttk__checkbutton(-text => "View",
+  my $view = $act->new_ttk__checkbutton(-style => 'My.TCheckbutton',
+					-compound => 'left',
+					-text => "View",
+					-image => ['xtick', 'selected', 'tick'],
 					-variable => \$Opt->{PDFview},
 					-command => sub{$Opt->saveOne('PDFview')});
-  my $cret = $act->new_ttk__checkbutton(-text => "Create",
+  my $cret = $act->new_ttk__checkbutton(-style => 'My.TCheckbutton',
+					-compound => 'left',
+					-text => "View",
+					-image => ['xtick', 'selected', 'tick'],
+					-text => "Create",
 					-variable => \$Opt->{PDFmake},
 					-command => sub{$Opt->saveOne('PDFmake')});
-  my $prnt = $act->new_ttk__checkbutton(-text => "Print",
+  my $prnt = $act->new_ttk__checkbutton(-style => 'My.TCheckbutton',
+					-compound => 'left',
+					-text => "View",
+					-image => ['xtick', 'selected', 'tick'],
+					-text => "Print",
 					-variable => \$Opt->{PDFprint},
 					-command => sub{$Opt->saveOne('PDFprint')});
 
@@ -309,11 +312,13 @@ sub actWin {
     -text => "All Songs",
     -width => 8,
     -command => sub{main::Main($Chordy,MULTIPLE);});
-  my $onep = $act->new_ttk__checkbutton(
-    -text => "Single PDF",
-    -offvalue => MULTIPLE,
-    -onvalue => SINGLE,
-    -variable => \$Opt->{OnePDFfile});
+  my $onep = $act->new_ttk__checkbutton(-style => 'My.TCheckbutton',
+					-compound => 'left',
+					-image => ['xtick', 'selected', 'tick'],
+					-text => "Single PDF",
+					-offvalue => MULTIPLE,
+					-onvalue => SINGLE,
+					-variable => \$Opt->{OnePDFfile});
 
   $view->g_pack(qw/-side top -anchor w -padx 8/);
   $cret->g_pack(qw/-side top -anchor w -padx 8/);
@@ -336,33 +341,60 @@ sub optWin {
   my($a,$b,$c,$d,$e,$f,$g,$h,$i);
   #########################
 
-  $a = $wid->new_ttk__checkbutton(-text => 'Center Lyrics',
+  $a = $wid->new_ttk__checkbutton(-style => 'My.TCheckbutton',
+				  -compound => 'left',
+				  -image => ['xtick', 'selected', 'tick'],
+				  -text => 'Center Lyrics',
 				  -variable => \$Opt->{Center},
 				  -command => sub{$Opt->saveOne('Center')});
-  $b = $wid->new_ttk__checkbutton(-text => 'Lyrics Only',
+  $b = $wid->new_ttk__checkbutton(-style => 'My.TCheckbutton',
+				  -compound => 'left',
+				  -image => ['xtick', 'selected', 'tick'],
+				  -text => 'Lyrics Only',
 				  -variable => \$Opt->{LyricOnly},
 				  -command => sub{$Opt->saveOne('LyricOnly')});
-  $c = $wid->new_ttk__checkbutton(-text => 'Group Lines',
+  $c = $wid->new_ttk__checkbutton(-style => 'My.TCheckbutton',
+				  -compound => 'left',
+				  -image => ['xtick', 'selected', 'tick'],
+				  -text => 'Group Lines',
 				  -offvalue => MULTIPLE,
 				  -onvalue => SINGLE,
 				  -variable => \$Opt->{Together},
 				  -command => sub{$Opt->saveOne('Together')});
-  $d = $wid->new_ttk__checkbutton(-text => '1/2 Height Blank Lines',
+  $d = $wid->new_ttk__checkbutton(-style => 'My.TCheckbutton',
+				  -compound => 'left',
+				  -image => ['xtick', 'selected', 'tick'],
+				  -text => '1/2 Height Blank Lines',
 				  -variable => \$Opt->{HHBL},
 				  -command => sub{$Opt->saveOne('HHBL')});
-  $e = $wid->new_ttk__checkbutton(-text => 'Show Labels',
+  $e = $wid->new_ttk__checkbutton(-style => 'My.TCheckbutton',
+				  -compound => 'left',
+				  -image => ['xtick', 'selected', 'tick'],
+				  -text => 'Show Labels',
 				  -variable => \$Opt->{ShowLabels},
 				  -command => sub{$Opt->saveOne('ShowLabels')});
-  $f = $wid->new_ttk__checkbutton(-text => "Highlight full line",
+  $f = $wid->new_ttk__checkbutton(-style => 'My.TCheckbutton',
+				  -compound => 'left',
+				  -image => ['xtick', 'selected', 'tick'],
+				  -text => "Highlight full line",
 				  -variable => \$Opt->{FullLineHL},
 				  -command => sub{$Opt->saveOne('FullLineHL')});
-  $g = $wid->new_ttk__checkbutton(-text => "Comment full line",
+  $g = $wid->new_ttk__checkbutton(-style => 'My.TCheckbutton',
+				  -compound => 'left',
+				  -image => ['xtick', 'selected', 'tick'],
+				  -text => "Comment full line",
 				  -variable => \$Opt->{FullLineCM},
 				  -command => sub{$Opt->saveOne('FullLineCM')});
-  $h = $wid->new_ttk__checkbutton(-text => "Ignore Capo Directives",
+  $h = $wid->new_ttk__checkbutton(-style => 'My.TCheckbutton',
+				  -compound => 'left',
+				  -image => ['xtick', 'selected', 'tick'],
+				  -text => "Ignore Capo Directives",
 				  -variable => \$Opt->{IgnCapo},
 				  -command => sub{$Opt->saveOne('IgnCapo')});
-  $i = $wid->new_ttk__checkbutton(-text => "No Long Line warnings",
+  $i = $wid->new_ttk__checkbutton(-style => 'My.TCheckbutton',
+				  -compound => 'left',
+				  -image => ['xtick', 'selected', 'tick'],
+				  -text => "No Long Line warnings",
 				  -variable => \$Opt->{NoWarn},
 				  -command => sub{$Opt->saveOne('NoWarn')});
 
@@ -380,33 +412,34 @@ sub optWin {
   ################
   
   $a = $wid->new_ttk__label(-text => "Line Spacing:");
-  $b = $wid->new_ttk__button(
-    -textvariable => \$Opt->{LineSpace},
-    -style => 'Menu.TButton',
-    -width => 3,
-    -command => sub{popMenu(\$Opt->{LineSpace},undef,[qw/1 2 3 4 5 6 7 8 9 10 12 14 16 18 20/]);
-		    $Opt->saveOne('LineSpace');});
+  $b = popButton($wid,
+		 \$Opt->{LineSpace},
+		 sub{$Opt->saveOne('LineSpace')},
+		 [qw/1 2 3 4 5 6 7 8 9 10 12 14 16 18 20/],
+		 -style => 'Menu.TButton',
+		 -width => 3,
+      );
 
   $Opt->{Capo} = "No";
   $c = $wid->new_ttk__label(-text => "Capo On:");
-  $d = $wid->new_ttk__button(
-    -textvariable => \$Opt->{Capo},
-    -style => 'Menu.TButton',
-    -width => 3,
-    -command => sub{popMenu(\$Opt->{Capo}, sub{$Opt->{Capo} = 'No' if ($Opt->{Capo} == 0)}, [0..12])});
+  $d = popButton($wid,
+		 \$Opt->{Capo},
+		 sub{$Opt->{Capo} = 'No' if ($Opt->{Capo} == 0)},
+		 [0..12],
+		 -style => 'Menu.TButton',
+		 -width => 3,
+      );
 
   $Opt->{Transpose} = "-";
   $e = $wid->new_ttk__label(-text => "Transpose To:");
   no warnings; # stops perl bleating about '#' in array definition.
-  $f = $wid->new_ttk__button(
-    -textvariable => \$Opt->{Transpose},
-    -width => 3,
-    -style => 'Menu.TButton',
-    -command => sub{popMenu(
-		      \$Opt->{Transpose},
-		      undef,
-		      [qw/- Ab A A# Bb B C C# Db D D# Eb E F F# Gb G G#/])
-    });
+  $f = popButton($wid,
+		 \$Opt->{Transpose},
+		 sub{},
+		 [qw/- Ab A A# Bb B C C# Db D D# Eb E F F# Gb G G#/],
+		 -style => 'Menu.TButton',
+		 -width => 3,
+      );
   use warnings;
 
   $g = $wid->new_ttk__radiobutton(-text => "Force Sharp",
@@ -415,13 +448,13 @@ sub optWin {
 				  -variable => \$Opt->{SharpFlat}, -value => FLAT);
 
   $a->g_grid(qw/-row 0 -column 2 -sticky e/, -padx => [4,0]);
-  $b->g_grid(qw/-row 0 -column 3 -sticky w/, -padx => [2,4]);
+  $b->g_grid(qw/-row 0 -column 3 -sticky w -pady 2/, -padx => [2,4]);
 
   $c->g_grid(qw/-row 1 -column 2 -sticky e/, -padx => [4,0]);
-  $d->g_grid(qw/-row 1 -column 3 -sticky w/, -padx => [2,4]);
+  $d->g_grid(qw/-row 1 -column 3 -sticky w -pady 2/, -padx => [2,4]);
 
   $e->g_grid(qw/-row 2 -column 2 -sticky e/, -padx => [4,0]);
-  $f->g_grid(qw/-row 2 -column 3 -sticky w/, -padx => [2,4]);
+  $f->g_grid(qw/-row 2 -column 3 -sticky w -pady 2/, -padx => [2,4]);
 
   $g->g_grid(qw/-row 3 -column 2 -columnspan 2 -sticky w/, -padx => [14,0]);
   $h->g_grid(qw/-row 4 -column 2 -columnspan 2 -sticky w/, -padx => [14,0]);
@@ -432,14 +465,13 @@ sub optWin {
     -labelanchor => 'n');
   $fcd->g_grid(qw/-row 0 -column 1 -sticky n/, -padx => [8,4]);
   $a = $fcd->new_ttk__label(-text => "Instrument");
-  $b = $fcd->new_ttk__button(
-    -textvariable => \$Opt->{Instrument},
-    -width => 9,
-    -style => 'Menu.TButton',
-    -command => sub{
-      popMenu(\$Opt->{Instrument},sub{readChords();},$Opt->{Instruments});
-      $Opt->saveOne('Instrument');
-    });
+  $b = popButton($fcd,
+		 \$Opt->{Instrument},
+		 sub{readChords();$Opt->saveOne('Instrument');},
+		 $Opt->{Instruments},
+		 -style => 'Menu.TButton',
+		 -width => 9,
+      );
 
   $c = $fcd->new_ttk__radiobutton(-text => "None",
 				  -variable => \$Opt->{Grid}, -value => NONE,
@@ -484,7 +516,7 @@ sub optWin {
     -style => 'PDF.TButton',
     -command => sub{
       CP::FgBgEd->new('PDF Background');
-      my($fg,$bg) = $ColourEd->Show(BLACK, $Opt->{PageBG}, BACKGRND);
+      my($fg,$bg) = $ColourEd->Show(BLACK, $Opt->{PageBG}, '', BACKGRND);
       if ($bg ne '') {
 	$Opt->{PageBG} = $bg;
 	$Opt->saveOne('PageBG');
@@ -521,9 +553,10 @@ sub setLists {
     -padding => [4,0,4,4]);
   my $sltR = $slFt->new_ttk__frame(qw/-style Wh.TFrame/);
 
-  my $setsLB;
-  my $sltr = $sltM->new_ttk__checkbutton(-variable => \$Opt->{SLrev},
-					 -style => 'Wh.TCheckbutton',
+  my $sltr = $sltM->new_ttk__checkbutton(-style => 'Wh.My.TCheckbutton',
+					 -variable => \$Opt->{SLrev},
+					 -compound => 'right',
+					 -image => ['xtick', 'selected', 'tick'],
 					 -command => sub{$Opt->saveOne('SLrev');
 							 $AllSets->listSets();
 					 });
@@ -540,12 +573,22 @@ sub setLists {
   my($x1,$y1,$x2,$y2) = split(/ /, $can->bbox($rtxt));
   $can->configure(-width => abs($x1) + $x2, -height => abs($y1) + $y2);
   $can->move($rtxt, abs($x1), abs($y1));
+  $can->bind($rtxt, '<Button-1>', sub{$sltr->invoke()});
 
-  $setsLB = $AllSets->{setsLB} = CP::List->new($sltL, 'e',
-					       -height => 12, -width => SLWID,
-					       -selectmode => '');
+  my $setsLB = $AllSets->{setsLB} = CP::List->new($sltL, 'e',
+						  -height => 12, -width => SLWID,
+						  -selectmode => 'single');
   $setsLB->{frame}->g_grid(qw/-row 0 -column 0 -sticky nsew/);
-  $setsLB->bind('<ButtonRelease-1>' => sub{$AllSets->showSet()});
+  # It would appear that if both <Button-1> and <Double-Button-1>
+  # are bound then both subs are called in sequence.
+  $setsLB->bind('<Button-1>' => sub{Tkx::after_idle(sub{$AllSets->showSet()})} );
+  $setsLB->bind('<Double-Button-1>' => sub{
+    Tkx::after_idle(sub{
+      my $idx = $setsLB->curselection(0);
+      $Chordy->{nb}->select(0);
+      main::showSelection($browser->{selLB}{array});
+      $setsLB->selection_set($idx);}
+      )});
   $AllSets->listSets();
 
   CORE::state $DT;
@@ -602,20 +645,16 @@ sub setLists {
   $labc->g_grid(-row => 0,    -column => 1);
   $row++;
 
-  makeImage('hyphen', \%XPM);
-  my %list = (Tkx::SplitList(Tkx::font_actual("BTkDefaultFont")));
-  $list{'-size'} += 10;
-  Tkx::font_create("HyphenFont", %list);
-
   foreach my $set (1..2) {
     my $lab = $sltCS->new_ttk__label(-text => "Set $set", -background => WHITE);
     my $sFr = $sltCS->new_ttk__frame(qw/-style Wh.TFrame/);
+    $sFr->g_grid_columnconfigure(1, -minsize => 10);
 
     my $buts = $sFr->new_ttk__button(-textvariable => \$AllSets->{meta}{"s${set}start"},
 				       -style => $st,
 				       -width => 5,
 				       -command => [$tsub, "s${set}start"] );
-    my $h = $sFr->new_ttk__label(qw/-image hyphen -font HyphenFont/, -background => WHITE);
+    my $h = $sFr->new_ttk__separator(-style => 'H.TSeparator', -orient => 'horizontal');
     my $bute = $sFr->new_ttk__button(-textvariable => \$AllSets->{meta}{"s${set}end"},
 				       -style => $st,
 				       -width => 5,
@@ -623,7 +662,7 @@ sub setLists {
     $lab->g_grid( -row => $row, -column => 0, -sticky => 'e', -pady => 3);
     $sFr->g_grid( -row => $row, -column => 1, -sticky => 'w', -pady => 3);
     $buts->g_grid(-row => 0,    -column => 0, -padx => 4);
-    $h->g_grid(   -row => 0,    -column => 1);
+    $h->g_grid(   -row => 0,    -column => 1, -sticky => 'ew');
     $bute->g_grid(-row => 0,    -column => 2, -padx => 4);
     $row++;
   }
@@ -670,7 +709,14 @@ sub setLists {
     -text => "Export",
     -width => 8,
     -style => 'Green.TButton',
-    -command => sub{$AllSets->export()});
+    -command => sub{if ($CurSet ne '') {
+                      my $newC = $Collection->{name};
+		      my $set = $AllSets->{sets}{$CurSet};
+		      my $clst = $Collection->list();
+		      my $lst = ['To all', 'SeP', @{$clst}, 'SeP', 'File'];
+		      popBmenu(\$newC, sub{CP::SetList::export($set, $newC, $clst)}, $lst);
+		    }
+    });
 
   ## Now pack everything
   # Setlists
@@ -682,7 +728,7 @@ sub setLists {
 
   $sltM->g_grid(qw/-row 0 -column 1 -sticky n/, -padx => [4,0], -pady => [0,4]);
   $sltr->g_pack(qw/-side top -fill x/, -pady => [12,0]);
-  $can->g_pack(qw/-side top -fill x -pady 0/);
+  $can->g_pack(qw/-side top -fill x -pady 0/, -padx => [4,0]);
 
   $sltCS->g_grid(qw/-row 0 -column 2 -columnspan 3 -sticky n/, -padx => [12,0]);
 
@@ -772,54 +818,45 @@ sub collectionWin {
   my($wid) = @_;
 
   $Chordy->{currentColl} = $Collection->{name};
-  my $collectionPath = $Collection->{path}.'/'.$Collection->{name};
-  my $ccsub = sub{
-    popMenu(\$Collection->{name},
-	    sub{$Collection->change($Collection->{name});
-		collItems($Chordy);
-		showSize();
-		fontWin();
-		$collectionPath = $Collection->{path}.'/'.$Collection->{name};
-	    }, $Collection->list() );
-  };
   my($a,$b,$c,$d,$e);
 
-  $a = $wid->new_ttk__button(-textvariable => \$Collection->{name},
-			     -width => 10,
-			     -style => 'Menu.TButton',
-			     -command => $ccsub);
+  $a = popButton($wid,
+		 \$Collection->{name},
+		 sub{$Collection->change($Collection->{name});showCollChange();},
+		 sub{$Collection->list()},
+		 -style => 'Menu.TButton',
+		 -width => 10,
+      );
   $b = $wid->new_ttk__label(-text => "Path: ");
-  $c = $wid->new_ttk__label(-textvariable => \$collectionPath);
+  $c = $wid->new_ttk__label(-textvariable => \$Collection->{fullPath});
 
   $d = $wid->new_ttk__label(-text => "Common PDF Path: ");
   $e = $wid->new_ttk__label(-textvariable => \$Opt->{PDFpath});
 
-  $a->g_grid(qw/-row 0 -column 0 -sticky w -padx 4/, -pady => [4,0]);
-  $b->g_grid(qw/-row 1 -column 0 -sticky e/, -pady => [8,0]);
-  $c->g_grid(qw/-row 1 -column 1 -sticky w/, -pady => [8,0]);
+  $a->g_grid(qw/-row 0 -column 0 -rowspan 2 -sticky w/, -padx => [4,16]);
 
-  $d->g_grid(qw/-row 2 -column 0 -sticky e/);
-  $e->g_grid(qw/-row 2 -column 1 -sticky w/);
+  $b->g_grid(qw/-row 0 -column 1 -sticky e/);
+  $c->g_grid(qw/-row 0 -column 2 -sticky w/);
+
+  $d->g_grid(qw/-row 1 -column 1 -sticky e/);
+  $e->g_grid(qw/-row 1 -column 2 -sticky w/);
 }
 
-sub collEdit {
-  if ($Collection->edit() eq 'OK' && $Collection->{name} ne $Chordy->{currentColl}) {
-    $Chordy->{currentColl} = $Collection->{name};
-    collItems($Chordy);
-  } else {
+sub showCollChange {
+  collItems();
+  if ($Chordy->{nb}->m_index('current') == 2) { # '2' is the Config Tab.
     showSize();
+    fontWin();
   }
 }
 
 sub collItems {
-  my($Chordy) = shift;
-
   my @del = ();
   foreach my $idx (0..$#ProFiles) {
     if (! -e "$Path->{Pro}/$ProFiles[$idx]->{name}") {
       push(@del, $idx);
     } else {
-      # Becuase this Collections version of the file may be different.
+      # Because this Collections version of the file may be different.
       $ProFiles[$idx] = CP::Pro->new($ProFiles[$idx]->{name});
     }
   }
@@ -848,13 +885,13 @@ sub mediaWin {
   showSize();
 
   $a = $wid->new_ttk__label(-width => 8, -anchor => 'e', -text => "Media:");
-  $b = $wid->new_ttk__button(
-    -textvariable => \$Opt->{Media},
-    -width => 15,
-    -style => 'Menu.TButton',
-    -command => sub{
-      my($pop,$fr) = popMenu(\$Opt->{Media}, \&newMedia, $Media->list());
-    });
+  $b = popButton($wid,
+		 \$Opt->{Media},
+		 sub{Tkx::after_idle(\&newMedia)},
+		 sub{$Media->list()},
+		 -style => 'Menu.TButton',
+		 -width => 15,
+      );
 
   my $st = 'Media.TLabel';
   Tkx::ttk__style_configure($st,
@@ -872,15 +909,13 @@ sub mediaWin {
 
   Tkx::ttk__style_configure("Win.TButton", -background => MWBG);
   $c = $wid->new_ttk__label(-text => "Print Media:");
-  $d = $wid->new_ttk__button(
-    -textvariable => \$Opt->{PrintMedia},
-    -width => 15,
-    -style => 'Win.TButton',
-    -command => sub{
-      popMenu(\$Opt->{PrintMedia}, undef, $Media->list());
-      # Need to delay the save otherwise Opt->{PrintMedia} = 0
-      Tkx::after_idle(sub{$Opt->save()});
-    });
+  $d = popButton($wid,
+		 \$Opt->{PrintMedia},
+		 sub{Tkx::after_idle(sub{$Opt->saveOne('PrintMedia')})},
+		 sub{$Media->list()},
+		 -style => 'Menu.TButton',
+		 -width => 15,
+      );
 
   Tkx::ttk__style_configure('Menu.TFrame',
 			    -background => $Opt->{MenuBG});
@@ -917,8 +952,8 @@ sub mediaWin {
 }
 
 sub newMedia {
-#  $Opt->changeOne('Media');
   $Media = $Media->change($Opt->{Media});
+  $Opt->saveOne('Media');
   showSize();
   fontWin();
   CP::Win::title();
@@ -944,36 +979,41 @@ sub fontWin {
 sub bgWin {
   my($bgf) = shift;
 
-  BGcS($bgf, 0, 'Comment',   \%{$Media->{Comment}},   \$Media->{commentBG});
-  BGcS($bgf, 1, 'Highlight', \%{$Media->{Highlight}}, \$Media->{highlightBG});
-  BGcS($bgf, 2, 'Title',     \%{$Media->{Title}},     \$Media->{titleBG});
-  BGcS($bgf, 3, 'Verse',     \%{$Media->{Lyric}},     \$Media->{verseBG});
-  BGcS($bgf, 4, 'Chorus',    \%{$Media->{Chord}},     \$Media->{chorusBG});
-  BGcS($bgf, 5, 'Bridge',    \%{$Media->{Lyric}},     \$Media->{bridgeBG});
-  BGcS($bgf, 6, 'Tab',       \%{$Media->{Tab}},       \$Media->{tabBG});
+  BGcS($bgf, 0, 'Verse');
+  BGcS($bgf, 1, 'Chorus');
+  BGcS($bgf, 2, 'Bridge');
+  BGcS($bgf, 3, 'Tab');
 }
 
-# $fntp is used to get the Foreground Colour.
 sub BGcS {
-  my($bgf,$col,$title,$fntp,$var) = @_;
+  my($bgf,$col,$title,$tf) = @_;
 
-  my $but;
+  my $fg = ($title =~ /Ver|Cho|Bri/) ? $Opt->{FGLyric} : $Opt->{"FG$title"};
+  my $bgptr = \$Opt->{"BG$title"};
+  my $bdptr = (defined $tf) ? \$Opt->{$tf.'borderColour'} : undef;
   my $w = length($title) + 2;
-  $but = $bgf->new_ttk__button(
-    -text => $title,
-    -width => $w,
-    -style => "$title.BG.TButton",
-    -command => sub{pickBG($title, $fntp, $but, $var)});
+  my $but = $bgf->new_ttk__button(
+    -text    => $title,
+    -width   => $w,
+    -style   => "$title.BG.TButton",
+    -command => sub{pickBG($title, $fg, $bgptr, $bdptr)});
   $but->g_grid(-row => 0, -padx => 4, -pady => 4, -column => $col);
 }
 
 sub pickBG {
-  my($title,$fntp,$but,$var) = @_;
+  my($title,$fg,$bgptr,$bdptr) = @_;
 
+  my($bg,$bd) = ($$bgptr,'');
   CP::FgBgEd->new("$title Background Colour");
-  my($fg,$bg) = $ColourEd->Show($fntp->{color}, $$var, BACKGRND);
+  my $op = BACKGRND;
+  if (defined $bdptr) {
+    $bd = $$bdptr;
+    $op |= BORDER;
+  }
+  ($fg,$bg,$bd) = $ColourEd->Show($fg, $bg, $bd, $op);
   if ($bg ne '') {
-    $$var = $bg;
+    $$bgptr = $bg;
+    $$bdptr = $bd if (defined $bdptr);
     Tkx::ttk__style_configure("$title.BG.TButton", -background => $bg);
     # Note: if $title is Bridge this has no effect - it just
     #       creates a new style which isn't used anywhere.
@@ -984,7 +1024,7 @@ sub pickBG {
     } else {
       Tkx::ttk__style_configure("$title.Font.TLabel", -background => $bg);
     }
-    $Media->save();
+    $Opt->save();
   }
 }
 
@@ -1077,75 +1117,6 @@ sub CmdS {
       $wid->g_focus();
     });
   $cbb->g_grid(-row => $r, qw/-column 3 -sticky w -padx 4 -pady 4/);
-}
-
-sub lookFrm {
-  my($frm) = shift;
-
-  my($a,$b,$c,$d,$e,$f,$g,$h,$i,$j,$k,$m);
-  $a = $frm->new_ttk__label(-text => "Colours:");
-  $b = $frm->new_ttk__button(
-    -text => "Button",
-    -width => 8,
-    -command => \&CP::Win::PBclr );
-  $c = $frm->new_ttk__button(
-    -text => "Menu",
-    -width => 8,
-    -style => 'Menu.TButton',
-    -command => \&CP::Win::MBclr );
-  $d = $frm->new_ttk__button(
-    -text => "Lists",
-    -width => 8,
-    -style => 'List.TButton',
-    -command => sub{CP::List::background(1)} );
-  $e = $frm->new_ttk__button(
-    -text => "Entry",
-    -width => 8,
-    -style => 'Ent.TButton',
-    -command => \&CP::Win::ENTclr );
-  $f = $frm->new_ttk__button(
-    -text => "Window",
-    -width => 8,
-    -style => 'Win.TButton',
-    -command => \&CP::Win::BGclr );
-  $g = $frm->new_ttk__button(
-    -text => "Message",
-    -width => 8,
-    -style => 'Msg.TButton',
-    -command => \&CP::Win::MSGclr );
-
-  $h = $frm->new_ttk__label(-text => "Fonts:");
-  $i = $frm->new_ttk__button(-text => "Normal/Bold", -command => \&main::useBold );
-
-#  my $bfrm = $frm->new_ttk__frame(-padding => [4,4,4,4]);
-  $j = $frm->new_ttk__button(
-    -text => "Save",
-    -style => 'Green.TButton',
-    -command => sub{$Opt->save()} );
-  $k = $frm->new_ttk__button(
-    -text => "Defaults",
-    -style => 'Green.TButton',
-    -command => \&CP::Win::defLook );
-  $m = $frm->new_ttk__button(
-    -text => "Copy To All Collections",
-    -style => 'Green.TButton',
-    -command => sub{$Opt->saveClr2all()} );
-
-
-  $a->g_grid(qw/-row 0 -column 0 -sticky e/, -padx => [4,0], -pady => [0,8]);
-  $b->g_grid(qw/-row 0 -column 1 -padx 4/, -pady => [0,8]);
-  $c->g_grid(qw/-row 0 -column 2 -padx 4/, -pady => [0,8]);
-  $d->g_grid(qw/-row 0 -column 3 -padx 4/, -pady => [0,8]);
-  $e->g_grid(qw/-row 0 -column 4 -padx 4/, -pady => [0,8]);
-  $f->g_grid(qw/-row 0 -column 5 -padx 4/, -pady => [0,8]);
-  $g->g_grid(qw/-row 0 -column 6 -padx 4/, -pady => [0,8]);
-  $h->g_grid(qw/-row 0 -column 7 -sticky e/, -padx => [12,0], -pady => [0,8]);
-  $i->g_grid(qw/-row 0 -column 8 -padx 4/, -pady => [0,8]);
-
-#  $bfrm->g_grid(qw/-row 1 -column 0 -columnspan 8/);
-  $j->g_grid(qw/-row 1 -column 1 -columnspan 2 -pady 4/);
-  $k->g_grid(qw/-row 1 -column 3 -columnspan 2 -pady 4/);
-  $m->g_grid(qw/-row 1 -column 5 -columnspan 3 -pady 4/);
 }
 
 1;

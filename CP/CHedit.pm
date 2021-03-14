@@ -34,7 +34,7 @@ our @EXPORT = qw/&CHedit &mkChords &chordButtons %CHRD/;
 our(%Groups, %CHRD, %IDs, %Chord);
 our($Canvas, $Indent, $Y);
 
-our $Top = '';
+our $Ed;
 
 # @String is a square array - one primary element for each string.
 # The first element is what is displayed above the fret board:
@@ -57,135 +57,136 @@ sub CHedit {
 
   my $standAlone = 0;
   my $done = '';
-  if (defined $MW && Tkx::winfo_exists($MW)) {
-    $Top = $MW->new_toplevel();
-  } else {
-    use CP::Win;
-    CP::Global::init();
-    $Collection = CP::Collection->new();
-    $Path = CP::Path->new();
-    $Cmnd = CP::Cmnd->new();
-    $Opt = CP::Opt->new();
-    CP::Win::init();
-    $Top = $MW;
-    $standAlone++;
-  }
-  makeImage("Eicon", \%XPM);
+  my($pop,$frame,$bf);
+  if (ref($Ed) ne 'HASH') {
+    if (defined $MW && Tkx::winfo_exists($MW)) {
+      $pop = CP::Pop->new(0, '.ct', 'Chord Editor', undef, undef, 'Eicon');
+      $Ed = {};
+      $Ed->{top} = $pop->{top};
+      $Ed->{frame} = $frame = $pop->{frame};
+    } else {
+      use CP::Win;
+      CP::Global::init();
+      $Collection = CP::Collection->new();
+      $Path = CP::Path->new();
+      $Cmnd = CP::Cmnd->new();
+      $Opt = CP::Opt->new();
+      CP::Win::init();
+      $MW->g_wm_title('Chord Editor');
+      makeImage("Eicon", \%XPM);
+      $MW->g_wm_iconphoto("Eicon");
+      $Ed->{top} = $MW;
+      $Ed->{frame} = $frame = $MW->new_ttk__frame(qw/-relief raised -borderwidth 2/);
+      $Ed->{frame}->g_pack(qw/-expand 1 -fill both/);
 
-  $Top->g_wm_protocol('WM_DELETE_WINDOW' => sub{$done = 'Cancel'});
-  $Top->g_wm_title('Chord Editor');
-  $Top->g_wm_iconphoto("Eicon");
+      $standAlone++;
+    }
 
-  init();
+    $Ed->{top}->g_wm_protocol('WM_DELETE_WINDOW' => sub{$done = 'Cancel'});
 
-  # Create and layout all the Frames
-  #
-  my $tf = $Top->new_ttk__frame(-relief => 'raised', -borderwidth => 2,  -padding => [4,4,4,4]);
-  $tf->g_pack(qw/-side top/);
+    init();
 
-  my $bf = $Top->new_ttk__frame();
-  $bf->g_pack(qw/-side bottom -fill x/);
+    # Create and layout all the Frames
+    #
+    my $tf = $frame->new_ttk__frame(-relief => 'raised', -borderwidth => 2, -padding => [4,4,4,4]);
+    $tf->g_pack(qw/-side top/);
 
-  my $lf = $tf->new_ttk__frame();
-  $lf->g_pack(qw/-side left -fill both -padx/ => [0,4]);
-  #
-  my $rf = $tf->new_ttk__frame();
-  $rf->g_pack(qw/-side right -fill both -padx/ => [4,0]);
+    $Ed->{bf} = $bf = $frame->new_ttk__frame();
+    $bf->g_pack(qw/-side bottom -fill x/);
 
-  my $ltf = $lf->new_ttk__frame();
-  $ltf->g_pack(qw/-side top -fill x/);
-  #
-  my $lbf = $lf->new_ttk__frame();
-  $lbf->g_pack(qw/-side top -fill both -pady/ => [8,0]);
+    my $lf = $tf->new_ttk__frame();
+    $lf->g_pack(qw/-side left -fill both -padx/ => [0,4]);
+    #
+    my $rf = $tf->new_ttk__frame();
+    $rf->g_pack(qw/-side right -fill both -padx/ => [4,0]);
 
-  # Now fill the Frames with their Widgets.
-  #
-  my $ltfb = $ltf->new_ttk__button(
-    -text => " Clear ",
-    -command => sub{
+    my $ltf = $lf->new_ttk__frame();
+    $ltf->g_pack(qw/-side top -fill x/);
+    #
+    my $lbf = $lf->new_ttk__frame();
+    $lbf->g_pack(qw/-side top -fill both -pady/ => [8,0]);
+
+    # Now fill the Frames with their Widgets.
+    #
+    my $ltfb = $ltf->new_ttk__button(
+      -text => " Clear ",
+      -command => sub{
+	newChord();
+	fretBoard(); });
+    $ltfb->g_pack(qw/-side top -pady/ => [4,8]);
+  
+    my $ltfl = $ltf->new_ttk__label(-text => "Chord name: ");
+    $ltfl->g_pack(qw/-side left/);
+  
+    my $ltfe = $ltf->new_ttk__entry(
+      -width => 8,
+      -textvariable => \$Centry,
+      -justify => 'center');
+    $ltfe->g_pack(qw/-side left/);
+
+    chordButtons($lbf,\&showChord);
+
+    my $rfl = $rf->new_ttk__label(-text => "Instrument: ");
+    $rfl->g_grid(qw/-row 0 -column 0 -sticky e -pady 4/);
+    my $val = '{'.join('} {',@{$Opt->{Instruments}}).'}';
+    my $rlm = $rf->new_ttk__combobox(
+      -textvariable => \$Opt->{Instrument},
+      -values => $val,
+      -width => 8,
+	);
+    $rlm->g_grid(qw/-row 0 -column 1 -sticky w -pady 4/);
+    $rlm->g_bind("<<ComboboxSelected>>", sub{
+      readFing($Opt->{Instrument});
+      chordButtons($lbf,\&showChord);
       newChord();
       fretBoard(); });
-  $ltfb->g_pack(qw/-side top -pady/ => [4,8]);
-  
-  my $ltfl = $ltf->new_ttk__label(-text => "Chord name: ");
-  $ltfl->g_pack(qw/-side left/);
-  
-  my $ltfe = $ltf->new_ttk__entry(
-    -width => 8,
-    -textvariable => \$Centry,
-    -justify => 'center');
-  $ltfe->g_pack(qw/-side left/);
-
-  chordButtons($lbf,\&showChord);
-
-  my $rfl = $rf->new_ttk__label(-text => "Instrument: ");
-  $rfl->g_grid(qw/-row 0 -column 0 -sticky e -pady 4/);
-  my $val = '{'.join('} {',@{$Opt->{Instruments}}).'}';
-  my $rlm = $rf->new_ttk__combobox(
-    -textvariable => \$Opt->{Instrument},
-    -values => $val,
-    -width => 8,
-      );
-  $rlm->g_grid(qw/-row 0 -column 1 -sticky w -pady 4/);
-  $rlm->g_bind("<<ComboboxSelected>>", sub{
-    readFing($Opt->{Instrument});
-    chordButtons($lbf,\&showChord);
-    newChord();
-    fretBoard(); });
-  $Canvas = $rf->new_tk__canvas(-bg => MWBG, -highlightthickness => 0);
-  $Canvas->g_grid(qw/-row 1 -column 0 -columnspan 2 -sticky nsew/);
-
-  fretBoard();
-
+    $Canvas = $rf->new_tk__canvas(-bg => MWBG, -highlightthickness => 0);
+    $Canvas->g_grid(qw/-row 1 -column 0 -columnspan 2 -sticky nsew/);
+    
+    fretBoard();
+  }
+  foreach my $c (Tkx::SplitList(Tkx::winfo_children($Ed->{bf}))) {
+    Tkx::destroy($c);
+  }
   my($lb,$rb);
   if ($what eq 'Save') {
-    $lb = $bf->new_ttk__button(
-      -text    => 'Exit',
-      -style => 'Red.TButton',
-      -command => sub{
-	if ($standAlone) {
-	  $MW->g_destroy();
-	  exit(0);
-	} else {
-	  $done = 'OK';
-	}
-      });
-    $rb = $bf->new_ttk__button(
-      -text    => 'Save',
-      -style => 'Green.TButton',
-      -command => sub{
-	save();
-	if ($standAlone) {
-	  $MW->g_destroy();
-	  exit(0);
-	} else {
-	  $done = 'OK';
-	}
-      });
+    $lb = $Ed->{bf}->new_ttk__button(-text => 'Exit', -style => 'Red.TButton',
+				     -command => sub{
+				       if ($standAlone) {
+					 $MW->g_destroy();
+					 exit(0);
+				       } else {
+					 $done = 'OK';
+				       } });
+    $rb = $Ed->{bf}->new_ttk__button(-text => 'Save', -style => 'Green.TButton',
+				     -command => sub{
+				       save();
+				       if ($standAlone) {
+					 $MW->g_destroy();
+					 exit(0);
+				       } else {
+					 $done = 'OK';
+				       } });
   }
   else {
-    $lb = $bf->new_ttk__button(
-      -text    => 'Cancel',
-      -style => 'Red.TButton',
-      -command => sub{
-	if ($standAlone) {
-	  $MW->g_destroy();
-	  exit(0);
-	} else {
-	  $done = 'Cancel';
-	}
-      });
-    $rb = $bf->new_ttk__button(
-      -text    => 'OK',
-      -style => 'Green.TButton',
-      -command => sub{$done = 'OK';});
+    $lb = $Ed->{bf}->new_ttk__button(-text => 'Cancel', -style => 'Red.TButton',
+				     -command => sub{
+				       if ($standAlone) {
+					 $MW->g_destroy();
+					 exit(0);
+				       } else {
+					 $done = 'Cancel';
+				       } });
+    $rb = $Ed->{bf}->new_ttk__button(-text => 'OK', -style => 'Green.TButton',
+				     -command => sub{$done = 'OK';});
   }
   $lb->g_pack(qw/-side left -pady 8 -padx 20/);
   $rb->g_pack(qw/-side right -pady 8 -padx 20/);
-  
+
   newChord();
 
-  $Top->g_raise();
+  $Ed->{top}->g_wm_deiconify();
+  $Ed->{top}->g_raise();
 
   if ($standAlone == 0) {
     Tkx::vwait(\$done);
@@ -196,8 +197,8 @@ sub CHedit {
 	$str .= ($s->[1] == -1) ? ' x' : ' '.$s->[1];
       }
     }
-    $Top->g_destroy();
-    $Top = '';
+    $Ed->{top}->g_wm_withdraw();
+    Tkx::update_idletasks();
     return $str;
   }
 }
@@ -215,6 +216,7 @@ sub init {
 sub chordButtons {
   my($frame,$func) = @_;
 
+  %Chord = ();
   my $row = 0;
   foreach my $p (['b','A','#'],
 		 ['b','B',''],
@@ -279,13 +281,12 @@ sub oneButton {
   } else {
     $but = $Chord{"$name"};
   }
-  my $pad = ($col & 1) ? [4,8] : [8,4];
-  $but->g_grid(-row => $row, -column => $col, -padx => $pad, -pady => 3);
+  my $pad = ($col & 1) ? [2,4] : [4,2];
+  $but->g_grid(-row => $row, -column => $col, -padx => $pad, -pady => 2);
 
   if (@{$Groups{$name}}) {
     $but->g_bind(
-      '<Enter>' =>
-      sub{ $IDs{$name} = Tkx::after(600, sub{popChords($but, $name, $func);}) }
+      '<Enter>' => sub{ $IDs{$name} = Tkx::after(600, sub{popChords($but, $name, $func);}) }
       );
   } else {
     $but->g_bind('<Enter>' => sub{} );
@@ -314,7 +315,8 @@ sub popChords {
     $Pop->{top}->g_raise();
   } elsif (@{$Groups{$name}}) {
     if ($but->m_instate('active')) {
-      $Pop = CP::Pop->new(1, '.ch', '', (pX()-20), (pY()-15));
+      my($x,$y) = (Tkx::winfo_pointerx($MW), Tkx::winfo_pointery($MW));
+      $Pop = CP::Pop->new(1, '.ch', '', $x, $y);
       my($top,$fr) = ($Pop->{top}, $Pop->{frame});
       my($row,$col) = qw/0 0/;
       my $chord = "$name";
@@ -333,7 +335,11 @@ sub popChords {
       }
       Tkx::update_idletasks();
       $top->g_raise();
-      Tkx::after(400, \&Where);
+      my($w,$h) = (Tkx::winfo_reqwidth($fr), Tkx::winfo_reqheight($fr));
+      $x -= int($w / 2);
+      $y -= int($h / 3);
+      $top->g_wm_geometry("+$x+$y"); 
+      Tkx::after(200, sub{Where($Pop,$x,$y,$w,$h)});
     } else {
       popCancel($name);
     }
@@ -341,24 +347,18 @@ sub popChords {
 }
 
 sub Where {
+  my($pop,$Px,$Py,$Pw,$Ph) = @_;
+
   if (popExists('.ch')) {
-    my $top = $Pop->{top};
-    my $x = pX();
-    my $y = pY();
-    my $Px = Tkx::winfo_x($top);
-    my $Py = Tkx::winfo_y($top);
-    my $Pw = Tkx::winfo_reqwidth($top);
-    my $Ph = Tkx::winfo_reqheight($top);
+    my $top = $pop->{top};
+    my($x,$y) = (Tkx::winfo_pointerx($MW), Tkx::winfo_pointery($MW));
     if ($x < $Px || $x >= ($Px + $Pw) || $y < $Py || $y >= ($Py + $Ph)) {
-      $Pop->popDestroy();
+      $pop->popDestroy();
     } else {
-      Tkx::after(400, \&Where);
+      Tkx::after(200, sub{Where($pop,$Px,$Py,$Pw,$Ph)});
     }
   }
 }
-
-sub pX {Tkx::winfo_pointerx($MW)};
-sub pY {Tkx::winfo_pointery($MW)};
 
 sub readFing {
   my($inst) = shift();
@@ -413,6 +413,7 @@ sub fretBoard {
   # fretboard position
   $Indent = 10;
 
+  my $top = $Ed->{top};
   my $sw = $BASE;      # these are both half
   my $fw = $BASE * 2;  # the actual width
   my $w = ($Pitch * $Nstring);
@@ -423,11 +424,13 @@ sub fretBoard {
   my $x = $Indent + int($Pitch / 2);
   my $bh;
   foreach my $s (0..($Nstring-1)) {
-    my $wid = $Top->new_ttk__button(
-      -textvariable => \$String[$s][0],
-      -width => 1);
-    $wid->m_configure(
-      -command => sub{popMenu(\$String[$s][0], sub{setString($s)}, [qw/0 X/])});
+    my $wid = popButton($top,
+			\$String[$s][0],
+			sub{setString($s)},
+			[qw/0 X/],
+			-width => 1,
+			-style => 'Menu.TButton',
+	);
     $bh = Tkx::winfo_reqheight($wid) if ($s == 0);
     $Canvas->create_window($x,$bh/2, -window => $wid, -anchor => 'center', -tags => 'FB');
     $x += $Pitch;
@@ -447,14 +450,17 @@ sub fretBoard {
       $Canvas->create_rectangle($Indent,$y-$fw, $Indent+$w,$y+$fw, -fill => 'grey', -tags => 'FB');
     }
     if ($_ == 1) {
-      my $wb = $Top->new_ttk__button(
-	-textvariable => \$Ffret,
-	-width => 2);
-      $wb->m_configure(-command => sub{popMenu(\$Ffret, \&fretBoard, [1..20])});
+      my $wb = popButton($top,
+			\$Ffret,
+			\&fretBoard,
+			[1..20],
+			-width => 2,
+			-style => 'Menu.TButton',
+	);
       $bh = Tkx::winfo_reqwidth($wb);
       $Canvas->create_window($Indent+$w+8,$y, -window => $wb, -anchor => 'w', -tags => 'FB');
       $dx += ($bh + 4);
-      my $wl = $Top->new_ttk__label(
+      my $wl = $top->new_ttk__label(
 	-text => "Base\nFret",
 	-font => "Arial 10 bold");
       $Canvas->create_window($Indent+$w+$bh+10,$y, -window => $wl, -anchor => 'w', -tags => 'FB');
@@ -815,9 +821,9 @@ static char *brace[] = {
 "k c #83c0c0",
 "                                  ",
 "                                  ",
+"                                  ",
 "  hkkkk                    #bbbi  ",
 "  i.fgg                    ega.b  ",
-"  i.b                        i.b  ",
 "  i.b                        i.b  ",
 "  i.b                        i.b  ",
 "  i.b                        i.b  ",

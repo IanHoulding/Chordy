@@ -14,20 +14,22 @@ use warnings;
 
 use Tkx;
 use CP::Cconst qw/:OS :BROWSE :SMILIE/;
-use CP::Global qw/:FUNC :WIN :VERS :PATH :OPT/;
+use CP::Global qw/:FUNC :WIN :VERS :PATH :OPT :XPM/;
 use CP::Tab;
 use CP::TabPDF;
 use CP::Cmsg;
 
 my %Opts = ();
 my $Recent;
+
 #
 # Not really a module in the strictest sense
 # but a way to keep all the menu code together.
 #
 sub new {
-  my($m,$menu);
+  my($proto,$tab) = @_;
 
+  my($m,$menu);
   if (OS eq 'aqua') {
     $m = $MW->new_menu();
     $menu = Tkx::widget->new(Tkx::menu($m->_mpath . ".apple"));
@@ -51,90 +53,99 @@ sub new {
   $menu->add_cascade(-menu => $help, -label => "Help");
 
   $file->add_command(-label => "Open",   -font => 'TkMenuFont', -command => \&openTab);
-  $file->add_command(-label => "New",    -font => 'TkMenuFont', -command => \&newTab);
+  $file->add_command(-label => "New",    -font => 'TkMenuFont', -command => [\&newTab, $tab]);
   {
     $Recent = $file->new_menu;
     $file->add_cascade(-menu => $Recent, -font => 'TkMenuFont', -label => 'Recent');
-    foreach (0..9) {
-      my $fn = (defined $Opt->{RecentTab}[$_]) ? $Opt->{RecentTab}[$_] : '. . .';
+    foreach my $i (0..9) {
+      my $fn = (defined $Opt->{RecentTab}[$i]) ? $Opt->{RecentTab}[$i] : '. . .';
       $Recent->add_command(-label => $fn,
 			   -font => 'TkMenuFont',
 			   -command => sub{
 			     if ($fn ne '. . .') {
 			       CP::Tab->new("$Path->{Tab}/$fn");
-			       $Tab->drawPageWin();
+			       $tab->drawPageWin();
 			       $Opt->add2recent($fn, 'RecentTab', \&refresh);
 			     }
 			   });
     }
   }
-  $file->add_command(-label => "Close",  -font => 'TkMenuFont', -command => \&closeTab);
-  $file->add_command(-label => "Delete", -font => 'TkMenuFont', -command => \&delTab);
+  $file->add_command(-label => "Close",  -font => 'TkMenuFont', -command => [\&closeTab, $tab]);
+  $file->add_command(-label => "Delete", -font => 'TkMenuFont', -command => [\&delTab, $tab]);
+  $file->add_command(-label => "Revert",
+		     -font => 'TkMenuFont',
+		     -command => sub{
+		       my $fn = (CP::Browser->new($MW, TABBR, $Path->{Tab}, '.tab'))[0];
+		       if ($fn eq '') {
+			 message(SAD, "You don't appear to have selected a Tab file.");
+			 return;
+		       }
+		       RevertTo($tab, $fn);
+		     });
   $file->add_separator;  #########
   $file->add_command(-label => "Save",
 		     -font => 'TkMenuFont',
-		     -command => sub{$Tab->save()});
+		     -command => sub{$tab->save()});
   $file->add_command(-label => "Save As",
 		     -font => 'TkMenuFont',
-		     -command => sub{$Tab->saveAs()});
+		     -command => sub{$tab->saveAs()});
   $file->add_command(-label => 'Save, Make & Close',
 		     -font => 'TkMenuFont',
-		     -command => \&saveCloseTab);
+		     -command => [\&saveCloseTab, $tab]);
   $file->add_command(-label => "Rename",
 		     -font => 'TkMenuFont',
-		     -command => \&renameTab);
+		     -command => [\&renameTab, $tab]);
   $file->add_command(-label => "Export",
 		     -font => 'TkMenuFont',
-		     -command => \&exportTab);
+		     -command => [\&exportTab, $tab]);
   $file->add_separator;  #########
   $file->add_command(-label => "Exit",
 		     -font => 'TkMenuFont',
-		     -command => \&exitTab);
-
+		     -command => sub{CP::Tab->new('_EXIT_')});
+###
   $edit->add_command(-label => "Collection",
 		     -font => 'TkMenuFont',
 		     -command => sub{$Collection->edit()});
   $edit->add_command(-label => "Media",
 		     -font => 'TkMenuFont',
-		     -command => \&mediaEdit);
+		     -command => [\&mediaEdit, $tab]);
   $edit->add_command(-label => "Fonts",
 		     -font => 'TkMenuFont',
-		     -command => \&fontEdit);
-  
+		     -command => [\&fontEdit, $tab]);
+###  
   $PDF->add_command(-label => "View",
 		    -font => 'TkMenuFont',
-		    -command => [\&CP::TabPDF::make, 'V']);
+		    -command => [\&CP::TabPDF::make, $tab, 'V']);
   $PDF->add_command(-label => 'Make',
 		    -font => 'TkMenuFont',
-		    -command => [\&CP::TabPDF::make, 'M']);
+		    -command => [\&CP::TabPDF::make, $tab, 'M']);
   $PDF->add_command(-label => 'Batch Make',
 		    -font => 'TkMenuFont',
-		    -command =>  \&CP::TabPDF::batch);
+		    -command => [\&CP::TabPDF::batch, $tab]);
   $PDF->add_command(-label => 'Print',
 		    -font => 'TkMenuFont',
-		    -command => [\&CP::TabPDF::make, 'P']);
+		    -command => [\&CP::TabPDF::make, $tab, 'P']);
   $PDF->add_separator;  #########
   $PDF->add_command(-label => 'Save, Make & Close',
 		    -font => 'TkMenuFont',
-		    -command => \&saveCloseTab);
+		    -command => [\&saveCloseTab, $tab]);
   $PDF->add_command(-label => 'Save As Text',
 		    -font => 'TkMenuFont',
-		    -command => sub{$Tab->saveAsText()});
-
+		    -command => sub{$tab->saveAsText()});
+###
   $Opts{menu} = $opt;
-  use warnings;
   $Opts{ent}[0] = {text => 'Bars/Stave', var => \$Opt->{Nbar}};
   my $bps = $opt->new_menu;
   $opt->add_cascade(-menu => $bps,
 		    -font => 'TkMenuFont',
-		    -label => 'Bars/Stave'." - $Opt->{Nbar}");
+		    -label => 'Bars/Stave'."   $Opt->{Nbar}");
   foreach (qw/3 4 5 6 7 8 9 10/) {
     $bps->add_radiobutton(-label => $_,
 			  -variable => \$Opt->{Nbar},
 			  -font => 'TkMenuFont',
-			  -command => sub{$Tab->drawPageWin();
-					  main::setEdited(1);
-					  config($opt, 0, 'Bars/Stave', $Opt->{Nbar});
+			  -command => sub{$tab->drawPageWin();
+					  $tab->setEdited(1);
+					  config(0);
 					  $Opt->saveOne('Nbar');
 			  });
   }
@@ -142,13 +153,13 @@ sub new {
   my $es = $opt->new_menu;
   $opt->add_cascade(-menu => $es,
 		    -font => 'TkMenuFont',
-		    -label => 'Edit Scale'." - $Opt->{EditScale}");
+		    -label => 'Edit Scale'."   $Opt->{EditScale}");
   foreach (qw/3 3.5 4 4.5 5 5.5 6/) {
     $es->add_radiobutton(-label => $_,
 			 -variable => \$Opt->{EditScale},
 			 -font => 'TkMenuFont',
-			 -command => sub{CP::TabWin::editWindow();
-					 config($opt, 1, 'Edit Scale', $Opt->{EditScale});
+			 -command => sub{CP::BarEd::editWindow($tab);
+					 config(1);
 					 $Opt->saveOne('EditScale');
 			 });
   }
@@ -156,15 +167,15 @@ sub new {
   my $inst = $opt->new_menu;
   $opt->add_cascade(-menu => $inst,
 		    -font => 'TkMenuFont',
-		    -label => 'Instrument'." - $Opt->{Instrument}");
+		    -label => 'Instrument'."   $Opt->{Instrument}");
   foreach (@{$Opt->{Instruments}}) {
     $inst->add_radiobutton(-label => $_,
 			   -variable => \$Opt->{Instrument},
 			   -font => 'TkMenuFont',
 			   -command =>
-			   sub{$Tab->drawPageWin();
-			       main::setEdited(1);
-			       config($opt, 2, 'Instrument', $Opt->{Instrument});
+			   sub{$tab->drawPageWin();
+			       $tab->setEdited(1);
+			       config(2);
 			       $Opt->saveOne('Instrument');
 			   });
   }
@@ -172,95 +183,104 @@ sub new {
   my $ll = $opt->new_menu;
   $opt->add_cascade(-menu => $ll,
 		    -font => 'TkMenuFont',
-		    -label => 'Lyric Lines'." - $Opt->{LyricLines}");
+		    -label => 'Lyric Lines'."   $Opt->{LyricLines}");
   foreach (qw/0 1 2 3/) {
     $ll->add_radiobutton(-label => $_,
 			 -variable => \$Opt->{LyricLines},
 			 -font => 'TkMenuFont',
-			 -command => sub{$Tab->{lyrics}->adjust($Opt->{LyricLines});
-					 $Tab->drawPageWin();
-					 main::setEdited(1);
-					 config($opt, 3, 'Lyric Lines', $Opt->{LyricLines});
+			 -command => sub{$tab->{lyrics}->adjust($Opt->{LyricLines});
+					 $tab->drawPageWin();
+					 $tab->setEdited(1);
+					 config(3);
 					 $Opt->saveOne('LyricLines');
 			 });
   }
-  $Opts{ent}[4] = {text => 'Lyric Spacing', var => \$Tab->{lyricSpace}};
+  $Opts{ent}[4] = {text => 'Lyric Spacing', var => \$tab->{lyricSpace}};
   my $ls = $opt->new_menu;
   $opt->add_cascade(-menu => $ls,
 		    -font => 'TkMenuFont',
-		    -label => 'Lyric Spacing'." - $Tab->{lyricSpace}");
+		    -label => 'Lyric Spacing'."   $tab->{lyricSpace}");
   foreach (qw/0 2 4 6 8 10 12 14 16 18 20/) {
     $ls->add_radiobutton(-label => $_,
-			 -variable => \$Tab->{lyricSpace},
+			 -variable => \$tab->{lyricSpace},
 			 -font => 'TkMenuFont',
-			 -command => sub{$Tab->drawPageWin();
-					 main::setEdited(1);
-					 config($opt, 4, 'Lyric Spacing', $Tab->{lyricSpace});
+			 -command => sub{$tab->drawPageWin();
+					 $tab->setEdited(1);
+					 config(4);
 			 });
   }
-  $Opts{ent}[5] = {text => 'Set Key', var => \$Tab->{key}};
+  $Opts{ent}[5] = {text => 'Set Key', var => \$tab->{key}};
   my $key = $opt->new_menu;
   $opt->add_cascade(-menu => $key,
 		    -font => 'TkMenuFont',
-		    -label => 'Set Key'." - $Tab->{key}");
+		    -label => 'Set Key'."   $tab->{key}");
   no warnings; # stops perl bleating about '#' in array definition.
   foreach (qw/- Ab Abm A Am A# A#m Bb Bbm B Bm C Cm C# C#m Db Dbm D Dm D# D#m Eb Ebm E Em F Fm F# F#m Gb Gbm G Gm G# G#m/) {
     $key->add_radiobutton(-label => $_,
-			  -variable => \$Tab->{key},
+			  -variable => \$tab->{key},
 			  -font => 'TkMenuFont',
-			  -command => sub{$Tab->pageKey();
-					  main::setEdited(1);
-					  config($opt, 5, 'Set Key', $Tab->{key});
+			  -command => sub{$tab->pageKey();
+					  $tab->setEdited(1);
+					  config(5);
 			  });
   }
-  $Opts{ent}[6] = {text => 'Stave Gap', var => \$Tab->{staveGap}};
+  use warnings;
+  $Opts{ent}[6] = {text => 'Stave Gap', var => \$tab->{staveGap}};
   my $sg = $opt->new_menu;
   $opt->add_cascade(-menu => $sg,
 		    -font => 'TkMenuFont',
-		    -label => 'Stave Gap'." - $Tab->{staveGap}");
+		    -label => 'Stave Gap'."   $tab->{staveGap}");
   foreach (qw/0 1 2 3 4 5 6 8 9 10 11 12 13 14 16 18 20/) {
     $sg->add_radiobutton(-label => $_,
-			 -variable => \$Tab->{staveGap},
+			 -variable => \$tab->{staveGap},
 			 -font => 'TkMenuFont',
-			 -command => sub{$Tab->drawPageWin();
-					 main::setEdited(1);
-					 config($opt, 6, 'Stave Gap', $Tab->{staveGap});
+			 -command => sub{$tab->drawPageWin();
+					 $tab->setEdited(1);
+					 config(6);
 			 });
   }
   $Opts{ent}[7] = {text => 'String Spacing', var => \$Opt->{StaffSpace}};
   my $ss = $opt->new_menu;
   $opt->add_cascade(-menu => $ss,
 		    -font => 'TkMenuFont',
-		    -label => 'String Spacing'." - $Opt->{StaffSpace}");
+		    -label => 'String Spacing'."   $Opt->{StaffSpace}");
   foreach (qw/6 7 8 9 10 11 12 13 14 15 16/) {
     $ss->add_radiobutton(-label => $_,
 			 -variable => \$Opt->{StaffSpace},
 			 -font => 'TkMenuFont',
-			 -command => sub{$Tab->drawPageWin();
-					 CP::TabWin::editWindow();
-					 main::setEdited(1);
-					 config($opt, 7, 'String Spacing', $Opt->{StaffSpace});
+			 -command => sub{$tab->drawPageWin();
+					 CP::BarEd::editWindow($tab);
+					 $tab->setEdited(1);
+					 config(7);
 					 $Opt->saveOne('StaffSpace');
 			 });
   }
-  $Opts{ent}[8] = {text => 'Timing', var => \$Tab->{Timing}};
+  $Opts{ent}[8] = {text => 'Timing', var => \$tab->{Timing}};
   my $tim = $opt->new_menu;
   $opt->add_cascade(-menu => $tim,
 		    -font => 'TkMenuFont',
-		    -label => 'Timing'." - $Tab->{Timing}");
+		    -label => 'Timing'."   $tab->{Timing}");
   foreach (qw{2/4 3/4 4/4}) {
     $tim->add_radiobutton(-label => $_,
-			  -variable => \$Tab->{Timing},
+			  -variable => \$tab->{Timing},
 			  -font => 'TkMenuFont',
-			  -command => sub{my($t,$_t) = split('/', $Tab->{Timing});
-					  $Tab->{BarEnd} = $t * 8;
-					  $Tab->drawPageWin();
-					  CP::TabWin::editWindow();
-					  main::setEdited(1);
-					  config($opt, 8, 'Timing', $Tab->{Timing});
+			  -command => sub{my($t,$_t) = split('/', $tab->{Timing});
+					  $tab->{BarEnd} = $t * 8;
+					  $tab->drawPageWin();
+					  CP::BarEd::editWindow($tab);
+					  $tab->setEdited(1);
+					  config(8);
 			  });
   }
-  
+  $opt->add_separator();
+  $opt->add_checkbutton(-label => "Save Fonts      ",
+			-variable => \$Opt->{SaveFonts},
+			-compound => 'right',
+			-indicatoron => 0,
+			-image => 'xtick',
+			-selectimage => 'tick',
+			-font => 'TkMenuFont');
+###  
   $misc->add_command(-label => 'View Error Log',
 		     -font => 'TkMenuFont',
 		     -command => \&viewElog);
@@ -290,32 +310,47 @@ sub refresh {
   my $menu = $Opts{menu};
   my $idx = 0;
   foreach my $ep (@{$Opts{ent}}) {
-    $menu->entryconfigure($idx++, -label => "$ep->{text} - ${$ep->{var}}");
+    if ($ep->{text} ne '') {
+      $menu->entryconfigure($idx, -label => "$ep->{text}   ${$ep->{var}}");
+    }
+    $idx++;
   }
-  foreach (0..9) {
-    my $fn = (defined $Opt->{RecentTab}[$_]) ? $Opt->{RecentTab}[$_] : '. . .';
-    $Recent->entryconfigure($_, -label => $fn);
+  foreach my $i (0..9) {
+    my $fn = (defined $Opt->{RecentTab}[$i]) ? $Opt->{RecentTab}[$i] : '. . .';
+    $Recent->entryconfigure($i,
+			    -label => $fn,
+			    -command => sub{
+			      if ($fn ne '. . .') {
+				my $tab = CP::Tab->new("$Path->{Tab}/$fn");
+				$tab->drawPageWin();
+				$Opt->add2recent($fn, 'RecentTab', \&refresh);
+			      }
+			    }
+	);
   }
 }
 
 sub config {
-  my($menu,$idx,$opt,$val) = @_;
+  my($idx) = shift;
 
-  $menu->entryconfigure($idx, -label => "$opt - $val");
+  my $ap = $Opts{ent}[$idx];
+  $Opts{menu}->entryconfigure($idx, -label => "$ap->{text}   ${$ap->{var}}");
 }
 
 sub openTab {
   my $fn = (CP::Browser->new($MW, TABBR, $Path->{Tab}, '.tab'))[0];
   if ($fn ne '') {
-    CP::Tab->new("$Path->{Tab}/$fn");
-    $Tab->drawPageWin();
+    my $tab = CP::Tab->new("$Path->{Tab}/$fn");
+    $tab->drawPageWin();
     $Opt->add2recent($fn, 'RecentTab', \&refresh);
   }
 }
 
 sub newTab {
-  if ($Tab->checkSave() ne 'Cancel') {
-    if ($Tab->{fileName} eq '') {
+  my($tab) = shift;
+
+  if ($tab->checkSave() ne 'Cancel') {
+    if ($tab->{fileName} eq '') {
       my $fn = "";
       my $ans = msgSet("Enter a name for the new file", \$fn);
       return(0) if ($ans eq "Cancel");
@@ -332,35 +367,41 @@ sub newTab {
       open OFH, ">", "$Path->{Tab}/$fn" or die "failed open '$Path->{Tab}/$fn' : $!\n";
       print OFH "{title:$title}\n";
       close OFH;
-      $Tab->{fileName} = $fn;
+      $tab->{fileName} = $fn;
     }
-    CP::Tab->new("$Path->{Tab}/$Tab->{fileName}");
-    $Tab->drawPageWin();
-    main::tabTitle($Tab->{fileName});
-    $Opt->add2recent($Tab->{fileName}, 'RecentTab', \&refresh);
+    $tab = CP::Tab->new("$Path->{Tab}/$tab->{fileName}");
+    $tab->drawPageWin();
+    $tab->tabTitle($tab->{fileName});
+    $Opt->add2recent($tab->{fileName}, 'RecentTab', \&refresh);
   }
 }
 
 sub closeTab {
-  if ($Tab->checkSave() ne 'Cancel') {
-    CP::Tab->new('');
-    $Tab->drawPageWin();
+  my($tab) = shift;
+
+  if ($tab->checkSave() ne 'Cancel') {
+    $tab = CP::Tab->new('');
+    $tab->drawPageWin();
   }
 }
 
 sub delTab {
-  if ($Tab->{fileName} ne '') {
-    my $ans = msgYesNo("Do you really want to delete\n  $Tab->{fileName}");
+  my($tab) = shift;
+
+  if ($tab->{fileName} ne '') {
+    my $ans = msgYesNo("Do you really want to delete\n  $tab->{fileName}");
     return if ($ans eq "No");
-    unlink("$Path->{Tab}/$Tab->{fileName}");
-    CP::Tab->new('');
-    $Tab->drawPageWin();
+    unlink("$Path->{Tab}/$tab->{fileName}");
+    $tab = CP::Tab->new('');
+    $tab->drawPageWin();
   }
 }
 
 sub renameTab {
-  if ($Tab->{fileName} ne '') {
-    my $ofn = $Tab->{fileName};
+  my($tab) = shift;
+
+  if ($tab->{fileName} ne '') {
+    my $ofn = $tab->{fileName};
     my $newfn = $ofn;
     my $ans = msgSet("Enter a new name for the file:", \$newfn);
     return if ($ans eq 'Cancel');
@@ -371,8 +412,8 @@ sub renameTab {
       return if ($ans eq "No");
     }
     rename("$Path->{Tab}/$ofn", "$Path->{Tab}/$newfn");
-    $Tab->{fileName} = $newfn;
-    main::tabTitle("$newfn");
+    $tab->{fileName} = $newfn;
+    $tab->tabTitle("$newfn");
     $Opt->add2recent($newfn, 'RecentTab', \&refresh);
   } else {
     Tkx::bell();
@@ -380,7 +421,9 @@ sub renameTab {
 }
 
 sub exportTab {
-  if ($Tab->{loaded} == 0) {
+  my($tab) = shift;
+
+  if ($tab->{loaded} == 0) {
     Tkx::bell();
     return;
   }
@@ -396,42 +439,41 @@ sub exportTab {
     if (! -e $dest) {
       make_path($dest, {chmod => 0777});
     }
-    if ($Tab->save($dest, 0) == 1) {
-      # We now have the current Tab in a temporary file: "$Path->{Temp}/$Tab->{fileName}"
-      my $tmp = "$Path->{Temp}/$Tab->{fileName}";
+    if ($tab->save($dest, 0) == 1) {
+      # We now have the current Tab in a temporary file: "$Path->{Temp}/$tab->{fileName}"
+      my $tmp = "$Path->{Temp}/$tab->{fileName}";
       my $txt = read_file($tmp);
-      if (write_file("$dest/$Tab->{fileName}", $txt) == 1) {
+      if (write_file("$dest/$tab->{fileName}", $txt) == 1) {
 	unlink($tmp);
       } else {
-	message(SAD, "Failed to write \"$Tab->{fileName}\" to \"$dest\"\nOriginal is in: \"$tmp\"");
+	message(SAD, "Failed to write \"$tab->{fileName}\" to \"$dest\"\nOriginal is in: \"$tmp\"");
 	return;
       }
-      message(SMILE, "\"$Tab->{fileName}\" Exported", -1);
+      message(SMILE, "\"$tab->{fileName}\" Exported", -1);
     }
   }
 }
 
-sub exitTab {
-  if ($Tab->checkSave() ne 'Cancel') {
-    $MW->g_destroy();
-    exit(0);
-  }
-}
-
 sub saveCloseTab {
-  $Tab->save();
-  CP::TabPDF::make('M');
-  $Tab->new('');
-  $Tab->drawPageWin();
+  my($tab) = shift;
+
+  $tab->save();
+  CP::TabPDF::make($tab, 'M');
+  $tab = $tab->new('');
+  $tab->drawPageWin();
 }
 
 sub mediaEdit {
+  my($tab) = shift;
+
   if ($Media->edit() eq "OK") {
-    $Tab->drawPageWin();
+    $tab->drawPageWin();
   }
 }
 
 sub fontEdit {
+  my($tab) = shift;
+
   my $pop = CP::Pop->new(0, '.fo', 'Font Selector', -1, -1);
   return if ($pop eq '');
   my($top,$wt) = ($pop->{top}, $pop->{frame});
@@ -460,7 +502,7 @@ sub fontEdit {
 
   Tkx::vwait(\$Done);
   if ($Done eq "OK") {
-    $Tab->drawPageWin();
+    $tab->drawPageWin();
   } else {
     $mcopy->copy($Media);
     $Media->save();

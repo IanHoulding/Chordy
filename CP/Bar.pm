@@ -46,22 +46,22 @@ use Math::Trig;
 use CP::Cconst qw/:TEXT :SMILIE :COLOUR :TAB/;
 use CP::Global qw/:OPT :WIN :CHORD/;
 use CP::Cmsg;
-use CP::FgBgEd;
+use CP::FgBgEd qw(&lighten &darken);
 use CP::Tab;
 use CP::Note;
 
 sub new {
-  my($proto,$offp) = @_;
+  my($proto,$tab) = @_;
 
   my $class = ref($proto) || $proto;
   my $self = {};
   bless $self, $class;
 
+  $self->{tab} = $tab;
   $self->{prev} = 0;
   $self->{next} = 0;
-  $self->{canvas} = $Tab->{pCan};    # This is the majority - only changed once for the EditBar.
-  $offp = $Tab->{pOffset} if (! defined $offp);
-  $self->{offset} = $offp;
+  $self->{canvas} = $tab->{pCan};    # This is the majority - only
+  $self->{offset} = $tab->{pOffset}; # changed once for the EditBars.
   $self->{pnum} = 0;
   $self->{pidx} = 0;
   $self->{bidx} = 0;
@@ -126,28 +126,12 @@ sub Clear {
   $self->blank();
 }
   
-sub ClearEbar {
+sub ClearEbars {
   $EditBar->Clear();
   $EditBar->{pbar} = 0;
   $EditBar1->Clear();
   $EditBar1->{pbar} = 0;
-  $Tab->ClearSel();
-}
-
-sub ClearAndRedraw {
-  $Tab->{eWin}->g_wm_withdraw();
-  ClearEbar();
-  $Tab->indexBars();
-  $Tab->newPage($Tab->{pageNum});
-}
-
-# Clears the Edit Bars and redraws them.
-# Usually done after a change to one of the size/distance parameters.
-sub remap {
-  my $sel = $Tab->{select1};
-  ClearEbar();
-  $sel->select();
-  $sel->Edit();
+  $EditBar->{tab}->ClearSel();
 }
 
 sub comp {
@@ -167,29 +151,32 @@ sub comp {
   }
   0;
 }
-# This sub can be called in 2 ways:
-# 1) Where we pass in a bar object that we want to display.
-#    In this case we only pass in the bar object.
-#    Currently ONLY for the EditBar.
-# 2) Where we don't have a bar object but still want the bar outline.
-#    In this case we pass in the tab object, page index and x/y values.
-#    Currently ONLY for Page bar outlines.
-#
-sub outline {
+
+sub editBarOutline {
   my($self) = shift;
 
-  my($pidx,$X,$Y,$off,$tt,$thick,$thin,$can);
-  if (ref($self) eq 'CP::Bar') {
-    ($pidx,$X,$Y,$off) = ($self->{pidx},$self->{x},$self->{y},$self->{offset});
+  outline($self, $self->{tab}, $self->{pidx}, $self->{x}, $self->{y});
+}
+
+# $self is undefined for Page Bars.
+sub pageBarOutline {
+  my($self,$tab,$pidx,$X,$Y) = @_;
+
+  outline($self, $tab, $pidx, $X, $Y);
+}
+
+sub outline {
+  my($self,$tab,$pidx,$X,$Y) = @_;
+
+  my($off,$can);
+  if (defined $self) {
+    $off = $self->{offset};
     $can = $self->{canvas};
   } else {
-    $pidx = shift;
-    $X = shift;
-    $Y = shift;
-    $off = $self->{pOffset}; # $self is actually $Tab.
-    $can = $self->{pCan};
+    $off = $tab->{pOffset};
+    $can = $tab->{pCan};
   }
-  ($thick,$thin) = ($off->{thick},$off->{thin});
+  my($thick,$thin) = ($off->{thick},$off->{thin});
   my $w = $off->{width};
   my $ht = $thin / 2;
   my $x1 = my $x2 = $X;
@@ -221,7 +208,7 @@ sub outline {
   $y1 = $Y + $off->{staffY};
   $y2 = $Y + $off->{staff0};
   my $un = $off->{interval} * 8;
-  my($t,$_t) = split('/', $Tab->{Timing});
+  my($t,$_t) = split('/', $tab->{Timing});
   foreach (1..$t) {
     vline($can, $x1, $y1, $y2, $ht, $fill, $tag);
     $x1 += $un;
@@ -237,7 +224,7 @@ sub outline {
   # Thick line at the end of a bar
   vline($can, $x1, $y1-$ht, $y2+$ht, $thick, $fill, $tag);
 
-  if ($pidx < 0) {
+  if (defined $self) {
     markers($self);
   } else {
     # Detection rectangle to edit a Bar
@@ -266,7 +253,7 @@ sub markers {
   my $hu = $u / 2;
   my $ss = $off->{staffSpace};
   my $hss = $ss / 2;
-  my($t,$_t) = split('/', $Tab->{Timing});
+  my($t,$_t) = split('/', $self->{tab}{Timing});
   my $hsq = ($t * 8) - 1;
   my $can = $self->{canvas};
   my $fill = ($self->{pidx} == -1) ? BLACK : LGREY;
@@ -283,62 +270,13 @@ sub markers {
 	$can->create_line($x,$y, $x,$y+$l, -width => 1, -fill => $fill, -tags => $tag);
       }
       # Create and bind the detection rectangles
-      $pos += $Tab->{BarEnd} if ($self->{pidx} == -2);
+      $pos += $self->{tab}{BarEnd} if ($self->{pidx} == -2);
       my $a = $can->create_rectangle($x-$hu, $y1, $x+$hu, $y2, -width => 0, -tags => $det);
       $can->bind($a, "<Button-1>", sub{posSelect($self, $str, $pos)});
       $x += $u;
     }
     $y -= $ss;
   }
-}
-
-sub EditPrev { _pn('prev', shift) }
-sub EditNext { _pn('next', shift) }
-
-sub _pn {
-  my($pn,$save) = @_;
-
-  my $bar = $Tab->{select1};
-  if ($save) {
-    Update();
-    $Tab->indexBars();
-    $Tab->newPage($Tab->{pageNum});
-  } else {
-    if (($bar && comp($EditBar, $bar)) || ($bar == 0 && ! isblank($EditBar))) {
-      my $ans = CP::Cmsg::msgYesNoCan("Save current Bar?");
-      return if ($ans eq 'Cancel');
-      Save() if ($ans eq 'Yes');
-    }
-  }
-  if ($bar) {
-    $bar = $bar->{$pn};
-    if ($bar == 0 && $pn eq 'prev') {
-      CP::Cmsg::message(SAD, "This is the first Bar.", 1);
-      return;
-    }
-  }
-  ClearEbar();
-  $bar->select() if ($bar);
-  Edit($bar);
-}
-
-# This is ONLY called for the EditBar.
-sub Background {
-  my($self) = @_;
-
-  if ((my $bg = bgGet($self)) ne '') {
-    $self->{bg} = $bg;
-    $self->{canvas}->itemconfigure("bg-1", -fill => $bg);
-  }
-}
-
-sub bgGet {
-  my($self) = shift;
-
-  $self->{bg} = WHITE if ($self->{bg} eq '');
-  CP::FgBgEd->new("Background Colour");
-  my($fg,$bg) = $ColourEd->Show($Tab->{noteColor}, $self->{bg}, BACKGRND);
-  $bg;
 }
 
 sub getNote {
@@ -356,11 +294,12 @@ sub getNote {
 sub posSelect {
   my($self,$string,$pos) = @_;
 
-  my $id = $Tab->{selected};
+  my $tab = $self->{tab};
+  my $id = $tab->{selected};
   my $can = $self->{canvas};
   if ($id != 0) {
     my $n = getNote($self, $id);
-    if ($n->{string} eq 'r') {
+    if ($n->{string} == REST) {
       $can->itemconfigure($id, -fill => BLACK);
       $n->move($string, $pos);
     }
@@ -369,7 +308,7 @@ sub posSelect {
       #   End a BendRelease.
       # or
       #   Move a selected note to this position.
-      if ($Tab->{shbr} eq 'r') {
+      if ($tab->{shbr} eq 'r') {
 	if ($pos <= $n->{pos}) {
 	  message(SAD, "Second point must be AFTER the original note position.",);
 	}
@@ -379,24 +318,24 @@ sub posSelect {
 	  if ($n->{bar} == $self) {
 	    $n->{hold} = $pos - $n->{pos};
 	  } else {
-	    my $barEnd = (eval($Tab->{Timing}) * 32) + 1;
+	    my $barEnd = (eval($tab->{Timing}) * 32) + 1;
 	    $n->{hold} = ($barEnd - $n->{pos}) + ($pos - $barEnd);
 	  }
 	  $n->show('F');
 	}
       }
       else {
-	$can->itemconfigure($id, -fill => $Tab->{noteColor});
+	$can->itemconfigure($id, -fill => $tab->{noteColor});
 	# {fret} stays the same ...
 	$n->move($string, $pos);
       }
     }
     $self->deselect();
-  } elsif ($Tab->{fret} ne '') {
+  } elsif ($tab->{fret} ne '') {
     # Place a fret number or rest on a string.
     my $n = CP::Note->new($EditBar, 1, '');
-    if ($Tab->{fret} =~ /r(\d+)/) {
-      $n->{string} = 'r';
+    if ($tab->{fret} =~ /r(\d+)/) {
+      $n->{string} = REST;
       $n->{fret} = $1;
       # Remove all frets from this position.
       my $idx = 0;
@@ -411,9 +350,9 @@ sub posSelect {
       $n->{pos} = $pos;
     } else {
       $n->{string} = $string;
-      $n->{fret} = $Tab->{fret};
+      $n->{fret} = $tab->{fret};
       $n->{pos} = $pos;
-      $n->{font} = $Tab->{noteFsize};
+      $n->{font} = $tab->{noteFsize};
     }
     $n->show('F');
     $self->noteSort($n);
@@ -421,197 +360,110 @@ sub posSelect {
 }
 
 sub Edit {
-  my($self) = shift;
+  my($self,$tab) = @_;
 
-  if ($self) {
-    if ($Tab->{eWin}->g_wm_state() eq 'normal') {
-      # We have a Bar being Edited and someone's selected a new Bar for editing.
-      my $bar = $Tab->{select1};
-      my $pbar = $EditBar->{pbar};
-      if (($pbar && comp($EditBar, $pbar)) || ($pbar == 0 && ! isblank($EditBar))) {
-	my $ans = CP::Cmsg::msgYesNoCan("Save current Bar?");
-	if ($ans eq 'Cancel') {
-	  $Tab->ClearSel();
-	  $pbar->select();
-	  $Tab->{select1} = $pbar;
-	  return;
-	}
-	Save() if ($ans eq 'Yes');
+  if ($tab->{eWin}->g_wm_state() eq 'normal') {
+    # We have a Bar being Edited and someone's selected a new Bar for editing.
+    my $pbar = $EditBar->{pbar};
+    if (($pbar && comp($EditBar, $pbar)) || ($pbar == 0 && ! isblank($EditBar))) {
+      my $ans = CP::Cmsg::msgYesNoCan("Save current Bar?");
+      if ($ans eq 'Cancel') {
+	$tab->ClearSel();
+	$pbar->select();
+	$tab->{select1} = $pbar;
+	return;
       }
-      $EditBar->Clear();
-      $EditBar1->Clear();
+      Save() if ($ans eq 'Yes');
     }
-    copy($self, $EditBar, HANDN);
-    $EditBar->{pbar} = $self;
-    $EditBar->{prev} = $self->{prev};
-    if ($self->{next} != 0) {
-      $EditBar1->{pbar} = $self->{next};
-      copy($self->{next}, $EditBar1, HANDN);
-      $EditBar1->{next} = $self->{next}{next};
-    } else {
-      $EditBar1->{next} = $EditBar1->{pbar} = 0;
-    }
-    $EditBar->{bidx} = $self->{bidx};
-  } else {
-    $EditBar->{bidx} = ($Tab->{bars}) ? $Tab->{lastBar}{bidx} + 1 : 1;
+    $EditBar->Clear();
+    $EditBar1->Clear();
   }
-  $Tab->{eWin}->g_wm_deiconify() if (Tkx::winfo_ismapped($Tab->{eWin}) == 0);
-  $Tab->{eWin}->g_raise();
+  copy($self, $EditBar, ALLB);
+  $EditBar->{pbar} = $self;
+  $EditBar->{prev} = $self->{prev};
+  if ($self->{next} != 0) {
+    $EditBar1->{pbar} = $self->{next};
+    copy($self->{next}, $EditBar1, ALLB);
+    $EditBar1->{next} = $self->{next}{next};
+  } else {
+    $EditBar1->{next} = $EditBar1->{pbar} = 0;
+  }
+  $EditBar->{bidx} = $self->{bidx};
+
+  $tab->{eWin}->g_wm_deiconify() if (Tkx::winfo_ismapped($tab->{eWin}) == 0);
+  $tab->{eWin}->g_raise();
   show($EditBar);
   show($EditBar1);
 }
 
-sub InsertBefore { insert(BEFORE); }
-sub InsertAfter  { insert(AFTER); }
-
-sub insert {
-  my($where) = shift;
-
-  if ($Tab->{select1}) {
-    $EditBar->{pbar} = $Tab->{select1};
-    $EditBar->save_bar($where);
-    ClearAndRedraw();
-  } else {
-    message(SAD, "No Bar selected - don't know where to put this one!", 1);
-  }
-}
-
-sub Save {
-  $EditBar1->save_bar(REPLACE) if ($EditBar1->{pbar} && comp($EditBar1, $EditBar1->{pbar}));
-  $EditBar->save_bar(REPLACE) if (comp($EditBar, $EditBar->{pbar}));
-  ClearAndRedraw();
-}
-
-sub Update {
-  if ($EditBar->{pbar}) {
-    $EditBar1->save_bar(UPDATE) if ($EditBar1->{pbar} && comp($EditBar1, $EditBar1->{pbar}));
-    $EditBar->save_bar(UPDATE) if (comp($EditBar, $EditBar->{pbar}));
-  } else {
-    # Editing a bar to tack on the end.
-    $EditBar->save_bar(UPDATE);
-#    message(SAD, "No Bar selected - don't know which bar to update!", 1);
-  }
-}
-
-sub save_bar {
-  my($self,$insert) = @_;
-
-  my($bar);
-  if ($self->{pbar} == 0) {
-    # We've edited a (new) blank Bar.
-    $bar = CP::Bar->new($Tab->{pOffset});
-    if ($Tab->{bars} == 0) {
-      $Tab->{bars} = $bar;
-    } else {
-      $Tab->{lastBar}{next} = $bar;
-      $bar->{prev} = $Tab->{lastBar};
-    }
-    $insert = REPLACE;
-  } else {
-    my $dest = $self->{pbar};
-    if ($insert == BEFORE || $insert == AFTER) {
-      $bar = CP::Bar->new($Tab->{pOffset});
-      if ($insert == AFTER) {
-	$bar->{prev} = $dest;
-	$bar->{next} = $dest->{next};
-	$dest->{next}{prev} = $bar;
-	$dest->{next} = $bar;
-      } else {
-	if ($dest->{prev} == 0) {
-	  $bar->{next} = $dest;
-	  $dest->{prev} = $bar;
-	  $Tab->{bars} = $bar;
-	} else {
-	  $bar->{prev} = $dest->{prev};
-	  $bar->{next} = $dest;
-	  $dest->{prev}{next} = $bar;
-	  $dest->{prev} = $bar;
-	}
-      }
-    } else {
-      $bar = $dest;
-    }
-  }
-  $Tab->{lastBar} = $bar if ($bar->{next} == 0);
-  foreach my $v (qw/newline newpage volta header justify rep bg/) {
-    $bar->{$v} = $self->{$v};
-  }
-  $bar->{notes} = [];
-  foreach my $n (noteSort($self)) {
-    $n->{bar} = $bar;
-    push(@{$bar->{notes}}, $n);
-  }
-  if ($insert == UPDATE) {
-    $bar->unMap();
-    $bar->show();
-  }
-  main::setEdited(1);
-}
-
-# ONLY called on the EditBar
-sub RemoveBG {
+sub bgGet {
   my($self) = shift;
 
-  $self->{canvas}->itemconfigure("bg$self->{pidx}", -fill => BLANK);
-  $self->{bg} = BLANK;
+  $self->{bg} = WHITE if ($self->{bg} eq '');
+  CP::FgBgEd->new("Background Colour");
+  my($fg,$bg) = $ColourEd->Show($self->{tab}{noteColor}, $self->{bg}, '', BACKGRND);
+  $bg;
 }
 
 # ONLY called on the Page Bars
 sub select {
   my($self) = shift;
 
+  my $tab = $self->{tab};
   my $bg = $self->{bg};
   my $tag = "bg$self->{pidx}";
-  my $can = $Tab->{pCan};
+  my $can = $tab->{pCan};
   $can->g_bind('<KeyRelease>', sub{});
-  if ($Tab->{select1} == $self) {
+  if ($tab->{select1} == $self) {
     $can->itemconfigure($tag, -fill => $bg);
-    $Tab->{select1} = 0;
+    $tab->{select1} = 0;
   } else {
-    if ($Tab->{select2} != 0) {
-      $Tab->ClearSel();
+    if ($tab->{select2} != 0) {
+      $tab->ClearSel();
     }
-    if ($Tab->{select1} != 0) {
-      $can->itemconfigure("bg$Tab->{select1}{pidx}", -fill => $bg);
+    if ($tab->{select1} != 0) {
+      $can->itemconfigure("bg$tab->{select1}{pidx}", -fill => $bg);
     }
     $can->itemconfigure($tag, -fill => SELECT);
-    $MW->g_bind('<Key-Delete>', \&checkDel);
-    $Tab->{select1} = $self;
+    $MW->g_bind('<Key-Delete>', [\&checkDel, $tab]);
+    $tab->{select1} = $self;
   }
-  $Tab->{select2} = 0;
+  $tab->{select2} = 0;
 }
 
 sub deselect {
   my($self) = shift;
 
-  my $id = $Tab->{selected};
+  my $tab = $self->{tab};
+  my $id = $tab->{selected};
   if ($id != 0) {
-    my $t = $Tab->{eCan}->type($id);
+    my $t = $tab->{eCan}->type($id);
     if ($t eq 'image') {
-      my $rst = "r".getNote($self, $id)->{fret};
-      $Tab->{eCan}->itemconfigure($id, -image => "edit$rst");
+      my $rst = 'r'.getNote($self, $id)->{fret};
+      $tab->{eCan}->itemconfigure($id, -image => "edit$rst");
     } else {
-      $Tab->{eCan}->itemconfigure($id, -fill => $Tab->{noteColor});
+      $tab->{eCan}->itemconfigure($id, -fill => $tab->{noteColor});
     }
-    $Tab->{selected} = 0;
+    $tab->{selected} = 0;
   }
 }
 
 sub checkDel {
-  my($key) = shift;
+  my($tab) = shift;
 
-  if ($Tab->{select1}) {
-    $Tab->DeleteBars();
+  if ($tab->{select1}) {
+    $tab->DeleteBars(1);
   }
 }
 
 sub rangeSelect {
   my($self) = shift;
 
-  $Tab->{select2} = $self;
-  my($a,$b) = $Tab->diff();
+  my $tab = $self->{tab};
+  $tab->{select2} = $self;
+  my($a,$b) = $tab->diff();
   if ($a != 0) {
-    my $can = $Tab->{pCan};
+    my $can = $tab->{pCan};
     do {
       $can->itemconfigure("bg$a->{pidx}", -fill => SELECT);
       $a = $a->{next};
@@ -623,30 +475,33 @@ sub rangeSelect {
 sub copy {
   my($self,$dst,$what) = @_;
 
-  if ($what & HONLY) {
-    foreach (qw/bg header justify lyric newline newpage rep volta/) {
-      $dst->{$_} = $self->{$_};
+  # VOLTA REPEAT HEAD JUST BBG NEWLP NOTE ALLB
+  my @content = (qw/volta rep header justify bg newlp/);
+  my $idx = 0;
+  for(my $i = VOLTA; $i <= NEWLP; $i <<= 1) {
+    if ($what & $i) {
+      if ($i == NEWLP) {
+	$dst->{newline} = $self->{newline};
+	$dst->{newpage} = $self->{newpage};
+      } else {
+	my $c = $content[$idx];
+	$dst->{$c} = $self->{$c};
+      }
     }
+    $idx++;
   }
-  if ($what & NONLY) {
+  if ($what & NOTE) {
     $dst->{notes} = [];
     foreach my $n (noteSort($self)) {
-      push(@{$dst->{notes}}, $n->copy($dst, HANDN));
+      push(@{$dst->{notes}}, $n->copy($dst));
     }
   }
-}
-
-sub Cancel {
-  my($self) = shift;
-
-  ClearEbar();
-  $Tab->ClearSel();
-  $Tab->{eWin}->g_wm_withdraw();
 }
 
 sub show {
   my($self) = shift;
 
+  my $tab = $self->{tab};
   my $pidx = $self->{pidx};
   my $can = $self->{canvas};
   $can->itemconfigure("bg$pidx", -fill => $self->{bg});
@@ -658,9 +513,9 @@ sub show {
       # Edit Bar.
       $can->delete('barn');
       $can->create_text(
-	$Tab->{editX} + 10, $Tab->{editY} + 1,
+	$tab->{editX} + 10, $tab->{editY} + 1,
 	-text => "Bar #: $self->{bidx}",
-	-font => $Tab->{barnFont},
+	-font => $tab->{barnFont},
 	-anchor => 'sw',
 	-tags => 'barn');
       if ($self->{header} ne '') {
@@ -673,22 +528,22 @@ sub show {
 	  if ($pn->{shbr} =~ /s|h/) {
 	    my $fn = $self->{notes}[0];
 	    my $u = $self->{offset}{interval};
-	    my $xlft = ($Tab->{BarEnd} - $pn->{pos}) * $u;
+	    my $xlft = ($tab->{BarEnd} - $pn->{pos}) * $u;
 	    my $xrht = (2 + $fn->{pos}) * $u;
 	    my $xaxis = $xlft + $xrht;
 	    if ($pn->{shbr} eq 's') {
 	      my $ymid = ($xlft / $xaxis) * ($self->{offset}{staffSpace} * 0.4);
-	      $fn->slideTail($fn->{fret}, $ymid, $Tab->{headColor}, 'edit');
+	      $fn->slideTail($fn->{fret}, $ymid, $tab->{headColor}, 'edit');
 	    }
 	    elsif ($pn->{shbr} eq 'h') {
 	      $xaxis /= 2;
 	      my $arc = $xaxis - $xrht;
 	      my $mid = int(rad2deg(acos($arc/$xaxis)));
-	      $fn->hammerTail($xaxis, $mid, $Tab->{headColor}, 'edit');
+	      $fn->hammerTail($xaxis, $mid, $tab->{headColor}, 'edit');
 	    }
 	  }
-	  elsif ($pn->{shbr} eq 'r' && ($pn->{pos} + $pn->{hold}) >= $Tab->{BarEnd}) {
-	    my $hold = $pn->{hold} - ($Tab->{BarEnd} - 1 - $pn->{pos}) + 2;
+	  elsif ($pn->{shbr} eq 'r' && ($pn->{pos} + $pn->{hold}) >= $tab->{BarEnd}) {
+	    my $hold = $pn->{hold} - ($tab->{BarEnd} - 1 - $pn->{pos}) + 2;
 	    my $arc = ($hold >= 3) ? 3 : 2;
 	    $hold -= $arc;
 	    my($x,$y) = $pn->noteXY();
@@ -708,7 +563,7 @@ sub show {
   } else {
     my $tag = "det$pidx";
     if ($can->bind($tag) eq '') {
-      my $sub = sub{$Tab->ClearSel();$self->select();$self->Edit();};
+      my $sub = sub{$tab->ClearSel();$self->select();$self->Edit($tab);};
       $can->itemconfigure("b$pidx", -fill => BLACK);
       $can->bind($tag, '<Button-1>', sub{$self->select()});
       $can->bind($tag, '<Shift-Button-1>', sub{$self->rangeSelect()});
@@ -759,8 +614,8 @@ sub repeat {
     my $y = $Y + $off->{staffY} - $ht;
     my $y2 = $Y + $off->{staff0} + $ht;
 
-    my $clr = $Tab->{headColor};
-    $clr = CP::FgBgEd::lighten($clr, PALE) if ($self->{pidx} == -2);
+    my $clr = $self->{tab}{headColor};
+    $clr = lighten($clr, PALE) if ($self->{pidx} == -2);
 
     my $dia = $fat * 2;
     my $dy = $fat * 0.75;
@@ -798,6 +653,7 @@ sub vline {
 sub topText {
   my($self) = shift;
 
+  my $tab = $self->{tab};
   my $off = $self->{offset};
   my $pidx = $self->{pidx};
   my $can = $self->{canvas};
@@ -805,10 +661,10 @@ sub topText {
   $can->delete($tag) if ($pidx < 0);
   push(@{$tag}, 'edit') if ($pidx < 0);
   if ($self->{header} ne '') {
-    my $fnt = ($pidx >= 0) ? $Tab->{headFont} : $Tab->{eheadFont};
+    my $fnt = ($pidx >= 0) ? $tab->{headFont} : $tab->{eheadFont};
     my $x = $self->{x};
-    my $clr = $Tab->{headColor};
-    $clr = CP::FgBgEd::lighten($clr, PALE) if ($pidx == -2);
+    my $clr = $tab->{headColor};
+    $clr = lighten($clr, PALE) if ($pidx == -2);
     my $wid = $can->create_text(
       0,0,
       -text => $self->{header},
@@ -822,7 +678,7 @@ sub topText {
     } else {
       $x += $off->{thick};
     }
-    my $fh = ($pidx >= 0) ? $Tab->{headSize} : $Tab->{eheadSize};
+    my $fh = ($pidx >= 0) ? $tab->{headSize} : $tab->{eheadSize};
     $can->coords($wid, $x, $self->{y} + $off->{headY});
   }
 }
@@ -837,8 +693,8 @@ sub volta {
   $can->delete($tag) if ($pidx < 0);
   push(@{$tag}, 'edit') if ($pidx < 0);
   if ($self->{volta} ne 'None') {
-    my $clr = $Tab->{headColor};
-    $clr = CP::FgBgEd::lighten($clr, PALE) if ($pidx == -2);
+    my $clr = $self->{tab}{headColor};
+    $clr = lighten($clr, PALE) if ($pidx == -2);
     my $linew = $off->{fat};
     my $w = $off->{width};
     my $x = $self->{x} + $off->{staffX};

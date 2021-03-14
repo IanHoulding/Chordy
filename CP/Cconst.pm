@@ -39,6 +39,8 @@ use constant {
 };
 # Constants for use with fonts
 use constant {
+  SUPOFF   => 0.5,
+  SUPHT    => 0.6,
   PAGEMUL  => 0.7,
   KEYMUL   => 0.8,
 };
@@ -111,6 +113,7 @@ use constant {
 use constant {
   BACKGRND => 1,
   FOREGRND => 2,
+  BORDER   => 4,
   BLANK  => '',
   WHITE  => '#FFFFFF',
   BLACK  => '#000000',
@@ -140,19 +143,25 @@ use constant {
   DGREY  => '#808080',
   MAGENT => '#700070',
 };
-#
-# Constants for the Tab Editor
-#
+##################################
+## Constants for the Tab Editor ##
+##################################
+
 # Constants for changes to a Bar
 use constant {
   PAGE => 0,
   EDIT => 1,
 };
+# Constants for Bar copy
 use constant {
-  VOLTA  => 1,
-  HEAD   => 2,
-  REPEAT => 4,
-  NOTE   => 8,
+  VOLTA  =>   1,
+  REPEAT =>   2,
+  HEAD   =>   4,
+  JUST   =>   8,
+  BBG    =>  16,
+  NEWLP  =>  32,
+  NOTE   =>  64,
+  ALLB   => 127,
 };
 # Constants for use with fonts
 # use constant TITLE  => 0, --- see above
@@ -164,11 +173,8 @@ use constant {
   RESTS  => 5,
   RESTFONT => 'TabSym',
 };
-# Constants for Bar copy & insertion
+# Constants for Bar insertion
 use constant {
-  HONLY   =>  1,
-  NONLY   =>  2,
-  HANDN   =>  3,
   BEFORE  => -1,
   REPLACE =>  0,
   AFTER   =>  1,
@@ -192,6 +198,11 @@ use constant {
   MET   => 4,
   RATE  => 8000,
 };
+# Constants to define Rest/Stopped as opposed a Note
+use constant {
+  REST  => 60,
+  GHOST => 67,
+};
 
 our @ISA = qw/Exporter/;
 
@@ -200,7 +211,7 @@ our @EXPORT_OK = qw/
   PROG USER ERRLOG
   MM IN PT MMF INF PTF
   MULTIPLE SINGLE
-  PAGEMUL KEYMUL
+  SUPOFF SUPHT PAGEMUL KEYMUL
   NL LYRIC VERSE CHORUS BRIDGE CMMNT CMMNTI CMMNTB
     HLIGHT CHORD TITLE NP CHRD GRID TAB LABEL HLINE VSPACE
     CFONT CFSIZ CFCLR LFONT LFSIZ LFCLR TFONT TFSIZ TFCLR
@@ -209,16 +220,17 @@ our @EXPORT_OK = qw/
   NONE FIRSTP ALLP
   SLWID FILE SLNEW SLREN SLCLN SLDEL SLSEL TABBR
   SAD QUIZ SMILE QUEST
-  BACKGRND FOREGRND BLANK WHITE BLACK BROWN DRED DGREEN DBLUE PBLUE SELECT
-  RED GREEN BLUE MWBG
+  BACKGRND FOREGRND BORDER BLANK WHITE BLACK BROWN DRED DGREEN DBLUE
+  PBLUE SELECT RED GREEN BLUE MWBG
   DBLBG VLMWBG POPBG DPOPBG bFG bBG mBG fBG bACT HFG RFG
   OWHITE LGREY DGREY MAGENT
 
   PAGE EDIT
-    VOLTA HEADER REPEAT NOTE
+    VOLTA REPEAT HEAD JUST BBG NEWLP NOTE ALLB
     NOTES SNOTES HEADER WORDS RESTS RESTFONT
-    HONLY NONLY HANDN BEFORE REPLACE AFTER UPDATE
+    BEFORE REPLACE AFTER UPDATE
     BNUMW FAT THICK THIN PALE
+    REST GHOST
   STOP PLAY PAUSE LOOP MET RATE
 /;
 
@@ -227,7 +239,7 @@ our %EXPORT_TAGS = (
   PATH    => [qw/PROG USER ERRLOG/],
   LENGTH  => [qw/MM IN PT MMF INF PTF/],
   PDF     => [qw/MULTIPLE SINGLE/],
-  FONT    => [qw/PAGEMUL KEYMUL RESTFONT/],
+  FONT    => [qw/SUPOFF SUPHT PAGEMUL KEYMUL RESTFONT/],
   MUSIC   => [qw/NL LYRIC VERSE CHORUS BRIDGE CMMNT CMMNTI CMMNTB
                  HLIGHT CHORD TITLE NP CHRD GRID TAB LABEL HLINE VSPACE
                  CFONT CFSIZ CFCLR LFONT LFSIZ LFCLR TFONT TFSIZ TFCLR/],
@@ -236,16 +248,17 @@ our %EXPORT_TAGS = (
   INDEX   => [qw/NONE FIRSTP ALLP/],
   BROWSE  => [qw/SLWID FILE SLNEW SLREN SLCLN SLDEL SLSEL TABBR/],
   SMILIE  => [qw/SAD QUIZ SMILE QUEST/],
-  COLOUR  => [qw/BACKGRND FOREGRND BLANK WHITE BLACK BROWN DRED DGREEN DBLUE PBLUE SELECT
-	         RED GREEN BLUE MWBG
+  COLOUR  => [qw/BACKGRND FOREGRND BORDER BLANK WHITE BLACK BROWN DRED DGREEN DBLUE
+	         PBLUE SELECT RED GREEN BLUE MWBG
 	         DBLBG VLMWBG POPBG DPOPBG bFG bBG mBG fBG bACT
 	         HFG RFG OWHITE LGREY DGREY MAGENT/],
 
   TAB     => [qw/PAGE EDIT
-	         VOLTA HEADER REPEAT NOTE
+	         VOLTA REPEAT HEAD JUST BBG NEWLP NOTE ALLB
 	         TITLE NOTES SNOTES HEADER WORDS RESTS
-	         HONLY NONLY HANDN BEFORE REPLACE AFTER UPDATE
-	         BNUMW FAT THICK THIN PALE/],
+	         BEFORE REPLACE AFTER UPDATE
+	         BNUMW FAT THICK THIN PALE
+	         REST GHOST/],
 
   PLAY    => [qw/STOP PLAY PAUSE LOOP MET RATE/],
     );

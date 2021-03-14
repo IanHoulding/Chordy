@@ -10,14 +10,13 @@ sub help {
   $win->add(
 [
  "<O TO:H: Chordy > ",
- "Takes a standard(ish) ChordPro text file and converts it to a PDF file with the chords arranged above the lines of lyrics. Chordy can also transpose the music key, either permanently or just for the current PDF creation. Another option is to have the chords shown at the top of the first page or all pages.",
+ "Takes a standard(ish) ChordPro text file and converts it to a PDF file with the chords arranged above the lines of lyrics. Chordy can also transpose the music key, either permanently or just for the current PDF creation. Optionaly, you can have the chords shown at the top of the first page or all pages.",
  "Chordy works with independent sets of files called <R Collections>. Each Collection has its own set of ChordPro and PDF files and its own set of configuration options.",
  "In the applications main display you have 3 tabs:",
 "<R Chordy PDF Generator> is where you get to convert your ChordPro files into a PDF file and/or Transposed etc.",
 "<R Setlists> allows you to create/modify/delete Setlists and is also where you select one or more ChordPro files you want to edit and/or create PDFs.",
 "<R Configuration Options> has the various settings used in each Collection.\n",
-#"<R Miscellaneous> lets you perform various house-keeping functions.\n",
-# "<O To:H: Table Of Contents >",
+
  "<O To:H:Menus>",
  "<V5>",
  "<O MF:S:File>",
@@ -27,11 +26,11 @@ sub help {
  "<O Mnc:s: New ChordPro>",
  "<O Mic:s: Import ChordPro>",
  "<V1>",
- "<O MFe:N: Export>",
+ "<O MFe:N: Export> ",
  "<O MFe:s:    One/All ChordPro>",
  "<O MFe:s:    One/All PDF>",
  "<V1>",
- "<O MFm:N: Mail>",
+ "<O MFm:N: Mail> ",
  "<O MFm:s:    One/All ChordPro>",
  "<O MFm:s:    One/All PDF>",
  "<V1>",
@@ -48,20 +47,36 @@ sub help {
  "<V5>",
  "<O MO:S:Options>",
  "<V1>",
- "<O MOp:N: PDFs>",
+ "<O MOp:N: PDFs> ",
  "<O MOp:s:    View>",
  "<O MOp:s:    Create>",
  "<O MOp:s:    Print>",
  "<V1>",
- "<O MOl:N: Lyrics>",
+ "<O MOl:N: Lyrics> ",
  "<O Mlc:s:    Center Lyrics",
  "<O Mll:s:    Lyrics Only>",
  "<O Mlg:s:    Group Lines>",
  "<O Mlb:s:    1/2 Ht Blank Lines>",
  "<V1>",
  "<O Mol:s: Line Spacing>",
- "<O Moh:s: Highlight Full Line>",
- "<O Moc:s: Comment Full Line>",
+ "<V1>",
+ "<O Moh:N: Highlight/Comment> ",
+ "<O Moh:s:    Full line>",
+ "<O Moh:s:    Border Relief>",
+ "<O Moh:s:    Border Width>",
+ "<V1>",
+ "<O Moi:s: Ignore Capo Directives>",
+ "<O Mon:s: No Long Line warnings>",
+ "<O Mos:s: Show Labels>",
+ "<O Mob:s: Label Background %>",
+ "<V1>",
+ "<O Moa:N: Appearance> ",
+ "<O Mac:s:    Colours - Tabs Window Button Menu Entry List Message>",
+ "<O Maf:s:    Fonts - Normal/Bold>",
+ "<O Map:s:    Copy to all Collections>",
+ "<O Mad:s:    Default Appearance>",
+ "<V2>",
+ "<O Mod:s: Defaults>",
  "<V5>",
  "<O MS:S:Misc>",
  "<V1>",
@@ -92,11 +107,10 @@ sub help {
  "<V5>",
  "<O FB:S:Configuration Options>",
  "<V1>",
- "<O CL:s: Collections>",
+ "<O CL:s: Collection>",
+ "<O FO:s: PDF Fonts - Colour and Size>",
+ "<O BC:s: PDF Sections Background Colours>",
  "<O PS:s: PDF Page Size>",
- "<O FO:s: Fonts - Colour and Size>",
- "<O BC:s: Background Colours>",
- "<O AP:s: Appearance>",
  "<V5>",
  "<O CE:S:Colour Editor>",
  "<V5>",
@@ -184,12 +198,42 @@ sub help {
  "<V5>",
  "<T Mol><s Line Spacing\n>",
  "<M>Determines the spacing between lines. This does not affect the positioning of chords above the lyrics. I usually use a value of 1 or 2 for lyrics + chords and 4 or 5 for just lyrics.",
+ "<V5>",
+ "<T Moh><N Highlight/Comment\n>",
+ "<s   Full line\n>",
+ "<M>The text normally has a background colour <I just> around the text. This option extends the background to cover the whole line.",
  "<V2>",
- "<T Moh><s Highlight Full Line\n>",
- "<M>Highlighted text normally has a background colour <I just> around the text. This option extends the background to cover the whole line.",
+ "<s   Border Relief\n>",
+ "<M>The text can optionally have a coloured border placed around it with a Relief of <R raised>, <R sunken> or <R flat>. The only exception is the <R Comment Box> directive which will <I always> show with a 1 point black border.",
  "<V2>",
- "<T Moc><s Comment Full Line\n>",
- "<M>Same as for Highlight above.",
+ "<s   Border Width\n>",
+ "<M>This option defines the width of the applied border. Setting this value to 0 will disable any border.",
+ "<V5>",
+ "<T Moi><s Ignore Capo Directives\n>",
+ "<M>If there is a <R Capo> directive in the ChordPro file, Chordy will transpose all chords in the file (except for the <R Key> directive). This option ignores the directive and shows the chords as written in the file but will still show the <R Capo> setting in the PDF but with \"(ignored)\" after it.",
+ "<V2>",
+ "<T Mon><s No Long Line warnings\n>",
+ "<M>Chordy normally bleats about each (and every) lyric line it finds that is too long to fit on one line on the page. This option stops that and just shows one generic error at the end of the run.",
+ "<V2>",
+ "<T Mos><s Show Labels\n>",
+ "<M>Any of the Verse, Chord, Bridge or Tab sections can have a <R Label> associated with it. This option allows you to turn the Labels on or off.",
+ "<V2>",
+ "<T Mob><s Label Background %\n>",
+ "<M>If Labels are displayed they will have a background which is a shade of the sections background. This shade will be a percentage shift lighter (negative values) or darker (positive values) by this ammount.",
+
+ "<V2>",
+ "<T Moa><N Appearance\n>",
+ "<T Mac><s    Colours - Tabs Window Button Menu Entry List Message\n>",
+ "<M>Lets you specify the Background colour for all the above elements plus you can also change the Foreground colours for Push and Menu buttons, Lists, Entry and Message boxes.",
+ "<V2>",
+ "<T Maf><s    Fonts - Normal/Bold\n>",
+ "<M>All buttons and lists can be displayed in \"Normal\" or \"<B Bold>\" text.",
+ "<V2>",
+ "<T Map><s    Copy to all Collections\n>",
+ "<M>The current colour definitions will be copied to all Collection Options.",
+ "<V2>",
+ "<T Mad><s    Default Appearance\n>",
+ "<M>Resets all colour definitions to their original default values.",
  "<V5>",
 
 ######
@@ -240,16 +284,16 @@ sub help {
  "<T Ch><H Chordy PDF Generator Tab\n>",
  "<V5>",
 
- "<T CP><S ChordPro File(s)>\n",
+ "<T CP><S ChordPro File(s)> ",
  "<M>These are files ending with a <B .pro> extension. The <R Browse> button allows you to select one or more files contained in the ChordPro folder (see the section on Folders and Commands).\nThe <R From Setlist> button lets you pull in a list of files from a pre defined Setlist.\n",
 
 ###
- "<T PD><S PDFs>\n",
+ "<T PD><S PDFs> ",
  "<M>You can elect to <B View>, <B Create> and/or <B Print> all listed ChordPro files or just a single selected file.\nThe viewer is <B SumatraPDF> on Windows systems (installed with Chordy), <B Preview> on Mac and <B acroread> on Linux. Whenever Chordy is creating a PDF, a small progress window will appear below the File List showing you which file is being worked on.",
  "The <R Single Song> button will <B View/Create/Print> a PDF file for the one selected ChordPro file.\nThe <R All Songs> button will <B View/Create/Print> a PDF file for each ChordPro file in the list unless the <R Single PDF> checkbox is active in which case a single PDF file will be created containing all the songs in the order shown in the ChordPro file list.\n",
 
 ###
- "<T SS><S Single File>\n",
+ "<T SS><S Single File> ",
  "<M>This section allows you to operate on ONE selected ChordPro File and perform various actions on it:\n",
 
  "<P  Edit > ",
@@ -262,7 +306,7 @@ sub help {
  "<M>Unlike when you create a PDF (see PDF Options below), this will permanently transpose all chords to the key defined in the option list and writes the new version back out to disk.\n",
 
 ###
- "<T Op><S PDF Options>\n",
+ "<T Op><S PDF Options> ",
 
  "<X checkbox><s  Center Lyrics> ",
  "<M>By default, the Lyrics, Highlights, Comments etc. are printed left justified (ie against the left side of the page). Turning this option on will center all text on each page.\n",
@@ -276,14 +320,17 @@ sub help {
  "<X checkbox><s  1/2 Height Blank Lines> ",
  "<M>Any blank lines in the ChordPro file will only use 1/2 as much verticle space in the PDF. This may make the PDF more compact at the possible expense of readability.\n",
 
- "<X checkbox><s  No Long Line warnings> ",
- "<M>If it has to, Chordy will adjust the Lyric font size until it fits onto a line in which case it will display a warning to that effect. This option stops those warnings appearing - they can become anoying if you're processing a large number of files. View the error log - they're copied into that.\n",
+ "<X checkbox><s  Highlight/Comment full line> ",
+ "<M>Highlight and Comment text normally have a background colour <I just> around the text. This option extends the background to cover the whole line.\n",
 
  "<X checkbox><s  Ignore Capo Directives> ",
  "<M>This option stops Chordy from Transposing chords in a file if the <B {capo:n}> option is present in the file. However, it does <I NOT> alter the action of the <R Tanspose To> option.\n",
 
- "<X checkbox><s  Highlight/Comment full line> ",
- "<M>Highlight and Comment text normally have a background colour <I just> around the text. This option extends the background to cover the whole line.\n",
+ "<X checkbox><s  No Long Line warnings> ",
+ "<M>If it has to, Chordy will adjust the Lyric font size until it fits onto a line in which case it will display a warning to that effect. This option stops those warnings appearing - they can become anoying if you're processing a large number of files. View the error log - they're copied into that.\n",
+
+ "<X checkbox><s  Show Labels> ",
+ "<M>Any of the Verse, Chord, Bridge or Tab sections can have a <R Label> associated with it. This option allows you to turn the Labels on or off.\n",
 
  "<P  Line Spacing > ",
  "<M>Determines the spacing between lines. This does not affect the positioning of chords above the lyrics. I usually use a value of 1 or 2  for lyrics + chords and 4 or 5 for just lyrics.\n",
@@ -304,7 +351,7 @@ sub help {
  "<M>This section lets you specify (in points) the Left, Right, Top and Bottom margins. These margins <I only> apply to any text on each page so backgrounds (behind the Title for example) will extend the whole width (and/or height) of the physical page.\n",
 
  ###
- "<T DI><S Chord Diagrams>\n",
+ "<T DI><S Chord Diagrams> ",
 
  "<M>This option set allows you to have an index of all the chords in the current song displayed at the top of the first page or the top of every page. Although the <R Instrument> button lets you select the type to display the chords for, only 6 string guitar chords are currently implemented. If you want to add chords to any of the available intruments, use the Chord Editor via the <R Edit> button.\n",
 
@@ -312,9 +359,9 @@ sub help {
 
  "<T SL><H Setlists\n>",
  "<V5>",
-
  "This tab is split into an upper and a lower section.",
- "<S Upper Section>\n",
+ "<V5>",
+ "<S Upper Section> ",
  "The upper section shows (on the left) the currently available Setlists and to it's right a box which shows which Setlist is currently selected along with date/time information and to the right and below that, a number of buttons to manipulate the current Setlist:\n",
  "<P  New > ",
  "<M>Creates a new Setlist.",
@@ -363,34 +410,28 @@ sub help {
  "<T FB><H Configuration Options\n>",
  "<V5>",
 
- "<T CL><S Collections>\n",
- "A <B Collection> is a grouping of ChordPro, PDF and Tab files along with various configuration files.\nThe default Collection from the install is called (wait for it ....) <B Chordy> and lives in the <R C:/Users/[USERNAME]> folder on Windows or in <R \$ENV{HOME}> on Linux/Mac.\nNote the use of Unix path separators / instead of the Windows \\ - this is historical because the Perl programming language (which Chordy is written in) was developed for the Unix environment.\nYou cannot delete a Collection if it is the only one but if you create a second Collection you can delete the original Chordy Collection. This isn't 100% accurate as the global configuration files are always left in the <R C:/Users/[USERNAME]/Chordy> or <R \$ENV{HOME}/Chordy> folder but the Pro, PDF and Tab folders are emptied.\nThe Collection section shows you the current Collection name and the path to it. Clicking on the Edit button allows you to <B Delete>, <B Rename> or create a <B New> Collection.\n(The only Collection you aren't allowed to rename is the Chordy one)\n",
+ "<T CL><S Collection> ",
+ "<M>A <B Collection> is a grouping of ChordPro, PDF and Tab files along with various configuration files.\nThe default Collection from the install is called (wait for it ....) <B Chordy> and lives in the <R C:/Users/[USERNAME]> folder on Windows or in <R \$ENV{HOME}> on Linux/Mac.\nNote the use of Unix path separators / instead of the Windows \\ - this is historical because the Perl programming language (which Chordy is written in) was developed for the Unix environment.\nYou cannot delete a Collection if it is the only one but if you create a second Collection you can delete the original Chordy Collection. This isn't 100% accurate as the global configuration files are always left in the <R C:/Users/[USERNAME]/Chordy> or <R \$ENV{HOME}/Chordy> folder but the Pro, PDF and Tab folders are emptied.\nThe Collection section shows you the current Collection name and the path to it. Clicking on the button allows you to change the current Collection.\n(The only Collection you aren't allowed to rename is the Chordy one)\n",
 
  "<s Common PDF Path> ",
  "<M>This allows any combination of Collections to share a PDF Folder. For example I have one Collection for a 4 string Bass and another for a 5 string but I want to have a common PDF folder. When a PDF file is created a copy will go into both this <I and> the Collection's PDF folder.\n",
 
- "<T PS><S PDF Page Size>\n",
+ "<T FO><S PDF Fonts - Colour and Size> ",
+ "This section allows you to define the fonts, their colour, size, weight (bold) and slant (italic), used for the various parts of the PDF and editor. The small (coloured) square to the left of the font name is a button that will let you define the colour that particular font will be displayed in. (See the separate section below that describes the colour editor)",
+ "The <R Choose> button gives you access to all the available fonts.\n",
+
+ "<T BC><S PDF Section Background Colours> ",
+ "A Verse, Chorus, Bridge or Tab section can have their background colour defined using these buttons.\n",
+
+ "<T PS><S PDF Page Size> ",
 
  "This section allows you to specify the output page size for the PDF file in points (72/inch), inches or millimeters. The default size is A4 (297mm x 210mm). As an example, I use a Samsung Galaxy Note Pro 12.2 which has a screen size of 263mm x 164mm which is slightly smaller than A4 and therefore I had to reduce the various text sizes by 2 points to fit the same lines onto this page size.\n",
 
- "<P  Edit Media > ",
+ "<P  Media > ",
  "<M>This button brings up a small window that allows you to delete or create a new media type or just edit the media height and/or width. Deleting a Media type happens immediately you select <R OK> in the confirmation box. Editing the Media Name causes a new type of Media to be created.\n",
 
  "<P Print Media > ",
  "<M>This allows you to specify the Media size and fonts to be used when printing as opposed to the Media size/fonts you use for PDF generation for use on a tablet.\n",
-
- "<T FO><S Fonts - Colour and Size>\n",
- "This section allows you to define the fonts, their colour, size, weight (bold) and slant (italic), used for the various parts of the PDF and editor. The small (coloured) square to the left of the font name is a button that will let you define the colour that particular font will be displayed in. (See the separate section below that describes the colour editor)",
- "The <R Choose> button gives you access to all the available fonts.\n",
-
- "<T BC><S Background Colours>\n",
- "A Comment, Highlight, Title, Verse, Chorus, Bridge or Tab section can all have their background colour defined using these buttons.\n",
-
- "<T AP><S Appearance>\n",
- "<s Colours> ",
- "<M>Allows you to change the Foreground and Background colours for Push and Menu buttons, Lists, Entry and Message boxes. Also lets you specify the Background colour for all the windows.\n",
- "<s Fonts> ",
- "<M>All buttons and lists can be displayed in \"Normal\" or \"<B Bold>\" text.\n",
 
 ################
 

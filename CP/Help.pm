@@ -62,8 +62,6 @@ sub new {
   my $textWin = $self->{text};
   # The following 3 tags control indenting. Indents stay in effect
   # until explicitly ended with an <E> tag OR a Heading tag.
-#  $textWin->tag_configure('m', -lmargin1 => 20,
-#			       -lmargin2 => 10);
   $textWin->tag_configure('M', -lmargin1 => 20,
 			       -lmargin2 => 10);
   $textWin->tag_configure('E', -lmargin1 => 0,
@@ -74,7 +72,7 @@ sub new {
 			       -justify => 'center',
 			       -foreground => HFG,
 			       -background => SELECT);
-  $textWin->tag_configure('h', -font => "Times ".($sz+5)." bold",
+  $textWin->tag_configure('h', -font => "Times ".($sz+4)." bold",
 			       -foreground => HFG,
 			       -background => SELECT);
   # Sub Headings
@@ -107,8 +105,8 @@ sub new {
   $textWin->tag_configure('U', -font => "Courier ".($sz-3)." bold",
 			       -offset => int($sz/3));
   # Link
-    $textWin->tag_configure('K', -font => "Times $sz bold",
-			         -foreground => HFG);
+  $textWin->tag_configure('K', -font => "Times $sz bold",
+			       -foreground => HFG);
   # Bold Italic
   $textWin->tag_configure('I', -font => "Times $sz bold italic");
   # Bold
@@ -118,9 +116,9 @@ sub new {
 			       -foreground => RFG);
   # Coloured Backgrounds
   $textWin->tag_configure('Y', -font => "Times $sz bold italic",
-			       -background => "$Media->{highlightBG}");
+			       -background => "$Opt->{BGHighlight}");
   $textWin->tag_configure('L', -font => "Times $sz normal",
-			       -background => "$Media->{commentBG}");
+			       -background => "$Opt->{BGComment}");
   $textWin->tag_configure('F', -font => "Times $sz normal",
 			       -background => "#FF00FF");
 
@@ -130,6 +128,10 @@ sub new {
 			        -borderwidth => 1,
 			        -spacing1 => 0,
 			        -spacing3 => 0);
+  # Horizontal line: <l height width #colour>
+#  $textWin->tag_configure('l', -font => "Times 1 normal",
+#			       -background => BLACK);
+
   # Vertical Spacing
   foreach my $sz (1..10) {
     $textWin->tag_configure("V$sz",  -font => "Times $sz normal");
@@ -222,6 +224,17 @@ sub add  {
 	      }
 	    }
 	    $textWin->insert('end', "\n", [$tag]);
+	  } elsif ($tag eq 'l') { # Line
+	    my($h,$w,$clr) = ($tagged =~ /(\d+)*\s*(\d+)*\s*(#......)*/);
+	    $h = 1 if (!defined $h);
+	    $w = 250 if (!defined $w);
+	    $clr = BLACK if (!defined $clr);
+	    Tkx::ttk__style_configure('L.TFrame', -background => $clr);
+	    my $fr = $textWin->new_ttk__frame(-width => $w,
+					      -height => $h,
+					      -style => 'L.TFrame'); 
+	    $textWin->window_create('end', -align => 'center', -window => $fr);
+	    $textWin->insert('end', "\n");
 	  } else {
 	    $tagged =~ s/\{\{\{/<<</g;
 	    $tagged =~ s/\}\}\}/>>>/g;

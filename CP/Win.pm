@@ -64,11 +64,40 @@ sub MWoptions {
 
   BGclr($Opt->{WinBG});
 
+  Tkx::ttk__style_configure('TNotebook.Tab',
+			    -font => "BTkDefaultFont",
+			    -background => LGREY,
+			    -foreground => $Opt->{TabFG});
+  Tkx::ttk__style_map('TNotebook.Tab',
+		      -background => "selected ".$Opt->{TabBG}." active ".$Opt->{TabAC});
+
   Tkx::ttk__style_configure('TFrame',
 			    -highlightthickness => 0,
 			    -borderwidth => 0,
 			    -activeborderwidth => 0,
 			    -selectborderwidth => 0);
+
+  Tkx::ttk__style_configure('PopMenu.TFrame',
+			    -bordercolor => BLACK,
+			    -background => $Opt->{MenuBG});
+  Tkx::ttk__style_configure('PopMenu.TButton',
+			    -padding => [8,0,8,0],
+			    -anchor => 'w',
+			    -highlightthickness => 0,
+			    -borderwidth => 0,
+			    -activeborderwidth => 0,
+			    -selectborderwidth => 0,
+			    -background => $Opt->{MenuBG},
+			    -foreground => $Opt->{MenuFG});
+  Tkx::ttk__style_map('PopMenu.TButton',
+		      -background => "active #3830FF",
+		      -foreground => "active #FFFFFF");
+  Tkx::ttk__style_configure('PopShad.TFrame',
+			    -borderwidth => 1,
+			    -bordercolor => '#C8C8C8',
+			    -relief => 'raised',
+			    -background => '#B0B0B0');
+
   Tkx::ttk__style_configure('Pop.TFrame',
 			    -background => $Opt->{PopBG});
   Tkx::ttk__style_configure('Wh.TFrame',
@@ -87,15 +116,14 @@ sub MWoptions {
   Tkx::ttk__style_configure('Wh.TLabelframe', -background => WHITE);
   Tkx::ttk__style_configure('Wh.TLabelframe.Label', -background => WHITE);
 
+  Tkx::ttk__style_configure('H.TSeparator', -background => BLACK);
+
   Tkx::ttk__style_configure('TCanvas',
 			    -highlightthickness => 0,
 			    -borderwidth => 0,
 			    -selectborderwidth => 0);
 
   Tkx::ttk__style_configure('TText', qw/-highlightthickness 0/);
-
-  Tkx::ttk__style_configure('TNotebook.Tab',
-			    -font => "BTkDefaultFont");
 
   Tkx::ttk__style_configure('Toolbutton',
 			    -relief => 'raised',
@@ -129,9 +157,6 @@ sub MWoptions {
   Tkx::ttk__style_configure("Menu.TButton",
 			    -foreground => $Opt->{MenuFG},
 			    -background => $Opt->{MenuBG});
-  Tkx::ttk__style_configure("List.TButton",
-			    -foreground => $Opt->{ListFG},
-			    -background => $Opt->{ListBG});
   Tkx::ttk__style_configure("Ent.TButton",
 			    -foreground => $Opt->{EntryFG},
 			    -background => $Opt->{EntryBG});
@@ -145,15 +170,16 @@ sub MWoptions {
 
   TButtonBGset();
 
-  Tkx::ttk__style_configure('TCheckbutton',
+  Tkx::ttk__style_configure('My.TCheckbutton',
+			    -indicatorsize => 0,
+			    -indicatormargin => [0,0,0,0],
+			    -relief => 'flat',
+			    -borderwidth => 0,
 			    -highlightthickness => 0,
+			    -padding => 0,
 			    -foreground => bFG);
-  Tkx::ttk__style_configure('Pop.TCheckbutton', -background => POPBG);
-  Tkx::ttk__style_configure('NM.TCheckbutton',
-			    -indicatormargin => [0,0,0,0]);
-  Tkx::ttk__style_configure('Wh.TCheckbutton',
-			    -background => WHITE,
-			    -indicatormargin => [0,0,0,0]);
+  Tkx::ttk__style_configure('Wh.My.TCheckbutton', -background => WHITE);
+  Tkx::ttk__style_configure('Pop.My.TCheckbutton',   -background => POPBG);
 
   Tkx::ttk__style_configure('TRadiobutton',
 			    -activeforeground => BLACK,
@@ -238,72 +264,80 @@ sub MWoptions {
 }
 
 sub TButtonBGset {
-  my($media) = shift;
-
-  $media = $Media if (! defined $media);
-  foreach my $h (qw/comment highlight title verse chorus bridge tab/) {
-    Tkx::ttk__style_configure(ucfirst($h).".BG.TButton", -background => $media->{$h."BG"});
+  foreach my $h (qw/Comment Highlight Title Verse Chorus Bridge Tab/) {
+    Tkx::ttk__style_configure($h.".BG.TButton", -background => $Opt->{"BG$h"});
+  }
+  foreach my $h (qw/Comment Highlight/) {
+    my $frst = substr($h, 0, 1);
+    Tkx::ttk__style_configure($h.".BD.TButton",
+			      -background => $Opt->{"BG".$h},
+			      -bordercolor => $Opt->{$frst."borderColour"},);
   }
 }
 
 sub TLabelBGset {
-  my($media) = shift;
-
-  $media = $Media if (! defined $media);
-  foreach my $h (qw/comment highlight title chord lyric tab/) {
-    my $bg = ($h =~ /cho|lyr/) ? $media->{verseBG} : $media->{"$h.BG"};
-    Tkx::ttk__style_configure(ucfirst($h).".Font.TLabel", -background => $media->{"$h.BG"});
+  foreach my $h (qw/Comment Highlight Title Chord Lyric Tab/) {
+    my $bg = ($h =~ /Cho|Lyr/) ? $Opt->{BGVerse} : $Opt->{"BG$h"};
+    Tkx::ttk__style_configure($h.".Font.TLabel", -background => $bg);
   }
 }
 
 sub PBclr {
   my($fg,$bg) = FgBgClr("Push Button", 'TButton');
+  my $save = 0;
   if ($fg ne '') {
     $Opt->{PushFG} = $fg;
-    $Opt->save();
+    $save++;
   }
   if ($bg ne '') {
     $Opt->{PushBG} = $bg;
-    $Opt->save();
+    $save++;
   }
+  $Opt->save() if ($save);
 }
 
 sub MBclr {
   my($fg,$bg) = FgBgClr("Menu Button", 'Menu.TButton');
+  my $save = 0;
   if ($fg ne '') {
     $Opt->{MenuFG} = $fg;
-    $Opt->save();
+    $save++;
   }
   if ($bg ne '') {
     $Opt->{MenuBG} = $bg;
-    $Opt->save();
+    $save++;
   }
+  $Opt->save() if ($save);
 }
 
 sub ENTclr {
   my($fg,$bg) = FgBgClr("Entry Box", 'Ent.TButton');
+  my $save = 0;
   if ($fg ne '') {
     $Opt->{EntryFG} = $fg;
-    $Opt->save();
+    $save++;
   }
   if ($bg ne '') {
     $Opt->{EntryBG} = $bg;
-    $Opt->save();
+    $save++;
   }
+  $Opt->save() if ($save);
   Tkx::ttk__style_configure('TEntry', -fieldforeground => $Opt->{EntryFG});
   Tkx::ttk__style_configure('TEntry', -fieldbackground => $Opt->{EntryBG});
 }
 
 sub MSGclr {
   my($fg,$bg) = FgBgClr("Message Pop-Up", 'Msg.TButton');
+  my $save = 0;
   if ($fg ne '') {
     $Opt->{PopFG} = $fg;
-    $Opt->save();
+    $save++;
   }
   if ($bg ne '') {
     $Opt->{PopBG} = $bg;
-    $Opt->save();
+    $save++;
   }
+  $Opt->save() if ($save);
   Tkx::ttk__style_configure('Pop.TLabel', -foreground => $Opt->{PopFG});
   Tkx::ttk__style_configure('Pop.TLabel', -background => $Opt->{PopBG});
   Tkx::ttk__style_configure('Pop.TFrame', -background => $Opt->{PopBG});
@@ -315,7 +349,7 @@ sub FgBgClr {
   my $fg = Tkx::ttk__style_lookup($style, -foreground);
   my $bg = Tkx::ttk__style_lookup($style, -background);
   CP::FgBgEd->new("$title Colour");
-  my($nfg,$nbg) = $ColourEd->Show($fg, $bg, (FOREGRND|BACKGRND));
+  my($nfg,$nbg) = $ColourEd->Show($fg, $bg, '', (FOREGRND|BACKGRND));
   if ($nfg ne '' && $nfg ne $fg) {
     Tkx::ttk__style_configure($style, -foreground => $nfg);
   }
@@ -328,49 +362,72 @@ sub FgBgClr {
 sub BGclr {
   my($clr) = shift;
 
-  my($fg,$bg);
+  my $fg = Tkx::ttk__style_lookup('TLabelframe.Label', -foreground);
+  my $bg = Tkx::ttk__style_lookup('TFrame', -background);
   if (! defined $clr) {
     CP::FgBgEd->new("Window Background");
-    $fg = Tkx::ttk__style_lookup('TLabelframe.Label', -foreground);
-    $bg = Tkx::ttk__style_lookup('TFrame', -background);
-    $ColourEd->{fgcolor} = $fg;
-    $ColourEd->{bgcolor} = $bg;
-    $ColourEd->{colorop} = BACKGRND;
-    (my $x,$clr) = $ColourEd->Show($fg, $bg, BACKGRND);
-  } else {
-    $bg = 'x';
+    (my $x,$clr) = $ColourEd->Show($fg, $bg, '', BACKGRND);
   }
   if ($clr ne '' && $clr ne $bg) {
     foreach (qw/TFrame Win.TButton TCheckbutton TRadiobutton TLabel TLabelframe TLabelframe.Label/) {
       Tkx::ttk__style_configure($_, -background => $clr);
     }
     $Opt->{WinBG} = $clr;
+    $Opt->saveOne('WinBG');
   }
 }
 
+sub TABclr {
+  my $save = 0;
+  my $fg = $Opt->{TabFG};
+  my $bg = $Opt->{TabBG};
+  CP::FgBgEd->new("Window Background");
+  my($nfg,$nbg) = $ColourEd->Show($fg, $bg, '', (FOREGRND|BACKGRND));
+  if ($nfg ne '' && $nfg ne $fg) {
+    Tkx::ttk__style_configure('TNotebook.Tab', -foreground => $nfg);
+    $Opt->{TabFG} = $nfg;
+    $save++;
+  }
+  if ($nbg ne '' && $nbg ne $bg) {
+    $Opt->{TabBG} = $nbg;
+    $save++;
+    my $grey = 208;  # D0
+    my($nr,$ng,$nb) = ($nbg =~ /\#(..)(..)(..)/);
+    $nr = $grey - int(($grey - hex($nr)) / 2);
+    $ng = $grey - int(($grey - hex($ng)) / 2);
+    $nb = $grey - int(($grey - hex($nb)) / 2);
+    $Opt->{TabAC} = sprintf "#%02x%02x%02x", $nr, $ng, $nb;
+    Tkx::ttk__style_map('TNotebook.Tab',
+			-background => "selected ".$nbg." active ".$Opt->{TabAC});
+  }
+  $Opt->save() if ($save);
+}
+
 sub defLook {
-  $Opt->{EntryFG} = BLACK;
-  $Opt->{EntryBG} = WHITE;
-  $Opt->{ListFG} = BLACK;
-  $Opt->{ListBG} = WHITE;
-  $Opt->{MenuFG} = bFG;
-  $Opt->{MenuBG} = mBG;
-  $Opt->{PushFG} = bFG;
-  $Opt->{PushBG} = bBG;
-  $Opt->{WinBG}  = MWBG;
-  newLook();
-  $Opt->save();
+  if (msgYesNo("Are you sure you want to reset\nall Colours to their defaults?") eq 'Yes') {
+    $Opt->{EntryFG} = BLACK;
+    $Opt->{EntryBG} = WHITE;
+    $Opt->{ListFG} = BLACK;
+    $Opt->{ListBG} = WHITE;
+    $Opt->{MenuFG} = bFG;
+    $Opt->{MenuBG} = mBG;
+    $Opt->{PushFG} = bFG;
+    $Opt->{PushBG} = bBG;
+    $Opt->{WinBG}  = MWBG;
+    newLook();
+    $Opt->save();
+  }
 }
 
 sub newLook {
   Tkx::ttk__style_configure('TEntry', -fieldforeground => $Opt->{EntryFG});
   Tkx::ttk__style_configure('TEntry', -fieldbackground => $Opt->{EntryBG});
-  CP::List::background();
   Tkx::ttk__style_configure("Menu.TButton", -foreground => $Opt->{MenuFG});
   Tkx::ttk__style_configure("Menu.TButton", -background => $Opt->{MenuBG});
   Tkx::ttk__style_configure("TButton", -foreground => $Opt->{PushFG});
   Tkx::ttk__style_configure("TButton", -background => $Opt->{PushBG});
-  BGclr(MWBG);
+  BGclr($Opt->{WinBG});
+  CP::List::background();
 }
 
 1;

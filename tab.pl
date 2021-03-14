@@ -95,10 +95,9 @@ fontSetup();
 restXPMs();
 CP::Win::init();
 
-makeImage("tick", \%XPM);
 makeImage("Ticon", \%XPM);
 $MW->g_wm_iconphoto("Ticon");
-$MW->g_wm_protocol('WM_DELETE_WINDOW' => \&CP::TabMenu::exitTab);
+$MW->g_wm_protocol('WM_DELETE_WINDOW' => sub{CP::Tab->new('_EXIT_')});
 
 #
 # To be able to realisticaly manipulate Canvas fonts to look like the PDF result we
@@ -114,10 +113,10 @@ if ($sc != 1) {
   }
 }
 
-CP::Tab->new($FN);
-CP::TabMenu->new();
-$Tab->{scaling} = $sc;
-$Tab->drawPageWin();
+my $tab = CP::Tab->new($FN);
+CP::TabMenu->new($tab);
+$tab->{scaling} = $sc;
+$tab->drawPageWin();
 
 $MW->g_wm_deiconify();
 $MW->g_raise();
@@ -126,16 +125,20 @@ Tkx::MainLoop();
 ###########################################################################################
 ###########################################################################################
 
-sub setEdited {
-  $Tab->{edited} = shift;
-  tabTitle($Tab->{fileName});
-}
+sub viewOnePDF {
+  my($tab,$path,$fn) = @_;
 
-sub tabTitle {
-  my($fn) = shift;
-
-  my $ed = ($Tab->{edited}) ? ' (edited)' : '';
-  $MW->g_wm_title("Tab Editor  |  Collection: ".$Collection->{name}."  |  Media: $Opt->{Media}  |  Tab: $fn$ed");
+  my $orgFN = '';
+  if (defined $tab) {
+    $orgFN = $tab->{fileName};
+  }
+  $tab = CP::Tab->new("$path/$fn");
+  CP::TabPDF::make($tab, 'V');
+  if ($orgFN ne '') {
+    CP::Tab->new("$Path->{Tab}/$orgFN");
+  } else {
+    CP::Tab->new('');
+  }
 }
 
 # Place-holder for Collection.pm which calls this in chordy.pl

@@ -59,13 +59,13 @@ sub new {
       $avail->h2tcl();
       $Opt->saveOne('SortBy');
     } );
-  my $rev = $topFrm->new_ttk__checkbutton(-variable => \$Opt->{RevSort},
-					  -style => 'NM.TCheckbutton',
+  my $rev = $topFrm->new_ttk__checkbutton(-style => 'My.TCheckbutton',
+					  -variable => \$Opt->{RevSort},
+					  -compound => 'right',
+					  -image => ['xtick', 'selected', 'tick'],
+					  -text => 'Reverse',
 					  -command => sub{$Opt->saveOne('RevSort');
 							  $avail->h2tcl();});
-  my $revlab = $topFrm->new_ttk__label(-text => 'Reverse',
-				       -font => 'BTkDefaultFont',
-				       -padding => [0,0,0,0]);
 
   my $mfs = $topFrm->new_ttk__label(-text => 'Search: ');
   my $entry = $topFrm->new_ttk__entry(-width => 20, -validate => 'key');
@@ -85,7 +85,7 @@ sub new {
     -takefocus => 1);
 
   if ($what & TABBR) {
-    $avail->bind('<Double-Button-1>' => sub{$done = 'OK'});
+    $avail->bind('<Double-Button-1>' => sub{moveOneItem($self,$avail,$select);$done = 'OK'});
   } else {
     $avail->bind('<Double-Button-1>' => sub{moveOneItem($self,$avail,$select);});
   }
@@ -97,10 +97,12 @@ sub new {
   }
   $avail->h2tcl();  # doesn't actually "show" - just sets the $tcl variable
 
-  my $igna = $leftFrm->new_ttk__checkbutton(
-    -text => "Ignore leading \"$Opt->{Articles}\" when sorting",
-    -variable => \$Opt->{IgnArticle},
-    -command => sub{$avail->h2tcl()});
+  my $igna = $leftFrm->new_ttk__checkbutton(-style => 'My.TCheckbutton',
+					    -compound => 'left',
+					    -image => ['xtick', 'selected', 'tick'],
+					    -text => "Ignore leading \"$Opt->{Articles}\" when sorting",
+					    -variable => \$Opt->{IgnArticle},
+					    -command => sub{$avail->h2tcl()});
 
   ### Left/Right Arrows & Alpha shortcuts
   my $centerFrm = $frame->new_ttk__frame();
@@ -135,8 +137,8 @@ sub new {
 
   $srt->g_pack(qw/-side left/, -padx => [4,0]);
   $sby->g_pack(qw/-side left/, -padx => [2,0]);
-  $rev->g_pack(qw/-side left -anchor e/, -padx => [4,0]);
-  $revlab->g_pack(qw/-side left -anchor w/, -padx => [0,0]);
+  $rev->g_pack(qw/-side left -anchor e/, -padx => [8,0]);
+#  $revlab->g_pack(qw/-side left -anchor w/, -padx => [0,0]);
 
   $mfs->g_pack(  qw/-side left/, -padx => [30,0]);
   $entry->g_pack(qw/-side left/, -padx => [2,0]);
@@ -214,8 +216,8 @@ sub new {
     if ($done eq 'OK') {
       if ($what == TABBR) {
 	if (@{$select->{array}} == 0) {
-	  my $idx = $avail->curselection(0);
-	  $sl[0] = $avail->get($idx);
+#	  my $idx = $avail->curselection(0);
+	  $sl[0] = ''; #$avail->get($idx);
 	} else {
 	  $sl[0] = $select->{array}[0];
 	}

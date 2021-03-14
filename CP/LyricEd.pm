@@ -18,26 +18,26 @@ use CP::Global qw/:FUNC :OPT :WIN :MEDIA :XPM/;
 #use CP::Pop qw/:MENU :POP/;
 use CP::Win;
 use CP::Cmsg;
-use CP::Tab;
+use CP::FgBgEd qw(&lighten &darken);
+#use CP::Tab;
 
-our $Ed = {};
+our $Ed;
 
 sub Edit {
-  my($class,$lyrics) = @_;
+  my($class,$tab) = @_;
 
+  my $lyrics = $tab->{lyrics};
   my $done = '';
   my $txtWin = '';
+  my $pop;
 
-  if (ref($Ed) eq 'HASH') {
+  if (ref($Ed) ne 'HASH') {
+    $Ed = {};
     bless $Ed, $class;
 
-    $Ed->{Top} = $MW->new_toplevel();
-    $Ed->{Top}->g_wm_withdraw();
+    $pop = CP::Pop->new(0, '.le', 'Lyric Editor', undef, undef, 'Eicon');
+    $Ed->{Top} = $pop->{top};
     $Ed->{Top}->g_wm_protocol('WM_DELETE_WINDOW' => sub{$Ed->{Top}->g_wm_withdraw()});
-    $Ed->{Top}->g_wm_title("Lyric Editor");
-
-    makeImage("Eicon", \%XPM);
-    $Ed->{Top}->g_wm_iconphoto("Eicon");
 
     ##############################################
     ## set up 2 frames to put everything into.
@@ -45,8 +45,7 @@ sub Edit {
     ## Bottom: Buttons
     ##############################################
 
-    my $mainFrame = $Ed->{Top}->new_ttk__frame(qw/-relief raised -borderwidth 2/);
-    $mainFrame->g_pack(qw/-expand 1 -fill both/);
+    my $mainFrame = $pop->{frame};
 
     my $topF = $Ed->{leftFrame} = $mainFrame->new_ttk__frame();
     $topF->g_pack(qw/-side top -expand 1 -fill both/);
@@ -63,14 +62,14 @@ sub Edit {
     ## set up for autosizing.
 
     my $fp = $Media->{Words};
-    my $sz = int($EditFont{size} * $Tab->{scaling});
+    my $sz = int($EditFont{size} * $tab->{scaling});
     $txtWin = $Ed->{TxtWin} = $topF->new_tk__text(
       -width => 90,
       -height => 24,
       -insertwidth => 2,
       -font => "\{$fp->{family}\} $sz $fp->{weight} $fp->{slant}",
       -relief => 'raised',
-      -foreground => $fp->{color},
+      -foreground => $Opt->{FGWords},
       -background => WHITE,
       -borderwidth => 2,
       -highlightthickness => 0,
@@ -112,7 +111,7 @@ sub Edit {
     my $updt = $botF->new_ttk__button(
       -text => 'Update',
       -style => "Green.TButton",
-      -command => sub{update($txtWin, $lyrics)});
+      -command => sub{update($txtWin, $tab)});
     $updt->g_grid(qw/-row 0 -column 1/);
     my $save = $botF->new_ttk__button(
       -text => 'Save',
@@ -126,7 +125,7 @@ sub Edit {
   }
   $txtWin->delete('1.0', 'end');
 
-  my $edited = $Tab->{edited};
+  my $edited = $tab->{edited};
   $lyrics->collect();
   my @org = @{$lyrics->{text}};
   return('') if (@org == 0);
@@ -142,11 +141,12 @@ sub Edit {
 
   if ($done eq 'Cancel') {
     @{$lyrics->{text}} = @org;
-    $Tab->newPage($Tab->{pageNum});
-    main::setEdited($edited);
+    $tab->newPage($tab->{pageNum});
+    $tab->setEdited($edited);
   } else {
-    update($txtWin, $lyrics);
+    update($txtWin, $tab);
   }
+  $txtWin->delete('1.0', 'end');
   $Ed->{Top}->g_wm_withdraw();
   Tkx::update_idletasks();
   return($done);
@@ -169,13 +169,14 @@ sub drawBlinds {
   for(my $i = 1; $i <= $nlines; $i += $ll) {
     $txtWin->tag_add('B', "$i.0", ($i+$Opt->{LyricLines}).".0");
   }
-  my $selbg = CP::FgBgEd::darken(SELECT, 10);
+  my $selbg = darken(SELECT, 10);
   $txtWin->tag_configure('B', -background => "#F0F0F0", -selectbackground => $selbg);
 }
 
 sub update {
-  my($txtWin, $lyrics) = @_;
+  my($txtWin, $tab) = @_;
 
+  my $lyrics = $tab->{lyrics};
   my $nlines = $txtWin->count(-lines, '1.0', 'end');
   my $text = $lyrics->{text};
   my $idx = 0;
@@ -184,11 +185,11 @@ sub update {
     my $txt = $txtWin->get("$i.0", "$i.end");
     if ($txt ne $text->[$idx]) {
       $text->[$idx] = $txt;
-      main::setEdited(1);
+      $tab->setEdited(1);
     }
     $idx++;
   }
-  $Tab->newPage($Tab->{pageNum});
+  $tab->newPage($tab->{pageNum});
 }
 
 1;
